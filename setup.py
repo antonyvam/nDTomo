@@ -46,7 +46,7 @@ setup(
 		"silx >=0.6.0",
 		"scikit-image >=0.10.0",
 	],
-	packages=find_packages()
+	packages=find_packages(),
 	extras_require={
 		"PDF":  ["diffpy"],
 		"Iterative algorithms": ["tomopy", "astra"],
