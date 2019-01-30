@@ -23,7 +23,7 @@
 # ###########################################################################*/
   
 
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -46,7 +46,7 @@ setup(
 		"silx >=0.6.0",
 		"scikit-image >=0.10.0",
 	],
-	packages=['nDTomo'],
+	packages=find_packages()
 	extras_require={
 		"PDF":  ["diffpy"],
 		"Iterative algorithms": ["tomopy", "astra"],
