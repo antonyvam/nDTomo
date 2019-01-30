@@ -14,6 +14,7 @@ It can batch integrate diffraction/scattering tomographic data collected with di
 * Zigzag
 * Interlaced
 * Continuous rotation/translation
+
 The data integration can be performed with different processing units:
 * CPU
 * GPU
