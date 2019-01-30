@@ -1,0 +1,14 @@
+LICENSE.txt
+MANIFEST.in
+README.md
+setup.py
+docs/build/html/_sources/index.rst.txt
+nDTomo/__init__.py
+nDTomo/nD_Integrator.py
+nDTomo/nD_MultiTool.py
+nDTomo/nD_Processing.py
+nDTomo.egg-info/PKG-INFO
+nDTomo.egg-info/SOURCES.txt
+nDTomo.egg-info/dependency_links.txt
+nDTomo.egg-info/requires.txt
+nDTomo.egg-info/top_level.txt
