@@ -22,18 +22,12 @@
 #
 # ###########################################################################*/
   
-from setuptools import setup
 
-<<<<<<< HEAD
 from setuptools import setup
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-=======
-with open("README.md", "r") as fh:
-    long_description = fh.read()
->>>>>>> 3fb35ab491ff4613baebfb4408fe068a5cca257a
 
 setup(
 	name="nDTomo",
@@ -66,10 +60,6 @@ setup(
 		"Topic :: Scientific/Engineering",
 		"Topic :: Scientific/Engineering :: Chemistry",
 		"Topic :: Scientific/Engineering :: Visualization",
-		]
-	
-<<<<<<< HEAD
+		],
 ) 
-=======
-) 		
->>>>>>> 3fb35ab491ff4613baebfb4408fe068a5cca257a
+
