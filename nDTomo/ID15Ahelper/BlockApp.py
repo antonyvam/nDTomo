@@ -185,7 +185,7 @@ class BlockMainWindow(QMainWindow):
         action_addDualEuro = addOthers.addAction("dual euro")
         action_sleep = addOthers.addAction("sleep")
         action_wait = addOthers.addAction("wait for user")
-        action_group = addOthers.addAction("group")       
+#        action_group = addOthers.addAction("group")       
 
         action_StandardView =  viewOptions.addAction(self.expt.blockStyles[0].name)        
         action_BabyView =  viewOptions.addAction(self.expt.blockStyles[1].name)        
@@ -225,7 +225,7 @@ class BlockMainWindow(QMainWindow):
         action_addDualEuro.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.DualEurothermBlock()))
         action_sleep.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.SleepBlock()))
         action_wait.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.WaitForUserBlock()))
-        action_group.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.GenericGroupBlock()))
+#        action_group.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.GenericGroupBlock()))
         action_StandardView.triggered.connect(lambda: self.expt.restyle(0))
         action_BabyView.triggered.connect(lambda: self.expt.restyle(1))
         action_AboutView.triggered.connect(lambda: self.about())        
@@ -286,12 +286,13 @@ class BlockMainWindow(QMainWindow):
         d.setText(message)
         d.exec_()
         
-if sys.platform == 'win32' or sys.platform == 'win64' :
+	
+def main():
+    qApp = QApplication(sys.argv)
     w = BlockMainWindow()
     w.show()
-else:
-    if __name__ == '__main__':
-        app = QApplication(sys.argv)
-        w = BlockMainWindow()
-        w.show()
-        sys.exit(app.exec_())   
+    sys.exit(qApp.exec_())
+    qApp.exec_()
+   
+if __name__ == "__main__":
+    main()
