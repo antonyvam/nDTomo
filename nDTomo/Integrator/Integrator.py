@@ -20,214 +20,25 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
-try:
-    from scipy.misc import imresize, imrotate
-except:
-    print "Cannot import imresize and/or imrotate"
-    
-from skimage.transform import radon, iradon, resize, rotate
-
-try:
-    import tomopy
-except:
-    print "Cannot import tomopy"
-
-try:
-    import astra
-except:
-    print "Cannot import astra"
-
-try:
-    from  silx.opencl.backprojection import Backprojection as fbp
-except:
-    print "Silx is not installed or there is a problem with pyopencl"
-    
-import Processing_v2018_05 as p
-
 os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
 
+#% import nDTomo classes
 
-class SinoProcessing(QtCore.QThread):
-    snprocdone = QtCore.pyqtSignal()
-    progress_sino = QtCore.pyqtSignal(int)
-    
-    def __init__(self,sinos,sinonorm,ofs,crsr,scantype):
-        QtCore.QThread.__init__(self)
-        self.sinos_proc = sinos
-        self.sinonorm = sinonorm
-        self.ofs = ofs
-        self.crsr = crsr
-        self.scantype = scantype
-        
-        
-    def run(self):
-        
-        if self.sinonorm == 1:
-            self.scalesinos()   
-        
-        if self.ofs>0:
-            self.airrem()
+from DCalibration import Calibration, CreatMask
 
-        if self.crsr>0:       
-            self.sinocentering()
-        
-    def airrem(self):
-        
-        for ii in range(0,self.sinos_proc.shape[1]):
-            dpair = (mean(self.sinos_proc[0:self.ofs,ii,:],axis = 0) + mean(self.sinos_proc[self.sinos_proc.shape[0]-self.ofs:self.sinos_proc.shape[0],ii,:],axis = 0))/2
-            self.sinos_proc[:,ii,:] = self.sinos_proc[:,ii,:] - dpair
-            
-    def scalesinos(self):
-        
-        ss = sum(self.sinos_proc,axis = 2)
-        scint = zeros((self.sinos_proc.shape[1]))
-        # Summed scattering intensity per linescan
-        for ii in range(0,self.sinos_proc.shape[1]):
-            scint[ii] = sum(ss[:,ii])
-        # Scale factors
-        sf = scint/max(scint)
-        
-        # Normalise the sinogram data    
-        for jj in range(0,self.sinos_proc.shape[1]):
-            self.sinos_proc[:,jj,:] = self.sinos_proc[:,jj,:]/sf[jj] 
-        
-    def sinocentering(self):
-        
-        
-                
-        di = self.sinos_proc.shape
-        if len(di)>2:
-            s = sum(self.sinos_proc, axis = 2)
-        
-        cr =  arange(s.shape[0]/2 - self.crsr, s.shape[0]/2 + self.crsr, 0.1)
-    #    nomega = s.shape[1] - 1
-        
-        xold = arange(0,s.shape[0])
-        
-        st = []; ind = [];
-        
-        
-        for kk in range(0,len(cr)):
-            
-            xnew = cr[kk] + arange(-ceil(s.shape[0]/2),ceil(s.shape[0]/2)-1)
-            sn = zeros((len(xnew),s.shape[1]))
-            
-            
-            for ii in range(0,s.shape[1]):
-                
-                sn[:,ii] = interp(xnew, xold, s[:,ii])
-#                sn[:,ii] = np.interp(xnew, xold, s[:,ii], left=0 , right=0)
+from PDFmask import CreatPDFMask
 
+from CreateAzimJson import CreatAzimint
 
-            re = sn[::-1,-1]
-    #        re = sn[:,:1]
-            st.append((std((sn[:,0]-re)))); ind.append(kk)
-    #        plt.figure(1);plt.clf();plt.plot(sn[:,0]);plt.plot(re);plt.pause(0.001);
-    
-    
-        m = argmin(st)
-        print(cr[m])
-        
-        mm = 0
-        xnew = cr[m] + arange(-ceil(s.shape[0]/2),ceil(s.shape[0]/2)-1)
-        if len(di)>2:
-            sn = zeros((len(xnew),self.sinos_proc.shape[1],self.sinos_proc.shape[2]))  
-            for ll in range(0,self.sinos_proc.shape[2]):
-                for ii in range(0,self.sinos_proc.shape[1]):
-                    sn[:,ii,ll] = interp(xnew, xold, self.sinos_proc[:,ii,ll])    
-#                    sn[:,ii,ll] = np.interp(xnew, xold, self.sinos_proc[:,ii,ll], left=0 , right=0) 
-                    
-                v = (100.*(mm+1))/self.sinos_proc.shape[2]
-                mm = mm + 1
-                self.progress_sino.emit(v)
-                
-            if self.scantype == 'zigzag':
-                sn = sn[:,0:sn.shape[1]-1,:]
-                
-#                print ll
-                
-        elif len(di)==2:
-            
-            sn = zeros((len(xnew),s.shape[1]))    
-            for ii in range(0,s.shape[1]):
-                sn[:,ii] = interp(xnew, xold, s[:,ii], left=0 , right=0)
-                
-            if self.scantype == 'zigzag':
-                sn = sn[:,0:sn.shape[1]-1]
-            
-        self.sinos_proc = sn
-        self.snprocdone.emit()
-        
-        
-class ReconstructData(QtCore.QThread):
-    recdone = QtCore.pyqtSignal()
-    progress = QtCore.pyqtSignal(int)
-    
-    def __init__(self,sinos):
-        QtCore.QThread.__init__(self)
-        self.sinos = sinos
-        
-    def run(self):
+from ScatterTomoInt import XRDCT_Squeeze
 
-        npr = self.sinos.shape[1]
-        self.theta = arange(0,180-180./(npr-1),180./(npr-1))
-        self.sinos = self.sinos[0:self.sinos.shape[0],0:len(self.theta),:]
-        
-        try:
-            self.rec_silx()
-        except:
-            self.rec_skimage()
-        
-        self.remring()
-        
-        self.recdone.emit()
-        
-    def rec_skimage(self):
+from ZigzagTomoInt_Live import XRDCT_LiveSqueeze
+from ZigzagTomoInt_LiveRead import XRDCT_LiveRead
+from ZigzagTomoInt_LiveMulti import XRDCT_ID15ASqueeze
 
-        self.bp = zeros((self.sinos.shape[0],self.sinos.shape[0],self.sinos.shape[2]))
-        
-        ist = 0
-        ifi = self.sinos.shape[2]
-        for ii in range(ist,ifi):
-            self.bp[:,:,ii] = iradon(self.sinos[:,0:len(self.theta),ii], theta=self.theta, output_size=self.sinos.shape[0], circle=True)
-            v = (100.*(ii-ist+1))/(ifi-ist)
-            self.progress.emit(v)
-            
-        
-    def rec_silx(self):
-
-        
-        self.bp = zeros((self.sinos.shape[0],self.sinos.shape[0],self.sinos.shape[2]))
-        t = fbp(sino_shape=(self.sinos.shape[1],self.sinos.shape[0]),devicetype='CPU')
-#            print self.bp.shape
-#            start=time.time()
-        ist = 0
-        ifi = self.sinos.shape[2]
-        for ii in range(ist,ifi):
-            self.bp[:,:,ii] = t.filtered_backprojection(sino=transpose(self.sinos[:,:,ii],(1,0)))
-            v = (100.*(ii-ist+1))/(ifi-ist)
-            self.progress.emit(v)
-            
-
-    def remring(self):
-        
-        sz = floor(self.bp.shape[0])
-        x = arange(0,sz)
-        x = tile(x,(int(sz),1))
-        y = swapaxes(x,0,1)
-        
-        xc = round(sz/2)
-        yc = round(sz/2)
-        
-        r = sqrt(((x-xc)**2 + (y-yc)**2));
-        
-        dim =  self.bp.shape
-        if len(dim)==2:
-            self.bp = where(r>0.98*sz/2,0,self.bp)
-        elif len(dim)==3:
-            for ii in range(0,dim[2]):
-                self.bp[:,:,ii] = where(r>0.98*sz/2,0,self.bp[:,:,ii])
-                
+from FastTomoInt_Live import Fast_XRDCT_LiveSqueeze
+from FastTomoInt_LiveRead import Fast_XRDCT_LiveRead
+from FastTomoInt_LiveMulti import Fast_XRDCT_ID15ASqueeze
 
         
 
@@ -332,8 +143,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
 #        self.mapperExplorerDock.setVisible(0)
 #        self.plotterExplorerDock.setVisible(0)
-
-
 
         # Detector calibration pannel
         
@@ -665,11 +474,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.E = float(s)
     
     def calib(self):
-        self.createdetcalib = p.CalibrationThread(self.calibrant,self.E)
+        self.createdetcalib = Calibration(self.calibrant,self.E)
         self.createdetcalib.start()            
 
     def createmask(self):
-        self.createdetmask = p.CreatMaskThread(self.calibrant)
+        self.createdetmask = CreatMask(self.calibrant)
         self.createdetmask.start()
         
     def loadponifile(self):
@@ -691,14 +500,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         print self.maskname
 
     def createPDFmask(self):
-        self.createdetpdfmask = p.CreatPDFMaskThread(self.poniname,self.maskname)
+        self.createdetpdfmask = CreatPDFMask(self.poniname,self.maskname)
         self.createdetpdfmask.start()
 
     def selRadial(self,s):
         self.npt_rad = s
         
     def createazimint(self):
-        self.createdetazimint = p.CreatAzimintThread(self.poniname,self.maskname,self.npt_rad)
+        self.createdetazimint = CreatAzimint(self.poniname,self.maskname,self.npt_rad)
         self.createdetazimint.start()        
         
 #        self.jsonname = self.createdetazimint.jsonname
@@ -1159,9 +968,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if self.scantype == 'zigzag':
 
                 if self.liveoption == 1:
-                    self.Squeezing = p.XRDCT_LiveSqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Squeezing = XRDCT_LiveSqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Squeezing.start()  
-                    self.Reading = p.XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Reading = XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Reading.start()  
                     self.Reading.exploredata.connect(self.explore)
                     self.Reading.updatedata.connect(self.update)
@@ -1170,11 +979,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     
                 elif self.liveoption == 0:
                     if self.procunit == "MultiGPU":
-                        self.Squeezing = p.XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                        self.Squeezing = XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                         self.Squeezing.start()
                         self.Squeezing.liveRead()
                     else:
-                        self.Squeezing = p.XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime)
+                        self.Squeezing = XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime)
                         self.Squeezing.start()
 #                    self.Squeezing.squeeze.connect(self.writeintdata)
                     
@@ -1184,20 +993,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             elif self.scantype == 'fast':
 
                 if self.liveoption == 1:
-                    self.Squeezing = p.Fast_XRDCT_LiveSqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Squeezing = Fast_XRDCT_LiveSqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Squeezing.start()  
-                    self.Reading = p.Fast_XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Reading = Fast_XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Reading.start()  
                     self.Reading.exploredata.connect(self.explore)
                     self.Reading.updatedata.connect(self.update)
                     
                 elif self.liveoption == 0:
                     if self.procunit == "MultiGPU":
-                        self.Squeezing = p.Fast_XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                        self.Squeezing = Fast_XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                         self.Squeezing.start()
                         self.Squeezing.liveRead()
                     else:
-                        self.Squeezing = p.XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime)
+                        self.Squeezing = XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime)
                         self.Squeezing.start()
                     self.Squeezing.squeeze.connect(self.writeintdata)
                     
@@ -1219,16 +1028,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         na = float(self.na); nt = float(self.nt);npt_rad = float(self.npt_rad);
         try:
             if self.scantype == 'zigzag':
-                    self.Reading = p.XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Reading = XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Reading.start()  
                     self.Reading.exploredata.connect(self.explore)
                     self.Reading.updatedata.connect(self.update)
             elif self.scantype == 'fast':                    
-                    self.Reading = p.Fast_XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Reading = Fast_XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Reading.start()  
                     self.Reading.exploredata.connect(self.explore)
-                    self.Reading.updatedata.connect(self.update)                
-                self.Squeezing.progress.connect(self.progressbar.setValue)
+                    self.Reading.updatedata.connect(self.update)
+            
+            self.Squeezing.progress.connect(self.progressbar.setValue)
                 
             if self.progressbar.value() == 100:
                 self.pbuttonrec.setEnabled(True)
@@ -1471,14 +1281,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mapper.show()
         self.mapper.draw()          
         
-    def fbprec_vol(self):
-        
-        self.ReconstructVol.setEnabled(False)
-        self.Rec = ReconstructData(self.Reading.data)
-        self.Rec.start()            
-        self.Rec.progress.connect(self.progressbarrec.setValue)
-        self.data = self.Rec.bp
-        self.Rec.recdone.connect(self.update_rec)
+
         
     def update_rec(self):
                 
@@ -1580,11 +1383,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
              
             if self.procunit == "MultiGPU":
                 if self.scantype == 'zigzag':
-                    self.Squeezing.append(p.XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime))
+                    self.Squeezing.append(XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime))
                 elif self.scantype == 'fast':
-                    self.Squeezing.append(p.Fast_XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime))
+                    self.Squeezing.append(Fast_XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime))
             else:
-                self.Squeezing.append(p.XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime))
+                self.Squeezing.append(XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime))
 
             
             self.progressbarbatch.append(QtWidgets.QProgressBar(self))

@@ -16,6 +16,7 @@ class FitData(QThread):
     '''
     Single peak batch fitting class    
     '''
+    
     fitdone = pyqtSignal()
     progress_fit = pyqtSignal(int)
     
