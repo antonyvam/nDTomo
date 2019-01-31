@@ -1761,15 +1761,15 @@ class MyCanvas(Canvas):
     def compute_initial_figure(self):
         pass
     
-#def main():
-#    qApp = QtWidgets.QApplication(sys.argv)
-#    aw = ApplicationWindow()
-#    aw.show()
-#    sys.exit(qApp.exec_())
-#    qApp.exec_()
-#   
-#if __name__ == "__main__":
-#    main()
+def main():
+    qApp = QtWidgets.QApplication(sys.argv)
+    aw = ApplicationWindow()
+    aw.show()
+    sys.exit(qApp.exec_())
+    qApp.exec_()
+   
+if __name__ == "__main__":
+    main()
     
-aw = ApplicationWindow()    
-aw.show()
+#aw = ApplicationWindow()    
+#aw.show()

@@ -238,12 +238,12 @@ class BlockMainWindow(QMainWindow):
         text = self.editor.toPlainText()
         file.write(text)
         file.close()
-'''
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     w = BlockMainWindow()
     w.show()
     sys.exit(app.exec_())   
-'''
-w = BlockMainWindow()
-w.show()
+
+#w = BlockMainWindow()
+#w.show()

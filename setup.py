@@ -45,6 +45,7 @@ setup(
 		"scipy >=0.14.0",
 		"silx >=0.6.0",
 		"scikit-image >=0.10.0",
+		"pyqtgraph",
 	],
 	packages=find_packages(),
 	extras_require={
