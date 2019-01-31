@@ -10,7 +10,7 @@ class BlockStyleStandard():
     def __init__(self):
         self.name = 'standard'
         self.topMargin = 50
-        self.blockSpacing = 70
+        self.blockSpacing = 60#70
         self.height = 40
         self.width = 150
         self.fontSize = 10

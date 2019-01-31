@@ -6,16 +6,16 @@ Created on Sun Nov 19 13:08:04 2017
 """
 #from PyQt5 import QtWidgets, QtGui, QtCore
 import sys
-from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QFileDialog, QTextEdit 
-from PyQt5.QtWidgets import QVBoxLayout, QHBoxLayout, QDockWidget, QTabWidget, QScrollArea
-from PyQt5.QtGui import QFont, QFontMetrics#, QTextCursor
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QFileDialog, QTextEdit, QAction 
+from PyQt5.QtWidgets import QVBoxLayout, QDockWidget, QTabWidget, QScrollArea, QMessageBox
+from PyQt5.QtGui import QFont, QFontMetrics, QImage, QPixmap, QIcon#, QTextCursor
+from PyQt5.QtCore import Qt, qVersion, PYQT_VERSION_STR, QSize
 
 
 import specSyntax
+import ModeBlocks, ScanBlocks, MotorBlocks, LoopBlocks, OtherBlocks
 
-import HighLevelBlocks
-import MidLevelBlocks
+
 from BlockDocument import BlockDocument
 from pyqtgraph.parametertree import ParameterTree
 
@@ -26,12 +26,12 @@ class BlockMainWindow(QMainWindow):
 #####        super(BlockMainWindow, self).__init__()
         
 #        layout = QHBoxLayout()        
-        self.setWindowTitle('ID15 SpecBlox')
+        self.setWindowTitle('FindenBlox for ID15')
         
 #        self.setWindowModality(Qt.ApplicationModal)
         self.setGeometry(200, 200, 800, 700)
 
-        self.layout = QHBoxLayout(self)
+ #       self.layout = QHBoxLayout(self)
         # Initialize tab screen
         self.tabs = QTabWidget()
         self.tab1 = QWidget()
@@ -62,21 +62,8 @@ class BlockMainWindow(QMainWindow):
         self.setupDirTreeViewer()
         self.setUpMenuBar()
         self.expt.initUI()
+        self.expt.trigger.connect(self.updateEverywhere)
         self.show()
-        
-# Some demo blocks
-  #      self.expt.addBlock(HighLevelBlocks.WhileLessThanSomeTime())
-#        self.expt.addBlock(HighLevelBlocks.XRD_Mode_Block())
-#        self.expt.addBlock(HighLevelBlocks.Simple_XRD_CT_Block())
-#        self.expt.restyle(1)
-
-#        self.expt.addBlock(MidLevelBlocks.ForBlock())
-#        self.expt.addBlock(HighLevelBlocks.RelMotorMoveBlock())
-#        self.expt.addBlock(HighLevelBlocks.RelMotorMoveBlock())
-#        self.expt.addBlock(MidLevelBlocks.ForBlock())
-#        self.expt.addBlock(HighLevelBlocks.RelMotorMoveBlock())
-#        self.expt.addBlock(HighLevelBlocks.RelMotorMoveBlock())
-
 
     def setupParameterTreeViewer(self):
         font = QFont()
@@ -90,7 +77,7 @@ class BlockMainWindow(QMainWindow):
         self.dock.setWidget(self.parameterTree)
         self.dock.setFloating(False)
         self.addDockWidget(Qt.RightDockWidgetArea, self.dock)
-        self.setLayout(self.layout)
+#        self.setLayout(self.layout)
         self.expt.overObjectSignal.connect(self.updatePropertyEditor)
         
     def setupEditor(self):
@@ -160,53 +147,97 @@ class BlockMainWindow(QMainWindow):
         addLoops = bar.addMenu("Loops")
         addOthers = bar.addMenu("Others")
         viewOptions = bar.addMenu("View")
+        helpMe = bar.addMenu("Help")
         
         action_New = file.addAction("New")
-        action_Save = file.addAction("Save")
-        action_Import = file.addAction("Import")
-        action_Export = file.addAction("Export")
+        action_Save = QAction(QIcon('.//images//save-button-icon-73092.png'), "Save", self)
+#        action_SaveAs = file.addAction("Save As")
+        file.addAction(action_Save)
+        
+        action_Import = QAction(QIcon('.//images//import.png'), "Import", self)
+        action_Export = QAction(QIcon('.//images//export.png'), "Export", self)
+        file.addAction(action_Import)
+        file.addAction(action_Export)
         action_Quit = file.addAction("Quit")
 
         action_ABS_Mode = addModes.addAction("ABS Mode")
         action_XRD_Mode =  addModes.addAction("XRD Mode")        
         action_PDF_Mode = addModes.addAction("PDF Mode")
-        action_Single_XRD = addScans.addAction("single XRD")
+		
+        action_Single_XRD = addScans.addAction("point XRD")
+        action_AEROYSCAN = addScans.addAction("hor XRD linescan")
+        action_ZSCAN = addScans.addAction("ver XRD linescan")
+        action_XRDMAP = addScans.addAction("XRD Map")
+        action_XRDCT = addScans.addAction("single XRD-CT")
+        action_XRDCT3D = addScans.addAction("3D XRD-CT")
+        action_FASTXRDCT = addScans.addAction("Fast XRD-CT")
+        action_FASTXRDCT3D = addScans.addAction("Fast 3D XRD-CT")
         action_INTER = addScans.addAction("interlaced XRD-CT")
-        action_XRDCT = addScans.addAction("simple XRD-CT")
+        action_ABSCT = addScans.addAction("ABS-CT")
+        
         action_rel = addMotors.addAction("rel move")
         action_abs = addMotors.addAction("abs move")
         action_for = addLoops.addAction("for")
         action_while = addLoops.addAction("while < time")
-        action_while2 = addLoops.addAction("while < T degC")
-        action_addTimer = addOthers.addAction("add timer")
+        action_while2 = addLoops.addAction("while Temp ramp")
+        action_positionalSeries = addLoops.addAction("positionalSeries") 
         action_addSingleEuro = addOthers.addAction("single euro")
         action_addDualEuro = addOthers.addAction("dual euro")
         action_sleep = addOthers.addAction("sleep")
-        
+        action_wait = addOthers.addAction("wait for user")
+        action_group = addOthers.addAction("group")       
+
         action_StandardView =  viewOptions.addAction(self.expt.blockStyles[0].name)        
         action_BabyView =  viewOptions.addAction(self.expt.blockStyles[1].name)        
+        action_AboutView =  viewOptions.addAction('About')        
+
+        action_Support =  helpMe.addAction('Support')        
+        action_About =  helpMe.addAction('About')        
 
         action_New.triggered.connect(lambda: self.newBlockDocument())
         action_Save.triggered.connect(lambda: self.saveStuff())
         action_Import.triggered.connect(lambda: self.importStuff())
         action_Export.triggered.connect(lambda: self.exportStuff())
         action_Quit.triggered.connect(lambda: sys.exit(0))
-        action_ABS_Mode.triggered.connect(lambda: self.expt.addBlock(HighLevelBlocks.AbsModeBlock()))
-        action_XRD_Mode.triggered.connect(lambda: self.expt.addBlock(HighLevelBlocks.XrdModeBlock()))
-        action_Single_XRD.triggered.connect(lambda: self.expt.addBlock(HighLevelBlocks.OneShotBlock()))
-        action_INTER.triggered.connect(lambda: self.expt.addBlock(HighLevelBlocks.Interlaced_XRD_CT_Block()))
-        action_XRDCT.triggered.connect(lambda: self.expt.addBlock(HighLevelBlocks.Simple_XRD_CT_Block()))
-        action_rel.triggered.connect(lambda: self.expt.addBlock(HighLevelBlocks.RelMotorMoveBlock()))
-        action_abs.triggered.connect(lambda: self.expt.addBlock(HighLevelBlocks.AbsMotorMoveBlock()))
-        action_for.triggered.connect(lambda: self.expt.addBlock(MidLevelBlocks.SimpleForBlock()))
-        action_while.triggered.connect(lambda: self.expt.addBlock(HighLevelBlocks.WhileLessThanSomeTime()))
-        action_while2.triggered.connect(lambda: self.expt.addBlock(HighLevelBlocks.WhileLessThanSomeTemp()))
-        action_addSingleEuro.triggered.connect(lambda: self.expt.addBlock(HighLevelBlocks.SingleEurothermBlock()))        
-        action_addDualEuro.triggered.connect(lambda: self.expt.addBlock(HighLevelBlocks.DualEurothermBlock()))
-        action_sleep.triggered.connect(lambda: self.expt.addBlock(MidLevelBlocks.SleepBlock()))
+        
+        action_ABS_Mode.triggered.connect(lambda: self.expt.addBlock(ModeBlocks.AbsModeBlock()))
+        action_XRD_Mode.triggered.connect(lambda: self.expt.addBlock(ModeBlocks.XrdModeBlock()))
+        action_PDF_Mode.triggered.connect(lambda: self.expt.addBlock(ModeBlocks.PdfModeBlock()))
+		
+        action_Single_XRD.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.OneShotBlock()))
+        action_AEROYSCAN.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.AEROYSCAN_Block()))
+        action_ZSCAN.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.ZSCAN_Block()))
+        action_XRDMAP.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.XRDMAP_Block()))
+        action_INTER.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.Interlaced_XRD_CT_Block()))
+        action_XRDCT.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.XRDCT_Block()))
+        action_XRDCT3D.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.XRDCT3D_Block()))
+        action_FASTXRDCT.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.FASTXRDCT_Block()))
+        action_FASTXRDCT3D.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.FASTXRDCT3D_Block()))
+        action_ABSCT.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.ABSCT_Block()))
+        
+        action_rel.triggered.connect(lambda: self.expt.addBlock(MotorBlocks.RelMotorMoveBlock()))
+        action_abs.triggered.connect(lambda: self.expt.addBlock(MotorBlocks.AbsMotorMoveBlock()))
+        action_for.triggered.connect(lambda: self.expt.addBlock(LoopBlocks.SimpleForBlock()))
+        action_while.triggered.connect(lambda: self.expt.addBlock(LoopBlocks.WhileLessThanSomeTime()))
+        action_while2.triggered.connect(lambda: self.expt.addBlock(LoopBlocks.WhileTempRamp()))
+        action_positionalSeries.triggered.connect(lambda: self.expt.addBlock(LoopBlocks.PositionalSeriesBlock()))
+        action_addSingleEuro.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.SingleEurothermBlock()))        
+        action_addDualEuro.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.DualEurothermBlock()))
+        action_sleep.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.SleepBlock()))
+        action_wait.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.WaitForUserBlock()))
+        action_group.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.GenericGroupBlock()))
         action_StandardView.triggered.connect(lambda: self.expt.restyle(0))
         action_BabyView.triggered.connect(lambda: self.expt.restyle(1))
+        action_AboutView.triggered.connect(lambda: self.about())        
+##        action_Support.triggered.connect()        
+        action_About.triggered.connect(lambda: self.about())        
 
+        self.toolbar = self.addToolBar('hello')
+#        self.toolbar.addAction(action_Import)
+        self.toolbar.addAction(action_Export)
+        self.toolbar.addAction(action_Save)
+        self.toolbar.setIconSize(QSize(32,32))
+        
     def newBlockDocument(self):
         # this is really bad way I think better to call self.expt.clear() and
         # do the work there
@@ -232,18 +263,35 @@ class BlockMainWindow(QMainWindow):
         dlg = QFileDialog()
         fileName = dlg.getSaveFileName(self, 'Save File', 'id15_user_mac.mac', filter = '*.mac')
         print(fileName)
-        file = open(fileName[0],'w')
-        print(file)
-        self.writeCode()
-        text = self.editor.toPlainText()
-        file.write(text)
-        file.close()
-
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
+        if len(fileName)>0:
+            print(fileName)
+            file = open(fileName[0],'w')
+            print(file)
+            self.writeCode()
+            text = self.editor.toPlainText()
+            file.write(text)
+            file.close()
+    
+    def about(self):
+        a = sys.version_info
+        message = '<b>FindenBlox for ID15 v1.0612.2017</b><p>'
+        message += 'Python %d.%d.%d, PyQt %s, Qt %s on %s platform' % (a.major, a.minor, a.micro, PYQT_VERSION_STR, qVersion(), sys.platform)
+#        message += 
+        message += '<p><i>Created by <a href=www.finden.co.uk>Finden</a>. Running under license under XXX All rights reserved. December 2017'
+        message += '\t '
+        sImage = QPixmap(".//images//logoLetters.png")
+        d = QMessageBox()
+        d.setWindowTitle('About...')
+        d.setIconPixmap(sImage)
+        d.setText(message)
+        d.exec_()
+        
+if sys.platform == 'win32' or sys.platform == 'win64' :
     w = BlockMainWindow()
     w.show()
-    sys.exit(app.exec_())   
-
-#w = BlockMainWindow()
-#w.show()
+else:
+    if __name__ == '__main__':
+        app = QApplication(sys.argv)
+        w = BlockMainWindow()
+        w.show()
+        sys.exit(app.exec_())   

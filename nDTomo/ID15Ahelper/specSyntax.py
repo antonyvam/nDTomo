@@ -19,10 +19,20 @@ class Highlighter(QSyntaxHighlighter):
         keywordFormat.setForeground(Qt.red)
  #       keywordFormat.setFontWeight(QFont.Bold)
 
-        keywordPatterns = [ "\\bdef\\b", "\\blocal\\b", "\\bfor\\b", "\\bwhile\\b", "\\bsprintf\\b", "\\bumvr\\b", "\\bumv\\b" ]
+        keywordPatterns = [ "\\bdef\\b", "\\blocal\\b", "\\bfor\\b", "\\bwhile\\b",
+                           "\\bsprintf\\b"]
 
         self.highlightingRules = [(QRegExp(pattern), keywordFormat)
                 for pattern in keywordPatterns]
+
+        keywordPatterns2 = [ "\\bshopen\\b", "\\bshclose\\b",  
+                           "\\babsconf\\b", "\\bxrdconf\\b", "\\boneshot\\b", 
+                           "\\boneshot_norot\\b", "\\bumvr\\b", "\\bumv\\b" ]
+        keywordFormat2 = QTextCharFormat()
+        keywordFormat2.setForeground(Qt.darkRed)
+        
+        self.highlightingRules.extend([(QRegExp(pattern), keywordFormat2)
+                for pattern in keywordPatterns2])
 
         classFormat = QTextCharFormat()
         classFormat.setFontWeight(QFont.Bold)

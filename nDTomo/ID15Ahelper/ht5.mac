@@ -1,0 +1,86 @@
+
+# Block 0
+def id15_user_mac '{
+	# Block 1
+	umv hrz 0.000000
+	# Block 2
+	{
+		# Block 3
+		umv hrz 0.000000
+		# Block 4
+		fileName = "ht_bottom_xrdct"
+		cmd = sprintf("xrdct3d %s 5.000000 6.000000 0.040000 0.010000", fileName)
+		eval(cmd)
+
+		# Block 5
+		umv hrz -3.000000
+		# Block 6
+		fileName = "ht_middle_xrdct"
+		cmd = sprintf("xrdct3d %s 5.000000 6.000000 0.040000 0.010000", fileName)
+		eval(cmd)
+
+		# Block 7
+		umv hrz -5.500000
+		# Block 8
+		fileName = "ht_top_xrdct"
+		cmd = sprintf("xrdct3d %s 5.000000 6.000000 0.040000 0.010000", fileName)
+		eval(cmd)
+
+	}
+	# Block 9
+	fileName = "ht_top_xrdct"
+	cmd = sprintf("xrdct3d %s 5.000000 6.000000 0.040000 0.010000", fileName)
+	eval(cmd)
+
+	# Block 10
+	shclose
+	yesno("Waiting to proceed ...","1")
+	shopen
+
+	# Block 11
+	local qq 
+	qq = 0 
+	t0 = time() ; t = time() 
+	while ( (t-t0) < 1800 ) {
+		# Block 12
+		fileName = sprintf("red_map_%.4d", qq)
+		cmd = sprintf("xrdmap %s 6.000000 0.040000 0.050000 0.000000 -5.500000 0.500000", fileName)
+		eval(cmd)
+
+		# update while loop parameters
+		qq++ ; t = time()
+	}
+	# Block 13
+	fileName = "red_3Dxrdct"
+	cmd = sprintf("xrdct3d %s 5.000000 6.000000 0.040000 0.010000 -2.600000 -3.400000 0.080000", fileName)
+	eval(cmd)
+
+	# Block 14
+	fileName = "redAtEnd_map"
+	cmd = sprintf("xrdmap %s 6.000000 0.040000 0.050000 0.000000 -5.500000 0.500000", fileName)
+	eval(cmd)
+
+	# Block 15
+	{
+		# Block 16
+		umv hrz 0.000000
+		# Block 17
+		fileName = "redEnd_bottom_xrdct"
+		cmd = sprintf("xrdct3d %s 5.000000 6.000000 0.040000 0.010000", fileName)
+		eval(cmd)
+
+		# Block 18
+		umv hrz -5.500000
+		# Block 19
+		fileName = "redEnd_top_xrdct"
+		cmd = sprintf("xrdct3d %s 5.000000 6.000000 0.040000 0.010000", fileName)
+		eval(cmd)
+
+	}
+
+	# Block 19
+	shclose
+	yesno("Waiting to proceed ...","1")
+	shopen
+
+}'

@@ -1,0 +1,49 @@
+# Block 0
+def id15_user_mac '{
+	# Block 1
+	{
+	}
+	# Block 2
+	local qq 
+	qq = 0 
+	t0 = time() ; t = time() 
+	while ( (t-t0) < 480 ) {
+		# Block 3
+		fileName = sprintf("Poxv2_run2_map_%.4d", qq)
+		cmd = sprintf("xrdmap %s 6.000000 0.040000 0.050000 1.5 -5 0.500000", fileName)
+		eval(cmd)
+
+		# update while loop parameters
+		qq++ ; t = time()
+	}
+	# Block 4
+	fileName = "Poxv2_run2_3Dxrdct"
+	cmd = sprintf("xrdct3d %s 5.000000 6.000000 0.040000 0.010000 -1.6 -2.4 0.080000", fileName)
+	eval(cmd)
+
+	# Block 10
+	fileName = "Poxv2_run2_AtEnd_map"
+	cmd = sprintf("xrdmap %s 6.000000 0.040000 0.050000 1.5 -5 0.500000", fileName)
+	eval(cmd)
+
+	# Block 5
+	{
+		# Block 6
+		umv hrz 1.5
+		# Block 7
+		fileName = "Poxv2_run2_bottom_xrdct"
+		cmd = sprintf("xrdct3d %s 5.000000 6.000000 0.040000 0.010000", fileName)
+		eval(cmd)
+
+		# Block 8
+		umv hrz -5
+		# Block 9
+		fileName = "Poxv2_run2_top_xrdct"
+		cmd = sprintf("xrdct3d %s 5.000000 6.000000 0.040000 0.010000", fileName)
+		eval(cmd)
+
+	}
+
+	
+
+}'

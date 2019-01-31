@@ -4,33 +4,28 @@ Created on Wed Aug  2 13:36:33 2017
 
 @author: simon
 """
-
+from sys import platform
 
 from PyQt5.QtCore import Qt, pyqtSignal
-from PyQt5.QtWidgets import QWidget, QAction, QMenu#, QScrollArea, QVBoxLayout
-from PyQt5.QtGui import QPainter, QBrush, QImage#, QSizePolicy
+from PyQt5.QtWidgets import QWidget, QAction, QMenu
+from PyQt5.QtGui import QPainter, QBrush, QImage
 import numpy as np
 import json
+import ast
 
 from BlockStyles import BlockStyleStandard, BlockStyleBaby
-from baseBlocks import NodeAddress, Block, BlockGroup
-import HighLevelBlocks
-import MidLevelBlocks
+from baseBlocks import BlockGroup #, NodeAddress, Block,
+import baseBlocks
 
-import ast
-       
+# need this import statement otherwise treeDictRead will not work properly
+import ModeBlocks, ScanBlocks, MotorBlocks, LoopBlocks, OtherBlocks
+  
 class BlockDocument(QWidget): 
     overObjectSignal = pyqtSignal() # object cannot be inside constructor 
+    trigger = pyqtSignal()
     def __init__(self):
         QWidget.__init__(self) #####
 #####        super(BlockDocument, self).__init__()
-
-#        layout = QVBoxLayout()
-#        self.setLayout(layout)
-#        self.setFixedWidth(300)
-#        self.setFixedHeight(300)
-#        ss = QSizePolicy()#
-#        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.setMinimumWidth(1400)
         self.setMinimumHeight(1000)
@@ -67,7 +62,7 @@ class BlockDocument(QWidget):
 
     def initUI(self):      
         self.setAutoFillBackground(True)
-        sImage = QImage(".//backgroundImage.png")
+        sImage = QImage(".//images//backgroundImage.png")
         palette = self.palette()
         palette.setBrush(10, QBrush(sImage)) 
         self.setPalette(palette)
@@ -179,6 +174,7 @@ class BlockDocument(QWidget):
  #       if self.visibleBlocks.size > 0 :
  #           pass
         self.update()
+        self.trigger.emit()
         
     def updateBlocks(self):
         self.blockTree.setIndent()
@@ -376,7 +372,7 @@ class BlockDocument(QWidget):
                 print(message) 
                 # if there are no blocks treat this as loading from scratch and ignore the godBlock
                 if self.blockTree.blocks.size == 0 and i == 0 and d[j]['name'] == 'godBlock' :
-#                    print('ham')
+                    #print('ham')
                     continue
                  # if there are some blocks just create a new group but dont make this a godblock
                 elif self.blockTree.blocks.size > 0 and i == 0 and d[j]['name'] == 'godBlock' :
@@ -390,7 +386,17 @@ class BlockDocument(QWidget):
                     self.addBlock(block)
                     continue
                 # for any other block type
-                else :                  
+                else : 
+#                    print(d[j]['moduleName'])
+#                    print(d[j]['className'])
+#                    if d[j]['className'] == 'BlockGroup':
+#                        block = BlockGroup
+#                        block.name = 'group'
+#                        block.expanded = True
+#                        block.visible = True
+#                        print('cheese')
+#                        self.addBlock(block)
+#                        continue
                     block = eval(d[j]['moduleName'] + '.' + d[j]['className'] + '()')
                     block.parameters.restoreState(p[j])
 ##                    self.activeGroup = self.groups[-1]
@@ -414,7 +420,10 @@ class BlockDocument(QWidget):
     def dropEvent(self, event) :
         s = event.mimeData().text()
         if 'file:' in s and '.blox' in s :
-            s = s.replace('file:///', '')
+            if platform == 'win32' or platform == 'win64' :
+                s = s.replace('file:///', '')
+            else : # linux
+                s = s.replace('file://', '')
             self.importBlocks(s)
         #self.addItem(e.mimeData().text())
         

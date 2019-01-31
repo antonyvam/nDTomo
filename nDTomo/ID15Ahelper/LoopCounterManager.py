@@ -12,7 +12,7 @@ class LoopCounterManager():
         self.reset()
         
     def reset(self):
-        self.allCountersList = ['ii' , 'jj', 'kk', 'mm']#, 'nn', 'pp', 'qq', 'rr', 'iii', 'jjj', 'kkk', 'mmm', 'nnn']
+        self.allCountersList = ['ii' , 'jj', 'kk', 'mm', 'nn', 'pp', 'qq', 'rr']#, 'iii', 'jjj', 'kkk', 'mmm', 'nnn']
         self.allCounters = {k: v for v, k in enumerate(self.allCountersList)}
         self.invertedCounterDict = self.inverseMapping(self.allCounters)
         self.availableCounters = self.allCounters 

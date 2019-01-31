@@ -6,8 +6,8 @@ Created on Thu Nov 16 20:41:06 2017
 """
 
 import numpy as np
-from PyQt5.QtCore import QObject, QRect, Qt
-from PyQt5.QtGui import QColor, QFont
+from PyQt5.QtCore import QObject, QRect, Qt, QSize, QPoint
+from PyQt5.QtGui import QColor, QFont, QImage, QPixmap
 from pyqtgraph.parametertree import Parameter
 
 #from PyQt5.QtGui import QPen
@@ -20,7 +20,7 @@ class Node():
         self.highlightColor = QColor(255, 255, 0)
         self.x = 0
         self.y = 0
-        self.nodeSize = 10
+        self.nodeSize = 6
         self.boundingBox = QRect(self.x, self.y, self.nodeSize, self.nodeSize)
 
     def drawNode(self, qp, parent):
@@ -71,12 +71,12 @@ class Block():
         self.parentBlock = 0
         self.visible = True
         self.name = ''
-        self.regularColor = QColor(50, 150, 50)
+        self.regularColor = QColor(200, 200, 200)
         self.color = self.regularColor
         self.highlightColor = QColor(255, 0, 255)
         self.regularAlpha = .8
         self.alpha = self.regularAlpha
-        self.fontColor = QColor(255,255,255)
+        self.fontColor = QColor(10,10,10)
         self.fontSize = 12
         self.x = 100 # perhaps duff now
         self.y = 50
@@ -89,11 +89,14 @@ class Block():
         self.indentN = 0  
         self.parameters = Parameter.create(name=self.name, type='group', children=[])
         self.methodText = 'pass'
+        self.sideText = ''
+        self.time = 0
         self.selected = False
         # these properties recently added
         self.parentId = 0
         self.id = 0
         self.childrenId = []
+        self.image = QImage('.//images//null.png')
 
 #    def clone(self):
 #        newBlock = type(self.__class__.__name__, (self.__class__.__base__,), self.__dict__)
@@ -130,10 +133,19 @@ class Block():
         del blockDictCopy['fontColor']
         del blockDictCopy['highlightColor']
         del blockDictCopy['regularColor']
+        del blockDictCopy['image']
         if 'easternBlock' in blockDictCopy.keys():
             del blockDictCopy['easternBlock']
 #        serialList = [blockDictCopy, blockParametersCopy]
         return [blockDictCopy, blockParametersCopy]
+    
+    def getParentLoopCounters(self, loopCounters):    
+        if self.parentBlock == 0:
+            return loopCounters
+        if not(self.parentBlock.loopCounter == ''):
+            loopCounters.append(self.parentBlock.loopCounter)
+        loopCounters = self.parentBlock.getParentLoopCounters(loopCounters)
+        return loopCounters
 
     def initiateParameters(self):
         pass
@@ -175,8 +187,16 @@ class Block():
         for i in range(0, self.nodes.size):
             self.nodes[i].drawNode(qp, self)
         qp.setPen(self.fontColor)
-        qp.setFont(QFont("Segoe UI", self.fontSize, italic=True))
+        qp.setFont(QFont("Segoe UI", self.fontSize, italic=False))
         qp.drawText(self.boundingBox, Qt.AlignCenter, self.name)
+### moved from postDrawActions in scanblock
+        rect = QRect(self.boundingBox.topRight()+QPoint(10,0),QSize(500,100))
+        qp.setFont(QFont("Segoe UI", self.fontSize, italic=False))
+        qp.setPen(QColor(0,0,0))
+        qp.drawText(rect, Qt.AlignLeft, self.sideText)       
+###
+        rect2 = QRect(self.boundingBox.topLeft()-QPoint(self.height+10,0),QSize(self.height,self.height))
+        qp.drawImage(rect2, self.image)
         self.postDrawActions(qp)
         
     def overObject(self, x, y):
@@ -213,11 +233,24 @@ class Block():
                 kwargs['type'] = 'float'
             else:
                 kwargs['type'] = 'str'
-        return dict(name=name, value=value, values=values, **kwargs) 
+        return dict(name=name, value=value, values=values, **kwargs)
+    
+    def humanTime(self):
+        self
+        m, s = divmod(self.time, 60)
+        h, m = divmod(m, 60)
+        if h > 0 :
+            strTime = "%d hr %d min %d sec" % (h,m,s)
+        if h == 0 and m > 0:
+            strTime = "%d min %d sec" % (m,s)
+        if h == 0 and m == 0:
+            strTime = "%d sec" % (s)
+        return strTime
         
 class EasternBlock(Block):
     def __init__(self):
-        super(EasternBlock, self).__init__()
+        Block.__init__(self) #####
+####        super(EasternBlock, self).__init__()
 #        super().__init__()
         self.addNode('W') 
         self.regularColor = QColor(240, 240, 240)
@@ -242,17 +275,7 @@ class BlockGroup(Block):
         self.openingText = ''
         self.methodText = '{'
         self.closingText = '\n}'
-#    def clone(self):
-#        newBlock = type(self.__class__.__name__,  (self.__class__.__base__,), self.__dict__)
-#        newBlock.parameters = Parameter.create(name=self.parameters.name(), type='group', children = self.parameters.children())
-#        newBlock.blocks = np.empty(0,dtype=object)
-#        for i in range(0, self.blocks.size):
-#            print('_____________________________')
-#            print(i)
-#            cloneOfChildBlock = self.blocks[i].clone()
-#            cloneOfChildBlock.setParentBlock(newBlock)
-#            newBlock.blocks = np.append(newBlock.blocks, cloneOfChildBlock)
-#        return newBlock
+        self.loopCounter = ''
 
     def getCode(self, i, j): # i is the block level and j is the block number
         self.setMethodText()
@@ -270,7 +293,6 @@ class BlockGroup(Block):
         return s, i
 
     def copy(self):
- #       print('coying ..' + self.__class__.__name__)
         copyInstance = self.__class__()
         copyInstance.__dict__= self.__dict__.copy()
         copyInstance.parameters = Parameter.create(name=self.parameters.name(), type='group', children =[])#children = self.parameters.children()
@@ -296,18 +318,13 @@ class BlockGroup(Block):
         del blockDictCopy['fontColor']
         del blockDictCopy['highlightColor']
         del blockDictCopy['regularColor']
-#        serialList = [ blockDictCopy, blockParametersCopy]
-#        serialList.append(blockDictCopy)
-#        serialList.append(blockParametersCopy)
+        del blockDictCopy['image']
         blockDictList = []
         blockParametersList = []
         for i in range(0, self.blocks.size):
-#            serialList.append(self.blocks[i].serialise())
-#        serialList = [serialList]
             blockChilsDictCopy, blockChildParametersCopy = self.blocks[i].serialise()
             blockDictList.append(blockChilsDictCopy)
-            blockParametersList.append(blockChildParametersCopy)
-            
+            blockParametersList.append(blockChildParametersCopy)          
         blockDictList = [blockDictCopy, blockDictList]
         blockParametersList = [blockParametersCopy, blockParametersList]
         return blockDictList, blockParametersList   
@@ -336,8 +353,14 @@ class BlockGroup(Block):
         for i in range(0, self.nodes.size):
             self.nodes[i].drawNode(qp, self)
         qp.setPen(self.fontColor)
-        qp.setFont(QFont("Arial", self.fontSize, italic=True))
+        qp.setFont(QFont("Arial", self.fontSize, italic=False))
         qp.drawText(self.boundingBox, Qt.AlignCenter, self.name)
+        rect = QRect(self.boundingBox.topRight()+QPoint(10,0),QSize(500,100))
+        qp.setFont(QFont("Segoe UI", self.fontSize, italic=False))
+        qp.setPen(QColor(0,0,0))
+        qp.drawText(rect, Qt.AlignLeft, self.sideText)
+        rect2 = QRect(self.boundingBox.topLeft()-QPoint(self.height+10,0),QSize(self.height,self.height))
+        qp.drawImage(rect2, self.image)
         self.postDrawActions(qp)
         
     def setIndent(self):
@@ -419,7 +442,7 @@ class BlockGroup(Block):
         self.y += y
         for i in range(0, self.blocks.size):
             self.blocks[i].relY(y)
-            
+        
     def printBlock(self):
         for i in range(0, self.blocks.size):
             print(self.blocks[i].visible, '\t', self.blocks[i].Type,'\t',self.blocks[i].name,'\t', self.blocks[i].parentBlock.name)
@@ -427,16 +450,4 @@ class BlockGroup(Block):
                 self.blocks[i].printBlock()
     
 
-        
-        '''
-        clone = BlockGroup()
-        clone.Type = 'Group'
-        clone.expanded = self.expanded 
-        clone.expanded = self.visible 
-        for i in range(0, self.blocks.size):
-           pass
-           # clone.blocks[i] = self.blocks[i].clone()
-        clone.blocks = self.blocks 
-        '''
- 
 

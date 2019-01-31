@@ -5,7 +5,7 @@ Created on Tue Dec  5 21:37:56 2017
 @author: simon
 """
 from baseBlocks import Block
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QImage
 import settings
 
 ##############################################################################             
@@ -24,6 +24,7 @@ class RelMotorMoveBlock(Block):
         self.name = ''
         self.value = value
         self.initiateParameters(0, value)
+        self.image = QImage('.//images//cog2.png')
         
     def setMethodText(self):
         motor = settings.userMotorList[self.parameters['motor']]
@@ -55,6 +56,7 @@ class AbsMotorMoveBlock(Block):
         self.name = ''
         self.value = value
         self.initiateParameters(0, value)       
+        self.image = QImage('.//images//cog3.png')
         
     def setMethodText(self):
         motor = settings.userMotorList[self.parameters['motor']]

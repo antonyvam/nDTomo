@@ -81,4 +81,14 @@ class XrdModeBlock(SimpleFunctionCallBlock):
         self.initValue = self.name
         self.initiateParameters()  
 
+##############################################################################        
+class PdfModeBlock(SimpleFunctionCallBlock):
+    def __init__(self):
+        SimpleFunctionCallBlock.__init__(self) #####
+#####        super(XrdModeBlock, self).__init__()
+#        super().__init__()
+        self.name = 'pdfconf'
+        self.initValue = self.name
+        self.initiateParameters()  
+		
 ##############################################################################
