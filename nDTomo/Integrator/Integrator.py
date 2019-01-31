@@ -406,7 +406,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 
         self.pbuttonrec = QtWidgets.QPushButton("Reconstruct",self)
-        self.pbuttonrec.clicked.connect(self.fbprec_vol)
+#        self.pbuttonrec.clicked.connect(self.fbprec_vol)
         self.pbuttonrec.setEnabled(False)
 #        self.pbuttonrec.setMaximumWidth(150)
         self.l.addWidget(self.pbuttonrec,14,4)
