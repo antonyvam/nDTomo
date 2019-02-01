@@ -191,7 +191,7 @@ class BlockMainWindow(QMainWindow):
         action_BabyView =  viewOptions.addAction(self.expt.blockStyles[1].name)        
         action_AboutView =  viewOptions.addAction('About')        
 
-        action_Support =  helpMe.addAction('Support')        
+#        action_Support =  helpMe.addAction('Support')        
         action_About =  helpMe.addAction('About')        
 
         action_New.triggered.connect(lambda: self.newBlockDocument())
@@ -274,14 +274,14 @@ class BlockMainWindow(QMainWindow):
     
     def about(self):
         a = sys.version_info
-        message = '<b>FindenBlox for ID15 v1.0612.2017</b><p>'
+        message = '<b>ID15A helper v0.1.0 url:</b><p>'
         message += 'Python %d.%d.%d, PyQt %s, Qt %s on %s platform' % (a.major, a.minor, a.micro, PYQT_VERSION_STR, qVersion(), sys.platform)
 #        message += 
-        message += '<p><i>Created by <a href=www.finden.co.uk>Finden</a>. Running under license under XXX All rights reserved. December 2017'
+        message += '<p><i>Created by <a href=www.finden.co.uk>Finden</a>. Running under license under GPLv3'
         message += '\t '
         sImage = QPixmap(".//images//logoLetters.png")
         d = QMessageBox()
-        d.setWindowTitle('About...')
+        d.setWindowTitle('About')
         d.setIconPixmap(sImage)
         d.setText(message)
         d.exec_()
