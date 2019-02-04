@@ -1,0 +1,183 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>nDTomo software suite &#8212; nDTomo 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Installation of nDTomo software" href="req.html" />
+    <link rel="prev" title="nDTomo’s documentation" href="index.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="ndtomo-software-suite">
+<h1>nDTomo software suite<a class="headerlink" href="#ndtomo-software-suite" title="Permalink to this headline">¶</a></h1>
+<p>The nDTomo software suite contains GUIs for the acquisition, pre-processing and analysis of X-ray chemical tomography data</p>
+<div class="section" id="id15a-helper">
+<h2>ID15A helper<a class="headerlink" href="#id15a-helper" title="Permalink to this headline">¶</a></h2>
+<p>A GUI to help generate .mac scripts for the ID15A beamline. These are macros that can be used during an experiment.
+The GUI helps the user design an experiment while the acquisition macros (e.g. macros for collection of X-ray tomographic data) are developed by the beamline.</p>
+</div>
+<div class="section" id="integrator">
+<h2>Integrator<a class="headerlink" href="#integrator" title="Permalink to this headline">¶</a></h2>
+<p>The Integrator GUI is designed to assist the user to integrate X-ray and Pair distribution function computed tomography data (XRD-CT and PDF-CT).
+It can batch integrate diffraction/scattering tomographic data collected with different strategies [1,2]:</p>
+<ul class="simple">
+<li>Zigzag</li>
+<li>Interlaced</li>
+<li>Continuous rotation/translation</li>
+</ul>
+<p>The data integration is done with pyFAI and it can be performed with different processing units [3, 4]:</p>
+<ul class="simple">
+<li>CPU</li>
+<li>GPU</li>
+<li>ID15A data integration dedicated PC</li>
+</ul>
+<p>The integration of the diffraction data can be performed in several ways [5]:</p>
+<ul class="simple">
+<li>Standard azimuthal integration</li>
+<li>Using a trimmed mean filter: the user specifies the % for trimming</li>
+<li>Using a new standard deviation based adaptive filter: the user specifies the number of standard deviations to be used</li>
+</ul>
+</div>
+<div class="section" id="multitool">
+<h2>MultiTool<a class="headerlink" href="#multitool" title="Permalink to this headline">¶</a></h2>
+<p>The MultiTool GUI allows for the processing and analysis of chemical tomography data. For example:</p>
+<ol class="arabic">
+<li><p class="first">It allows for the visualization of 3d matrices. These are typically grid maps (e.g. XRD XZ maps) or cross-sections (e.g. XRD/PDF/SAXS/XAFS/XRF-CT data)</p>
+</li>
+<li><p class="first">It has the ability to:</p>
+<blockquote>
+<div><ul class="simple">
+<li>Centre sinogram volumes (raw chemical tomography data),</li>
+<li>Remove backround signal,</li>
+<li>Normalise sinogram assuming constant total scattering intensity per projection (diffaction/scattering tomography data)</li>
+<li>Reconstruct a diffaction/scattering tomography dataset</li>
+<li>Reconstruct multiple diffaction/scattering tomography datasets simultaneously (batch reconstruction)</li>
+</ul>
+</div></blockquote>
+</li>
+<li><p class="first">It can load, normalise (flat/dark images) and reconstruction of X-ray absorption computed tomography data (abs-CT)</p>
+</li>
+<li><p class="first">It can perform a zero-order absorption correction on diffaction/scattering tomography data using an abs-CT image</p>
+</li>
+<li><p class="first">It allows for batch single peak fitting of chemical tomography data</p>
+</li>
+</ol>
+<div class="section" id="references">
+<h3>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li>Vamvakeros, A. et al. Interlaced X-ray diffraction computed tomography. Journal of Applied Crystallography 49, 485-496, doi:10.1107/S160057671600131X (2016).</li>
+<li>Vamvakeros, A. et al. 5D operando tomographic diffraction imaging of a catalyst bed. Nature Communications 9, 4751, doi:10.1038/s41467-018-07046-8 (2018).</li>
+<li>Ashiotis, G. et al. The fast azimuthal integration Python library: pyFAI. Journal of Applied Crystallography 48, 510-519, doi:10.1107/S1600576715004306 (2015).</li>
+<li>Kieffer, J. et al. Real-time diffraction computed tomography data reduction. Journal of Applied Crystallography 25, 612-617, doi:10.1107/S1600577518000607 (2018).</li>
+<li>Vamvakeros, A. et al. Removing multiple outliers and single-crystal artefacts from X-ray diffraction computed tomography data. Journal of Applied Crystallography 48, 1943-1955, doi:10.1107/s1600576715020701 (2015).</li>
+</ol>
+</div>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">nDTomo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">nDTomo software suite</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id15a-helper">ID15A helper</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#integrator">Integrator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#multitool">MultiTool</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="req.html">Installation of nDTomo software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">nDTomo API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refs.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sites.html">Websites</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">nDTomo’s documentation</a></li>
+      <li>Next: <a href="req.html" title="next chapter">Installation of nDTomo software</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, A. Vamvakeros.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/intro.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

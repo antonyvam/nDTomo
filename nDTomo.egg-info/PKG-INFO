@@ -1,0 +1,16 @@
+Metadata-Version: 2.1
+Name: nDTomo
+Version: 0.1.0
+Summary: nDTomo software suite
+Home-page: http://github.com/antonyvam/nDTomo
+Author: A. Vamvakeros
+Author-email: antony@finden.co.uk
+License: LICENSE.txt
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering
+Classifier: Topic :: Scientific/Engineering :: Chemistry
+Classifier: Topic :: Scientific/Engineering :: Visualization
+Provides-Extra: PDF
+Provides-Extra: Iterative algorithms
