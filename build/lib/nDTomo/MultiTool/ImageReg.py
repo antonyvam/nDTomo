@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
+
 Image registration class for the MultiTool
 
-@author: Antony
+@author: A. Vamvakeros
+
 """
 
 from PyQt5.QtCore import pyqtSignal, QThread
@@ -10,8 +12,17 @@ from skimage.transform import iradon, radon
 from numpy import concatenate, log, flipud, zeros, sqrt, sum, arange, min, max, floor, where, mean, array, exp, inf, ceil, interp, std, argmin, transpose, tile, swapaxes, round
 
 class AlignImages(QThread):
+    
     '''
+    
     The AlignImages class allows for aligning two images. The image registration is performed by translation and rotation.
+    
+    :theta: tomographic angles
+            
+    :iman: absorption-contrast CT image
+        
+    :bpx: chemical-contrast CT image
+    
     '''
     
     aligndone = pyqtSignal()
@@ -25,6 +36,12 @@ class AlignImages(QThread):
         
     def run(self):
                    
+        """
+        
+        Initialise the image aligning process
+        
+        """  
+        
         #Rotate the micro-CT image
         
         dia = []; ang = []

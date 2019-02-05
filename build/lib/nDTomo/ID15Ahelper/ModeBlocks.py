@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec  5 21:15:33 2017
 
-@author: simon
+Mode blocks
+
+@author: S.D.M. Jacques
+
 """
 
 from baseBlocks import Block
@@ -31,6 +33,13 @@ class SimpleFunctionCallBlock(Block):
         
 ##############################################################################
 class XRD_demo_Block(Block):
+    
+    """
+    
+    XRD demo block
+    
+    """
+    
     def __init__(self): #####
         Block.__init__(self)
 #####        super(XRD_Mode_Block, self).__init__()
@@ -63,6 +72,13 @@ class XRD_demo_Block(Block):
                 
 ##############################################################################
 class AbsModeBlock(SimpleFunctionCallBlock):
+    
+    """
+    
+    Absorption configuration mode block
+    
+    """
+    
     def __init__(self):
         SimpleFunctionCallBlock.__init__(self) #####
 #####       super(AbsModeBlock, self).__init__()
@@ -73,6 +89,13 @@ class AbsModeBlock(SimpleFunctionCallBlock):
         
 ##############################################################################        
 class XrdModeBlock(SimpleFunctionCallBlock):
+    
+    """
+    
+    XRD configuration mode block
+    
+    """
+    
     def __init__(self):
         SimpleFunctionCallBlock.__init__(self) #####
 #####        super(XrdModeBlock, self).__init__()
@@ -83,6 +106,13 @@ class XrdModeBlock(SimpleFunctionCallBlock):
 
 ##############################################################################        
 class PdfModeBlock(SimpleFunctionCallBlock):
+    
+    """
+    
+    PDF configuration mode block
+    
+    """
+    
     def __init__(self):
         SimpleFunctionCallBlock.__init__(self) #####
 #####        super(XrdModeBlock, self).__init__()

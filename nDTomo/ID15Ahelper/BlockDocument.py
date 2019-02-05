@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Aug  2 13:36:33 2017
 
-@author: simon
+Block document
+
+@author: S.D.M. Jacques
+
 """
 from sys import platform
 

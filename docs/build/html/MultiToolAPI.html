@@ -1,0 +1,474 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>MultiTool GUI API reference &#8212; nDTomo 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="References" href="refs.html" />
+    <link rel="prev" title="Integrator GUI API reference" href="IntegratorAPI.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="multitool-gui-api-reference">
+<h1>MultiTool GUI API reference<a class="headerlink" href="#multitool-gui-api-reference" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-nDTomo.MultiTool.AbsTomoRec">
+<span id="the-abstomorec-module"></span><h2>The “AbsTomoRec” module<a class="headerlink" href="#module-nDTomo.MultiTool.AbsTomoRec" title="Permalink to this headline">¶</a></h2>
+<p>Absorption-contrast tomography data reconstruction class for the MultiTool</p>
+<p>&#64;author: A. Vamvakeros</p>
+<dl class="class">
+<dt id="nDTomo.MultiTool.AbsTomoRec.ReconABSCT">
+<em class="property">class </em><code class="descclassname">nDTomo.MultiTool.AbsTomoRec.</code><code class="descname">ReconABSCT</code><span class="sig-paren">(</span><em>sinos</em>, <em>sc</em>, <em>savepathabs</em>, <em>dataset</em>, <em>absscantype</em>, <em>offset</em><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.AbsTomoRec.ReconABSCT" title="Permalink to this definition">¶</a></dt>
+<dd><p>The absorption-contrast tomography data can be reconstructed with either the skimage or silx.
+In both cases, the filterec back projection algorithm is emploed to reconstruct the images.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Sinos:</th><td class="field-body">sinogram data volume</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Sc:</th><td class="field-body">scale factor used to resize the sinograms (max value of 1)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Savepathabs:</th><td class="field-body">directory to save the reconstructed absorption-contrast CT data</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Dataset:</th><td class="field-body">dataset name</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Absscantype:</th><td class="field-body">type of scan, options are: ‘180’ or ‘360’</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Offset:</th><td class="field-body">maximum number of pixels to use for the sinogram centering process</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="nDTomo.MultiTool.AbsTomoRec.ReconABSCT.airrem">
+<code class="descname">airrem</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.AbsTomoRec.ReconABSCT.airrem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for subtracting the backgroung signal from the sinograms</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.AbsTomoRec.ReconABSCT.rec_silx">
+<code class="descname">rec_silx</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.AbsTomoRec.ReconABSCT.rec_silx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstruct the images using the filtered back projection algorithm from the silx package using GPU</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.AbsTomoRec.ReconABSCT.rec_skimage">
+<code class="descname">rec_skimage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.AbsTomoRec.ReconABSCT.rec_skimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstruct the images using the filtered back projection algorithm from the skimage package</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.AbsTomoRec.ReconABSCT.remring">
+<code class="descname">remring</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.AbsTomoRec.ReconABSCT.remring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove recontruction ring</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.AbsTomoRec.ReconABSCT.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.AbsTomoRec.ReconABSCT.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialise the data reconstruction process</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.AbsTomoRec.ReconABSCT.savedata">
+<code class="descname">savedata</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.AbsTomoRec.ReconABSCT.savedata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Save the reconstructed 3D data in a single .hdf5 file</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.AbsTomoRec.ReconABSCT.sinocentering">
+<code class="descname">sinocentering</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.AbsTomoRec.ReconABSCT.sinocentering" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for centering sinograms by flipping the projection at 180 deg and comparing it with the one at 0 deg</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nDTomo.MultiTool.ChemTomoRec">
+<span id="the-chemtomorec-module"></span><h2>The “ChemTomoRec” module<a class="headerlink" href="#module-nDTomo.MultiTool.ChemTomoRec" title="Permalink to this headline">¶</a></h2>
+<p>Chemical tomography data reconstruction class for the MultiTool</p>
+<p>&#64;author: A. Vamvakeros</p>
+<dl class="class">
+<dt id="nDTomo.MultiTool.ChemTomoRec.BatchProcessing">
+<em class="property">class </em><code class="descclassname">nDTomo.MultiTool.ChemTomoRec.</code><code class="descname">BatchProcessing</code><span class="sig-paren">(</span><em>sinos</em>, <em>sinonorm</em>, <em>ofs</em>, <em>crsr</em>, <em>scantype</em>, <em>output</em>, <em>tth</em>, <em>q</em>, <em>d</em><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.BatchProcessing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for batch reconstruction of multiple chemical tomography data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Sinos_proc:</th><td class="field-body">sinogram data volume</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Sinonorm:</th><td class="field-body">normalisation of the sinogram data volume, options are 0 or 1.</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Ofs:</th><td class="field-body">number of voxels (from each side of the sinograms) to be used for background subtraction</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Crsr:</th><td class="field-body">maximum number of voxels to use for the sinogram centering process</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Scantype:</th><td class="field-body">type of scan, options are: ‘Zigzag’, ‘ContRot’ and ‘Interlaced’</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Output:</th><td class="field-body">output file containing the results</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Tth:</th><td class="field-body">2theta (1d array)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">D:</th><td class="field-body">d spacing (1d array)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Q:</th><td class="field-body">q spacing (1d array)</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoRec.BatchProcessing.airrem">
+<code class="descname">airrem</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.BatchProcessing.airrem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for subtracting the backgroung signal from the sinograms</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoRec.BatchProcessing.rec_silx">
+<code class="descname">rec_silx</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.BatchProcessing.rec_silx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstruct the images using the filtered back projection algorithm from the silx package using GPU</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoRec.BatchProcessing.remring">
+<code class="descname">remring</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.BatchProcessing.remring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove recontruction ring</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoRec.BatchProcessing.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.BatchProcessing.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialise the batch data reconstruction process</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoRec.BatchProcessing.scalesinos">
+<code class="descname">scalesinos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.BatchProcessing.scalesinos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for normalising the sinograms. It assumes that the total scattering intensity per projection is constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoRec.BatchProcessing.sinocentering">
+<code class="descname">sinocentering</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.BatchProcessing.sinocentering" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for centering sinograms by flipping the projection at 180 deg and comparing it with the one at 0 deg</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="nDTomo.MultiTool.ChemTomoRec.ReconstructData">
+<em class="property">class </em><code class="descclassname">nDTomo.MultiTool.ChemTomoRec.</code><code class="descname">ReconstructData</code><span class="sig-paren">(</span><em>sinos</em><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.ReconstructData" title="Permalink to this definition">¶</a></dt>
+<dd><p>The chemical tomography data can be reconstructed with either the skimage or silx.
+In both cases, the filterec back projection algorithm is emploed to reconstruct the images.</p>
+<blockquote>
+<div><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">sinos:</th><td class="field-body">sinogram data volume</td>
+</tr>
+</tbody>
+</table>
+</div></blockquote>
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoRec.ReconstructData.rec_silx">
+<code class="descname">rec_silx</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.ReconstructData.rec_silx" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstruct the images using the filtered back projection algorithm from the silx package using GPU</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoRec.ReconstructData.rec_skimage">
+<code class="descname">rec_skimage</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.ReconstructData.rec_skimage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Reconstruct the images using the filtered back projection algorithm from the skimage package</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoRec.ReconstructData.remring">
+<code class="descname">remring</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.ReconstructData.remring" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove recontruction ring</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoRec.ReconstructData.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoRec.ReconstructData.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialise the data reconstruction process</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nDTomo.MultiTool.ChemTomoSinograms">
+<span id="the-chemtomosinograms-module"></span><h2>The “ChemTomoSinograms” module<a class="headerlink" href="#module-nDTomo.MultiTool.ChemTomoSinograms" title="Permalink to this headline">¶</a></h2>
+<p>Chemical tomography sinogram data class for the MultiTool</p>
+<p>&#64;author: A. Vamvakeros</p>
+<dl class="class">
+<dt id="nDTomo.MultiTool.ChemTomoSinograms.SinoProcessing">
+<em class="property">class </em><code class="descclassname">nDTomo.MultiTool.ChemTomoSinograms.</code><code class="descname">SinoProcessing</code><span class="sig-paren">(</span><em>sinos</em>, <em>sinonorm</em>, <em>ofs</em>, <em>crsr</em>, <em>scantype</em><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoSinograms.SinoProcessing" title="Permalink to this definition">¶</a></dt>
+<dd><p>The SinoProcessing class allows for:</p>
+<blockquote>
+<div><ol class="loweralpha simple">
+<li>Centering of the sinogram(s)</li>
+<li>Subtraction of background signal</li>
+<li>Normalisation of sinograms assuming constant summed intensity per projection</li>
+</ol>
+</div></blockquote>
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoSinograms.SinoProcessing.airrem">
+<code class="descname">airrem</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoSinograms.SinoProcessing.airrem" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for subtracting the backgroung signal from the sinograms</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoSinograms.SinoProcessing.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoSinograms.SinoProcessing.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialise the sinogram data processing</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoSinograms.SinoProcessing.scalesinos">
+<code class="descname">scalesinos</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoSinograms.SinoProcessing.scalesinos" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for normalising the sinograms. It assumes that the total scattering intensity per projection is constant.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.ChemTomoSinograms.SinoProcessing.sinocentering">
+<code class="descname">sinocentering</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ChemTomoSinograms.SinoProcessing.sinocentering" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for centering sinograms by flipping the projection at 180 deg and comparing it with the one at 0 deg</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nDTomo.MultiTool.ImageReg">
+<span id="the-imagereg-module"></span><h2>The “ImageReg” module<a class="headerlink" href="#module-nDTomo.MultiTool.ImageReg" title="Permalink to this headline">¶</a></h2>
+<p>Image registration class for the MultiTool</p>
+<p>&#64;author: A. Vamvakeros</p>
+<dl class="class">
+<dt id="nDTomo.MultiTool.ImageReg.AlignImages">
+<em class="property">class </em><code class="descclassname">nDTomo.MultiTool.ImageReg.</code><code class="descname">AlignImages</code><span class="sig-paren">(</span><em>theta</em>, <em>iman</em>, <em>bpx</em><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ImageReg.AlignImages" title="Permalink to this definition">¶</a></dt>
+<dd><p>The AlignImages class allows for aligning two images. The image registration is performed by translation and rotation.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Theta:</th><td class="field-body">tomographic angles</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Iman:</th><td class="field-body">absorption-contrast CT image</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Bpx:</th><td class="field-body">chemical-contrast CT image</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="nDTomo.MultiTool.ImageReg.AlignImages.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.ImageReg.AlignImages.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialise the image aligning process</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nDTomo.MultiTool.NormAbs">
+<span id="the-normabs-module"></span><h2>The “NormAbs” module<a class="headerlink" href="#module-nDTomo.MultiTool.NormAbs" title="Permalink to this headline">¶</a></h2>
+<p>Radiograph normalisation class for the MultiTool</p>
+<p>&#64;author: A. Vamvakeros</p>
+<dl class="class">
+<dt id="nDTomo.MultiTool.NormAbs.NormaliseABSCT">
+<em class="property">class </em><code class="descclassname">nDTomo.MultiTool.NormAbs.</code><code class="descname">NormaliseABSCT</code><span class="sig-paren">(</span><em>ifn</em>, <em>flat_im</em>, <em>dark_im</em>, <em>roixi</em>, <em>roixf</em>, <em>roiyi</em>, <em>roiyf</em><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.NormAbs.NormaliseABSCT" title="Permalink to this definition">¶</a></dt>
+<dd><p>The NormaliseABSCT class allows for normalisation of an absortion-contrast</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Ifn:</th><td class="field-body">full path to radiographs (multiple images stored in one edf file)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Flat_im:</th><td class="field-body">full path to flat images</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Dark_im:</th><td class="field-body">full path to dark images</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Roixi:</th><td class="field-body">initial pixel in radiographs (x axis)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Roixf:</th><td class="field-body">final pixel in radiographs (x axis)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Roiyi:</th><td class="field-body">initial pixel in radiographs (y axis)</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Roiyf:</th><td class="field-body">final pixel in radiographs (y axis)</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="nDTomo.MultiTool.NormAbs.NormaliseABSCT.normalise">
+<code class="descname">normalise</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.NormAbs.NormaliseABSCT.normalise" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method for normalising the radiographs</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.NormAbs.NormaliseABSCT.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.NormAbs.NormaliseABSCT.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialise the radiograph normalisation process</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-nDTomo.MultiTool.PeakFitting">
+<span id="the-peakfitting-module"></span><h2>The “PeakFitting” module<a class="headerlink" href="#module-nDTomo.MultiTool.PeakFitting" title="Permalink to this headline">¶</a></h2>
+<p>Single peak batch fitting class for the MultiTool</p>
+<p>&#64;author: A. Vamvakeros</p>
+<dl class="class">
+<dt id="nDTomo.MultiTool.PeakFitting.FitData">
+<em class="property">class </em><code class="descclassname">nDTomo.MultiTool.PeakFitting.</code><code class="descname">FitData</code><span class="sig-paren">(</span><em>data</em>, <em>roi</em>, <em>Area</em>, <em>Areamin</em>, <em>Areamax</em>, <em>Pos</em>, <em>Posmin</em>, <em>Posmax</em>, <em>FWHM</em>, <em>FWHMmin</em>, <em>FWHMmax</em><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.PeakFitting.FitData" title="Permalink to this definition">¶</a></dt>
+<dd><p>Single peak batch fitting class</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Data:</th><td class="field-body">the spectral/scattering data</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Roi:</th><td class="field-body">bin number of interest</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Area:</th><td class="field-body">initial value for peak area</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Areamin:</th><td class="field-body">minimum value for peak area</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Areamax:</th><td class="field-body">maximum value for peak area</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Pos:</th><td class="field-body">initial value for peak position</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">Posmin:</th><td class="field-body">minimum value for peak position</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Posmax:</th><td class="field-body">maximum value for peak position</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">FWHM:</th><td class="field-body">initial value for peak full width at half maximum (FWHM)</td>
+</tr>
+<tr class="field-even field"><th class="field-name">FWHMmin:</th><td class="field-body">minimum value for peak FWHM</td>
+</tr>
+<tr class="field-odd field"><th class="field-name">FWHMmax:</th><td class="field-body">maximum value for peak FWHM</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="nDTomo.MultiTool.PeakFitting.FitData.gmodel2">
+<code class="descname">gmodel2</code><span class="sig-paren">(</span><em>x</em>, <em>A</em>, <em>m</em>, <em>w</em>, <em>a</em>, <em>b</em><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.PeakFitting.FitData.gmodel2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gaussian model with linear background: A * exp( - (x-m)**2/w) + a*x + b</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nDTomo.MultiTool.PeakFitting.FitData.run">
+<code class="descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#nDTomo.MultiTool.PeakFitting.FitData.run" title="Permalink to this definition">¶</a></dt>
+<dd><p>Initialise the single peak batch fitting process</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">nDTomo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">nDTomo software suite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="req.html">Installation of nDTomo software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ID15A_helperAPI.html">ID15Ahelper GUI API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="IntegratorAPI.html">Integrator GUI API reference</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MultiTool GUI API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#module-nDTomo.MultiTool.AbsTomoRec">The “AbsTomoRec” module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-nDTomo.MultiTool.ChemTomoRec">The “ChemTomoRec” module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-nDTomo.MultiTool.ChemTomoSinograms">The “ChemTomoSinograms” module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-nDTomo.MultiTool.ImageReg">The “ImageReg” module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-nDTomo.MultiTool.NormAbs">The “NormAbs” module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-nDTomo.MultiTool.PeakFitting">The “PeakFitting” module</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="refs.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sites.html">Websites</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="IntegratorAPI.html" title="previous chapter">Integrator GUI API reference</a></li>
+      <li>Next: <a href="refs.html" title="next chapter">References</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, A. Vamvakeros.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.3</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/MultiToolAPI.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Misc classes
+Miscellaneous classes
 
 @author: Antony
 """

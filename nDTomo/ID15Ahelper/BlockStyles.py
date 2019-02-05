@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 16 21:07:11 2017
 
-@author: simon
+Block styles
+
+@author: S.D.M. Jacques
+
 """
 
     

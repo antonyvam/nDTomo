@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec  5 21:37:56 2017
 
-@author: simon
+Motor blocks
+
+@author: S.D.M. Jacques
+
 """
 from baseBlocks import Block
 from PyQt5.QtGui import QColor, QImage
@@ -10,6 +12,13 @@ import settings
 
 ##############################################################################             
 class RelMotorMoveBlock(Block):
+    
+    """
+    
+    Relative motor movement block
+    
+    """
+    
     def __init__(self):
         Block.__init__(self) #####
 #####        super(RelMotorMoveBlock, self).__init__()
@@ -42,6 +51,13 @@ class RelMotorMoveBlock(Block):
 
 ##############################################################################        
 class AbsMotorMoveBlock(Block):        
+    
+    """
+    
+    Absolute motor movement block
+    
+    """
+    
     def __init__(self):
         Block.__init__(self) #####
 #####        super(AbsMotorMoveBlock, self).__init__()

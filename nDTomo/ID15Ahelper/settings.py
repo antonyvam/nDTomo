@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Dec  3 18:20:12 2017
 
-@author: simon
+Motor names and heating system names
+
+@author: S.D.M. Jacques
+
 """
 
 userMotorList = ['aerox', 'aeroy', 'hrz']

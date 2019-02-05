@@ -2,7 +2,7 @@
 """
 Class used to integrate XRD-CT using CPU or GPU
 
-@author: Antony
+@author: A. Vamvakeros
 """
 
 from numpy import sin, deg2rad, pi, concatenate, log, flipud, zeros, sqrt, sum, arange, min, max, floor, where, mean, array, exp, inf, ceil, interp, std, argmin, transpose, tile, swapaxes, round
@@ -12,7 +12,51 @@ import os, time, h5py, fabio, pyFAI
 class XRDCT_Squeeze(QThread):
     
     """
-    XRD-CT data integration with CPU or GPU    
+    
+    XRD-CT data integration with CPU or GPU   
+    
+        :prefix: prefix used for the filenames of the experimental data
+    
+	:dataset: foldername where the experimental data are stored
+    
+	:xrdctpath: full path where the experimental data are stored
+    
+	:maskname: detector mask file ('mask.edf')
+    
+	:poniname: .poni file ('filename.poni')
+    
+	:na: number of angular steps during the tomographic scan
+    
+	:nt: number of translation steps during the tomographic scan
+    
+	:npt_rad: number of bins used for the diffraction pattern (e.g. 2048)
+    
+	:procunit: processing unit, options are: 'CPU', 'GPU' and 'MultiGPU'
+    
+	:units:  x axis units for the integrated diffraction patterns, options are: 'q_A^-1' or '2th_deg'
+    
+	:prc: percentage to be used for the trimmed mean filter
+    
+	:thres: number of standard deviation values to be used for the adaptive standard deviation filter
+    
+	:datatype: type of image files, options are: 'edf' or 'cbf'
+    
+	:savepath: full path where results will be saved
+    
+	:scantype: scantype, options are: 'Zigzag', 'ContRot' and 'Interlaced'
+    
+	:energy: X-ray energy in keV		
+    
+	:jsonname: full path for the .azimint.json file
+    
+	:omega:	rotation axis motor positions during the tomographic scan (1d array)
+    
+	:trans:	translation axis motor positions during the tomographic scan (1d array)
+    
+	:dio: diode values per point during the tomographic scan (1d array)
+    
+	:etime:	values for exposure time per point during the tomographic scan (1d array)
+        
     """
     
     squeeze = pyqtSignal()
@@ -39,6 +83,12 @@ class XRDCT_Squeeze(QThread):
             
     def run(self):
 
+        """
+        
+		Initiate the XRD-CT data integration process
+        
+		"""
+        
         try:
             self.data = zeros((self.nt*self.na,self.npt_rad-10));
             
@@ -99,11 +149,13 @@ class XRDCT_Squeeze(QThread):
             print "Something is wrong with the integration..."
 
     def tth2q(self):
-        """A private function to get baz.
-
-        This really should have a full function definition, but I am too lazy.
 
         """
+        
+		Convert 2theta to d and q spacing
+        
+		"""  	
+        
         self.h = 6.620700406E-34;self.c = 3E8
         self.wavel = 1E10*6.242E18*self.h*self.c/(self.E*1E3)
         self.d = self.wavel/(2*sin(deg2rad(0.5*self.tth)))
@@ -111,7 +163,13 @@ class XRDCT_Squeeze(QThread):
                 
     def writehdf5(self):
 
-
+        """
+        
+		Export the integrated diffraction data from the tomographic scan as a single .hdf5 file.
+        The integrated data are saved as a 2D array.
+        
+		"""  
+        
         if self.filt == "No":
             fn = "%s/%s_integrated_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, self.filt,self.procunit)
         elif self.filt == "Median":
@@ -121,7 +179,6 @@ class XRDCT_Squeeze(QThread):
         elif self.filt == "sigma":
             fn = "%s/%s_integrated_%.1f_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, float(self.thres), self.filt,self.procunit)                
 
-#        fn = "%s/%s_squeezed_%s.hdf5" % (self.savepath, self.dataset, self.filt)
         h5f = h5py.File(fn, "w")
         h5f.create_dataset('data', data=self.data)
         h5f.create_dataset('slow_axis_steps', data=self.na)
@@ -140,3 +197,6 @@ class XRDCT_Squeeze(QThread):
         os.chdir(self.savepath)
         perm = 'chmod 777 %s' %fn
         os.system(perm)
+        
+        
+        

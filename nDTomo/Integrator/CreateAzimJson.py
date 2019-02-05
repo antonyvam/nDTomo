@@ -2,7 +2,6 @@
 """
 Class to create .azimint.json file using the .poni calibration file, a detector mask (edf file) and the number of bins used for the diffraction pattern (e.g. 2048)
 
-
 @author: A. Vamvakeros
 """
 
@@ -14,9 +13,9 @@ class CreatAzimint(QThread):
     
     def __init__(self,ponifile,mask,npt_rad):
         """
-		:ponifile: the .poni file ('filename.poni')
-		:mask: the detector mask file ('mask.edf')
-		:npt_rad: the number of bins used for the diffraction pattern (e.g. 2048)
+		:ponifile: .poni file ('filename.poni')
+		:mask: detector mask file ('mask.edf')
+		:npt_rad: number of bins used for the diffraction pattern (e.g. 2048)
 		"""
         QThread.__init__(self)
         self.poniname = ponifile     
@@ -25,7 +24,7 @@ class CreatAzimint(QThread):
         self.jsonname = '.azimint.json'
         
     def run(self):
-		"""
+        """
 		Creates a .azimint.json file using the .poni calibration file
 		"""
 		

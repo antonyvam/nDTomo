@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun May 20 15:25:19 2018
+Some test classes for visualization
 
-@author: Antony
+@authors: S.D.M. Jacques and A. Vamvakeros
 """
 
 from __future__ import unicode_literals
@@ -164,22 +164,3 @@ class HyperSliceExplorer():
         self.mapper.draw_all()
 	#self.mapper.show(block=False)#self.mapper.ion()#self.mapper.pause(0.0001)
         return
-    
-
-
-
-
-        
-
-
-
-                
-
-        
- 
-    
-    
-    
-    
-    
-    

@@ -2,7 +2,7 @@
 """
 Chemical tomography data reconstruction class for the MultiTool
 
-@author: Antony
+@author: A. Vamvakeros
 """
 
 from PyQt5.QtCore import pyqtSignal, QThread
@@ -19,7 +19,10 @@ class ReconstructData(QThread):
 
     '''
     The chemical tomography data can be reconstructed with either the skimage or silx.
-    In both cases, the filterec back projection algorithm is emploed to reconstruct the images. 
+    In both cases, the filterec back projection algorithm is emploed to reconstruct the images.
+    
+        :sinos: sinogram data volume
+        
     '''
     
     recdone = pyqtSignal()
@@ -31,6 +34,12 @@ class ReconstructData(QThread):
         
     def run(self):
 
+        """
+        
+        Initialise the data reconstruction process
+        
+        """   
+        
         npr = self.sinos.shape[1]
         self.theta = arange(0,180-180./(npr-1),180./(npr-1))
         self.sinos = self.sinos[0:self.sinos.shape[0],0:len(self.theta),:]
@@ -46,6 +55,12 @@ class ReconstructData(QThread):
         
     def rec_skimage(self):
 
+        """
+        
+        Reconstruct the images using the filtered back projection algorithm from the skimage package
+        
+        """
+        
         self.bp = zeros((self.sinos.shape[0],self.sinos.shape[0],self.sinos.shape[2]))
         
         ist = 0
@@ -57,6 +72,12 @@ class ReconstructData(QThread):
             
     def rec_silx(self):
 
+        """
+        
+        Reconstruct the images using the filtered back projection algorithm from the silx package using GPU
+        
+        """
+        
         self.bp = zeros((self.sinos.shape[0],self.sinos.shape[0],self.sinos.shape[2]))
         t = fbp(sino_shape=(self.sinos.shape[1],self.sinos.shape[0]),devicetype='CPU')
 #            print self.bp.shape
@@ -69,6 +90,12 @@ class ReconstructData(QThread):
             self.progress.emit(v)
             
     def remring(self):
+        
+        """
+        
+        Remove recontruction ring
+        
+        """
         
         sz = floor(self.bp.shape[0])
         x = arange(0,sz)
@@ -92,7 +119,27 @@ class ReconstructData(QThread):
 class BatchProcessing(QThread):
     
     '''
+    
     Class for batch reconstruction of multiple chemical tomography data  
+    
+    :sinos_proc: sinogram data volume
+        
+    :sinonorm: normalisation of the sinogram data volume, options are 0 or 1.
+    
+    :ofs: number of voxels (from each side of the sinograms) to be used for background subtraction
+    
+    :crsr: maximum number of voxels to use for the sinogram centering process
+    
+    :scantype: type of scan, options are: 'Zigzag', 'ContRot' and 'Interlaced'
+    
+    :output: output file containing the results
+
+    :tth: 2theta (1d array)
+        
+    :d: d spacing (1d array)
+        
+    :q: q spacing (1d array)
+    
     '''
     
     snprocdone = pyqtSignal()
@@ -114,6 +161,12 @@ class BatchProcessing(QThread):
         
         
     def run(self):
+        
+        """
+        
+        Initialise the batch data reconstruction process
+        
+        """
         
         if self.sinonorm == 1:
             self.scalesinos()   
@@ -143,11 +196,23 @@ class BatchProcessing(QThread):
         
     def airrem(self):
         
+        """
+        
+        Method for subtracting the backgroung signal from the sinograms
+        
+        """           
+        
         for ii in range(0,self.sinos_proc.shape[1]):
             dpair = (mean(self.sinos_proc[0:self.ofs,ii,:],axis = 0) + mean(self.sinos_proc[self.sinos_proc.shape[0]-self.ofs:self.sinos_proc.shape[0],ii,:],axis = 0))/2
             self.sinos_proc[:,ii,:] = self.sinos_proc[:,ii,:] - dpair
             
     def scalesinos(self):
+        
+        """
+        
+        Method for normalising the sinograms. It assumes that the total scattering intensity per projection is constant.
+        
+        """  
         
         ss = sum(self.sinos_proc,axis = 2)
         scint = zeros((self.sinos_proc.shape[1]))
@@ -163,6 +228,12 @@ class BatchProcessing(QThread):
         
     def sinocentering(self):
                 
+        """
+        
+        Method for centering sinograms by flipping the projection at 180 deg and comparing it with the one at 0 deg
+        
+        """   
+        
         di = self.sinos_proc.shape
         if len(di)>2:
             s = sum(self.sinos_proc, axis = 2)
@@ -238,6 +309,11 @@ class BatchProcessing(QThread):
         
     def rec_silx(self):
 
+        """
+        
+        Reconstruct the images using the filtered back projection algorithm from the silx package using GPU
+        
+        """        
         
         self.bp = zeros((self.sinos_proc.shape[0],self.sinos_proc.shape[0],self.sinos_proc.shape[2]))
         t = fbp(sino_shape=(self.sinos_proc.shape[1],self.sinos_proc.shape[0]),devicetype='CPU')
@@ -251,6 +327,12 @@ class BatchProcessing(QThread):
             self.progress.emit(v)
             
     def remring(self):
+
+        """
+        
+        Remove recontruction ring
+        
+        """
         
         sz = floor(self.bp.shape[0])
         x = arange(0,sz)

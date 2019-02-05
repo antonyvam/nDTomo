@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
+
 Radiograph normalisation class for the MultiTool
 
-@author: Antony
+@author: A. Vamvakeros
+
 """
 
 from PyQt5 import QtCore
@@ -10,8 +12,25 @@ import fabio
 from numpy import concatenate, log, flipud, zeros, sqrt, sum, arange, min, max, floor, where, mean, array, exp, inf, ceil, interp, std, argmin, transpose, tile, swapaxes, round
 
 class NormaliseABSCT(QtCore.QThread):
+    
     '''
+    
     The NormaliseABSCT class allows for normalisation of an absortion-contrast 
+    
+    :ifn: full path to radiographs (multiple images stored in one edf file)
+    
+    :flat_im: full path to flat images
+    
+    :dark_im: full path to dark images
+
+    :roixi: initial pixel in radiographs (x axis)
+    
+    :roixf: final pixel in radiographs (x axis)
+    
+    :roiyi: initial pixel in radiographs (y axis)
+
+    :roiyf: final pixel in radiographs (y axis)
+        
     '''    
     normdone = QtCore.pyqtSignal()
     progress_norm = QtCore.pyqtSignal(int)
@@ -29,6 +48,12 @@ class NormaliseABSCT(QtCore.QThread):
                 
     def run(self):
 
+        """
+        
+        Initialise the radiograph normalisation process
+        
+        """  
+        
         if len(self.ifn)>0:
             self.i = fabio.open(self.ifn)
             self.nd = self.i.nframes
@@ -36,7 +61,13 @@ class NormaliseABSCT(QtCore.QThread):
             self.normalise()
             
     def normalise(self):
-
+        
+        """
+        
+        Method for normalising the radiographs
+        
+        """ 
+        
         self.roix = range(self.roixi,self.roixf)
         self.roiy = range(self.roiyi,self.roiyf)
         

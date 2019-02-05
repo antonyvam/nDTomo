@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
+
 MultiTool GUI for data processing, visualization and analysis of tomographic data
 
-@author: AV
+@author: A. Vamvakeros
+
 """
 
 from __future__ import unicode_literals
@@ -63,6 +65,13 @@ from AbsTomoRec import ReconABSCT
 
                 
 class ApplicationWindow(QtWidgets.QMainWindow):
+    
+    """
+    
+    The MultiTool GUI
+    
+    """
+    
     def __init__(self):
         super(ApplicationWindow, self).__init__()
         self.data = np.zeros(())
@@ -216,41 +225,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 
         ############### TAB 1 -  XRD-CT panel ############### 
         
-#        self.ChooseImage = QtWidgets.QLabel(self)
-#        self.ChooseImage.setText('XRD-CT data')
-#        self.tab1.layout.addWidget(self.ChooseImage,0,0)
-#        
-#
-#        self.ViewDataVol=QtWidgets.QCheckBox("View XRD-CT data",self) # QtWidgets.QPushButton
-#        self.ViewDataVol.stateChanged.connect(self.viewdata) #mybutton1.pressed.connect(self.viewdata)     
-#        self.tab1.layout.addWidget(self.ViewDataVol,1,0)
-        
-#        self.ZigZag=QtWidgets.QCheckBox("Zig zag scan",self)
-#        self.ZigZag.stateChanged.connect(self.flipcolumns)
-#        self.l.addWidget(self.ZigZag,1,1)
-                
-#        self.ReconstructVol=QtWidgets.QCheckBox("Reconstruct Data Volume",self)
-#        self.ReconstructVol.stateChanged.connect(self.fbprec_vol)
-#        self.l.addWidget(self.ReconstructVol,2,0)
-
-#        self.label13 = QtWidgets.QLabel(self)
-#        self.label13.setText('Perform XRD-CT data integration')
-#        self.l.addWidget(self.label13,10,1)
-
-        
-#        self.Energy = QtWidgets.QLabel(self)
-#        self.Energy.setText('X-ray energy (keV)')
-#        self.l.addWidget(self.Energy,1,1)
-#                    
-##        self.EnergySel = QtWidgets.QSpinBox(self)
-##        self.EnergySel.valueChanged.connect(self.selEnergy)
-##        self.l.addWidget(self.EnergySel,2,2)        
-#
-#        self.EnergySel = QtWidgets.QLineEdit(self)
-#        self.EnergySel.setValidator(QtGui.QDoubleValidator(0.99,99.99,2))
-#        self.EnergySel.textChanged.connect(self.selEnergy)
-#        self.l.addWidget(self.EnergySel,1,2)  
-
         self.DatasetLabel = QtWidgets.QLabel(self)
         self.DatasetLabel.setText('Dataset:')
         self.tab1.layout.addWidget(self.DatasetLabel,0,0)
@@ -280,10 +254,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ChooseXAxis.setMaximumWidth(170)
         self.tab1.layout.addWidget(self.ChooseXAxis,1,1)  
         
-#        self.LabelExport = QtWidgets.QLabel(self)
-#        self.LabelExport.setText('Export local diffraction pattern')
-#        self.tab1.layout.addWidget(self.LabelExport,1,2)
-        
+
         self.ExportDPbutton = QtWidgets.QPushButton("Export local diffraction pattern",self)
         self.ExportDPbutton.clicked.connect(self.exportdp)
 #        self.ExportDPbutton.setMaximumWidth(150)
@@ -303,11 +274,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.Air.setText('Air scattering (voxels)')
         self.Air.setMaximumWidth(150)
         self.tab1.layout.addWidget(self.Air,2,1)        
-        
-#        self.AirSel = QtWidgets.QLineEdit(self)
-#        self.AirSel.setValidator(QtGui.QDoubleValidator(0.99,99.99,2))
-#        self.AirSel.textChanged.connect(self.selEnergy)
-#        self.l.addWidget(self.AirSel,2,2)          
         
         self.airspinbox = QtWidgets.QSpinBox(self)
         self.airspinbox.valueChanged.connect(self.changeAir)
@@ -384,22 +350,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.pbutton16.setEnabled(True)
         self.tab1.layout.addWidget(self.pbutton16,6,3)
         
-#        # Separate the two panels
-#        
-#        self.ChooseImage = QtWidgets.QLabel(self)
-#        self.ChooseImage.setText('                    ')
-#        self.layout.addWidget(self.ChooseImage,0,4)
-#        
-#        self.ChooseImage = QtWidgets.QLabel(self)
-#        self.ChooseImage.setText('                    ')
-#        self.layout.addWidget(self.ChooseImage,0,5)
-        
         ############### TAB 2 -  micro-CT panel ###############
-        
-#        self.ChooseImage = QtWidgets.QLabel(self)
-#        self.ChooseImage.setText('Micro-CT data')
-#        self.tab2.layout.addWidget(self.ChooseImage,0,1)
-#        
         
         self.ViewDataVol2=QtWidgets.QCheckBox("View micro-CT images",self) # QtWidgets.QPushButton
         self.ViewDataVol2.stateChanged.connect(self.viewMicroCT) #mybutton1.pressed.connect(self.viewdata)     
@@ -467,7 +418,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.xrdpixsize.setMaximumWidth(150)
         self.tab2.layout.addWidget(self.xrdpixsize,5,2)
 
-     
         self.CheckBox3=QtWidgets.QCheckBox("Align micro-CT and XRD-CT datasets",self) # QtWidgets.QPushButton
         self.CheckBox3.stateChanged.connect(self.AlignData) #mybutton1.pressed.connect(self.viewdata)     
         self.tab2.layout.addWidget(self.CheckBox3,6,0)
@@ -480,8 +430,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.CheckBox4.stateChanged.connect(self.abscor) #mybutton1.pressed.connect(self.viewdata)     
         self.CheckBox4.setEnabled(False)
         self.tab2.layout.addWidget(self.CheckBox4,7,0)
-        
-
         
         ############### TAB 3 -  Peak fitting ###############
         
@@ -601,7 +549,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.AreaMaxSel.textChanged.connect(self.selAreaMax)
         self.tab3.layout.addWidget(self.AreaMaxSel,5,5)          
         
-        
         self.LabelPositionPeak = QtWidgets.QLabel(self)
         self.LabelPositionPeak.setText('Position')
         self.tab3.layout.addWidget(self.LabelPositionPeak,6,0)
@@ -611,7 +558,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.PosSel.setText(str(self.Pos));
         self.PosSel.textChanged.connect(self.selPos)
         self.tab3.layout.addWidget(self.PosSel,6,1)  
-
 
         self.LabelPositionMinPeak = QtWidgets.QLabel(self)
         self.LabelPositionMinPeak.setText('Min')
@@ -684,7 +630,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ChooseRes.setEnabled(False)
         self.tab3.layout.addWidget(self.ChooseRes,9,1)   
         
-
         self.LabelCMin = QtWidgets.QLabel(self)
         self.LabelCMin.setText('Min')
         self.tab3.layout.addWidget(self.LabelCMin,9,2)
@@ -702,7 +647,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.CMaxSel.setValidator(QtGui.QDoubleValidator(0.99,99.99,2))
         self.CMaxSel.textChanged.connect(self.selCMax)
         self.tab3.layout.addWidget(self.CMaxSel,9,5)  
-
 
         self.pbutton_expfit = QtWidgets.QPushButton("Export fit results",self)
         self.pbutton_expfit.clicked.connect(self.savefitresults)
@@ -776,7 +720,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.roixspinbox2.setMaximumWidth(150)
         self.tab4.layout.addWidget(self.roixspinbox2,5,3)    
         
-
         self.Labelroiystart = QtWidgets.QLabel(self)
         self.Labelroiystart.setText('Column start')
         self.tab4.layout.addWidget(self.Labelroiystart,6,0)        
@@ -796,7 +739,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.roiyspinbox2.setMinimum(0)
         self.roiyspinbox2.setMaximumWidth(150)
         self.tab4.layout.addWidget(self.roiyspinbox2,6,3)    
-
 
         self.Labelproj = QtWidgets.QLabel(self)
         self.Labelproj.setText('Projection')
@@ -851,7 +793,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 #        self.NormAbsVol.setMaximumWidth(150)
         self.tab4.layout.addWidget(self.labelst,9,2)
 
-
         self.NormAbsVol = QtWidgets.QPushButton("Normalise tomographic data volume",self)
         self.NormAbsVol.clicked.connect(self.norm_adata)
         self.NormAbsVol.setEnabled(False)
@@ -861,7 +802,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.progressabsbarn = QtWidgets.QProgressBar(self)
         self.progressabsbarn.setMaximumWidth(400)
         self.tab4.layout.addWidget(self.progressabsbarn,10,1)
-        
         
         self.Rescale = QtWidgets.QLabel(self)
         self.Rescale.setText('Rescale sinograms (scale factor):')
@@ -873,7 +813,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.rescalesinos.setMaximumWidth(150)
         self.tab4.layout.addWidget(self.rescalesinos,11,1)
         
-
         self.ReconstructAbsVol = QtWidgets.QPushButton("Reconstruct tomographic data volume",self)
         self.ReconstructAbsVol.clicked.connect(self.reconabsvol)
         self.ReconstructAbsVol.setEnabled(False)
@@ -888,7 +827,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.pbutton_stop_abs.setEnabled(False)
         self.tab4.layout.addWidget(self.pbutton_stop_abs,12,2)
         
-
         self.Labelz = QtWidgets.QLabel(self)
         self.Labelz.setText('CT image no.')
         self.tab4.layout.addWidget(self.Labelz,13,0)
@@ -905,88 +843,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.sliderabs.setMaximumWidth(150)
         self.sliderabs.setEnabled(False)
         self.tab4.layout.addWidget(self.sliderabs,13,2)
-
-
-#        self.labelbatch = QtWidgets.QLabel(self)
-#        self.labelbatch.setText('Perform batch ABS/PHC-CT reconstruction')
-#        self.tab4.layout.addWidget(self.labelbatch,14,0)
-#
-#        self.pbuttonbatchabs = QtWidgets.QPushButton("Add ABS/PHC-CT dataset",self)
-#        self.pbuttonbatchabs.clicked.connect(self.selABSCTdata)
-#        self.tab4.layout.addWidget(self.pbuttonbatchabs,15,0)
-#
-#        self.pbuttonbatchabs2 = QtWidgets.QPushButton("Remove ABS/PHC-CT dataset",self)
-#        self.pbuttonbatchabs2.clicked.connect(self.remABSCTdata)
-#        self.tab4.layout.addWidget(self.pbuttonbatchabs2,16,0)
-#        
-#        self.datalistabs = QtWidgets.QListWidget(self)
-##        self.tab4.layout.addWidget(self.datalistabs,15,1)
-#        self.tab4.layout.addWidget(self.datalistabs,15,1,16,1)
-##        self.datalistabs.setMaximumHeight(20)
-##
-##        self.pbuttonbatchflat = QtWidgets.QPushButton("Add flat field dataset",self)
-##        self.pbuttonbatchflat.clicked.connect(self.selFlatdata)
-##        self.tab4.layout.addWidget(self.pbuttonbatchflat,15,2)
-##
-##        self.pbuttonbatchflat2 = QtWidgets.QPushButton("Remove flat field dataset",self)
-##        self.pbuttonbatchflat2.clicked.connect(self.remFlatdata)
-##        self.tab4.layout.addWidget(self.pbuttonbatchflat2,16,2)
-##        
-##        self.datalistflat = QtWidgets.QListWidget(self)
-##        self.tab4.layout.addWidget(self.datalistflat,15,3)
-##        self.datalistflat.setMaximumHeight(20)
-##        
-##
-##        self.pbuttonbatchdark = QtWidgets.QPushButton("Add dark current dataset",self)
-##        self.pbuttonbatchdark.clicked.connect(self.selDarkdata)
-##        self.tab4.layout.addWidget(self.pbuttonbatchdark,15,4)
-##
-##        self.pbuttonbatchdark2 = QtWidgets.QPushButton("Remove dark current dataset",self)
-##        self.pbuttonbatchdark2.clicked.connect(self.remDarkdata)
-##        self.tab4.layout.addWidget(self.pbuttonbatchdark2,16,4)
-##        
-##        self.datalistdark = QtWidgets.QListWidget(self)
-##        self.tab4.layout.addWidget(self.datalistdark,15,5)
-##        self.datalistdark.setMaximumHeight(20)
-#        
-#
-#
-#        self.pbuttonbatchflat = QtWidgets.QPushButton("Add flat field dataset",self)
-#        self.pbuttonbatchflat.clicked.connect(self.selFlatdata)
-#        self.tab4.layout.addWidget(self.pbuttonbatchflat,15,2)
-#
-#        self.pbuttonbatchflat2 = QtWidgets.QPushButton("Remove flat field dataset",self)
-#        self.pbuttonbatchflat2.clicked.connect(self.remFlatdata)
-#        self.tab4.layout.addWidget(self.pbuttonbatchflat2,16,2)
-#        
-#        self.datalistflat = QtWidgets.QListWidget(self)
-#        self.tab4.layout.addWidget(self.datalistflat,15,3,16,1)
-#        
-#
-#        self.pbuttonbatchdark = QtWidgets.QPushButton("Add dark current dataset",self)
-#        self.pbuttonbatchdark.clicked.connect(self.selDarkdata)
-#        self.tab4.layout.addWidget(self.pbuttonbatchdark,15,4)
-#
-#        self.pbuttonbatchdark2 = QtWidgets.QPushButton("Remove dark current dataset",self)
-#        self.pbuttonbatchdark2.clicked.connect(self.remDarkdata)
-#        self.tab4.layout.addWidget(self.pbuttonbatchdark2,16,4)
-#        
-#        self.datalistdark = QtWidgets.QListWidget(self)
-#        self.tab4.layout.addWidget(self.datalistdark,15,5,16,1)
-#        
-#
-#        self.pbuttonbatchabs = QtWidgets.QPushButton("Perform batch processing",self)
-#        self.pbuttonbatchabs.clicked.connect(self.batchABSCTdata)
-#        self.tab4.layout.addWidget(self.pbuttonbatchabs,15,6)
-#
-#        self.pbuttonbatchabsstop = QtWidgets.QPushButton("Stop reconstruction",self)
-#        self.pbuttonbatchabsstop.clicked.connect(self.batchstopprocessxrdct)
-#        self.pbuttonbatchabsstop.setEnabled(True)
-#        self.tab4.layout.addWidget(self.pbuttonbatchabsstop,16,6)
-#        
-
-
-
 
 #####
 
@@ -1013,6 +869,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     ####################### XRD-CT #######################
 
     def exportdp(self):
+        
+        """
+        
+        Method to export spectra/diffraction patterns of interest
+        
+        """
         
         if len(self.hdf_fileName)>0 and len(self.dproi)>0:
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
@@ -1078,6 +940,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             print "Something is wrong with the data"
         
     def exportim(self):
+        
+        """
+        
+        Method to export spectral/scattering image of interest
+        
+        """
         
         if len(self.hdf_fileName)>0 and len(self.imoi)>0:
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
@@ -1459,9 +1327,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.tab1.layout.removeWidget(self.labels[ii])
             self.labels[ii].deleteLater()
             self.labels[ii] = None
-                    
             
-
         
 #    def tth2d(self):
 #        self.d = self.wavel/(2*np.sin(np.deg2rad(0.5*self.tth)))
@@ -1795,6 +1661,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def exportimroi(self):
         
+        """
+        
+        Method to export an spectral/scattering image after simple background suppression
+        
+        """
+        
         if len(self.hdf_fileName)>0 and len(self.imroi)>0:
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
             sn = "%s_roi_%sto%s.hdf5" %(s,str(self.ch1),str(self.ch2))
@@ -1965,6 +1837,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mapper.draw()        
         
     def savefitresults(self):
+        
+        """
+        
+        Method to export the peak fitting results
+        
+        """
         
         if len(self.hdf_fileName)>0 and len(self.imoi)>0:
             
@@ -2244,7 +2122,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
     def reconabsvol(self):
         
-        self.ReconABS = ReconABSCT(self.Normal.r,self.sc,self.savepathabs,self.dataset,self.absscantype,self.offset,self.sino)      
+        self.ReconABS = ReconABSCT(self.Normal.r,self.sc,self.savepathabs,self.dataset,self.absscantype,self.offset)      
         self.ReconABS.start()
         
         self.ReconABS.progressabs.connect(self.progressabsbar.setValue)
@@ -2293,250 +2171,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.spinboxabs.setEnabled(False)
         self.sliderabs.setEnabled(False)
 
-
-    def selABSCTdata(self):
-
-        self.ABSdialog = FileDialog()
-        if self.ABSdialog.exec_() == QtWidgets.QDialog.Accepted:
-            self.abspaths = (self.ABSdialog.selectedFiles())
-        
-        for ii in range(0,len(self.abspaths)):
-            oldpath = str(self.abspaths[ii])
-            try:
-                newpath = oldpath.split("/")
-                self.datasetname = newpath[-1]
-                
-                try: 
-                    newfile = self.datasetname.split(".edf")
-                    newfile = newfile[0]
-                    if len(self.datasetname)>0 and len(newfile)>0:
-                        self.datalistabs.addItem(self.datasetname)    
-                        
-                        newpath = oldpath.split(self.datasetname)
-                        newpath = newpath[0]
-                        self.pathslistabs.append(newpath)  
-                        
-                except:
-                    print('Something is wrong with the selected datasets')
-            except:
-                pass
-
-    def remABSCTdata(self):
-
-        for item in self.datalistabs.selectedItems():
-            self.datalistabs.takeItem(self.datalistabs.row(item))
-            
-    def selFlatdata(self):
-
-        self.Flatdialog = FileDialog()
-        if self.Flatdialog.exec_() == QtWidgets.QDialog.Accepted:
-            self.flatpaths = (self.Flatdialog.selectedFiles())
-        
-        for ii in range(0,len(self.flatpaths)):
-            oldpath = str(self.flatpaths[ii])
-            try:
-                newpath = oldpath.split("/")
-                self.datasetname = newpath[-1]
-                
-                try: 
-                    newfile = self.datasetname.split(".edf")
-                    newfile = newfile[0]
-                    if len(self.datasetname)>0 and len(newfile)>0:
-                        self.datalistflat.addItem(self.datasetname)    
-                        
-                        newpath = oldpath.split(self.datasetname)
-                        newpath = newpath[0]
-                        self.pathslistflat.append(newpath)  
-                        
-                except:
-                    print('Something is wrong with the selected datasets')
-            except:
-                pass
-
-    def remFlatdata(self):
-
-        for item in self.datalistflat.selectedItems():
-            self.datalistflat.takeItem(self.datalistflat.row(item))
-
-    def selDarkdata(self):
-
-        self.Darkdialog = FileDialog()
-        if self.Darkdialog.exec_() == QtWidgets.QDialog.Accepted:
-            self.darkpaths = (self.Darkdialog.selectedFiles())
-        
-        for ii in range(0,len(self.darkpaths)):
-            oldpath = str(self.darkpaths[ii])
-            try:
-                newpath = oldpath.split("/")
-                self.datasetname = newpath[-1]
-                
-                try: 
-                    newfile = self.datasetname.split(".edf")
-                    newfile = newfile[0]
-                    if len(self.datasetname)>0 and len(newfile)>0:
-                        self.datalistdark.addItem(self.datasetname)    
-                        
-                        newpath = oldpath.split(self.datasetname)
-                        newpath = newpath[0]
-                        self.pathslistdark.append(newpath)  
-                        
-                except:
-                    print('Something is wrong with the selected datasets')
-            except:
-                pass
-
-
-    def remDarkdata(self):
-
-        for item in self.datalistdark.selectedItems():
-            self.datalistdark.takeItem(self.datalistdark.row(item))
-
-
-    def batchABSCTdata(self):
-
-        # Need to disable some buttons
-        
-        datasetsabs = []
-        datasetsflat = []
-        datasetsdark = []
-        for index in xrange(self.datalistabs.count()):
-            datasetsabs.append(self.datalistabs.item(index).text())
-            datasetsflat.append(self.datalistflat.item(index).text())
-            datasetsdark.append(self.datalistdark.item(index).text())
-            
-        self.datasetsabs = datasetsabs
-        self.datasetsflat = datasetsflat
-        self.datasetsdark = datasetsdark
-#        print self.datasets[0]
-        
-        self.BatchProcABS = []       
-        self.Normal = []
-        self.progressbarbatch = []
-        self.labels = []
-        
-        for kk in range(0,len(self.datasetsabs)):
-            
-            self.prefix = self.datasetsabs[kk]
-
-            filename = self.prefix.split(".edf")
-            self.dataset = filename[0]
-                    
-#            output = '%s/%s_processed.hdf5' %(self.savepathabs,self.dataset)
-#            print output
-
-#            print 'self.pathslistabs'
-#            print self.pathslistabs
-#            print 'self.datasetsabs'
-#            print self.datasetsabs
-#            
-#            print 'self.pathslistflat'
-#            print self.pathslistflat
-#            print 'self.datasetsflat'
-#            print self.datasetsflat
-#            
-#            print 'self.pathslistdark'
-#            print self.pathslistdark
-#            print 'self.datasetsdark'
-#            print self.datasetsdark            
-            
-            ####### For ABS/PHC-CT data #######
-            self.ifn_path = '%s%s' %(self.pathslistabs[kk],self.datasetsabs[kk])
-            print self.ifn_path
-            
-            ####### For flat field #######
-            self.flat_im_path = '%s%s' %(self.pathslistflat[kk],self.datasetsflat[kk])
-            print self.flat_im_path            
-            self.flat = fabio.open(self.flat_im_path)
-            nd = self.flat.nframes
-            flat_im = np.zeros((self.flat.dim2,self.flat.dim1))
-            for ii in range(0,nd):
-                flat_im = flat_im + self.flat.getframe(ii).data
-            self.flat_im = flat_im/nd
-            self.flat_im = np.array(self.flat_im, dtype = float) - self.dark_im
-            print 'Flat field image into memory'
-            
-            
-            ####### For dark current #######
-            self.dark_im_path = '%s%s' %(self.pathslistdark[kk],self.datasetsdark[kk])
-            print self.dark_im_path                
-            self.dark = fabio.open(self.dark_im_path)
-            nd = self.dark.nframes
-            dark_im = np.zeros((self.dark.dim2,self.dark.dim1))
-            for ii in range(0,nd):
-                dark_im = dark_im + self.dark.getframe(ii).data
-            self.dark_im = dark_im/nd
-            self.dark_im = np.array(self.dark_im, dtype = float)
-            print 'Dark current image into memory'
-            
-            self.BatchProcABS.append(BatchProcessingABS(self.ifn_path,self.flat_im,self.dark_im,self.roixi,self.roixf,self.roiyi,self.roiyf,self.sc,self.savepathabs,self.dataset,self.absscantype,self.offset,self.sino))
-
-        self.procnum = 0
-        self.BatchProcABS[0].start()
-        self.alldatasets = len(self.BatchProcABS)
-        
-        for ii in range(0,len(self.datasetsabs)):
-            self.BatchProcABS[ii].batchrecsignal.connect(self.newrec)
-        
-    def newrec(self):
-            
-        self.procnum = self.procnum + 1
-        if self.procnum<self.alldatasets:
-            self.BatchProcABS[self.procnum].start()
-        else:
-            print 'All done'
-        
-        
-        
-        
-        
-                        
-#            self.progressbarbatch.append(QtWidgets.QProgressBar(self))
-#            self.tab1.layout.addWidget(self.progressbarbatch[ii],6+ii,5)
-#            
-#            self.labels.append(QtWidgets.QLabel(self))
-#            self.labels[ii].setText(self.dataset)
-#            self.tab1.layout.addWidget(self.labels[ii],6+ii,6)
-#
-#            self.BatchProc[ii].start()                
-#            self.BatchProc[ii].progress.connect(self.progressbarbatch[ii].setValue)
-            
-            
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-        
-        
-        
-
     def loadabsct(self):
+        
         h5_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open micro-CT data', "", "*.hdf5")
 
         print h5_fileName
@@ -2557,6 +2193,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.abscorim.setMaximum(dim[2]-1)
         
     def fileOpen(self):
+        
         self.hdf_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open XRD-CT data', "", "*.hdf5 *.h5")
         self.sinos = np.zeros(())
         self.bp = np.zeros(())
@@ -2592,8 +2229,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.explore()
         
     def loadxrdct(self):
+        
         if len(self.hdf_fileName)>0:
+            
             with h5py.File(self.hdf_fileName,'r') as f:
+                
                 try:
                     self.data = f['/data'][:]
                 except:
@@ -2805,8 +2445,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.fileQuit()
 
     def about(self):
-        QtWidgets.QMessageBox.about(self, "About",
-                                    """Data visualizer application""")
+        message = '<b>MultiTool v0.1.0 url:</b><p>'
+        message += '<p><i>Created by <a href=www.finden.co.uk>Finden</a>. Running under license under GPLv3'
+        message += '\t '
+        sImage = QtWidgets.QPixmap(".//images//logoLetters.png")
+        d = QtWidgets.QMessageBox()
+        d.setWindowTitle('About')
+        d.setIconPixmap(sImage)
+        d.setText(message)
+        d.exec_()
       
       
 class Coordinate(object):

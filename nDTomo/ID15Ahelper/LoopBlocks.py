@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec  5 11:34:24 2017
 
-@author: simon
+Loop blocks
+
+@author: S.D.M. Jacques
+
 """
 
 from baseBlocks import BlockGroup
@@ -11,9 +13,17 @@ import settings
 
 from LoopCounterManager import LoopCounterManager
 loopCounterManager = LoopCounterManager()     
+
 ##############################################################################
 
 class SimpleForBlock(BlockGroup):
+    
+    """
+    
+    For loop block
+    
+    """
+    
     def __init__(self):
         BlockGroup.__init__(self) #####
 #####       super(SimpleForBlock, self).__init__()
@@ -50,6 +60,13 @@ class SimpleForBlock(BlockGroup):
 #        self.methodText += '\n\t%s = sprintf(\"%s_%s\", %s)' % (prefixVarName, self.parameters['prefix'], prefixLoopCounterFormat, self.loopCounter)
 
 class SimpleWhileLoop(BlockGroup):
+    
+    """
+    
+    While loop block
+    
+    """
+    
     def __init__(self):
         BlockGroup.__init__(self) #####
 #####        super(SimpleWhileLoop, self).__init__()
@@ -71,6 +88,13 @@ class SimpleWhileLoop(BlockGroup):
         self.methodText = "while (%s) {" % (self.parameters['expression'])
 
 class WhileLessThanSomeTime(BlockGroup):
+    
+    """
+    
+    While temporal block
+    
+    """
+    
     def __init__(self):
         BlockGroup.__init__(self)
 #####        super(WhileLessThanSomeTime, self).__init__()
@@ -114,6 +138,13 @@ class WhileLessThanSomeTime(BlockGroup):
         self.closingText += '}'
               
 class WhileTempRamp(BlockGroup):
+    
+    """
+    
+    While temperature block
+    
+    """
+    
     def __init__(self):
         BlockGroup.__init__(self) #####
 #####        super(WhileLessThanSomeTemp, self).__init__()
@@ -184,6 +215,13 @@ class WhileTempRamp(BlockGroup):
 
 
 class PositionalSeriesBlock(BlockGroup):
+    
+    """
+    
+    Positional series block
+    
+    """
+    
     def __init__(self):
         BlockGroup.__init__(self) #####
 #####       super(SimpleForBlock, self).__init__()

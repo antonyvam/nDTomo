@@ -13,8 +13,53 @@ from PThread import Periodic
 class XRDCT_LiveRead(QThread): 
 
     '''
+    
     Read integrated data live    
-    '''        
+    
+        :prefix: prefix used for the filenames of the experimental data
+    
+	:dataset: foldername where the experimental data are stored
+    
+	:xrdctpath: full path where the experimental data are stored
+    
+	:maskname: detector mask file ('mask.edf')
+    
+	:poniname: .poni file ('filename.poni')
+    
+	:na: number of angular steps during the tomographic scan
+    
+	:nt: number of translation steps during the tomographic scan
+    
+	:npt_rad: number of bins used for the diffraction pattern (e.g. 2048)
+    
+	:procunit: processing unit, options are: 'CPU', 'GPU' and 'MultiGPU'
+    
+	:units:  x axis units for the integrated diffraction patterns, options are: 'q_A^-1' or '2th_deg'
+    
+	:prc: percentage to be used for the trimmed mean filter
+    
+	:thres: number of standard deviation values to be used for the adaptive standard deviation filter
+    
+	:datatype: type of image files, options are: 'edf' or 'cbf'
+    
+	:savepath: full path where results will be saved
+    
+	:scantype: scantype, options are: 'Zigzag', 'ContRot' and 'Interlaced'
+    
+	:energy: X-ray energy in keV		
+    
+	:jsonname: full path for the .azimint.json file
+    
+	:omega:	rotation axis motor positions during the tomographic scan (1d array)
+    
+	:trans:	translation axis motor positions during the tomographic scan (1d array)
+    
+	:dio: diode values per point during the tomographic scan (1d array)
+    
+	:etime:	values for exposure time per point during the tomographic scan (1d array)
+    
+    '''    
+        
     updatedata = pyqtSignal()
     exploredata = pyqtSignal()
     
@@ -46,6 +91,11 @@ class XRDCT_LiveRead(QThread):
             print "Cannot open mask file or the xrd-ct dataset directory is wrong"
 
     def run(self):
+
+        """
+		Initiate the XRD-CT data live read process
+		"""        
+
         self.nextLineNumber = 1
         
         if self.procunit == "MultiGPU":
@@ -61,6 +111,11 @@ class XRDCT_LiveRead(QThread):
 
 
     def checkForFile(self):
+        
+        """
+		Look for integrated data file 
+		"""   
+        
         if os.path.exists(self.nextFile) & os.path.exists(self.targetFile):
             print('%s exists' % self.nextFile)
             self.periodEvent.stop()
@@ -73,6 +128,11 @@ class XRDCT_LiveRead(QThread):
             print('%s or %s does not exist' %(self.nextFile,self.targetFile))
            
     def hdfLineScanRead(self):
+        
+        """
+		Read integrated data 
+		"""         
+        
         with h5py.File(self.nextFile,'r') as f:
             if self.procunit == "MultiGPU":
             #### For GPU  
@@ -112,16 +172,31 @@ class XRDCT_LiveRead(QThread):
             self.exploredata.emit()
 
     def tth2q(self):
+        
+        """
+		Convert 2theta to d and q spacing
+		"""  	
+        
         self.h = 6.620700406E-34;self.c = 3E8
         self.wavel = 1E10*6.242E18*self.h*self.c/(self.E*1E3)
         self.d = self.wavel/(2*sin(deg2rad(0.5*self.tth)))
         self.q = pi*2/self.d
 
     def colFliplive(self):
+        
+        """
+		Flip every second column in the sinograms to account for the zigzag data collection approach
+		"""  
+        
         if mod(self.nextLineNumber-1,2) == 0:
             self.data[:,self.nextLineNumber-1,:] = self.data[::-1,self.nextLineNumber-1,:]
             
     def setNextFile(self):
+        
+        """
+		Look for the target h5 file. If all done, save the integrated data as a sinongram volume.
+		""" 
+        
         self.nextLineNumber += 1
         
         if self.procunit == "MultiGPU":
@@ -158,6 +233,10 @@ class XRDCT_LiveRead(QThread):
 
     def setTargetFile(self):
         
+        """
+		Set the next target h5 file
+		"""  
+        
         if self.procunit == "MultiGPU":
             #### For GPU        
             if self.nextLineNumber < self.na:
@@ -174,6 +253,10 @@ class XRDCT_LiveRead(QThread):
                 
 
     def writesinos(self):
+        
+        """
+		Export the sinogram data volume as a single .hdf5 file
+		"""    
         
         if self.filt == "No":
             fn = "%s/%s_integrated_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, self.filt,self.procunit)
@@ -204,6 +287,10 @@ class XRDCT_LiveRead(QThread):
         
     def removedata(self):
 
+        """
+		Remove integrated linescan data
+		"""
+        
         if self.procunit == "MultiGPU":
             try:
                 fn = "%s/%s*.azim.h5" % (self.savepath, self.dataset)

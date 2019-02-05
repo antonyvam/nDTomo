@@ -1,13 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec  5 09:05:54 2017
 
-@author: simon
+Highlevel blocks
+
+@author: S.D.M. Jacques
+
 """
 
 # This class will need to be singleton
 # see http://python-3-patterns-idioms-test.readthedocs.io/en/latest/Singleton.html
 class LoopCounters():
+    
+    """
+    
+    A loop counter class
+    
+    """
+    
     def __init__(self):
         self.reset()
         

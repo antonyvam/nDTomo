@@ -11,8 +11,7 @@ import pyFAI, fabio
 from os import system
 
 class CreatPDFMask(QThread):
-    '''Class to create a detector mask for pair distribution function data'''
-    
+        
     def __init__(self,ponifile,mask):
         QThread.__init__(self)
         self.poniname = ponifile     

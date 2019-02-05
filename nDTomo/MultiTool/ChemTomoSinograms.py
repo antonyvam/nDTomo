@@ -1,19 +1,27 @@
 # -*- coding: utf-8 -*-
 """
+
 Chemical tomography sinogram data class for the MultiTool
 
-@author: Antony
+@author: A. Vamvakeros
+
 """
 
 from PyQt5.QtCore import pyqtSignal, QThread
 from numpy import concatenate, log, flipud, zeros, sqrt, sum, arange, min, max, floor, where, mean, array, exp, inf, ceil, interp, std, argmin, transpose, tile, swapaxes, round
 
 class SinoProcessing(QThread):
+    
     '''
+    
     The SinoProcessing class allows for:
+        
         a) Centering of the sinogram(s)
+    
         b) Subtraction of background signal
+    
         c) Normalisation of sinograms assuming constant summed intensity per projection
+    
     '''
     
     snprocdone = pyqtSignal()
@@ -29,6 +37,12 @@ class SinoProcessing(QThread):
         
         
     def run(self):
+
+        """
+        
+        Initialise the sinogram data processing
+        
+        """
         
         if self.sinonorm == 1:
             self.scalesinos()   
@@ -41,11 +55,23 @@ class SinoProcessing(QThread):
         
     def airrem(self):
         
+        """
+        
+        Method for subtracting the backgroung signal from the sinograms
+        
+        """   
+        
         for ii in range(0,self.sinos_proc.shape[1]):
             dpair = (mean(self.sinos_proc[0:self.ofs,ii,:],axis = 0) + mean(self.sinos_proc[self.sinos_proc.shape[0]-self.ofs:self.sinos_proc.shape[0],ii,:],axis = 0))/2
             self.sinos_proc[:,ii,:] = self.sinos_proc[:,ii,:] - dpair
             
     def scalesinos(self):
+        
+        """
+        
+        Method for normalising the sinograms. It assumes that the total scattering intensity per projection is constant.
+        
+        """ 
         
         ss = sum(self.sinos_proc,axis = 2)
         scint = zeros((self.sinos_proc.shape[1]))
@@ -61,8 +87,12 @@ class SinoProcessing(QThread):
         
     def sinocentering(self):
         
+        """
         
-                
+        Method for centering sinograms by flipping the projection at 180 deg and comparing it with the one at 0 deg
+        
+        """                  
+        
         di = self.sinos_proc.shape
         if len(di)>2:
             s = sum(self.sinos_proc, axis = 2)

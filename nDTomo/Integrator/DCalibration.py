@@ -15,7 +15,7 @@ from scipy.ndimage import binary_dilation
 class Calibration(QThread):
     
     def __init__(self,calibrant,energy):
-		"""
+        """
 		:calibrant: experimental file (i.e. calibrant diffraction pattern)
 		:energy: X-ray energy in keV
 		"""
@@ -24,7 +24,7 @@ class Calibration(QThread):
         self.E = energy
         
     def run(self):
-		"""
+        """
 		Run pyFAI-calib (detector calibration)
 		"""
         cmd = 'pyFAI-calib -e %.f -c CeO2 -D Pilatus2M_CdTe %s' %(self.E,self.calibrant)
@@ -34,7 +34,7 @@ class Calibration(QThread):
 class CreatMask(QThread):
     
     def __init__(self,calibrant):
-		"""
+        """
 		:calibrant: experimental file (i.e. calibrant diffraction pattern)
 		"""	
         QThread.__init__(self)
@@ -54,7 +54,7 @@ class CreatMask(QThread):
         system(perm) 
         
     def run(self):
-		"""
+        """
 		Run pyFAI-drawmask (detector calibration)
 		"""	
         cmd = 'pyFAI-drawmask %s' %(self.newcalibrant)

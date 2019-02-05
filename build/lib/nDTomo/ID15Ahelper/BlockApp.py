@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Nov 19 13:08:04 2017
 
-@author: SDMJ
+The main ID15A helper GUI code
+
+@author: S.D.M. Jacques
+
 """
 #from PyQt5 import QtWidgets, QtGui, QtCore
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QFileDialog, QTextEdit, QAction 
 from PyQt5.QtWidgets import QVBoxLayout, QDockWidget, QTabWidget, QScrollArea, QMessageBox
-from PyQt5.QtGui import QFont, QFontMetrics, QImage, QPixmap, QIcon#, QTextCursor
+from PyQt5.QtGui import QFont, QFontMetrics, QPixmap, QIcon#, QTextCursor
 from PyQt5.QtCore import Qt, qVersion, PYQT_VERSION_STR, QSize
 
 
@@ -21,12 +23,19 @@ from pyqtgraph.parametertree import ParameterTree
 
 
 class BlockMainWindow(QMainWindow):
+    
+    """
+    
+    The ID15A helper GUI
+    
+    """
+    
     def __init__(self):
         QMainWindow.__init__(self) #####
 #####        super(BlockMainWindow, self).__init__()
         
 #        layout = QHBoxLayout()        
-        self.setWindowTitle('FindenBlox for ID15')
+        self.setWindowTitle('ID15A helper')
         
 #        self.setWindowModality(Qt.ApplicationModal)
         self.setGeometry(200, 200, 800, 700)
@@ -165,14 +174,14 @@ class BlockMainWindow(QMainWindow):
         action_PDF_Mode = addModes.addAction("PDF Mode")
 		
         action_Single_XRD = addScans.addAction("point XRD")
-        action_AEROYSCAN = addScans.addAction("hor XRD linescan")
-        action_ZSCAN = addScans.addAction("ver XRD linescan")
+        action_HORSCAN = addScans.addAction("hor XRD linescan")
+        action_VERSCAN = addScans.addAction("ver XRD linescan")
         action_XRDMAP = addScans.addAction("XRD Map")
         action_XRDCT = addScans.addAction("single XRD-CT")
-        action_XRDCT3D = addScans.addAction("3D XRD-CT")
+        action_XRDCT3D = addScans.addAction("3D-XRD-CT")
         action_FASTXRDCT = addScans.addAction("Fast XRD-CT")
-        action_FASTXRDCT3D = addScans.addAction("Fast 3D XRD-CT")
-        action_INTER = addScans.addAction("interlaced XRD-CT")
+        action_FASTXRDCT3D = addScans.addAction("Fast 3D-XRD-CT")
+        action_INTER = addScans.addAction("Interlaced XRD-CT")
         action_ABSCT = addScans.addAction("ABS-CT")
         
         action_rel = addMotors.addAction("rel move")
@@ -181,8 +190,9 @@ class BlockMainWindow(QMainWindow):
         action_while = addLoops.addAction("while < time")
         action_while2 = addLoops.addAction("while Temp ramp")
         action_positionalSeries = addLoops.addAction("positionalSeries") 
-        action_addSingleEuro = addOthers.addAction("single euro")
-        action_addDualEuro = addOthers.addAction("dual euro")
+        action_addheatsys = addOthers.addAction("heating system")        
+#        action_addSingleEuro = addOthers.addAction("single suro")
+#        action_addDualEuro = addOthers.addAction("dual euro")
         action_sleep = addOthers.addAction("sleep")
         action_wait = addOthers.addAction("wait for user")
 #        action_group = addOthers.addAction("group")       
@@ -205,10 +215,10 @@ class BlockMainWindow(QMainWindow):
         action_PDF_Mode.triggered.connect(lambda: self.expt.addBlock(ModeBlocks.PdfModeBlock()))
 		
         action_Single_XRD.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.OneShotBlock()))
-        action_AEROYSCAN.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.AEROYSCAN_Block()))
-        action_ZSCAN.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.ZSCAN_Block()))
+        action_HORSCAN.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.HORSCAN_Block()))
+        action_VERSCAN.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.VERSCAN_Block()))
         action_XRDMAP.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.XRDMAP_Block()))
-        action_INTER.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.Interlaced_XRD_CT_Block()))
+        action_INTER.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.InterlacedXRDCT_Block()))
         action_XRDCT.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.XRDCT_Block()))
         action_XRDCT3D.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.XRDCT3D_Block()))
         action_FASTXRDCT.triggered.connect(lambda: self.expt.addBlock(ScanBlocks.FASTXRDCT_Block()))
@@ -217,12 +227,15 @@ class BlockMainWindow(QMainWindow):
         
         action_rel.triggered.connect(lambda: self.expt.addBlock(MotorBlocks.RelMotorMoveBlock()))
         action_abs.triggered.connect(lambda: self.expt.addBlock(MotorBlocks.AbsMotorMoveBlock()))
+        
         action_for.triggered.connect(lambda: self.expt.addBlock(LoopBlocks.SimpleForBlock()))
         action_while.triggered.connect(lambda: self.expt.addBlock(LoopBlocks.WhileLessThanSomeTime()))
         action_while2.triggered.connect(lambda: self.expt.addBlock(LoopBlocks.WhileTempRamp()))
         action_positionalSeries.triggered.connect(lambda: self.expt.addBlock(LoopBlocks.PositionalSeriesBlock()))
-        action_addSingleEuro.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.SingleEurothermBlock()))        
-        action_addDualEuro.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.DualEurothermBlock()))
+        
+        action_addheatsys.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.HeatingSystemBlock()))        
+#        action_addSingleEuro.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.SingleEurothermBlock()))        
+#        action_addDualEuro.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.DualEurothermBlock()))
         action_sleep.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.SleepBlock()))
         action_wait.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.WaitForUserBlock()))
 #        action_group.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.GenericGroupBlock()))
@@ -273,10 +286,7 @@ class BlockMainWindow(QMainWindow):
             file.close()
     
     def about(self):
-        a = sys.version_info
         message = '<b>ID15A helper v0.1.0 url:</b><p>'
-        message += 'Python %d.%d.%d, PyQt %s, Qt %s on %s platform' % (a.major, a.minor, a.micro, PYQT_VERSION_STR, qVersion(), sys.platform)
-#        message += 
         message += '<p><i>Created by <a href=www.finden.co.uk>Finden</a>. Running under license under GPLv3'
         message += '\t '
         sImage = QPixmap(".//images//logoLetters.png")

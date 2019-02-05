@@ -9,6 +9,8 @@ Contents
    
    intro
    req
-   api
+   ID15A_helperAPI
+   IntegratorAPI
+   MultiToolAPI
    refs
    sites

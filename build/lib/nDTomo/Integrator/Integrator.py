@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov 20 13:36:30 2018
+The main code for the Integrator GUI
 
-@author: Antony
+@author: A. Vamvakeros
 """
 
 from __future__ import unicode_literals
@@ -36,13 +36,20 @@ from ZigzagTomoInt_Live import XRDCT_LiveSqueeze
 from ZigzagTomoInt_LiveRead import XRDCT_LiveRead
 from ZigzagTomoInt_LiveMulti import XRDCT_ID15ASqueeze
 
-from FastTomoInt_Live import Fast_XRDCT_LiveSqueeze
-from FastTomoInt_LiveRead import Fast_XRDCT_LiveRead
-from FastTomoInt_LiveMulti import Fast_XRDCT_ID15ASqueeze
+from ContRotTomoInt_Live import Fast_XRDCT_LiveSqueeze
+from ContRotTomoInt_LiveRead import Fast_XRDCT_LiveRead
+from ContRotTomoInt_LiveMulti import Fast_XRDCT_ID15ASqueeze
 
         
 
 class ApplicationWindow(QtWidgets.QMainWindow):
+    
+    """
+    
+    The Integrator GUI
+    
+    """
+    
     def __init__(self):
         super(ApplicationWindow, self).__init__()
         self.data = zeros(())
@@ -62,7 +69,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.filt = "No"
         self.prc = 10
         self.thres = 3
-        self.scantype = "zigzag"
+        self.scantype = "Zigzag"
         self.parfile = []
         self.nt = []
         self.na = []
@@ -314,7 +321,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.l.addWidget(self.label11,8,3)
         
         self.ChooseScan = QtWidgets.QComboBox(self)
-        self.ChooseScan.addItems(["ZigZag", "Continuous rotation", "Interlaced"])
+        self.ChooseScan.addItems(["Zigzag", "Continuous rotation", "Interlaced"])
         self.ChooseScan.currentIndexChanged.connect(self.ChooseScanType)
         self.l.addWidget(self.ChooseScan,8,4)  
         
@@ -691,7 +698,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             
             
-            
     def DecideFilter(self,ind):
         if ind == 0:
             self.filt = "No"
@@ -726,69 +732,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
     def ChooseScanType(self,ind):
         if ind == 0:
-            self.scantype = "zigzag"
+            self.scantype = "Zigzag"
         elif ind == 1:
-            self.scantype = "fast"
-
-#    def readparfile(self):
-#        
-#        par_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File', "", "*.par *.log")
-#        if len(par_fileName)>0:
-#            self.parfile = par_fileName
-#            self.xrdctparpath.setText(self.parfile)
-#            self.readparinfo()
-
-#    def readparinfo(self): 
-#        
-#        d = {}
-#        with open(self.parfile) as f:
-#          d = dict(x.rstrip().split(None, 1) for x in f)
-#        
-#        
-#        frames = d['FAST_SCAN2D_PAR["npat"]']
-#        frames = frames.split('= ')
-#        frames = float(frames[1])
-#        self.nt = frames
-#        self.setnt.setText(str(int(self.nt)))
-#        print frames
-#        
-#        slowaxis = d['FAST_SCAN2D_PAR["slow_loop"]']
-#        slowaxis = slowaxis.split('= ')
-#        slowaxis = float(slowaxis[1])+1
-#        self.na = slowaxis
-#        self.setna.setText(str(int(self.na)))
-#        print slowaxis
-#        
-#        zigzag =  d['FAST_SCAN2D_PAR["odd"]["dir"]']
-#        zigzag = zigzag.split('= ')
-#        zigzag = zigzag[1]
-#        self.zigzag = zigzag
-#        print zigzag
-#        
-#        slowaxisname = d['FAST_SCAN2D_PAR["slow_axis"]'] 
-#        slowaxisname = slowaxisname.split('"')
-#        slowaxisname = slowaxisname[1]
-#        self.slowaxisname = slowaxisname
-#        print slowaxisname
-#        
-#        slowaxisstep = d['FAST_SCAN2D_PAR["slow_step"]']
-#        slowaxisstep = slowaxisstep.split('"')
-#        slowaxisstep = slowaxisstep[1]
-#        self.slowaxisstep = slowaxisstep
-#        print slowaxisstep
-#        
-#        direct = d['FAST_SCAN["file"]["dir"]']
-#        direct = direct.split('"')
-#        direct = direct[1]
-#        direct = direct.split('gz/')
-#        direct = direct[1]
-#        self.direct = direct
-#        print direct
-#        
-#        dataset = direct.split('xrdct/')
-#        self.dataset = dataset[1]
-#        self.xrdctname.setText(str(self.dataset))
-#        print self.dataset
+            self.scantype = "ContRot"
+        elif ind == 2:
+            self.scantype = "Interlaced"            
 
     def readspecfile(self): 
         
@@ -807,7 +755,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
     def readspecinfo(self): 
         
-        if self.scantype=='zigzag':
+        """
+        Method for reading .spec files that contain the motor positions during the tomographic scan
+        """
+        
+        if self.scantype=='Zigzag':
             try:
                 f=open(self.specfile).read()
                 nomega=f.count('#S')/2
@@ -848,9 +800,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             except:
                 print 'Can not find spec file',self.specfile,'skipping directory'
 
-                
-
-        elif self.scantype=='fast':
+        elif self.scantype=='ContRot':
             try:
                 with open(self.specfile) as f:
                     for line in f:
@@ -892,15 +842,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setnt.setText(str(self.nt))
         self.setna.setText(str(self.na))
             
-        
-#    def readparfile2(self,s):
-#        self.parfile = str(s)
-#        print self.parfile
-#	try:
-#        	self.readparfile()
-#	except:
-#		pass
-    
     def setnumtra(self,s):
         self.nt = int(s)
         print self.nt
@@ -957,6 +898,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     
     def processxrdct(self):
         
+        """
+        
+        Perform the XRD-CT data integration
+        
+        """
+        
         self.ChooseIntegration.setEnabled(False)
         self.pbutton11.setEnabled(False)   
         self.pbutton15.setEnabled(False)  
@@ -965,7 +912,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         na = float(self.na); nt = float(self.nt);npt_rad = float(self.npt_rad);
         
         try:
-            if self.scantype == 'zigzag':
+            if self.scantype == 'Zigzag':
 
                 if self.liveoption == 1:
                     self.Squeezing = XRDCT_LiveSqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
@@ -990,7 +937,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.Squeezing.progress.connect(self.progressbar.setValue)
                     
 
-            elif self.scantype == 'fast':
+            elif self.scantype == 'ContRot':
 
                 if self.liveoption == 1:
                     self.Squeezing = Fast_XRDCT_LiveSqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
@@ -1020,6 +967,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
     
     def readxrdct(self):
+
+        """
+        
+        Read the integrated XRD-CT data
+        
+        """
         
         self.ChooseIntegration.setEnabled(False)
         self.pbutton11.setEnabled(False)   
@@ -1027,12 +980,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.prefix = self.dataset
         na = float(self.na); nt = float(self.nt);npt_rad = float(self.npt_rad);
         try:
-            if self.scantype == 'zigzag':
+            if self.scantype == 'Zigzag':
                     self.Reading = XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Reading.start()  
                     self.Reading.exploredata.connect(self.explore)
                     self.Reading.updatedata.connect(self.update)
-            elif self.scantype == 'fast':                    
+            elif self.scantype == 'ContRot':                    
                     self.Reading = Fast_XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Reading.start()  
                     self.Reading.exploredata.connect(self.explore)
@@ -1046,11 +999,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         except:
             pass
         
-    
-#    def updatedata(self):
-##        self.data = self.Squeezing.data
-#        self.pbutton11.setEnabled(True)
-#        print 'All done!!!!'
     
     def stopprocessxrdct(self):
             
@@ -1078,36 +1026,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.pbutton15.setEnabled(True)        
         self.progressbar.setValue(0)
         
-    def writeintdata(self):
 
-        self.ChooseIntegration.setEnabled(True)
-        self.pbutton11.setEnabled(True)
-        self.pbutton15.setEnabled(True) 
-        self.progressbar.setValue(0)
-        
-        print 'All done!!!!'
-
-        fn = "%s/%s_squeezed_%s.hdf5" % (self.savepath, self.dataset, self.filt)
-        h5f = h5py.File(fn, "w")
-        h5f.create_dataset('data', data=self.Squeezing.data)
-        h5f.create_dataset('slow_axis_steps', data=self.na)
-        h5f.create_dataset('fast_axis_steps', data=self.nt)
-        h5f.create_dataset('q', data=self.Squeezing.q)
-        h5f.create_dataset('twotheta', data=self.Squeezing.tth)
-        h5f.create_dataset('d', data=self.Squeezing.d)
-        h5f.create_dataset('omega', data=self.omega)
-        h5f.create_dataset('translations', data=self.trans)
-        h5f.create_dataset('scantype', data=self.scantype)        
-        h5f.create_dataset('diode', data=self.dio)
-        h5f.create_dataset('exptime', data=self.etime)    
-        h5f.close()
-    	
-        os.chdir(self.savepath)
-        perm = 'chmod 777 %s' %fn
-        os.system(perm)        
-
-
-        
     def explore(self):
         self.data = self.Reading.data
         self.xaxis = self.Reading.q
@@ -1150,7 +1069,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.plotter.draw()        
                 
         
-    def onMapClick(self, event): # SDMJ version
+    def onMapClick(self, event):
         if event.button == 1:
             if event.inaxes:
                 self.col = int(event.xdata.round())
@@ -1382,9 +1301,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
              
             if self.procunit == "MultiGPU":
-                if self.scantype == 'zigzag':
+                if self.scantype == 'Zigzag':
                     self.Squeezing.append(XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime))
-                elif self.scantype == 'fast':
+                elif self.scantype == 'ContRot':
                     self.Squeezing.append(Fast_XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime))
             else:
                 self.Squeezing.append(XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime))
@@ -1498,11 +1417,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.filtervalue.setText(str(self.thres))
 		        
             
-            if self.scantype == "zigzag":
+            if self.scantype == "Zigzag":
                 self.ChooseScan.setCurrentIndex(0)
-            elif self.scantype == "fast":
+            elif self.scantype == "ContRot":
                 self.ChooseScan.setCurrentIndex(1)
-            elif self.scantype == "interlaced":
+            elif self.scantype == "Interlaced":
                 self.ChooseScan.setCurrentIndex(2)
   
     
@@ -1515,18 +1434,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.fileQuit()
 
     def about(self):
-#        QtWidgets.QMessageBox.about(self, "About",
-#                                    """Data integration application""")
-        a = sys.version_info
-        message = '<b>FindenIntegrator for ID15 v0.2.2018</b><p>'
-        message += 'Python %d.%d.%d, PyQt %s, Qt %s on %s platform' % (a.major, a.minor, a.micro, QtCore.PYQT_VERSION_STR, QtCore.qVersion(), sys.platform)
-#        message += 
-        message += '<p><i>Created by Antonis Vamvakeros <a href=www.finden.co.uk>Finden</a>. Running under license under XXX All rights reserved. January 2018'
+        message = '<b>Integrator GUI for ID15A v0.1.0 url:</b><p>'
+        message += '<p><i>Created by <a href=www.finden.co.uk>Finden</a>. Running under license under GPLv3'
         message += '\t '
-#        sImage = QPixmap(".//images//logoLetters.png")
+        sImage = QtWidgets.QPixmap(".//images//logoLetters.png")
         d = QtWidgets.QMessageBox()
-        d.setWindowTitle('About...')
-#        d.setIconPixmap(sImage)
+        d.setWindowTitle('About')
+        d.setIconPixmap(sImage)
         d.setText(message)
         d.exec_()
         
@@ -1573,6 +1487,7 @@ def main():
    
 if __name__ == "__main__":
     main()
-    
+
+####### For debugging only:    
 #aw = ApplicationWindow()    
 #aw.show()

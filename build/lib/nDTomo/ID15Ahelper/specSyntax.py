@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Aug  8 18:02:55 2017
 
-@author: simon
+Spec syntax class
+
+@author: S.D.M. Jacques
+
 """
-# syntax.py
 
-from PyQt5.QtCore import QFile, QRegExp, Qt
+
+from PyQt5.QtCore import QRegExp, Qt
 from PyQt5.QtGui import QFont, QSyntaxHighlighter, QTextCharFormat
-from PyQt5.QtWidgets import (QApplication, QFileDialog, QMainWindow, QMenu,
-        QMessageBox, QTextEdit)
+
 
 class Highlighter(QSyntaxHighlighter):
+    
     def __init__(self, parent=None):
+        
         super(Highlighter, self).__init__(parent)
 
         keywordFormat = QTextCharFormat()
@@ -62,6 +65,7 @@ class Highlighter(QSyntaxHighlighter):
         self.commentEndExpression = QRegExp("\\*/")
 
     def highlightBlock(self, text):
+        
         for pattern, format in self.highlightingRules:
             expression = QRegExp(pattern)
             index = expression.indexIn(text)

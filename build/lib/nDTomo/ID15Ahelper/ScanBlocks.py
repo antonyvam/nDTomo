@@ -1,19 +1,28 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 16 20:46:21 2017
 
-@author: simon
+Scan blocks
+
+@author: S.D.M. Jacques and A. Vamvakeros
+
 """
 
 
+import settings
 from baseBlocks import Block, EasternBlock
 from PyQt5.QtGui import QColor, QPen, QFont, QImage
-import settings
 from PyQt5.QtCore import Qt, QRect, QSize, QPoint
 #from PyQt5.QtGui import QPen
-import numpy as np
+
 ##############################################################################
 class ScanBlock(Block):
+    
+    """
+    
+    Gerenic scan block class
+    
+    """
+    
     def __init__(self):
         Block.__init__(self) #####
 #####        super(ScanBlock, self).__init__()
@@ -78,38 +87,16 @@ class ScanBlock(Block):
         s2 = s2 + ')\n'
         s = s1 + s2
         return s
-             
-##############################################################################        
-class Interlaced_XRD_CT_Block(ScanBlock):
-    def __init__(self):
-        ScanBlock.__init__(self) #####
-#####        super(Interlaced_XRD_CT_Block, self).__init__()
-#        super().__init__()
-        self.name = 'interlaced XRD-CT'
-        self.initiateParameters()
-        
-    def initiateParameters(self):
-        pathToData = 'C:\\Users\\simon\\Dropbox (Finden)\\Projects\\ID15_XRDCT_development\\scripts\\simon\\virtualDataArea\\'
-        self.parameters.setName(self.name)
-        self.parameters.addChild(self.item('scanFileName', 'dummy'))
-        self.parameters.addChild(self.item('pathToData', pathToData))
-        self.parameters.addChild(self.item('nSubTomos', 4))
-        self.parameters.addChild(self.item('slowAxis', 2, type='list', values = settings.userMotorDict))
-        self.parameters.addChild(self.item('slowAxisStart', 0.00))
-        self.parameters.addChild(self.item('slowAxisStep', 2.00))
-        self.parameters.addChild(self.item('slowAxisN', 180))
-        self.parameters.addChild(self.item('fastAxis', 2, type='list', values = settings.userMotorDict))      
-        self.parameters.addChild(self.item('fastAxisStart', -5.00))
-        self.parameters.addChild(self.item('fastAxisStep', 0.10))
-        self.parameters.addChild(self.item('fastAxisN', 100))
-        self.parameters.addChild(self.item('zigzag', 0, type='bool'))
-        self.parameters.addChild(self.item('acquisition', 0.02))
-    
-    def setMethodText(self):
-        self.methodText = "pass"
 
 ##############################################################################            
 class OneShotBlock(ScanBlock):
+    
+    """
+    
+    XRD point scan block
+    
+    """
+    
     def __init__(self):
         ScanBlock.__init__(self) #####
 #####        super(OneShotBlock, self).__init__()
@@ -138,7 +125,14 @@ class OneShotBlock(ScanBlock):
         self.sideText = self.humanTime()
         
 ##############################################################################
-class AEROYSCAN_Block(ScanBlock):
+class HORSCAN_Block(ScanBlock):
+    
+    """
+    
+    XRD horizontal profile scan block
+    
+    """
+    
     def __init__(self): 
         ScanBlock.__init__(self) #####
 #####        super(Simple_XRD_CT_Block, self).__init__()
@@ -170,7 +164,14 @@ class AEROYSCAN_Block(ScanBlock):
         self.sideText = self.humanTime()
         
 ##############################################################################
-class ZSCAN_Block(ScanBlock):
+class VERSCAN_Block(ScanBlock):
+    
+    """
+    
+    XRD vertical profile scan block
+    
+    """
+    
     def __init__(self): 
         ScanBlock.__init__(self) #####
 #####        super(Simple_XRD_CT_Block, self).__init__()
@@ -204,6 +205,13 @@ class ZSCAN_Block(ScanBlock):
         
 ##############################################################################
 class XRDMAP_Block(ScanBlock):
+
+    """
+    
+    XRD map scan block
+    
+    """
+    
     def __init__(self): 
         ScanBlock.__init__(self) #####
 #####        super(Simple_XRD_CT_Block, self).__init__()
@@ -243,13 +251,60 @@ class XRDMAP_Block(ScanBlock):
         self.time = 0#(np.mod(z_max-z_min)/z_step+1)*(scan_range/y_resolution) * exp_time
         self.sideText = self.humanTime()
         
+##############################################################################        
+class InterlacedXRDCT_Block(ScanBlock):
+    
+    """
+    
+    Interlaced XRD-CT scan block
+    
+    """
+    
+    def __init__(self):
+        ScanBlock.__init__(self) #####
+#####        super(Interlaced_XRD_CT_Block, self).__init__()
+#        super().__init__()
+        self.name = 'Interlaced XRD-CT'
+        self.initiateParameters()
+        
+    def initiateParameters(self):
+        self.parameters.setName(self.name)
+        self.parameters.addChild(dict(name='scanFileName', value='prefix', type ='str'))
+        self.parameters.addChild(dict(name='sampleSize (mm)', value = 5.00, type = 'float'))
+        self.parameters.addChild(dict(name='scanRange (mm)', value = 4.00, type = 'float'))
+        self.parameters.addChild(dict(name='resolution (mm)', value = 0.025, type = 'float'))
+        self.parameters.addChild(dict(name='exposureTime (sec)', value = 0.020, type = 'float'))
+
+        
+    def setMethodText(self):
+        prefix = self.parameters['scanFileName']  + '_Intxrdct'
+        sample_size = self.parameters['sampleSize (mm)']
+        scan_range = self.parameters['scanRange (mm)']
+        y_resolution = float(self.parameters['resolution (mm)'])
+        exp_time = float(self.parameters['exposureTime (sec)'])
+        loopCounters = self.getParentLoopCounters([])
+        
+        self.methodText = self.genSprintfFromLoopCounters(prefix, loopCounters)
+        self.methodText += "cmd = sprintf(\"xrdct3d %s %f %f %f %f\", fileName)\n" % (self.percents, sample_size, scan_range, y_resolution, exp_time)
+        self.methodText += "eval(cmd)\n"
+        self.time = (sample_size/y_resolution)*(scan_range/y_resolution) * exp_time
+        self.sideText = self.humanTime()
+        
 ##############################################################################
+
 class XRDCT_Block(ScanBlock):
+    
+    """
+    
+    Zigzag 2D-XRD-CT scan block
+    
+    """     
+    
     def __init__(self): 
         ScanBlock.__init__(self) #####
 #####        super(Simple_XRD_CT_Block, self).__init__()
 #        super().__init__()
-        self.name = 'XRD-CT'
+        self.name = 'Zigzag 2D-XRD-CT'
 #        self.regularColor = QColor(0, 0, 250)
         self.initiateParameters()
         self.image = QImage('.//images//singleSlice.png')
@@ -258,16 +313,16 @@ class XRDCT_Block(ScanBlock):
         self.parameters.setName(self.name)
         self.parameters.addChild(dict(name='scanFileName', value='prefix', type ='str'))
         self.parameters.addChild(dict(name='sampleSize (mm)', value = 5.00, type = 'float'))
-        self.parameters.addChild(dict(name='scanRange (mm)', value = 2.00, type = 'float'))
+        self.parameters.addChild(dict(name='scanRange (mm)', value = 4.00, type = 'float'))
+        self.parameters.addChild(dict(name='resolution (mm)', value = 0.025, type = 'float'))
         self.parameters.addChild(dict(name='exposureTime (sec)', value = 0.020, type = 'float'))
-        self.parameters.addChild(dict(name='resolution (microns)', value = 50, type = 'int'))
         
     def setMethodText(self):
-        prefix = self.parameters['scanFileName']  + '_xrdct'
+        prefix = self.parameters['scanFileName']  + '_Intxrdct'
         sample_size = self.parameters['sampleSize (mm)']
         scan_range = self.parameters['scanRange (mm)']
+        y_resolution = float(self.parameters['resolution (mm)'])
         exp_time = float(self.parameters['exposureTime (sec)'])
-        y_resolution = float(self.parameters['resolution (microns)'])/1000.0
         loopCounters = self.getParentLoopCounters([])
         
         self.methodText = self.genSprintfFromLoopCounters(prefix, loopCounters)
@@ -279,11 +334,18 @@ class XRDCT_Block(ScanBlock):
 
 ##############################################################################
 class XRDCT3D_Block(ScanBlock):
+    
+    """
+    
+    Zigzag 3D-XRD-CT scan block
+    
+    """     
+    
     def __init__(self): 
         ScanBlock.__init__(self) #####
 #####        super(Simple_XRD_CT_Block, self).__init__()
 #        super().__init__()
-        self.name = '3D XRD-CT'
+        self.name = 'Zigzag 3D-XRD-CT'
 #        self.regularColor = QColor(0, 0, 250)
         self.initiateParameters()
         self.image = QImage('.//images//stack.png')
@@ -292,19 +354,19 @@ class XRDCT3D_Block(ScanBlock):
         self.parameters.setName(self.name)
         self.parameters.addChild(dict(name='scanFileName', value='prefix', type ='str'))
         self.parameters.addChild(dict(name='sampleSize (mm)', value = 5.00, type = 'float'))
-        self.parameters.addChild(dict(name='scanRange (mm)', value = 2.00, type = 'float'))
-        self.parameters.addChild(dict(name='resolution (microns)', value = 50, type = 'int'))
+        self.parameters.addChild(dict(name='scanRange (mm)', value = 4.00, type = 'float'))
+        self.parameters.addChild(dict(name='resolution (mm)', value = 0.025, type = 'float'))
         self.parameters.addChild(dict(name='exposureTime (sec)', value = 0.020, type = 'float'))
         self.parameters.addChild(dict(name='Z start (mm)', value = 0.0, type = 'float'))
         self.parameters.addChild(dict(name='Z end (mm)', value = 1.0, type = 'float'))
         self.parameters.addChild(dict(name='Z step (mm)', value = 0.05, type = 'float'))
         
     def setMethodText(self):
-        prefix = self.parameters['scanFileName'] + '_3Dxrdct'
+        prefix = self.parameters['scanFileName'] + '_zigzag3Dxrdct'
         sample_size = self.parameters['sampleSize (mm)']
         scan_range = self.parameters['scanRange (mm)']
         exp_time = float(self.parameters['exposureTime (sec)'])
-        y_resolution = float(self.parameters['resolution (microns)'])/1000.0
+        y_resolution = float(self.parameters['resolution (microns)'])
 
         z_min = self.parameters['Z start (mm)']
         z_max = self.parameters['Z end (mm)']
@@ -325,12 +387,18 @@ class XRDCT3D_Block(ScanBlock):
 
 ##############################################################################
 class FASTXRDCT_Block(ScanBlock):
+    
+    """
+    
+   Continuous rotation 2D-XRD-CT scan block
+    
+    """ 
+    
     def __init__(self): 
         ScanBlock.__init__(self) #####
 #####        super(Simple_XRD_CT_Block, self).__init__()
 #        super().__init__()
-        self.name = 'FAST XRD-CT'
-#        self.regularColor = QColor(0, 0, 250)
+        self.name = 'ContRot XRD-CT'
         self.initiateParameters()
         self.image = QImage('.//images//singleSlice.png') ###### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! To sort
         
@@ -338,16 +406,16 @@ class FASTXRDCT_Block(ScanBlock):
         self.parameters.setName(self.name)
         self.parameters.addChild(dict(name='scanFileName', value='prefix', type ='str'))
         self.parameters.addChild(dict(name='sampleSize (mm)', value = 5.00, type = 'float'))
-        self.parameters.addChild(dict(name='scanRange (mm)', value = 2.00, type = 'float'))
+        self.parameters.addChild(dict(name='scanRange (mm)', value = 4.00, type = 'float'))
+        self.parameters.addChild(dict(name='resolution (mm)', value = 0.025, type = 'float'))
         self.parameters.addChild(dict(name='exposureTime (sec)', value = 0.020, type = 'float'))
-        self.parameters.addChild(dict(name='resolution (microns)', value = 50, type = 'int'))
         
     def setMethodText(self):
-        prefix = self.parameters['scanFileName']  + '_fastxrdct'
+        prefix = self.parameters['scanFileName']  + '_ContRotxrdct'
         sample_size = self.parameters['sampleSize (mm)']
         scan_range = self.parameters['scanRange (mm)']
         exp_time = float(self.parameters['exposureTime (sec)'])
-        y_resolution = float(self.parameters['resolution (microns)'])/1000.0
+        y_resolution = float(self.parameters['resolution (microns)'])
         loopCounters = self.getParentLoopCounters([])
         self.methodText = self.genSprintfFromLoopCounters(prefix, loopCounters)
         self.methodText += "cmd = sprintf(\"continuous_rot_xrdct3d %s %f %f %f %f\", fileName)\n" % (self.percents, sample_size, scan_range, y_resolution, exp_time)
@@ -358,12 +426,18 @@ class FASTXRDCT_Block(ScanBlock):
 
 ##############################################################################
 class FASTXRDCT3D_Block(ScanBlock):
+    
+    """
+    
+   Continuous rotation 3D-XRD-CT scan block
+    
+    """    
+    
     def __init__(self): 
         ScanBlock.__init__(self) #####
 #####        super(Simple_XRD_CT_Block, self).__init__()
 #        super().__init__()
-        self.name = 'Fast 3D XRD-CT'
-#        self.regularColor = QColor(0, 0, 250)
+        self.name = 'ContRot 3D-XRD-CT'
         self.initiateParameters()
         self.image = QImage('.//images//stack.png') ###### !!!!!!!!!!!!!!!!!!!!!!!!!!!!!! To sort
         
@@ -371,19 +445,19 @@ class FASTXRDCT3D_Block(ScanBlock):
         self.parameters.setName(self.name)
         self.parameters.addChild(dict(name='scanFileName', value='prefix', type ='str'))
         self.parameters.addChild(dict(name='sampleSize (mm)', value = 5.00, type = 'float'))
-        self.parameters.addChild(dict(name='scanRange (mm)', value = 2.00, type = 'float'))
-        self.parameters.addChild(dict(name='resolution (microns)', value = 50, type = 'int'))
+        self.parameters.addChild(dict(name='scanRange (mm)', value = 4.00, type = 'float'))
+        self.parameters.addChild(dict(name='resolution (mm)', value = 0.025, type = 'float'))
         self.parameters.addChild(dict(name='exposureTime (sec)', value = 0.020, type = 'float'))
         self.parameters.addChild(dict(name='Z start (mm)', value = 0.0, type = 'float'))
         self.parameters.addChild(dict(name='Z end (mm)', value = 1.0, type = 'float'))
         self.parameters.addChild(dict(name='Z step (mm)', value = 0.05, type = 'float'))
         
     def setMethodText(self):
-        prefix = self.parameters['scanFileName'] + '_fast3Dxrdct'
+        prefix = self.parameters['scanFileName'] + '_ContRot3Dxrdct'
         sample_size = self.parameters['sampleSize (mm)']
         scan_range = self.parameters['scanRange (mm)']
         exp_time = float(self.parameters['exposureTime (sec)'])
-        y_resolution = float(self.parameters['resolution (microns)'])/1000.0
+        y_resolution = float(self.parameters['resolution (microns)'])
 
         z_min = self.parameters['Z start (mm)']
         z_max = self.parameters['Z end (mm)']
@@ -404,40 +478,44 @@ class FASTXRDCT3D_Block(ScanBlock):
 
 ##############################################################################
 class ABSCT_Block(ScanBlock):
+    
+    """
+    
+    Absorption-contrast CT scan block
+    
+    """
+    
     def __init__(self): 
         ScanBlock.__init__(self) #####
-#####        super(Simple_XRD_CT_Block, self).__init__()
-#        super().__init__()
         self.name = 'ABS-CT'
-#        self.regularColor = QColor(0, 0, 250)
         self.initiateParameters()
         self.image = QImage('.//images//stack.png')
         
     def initiateParameters(self):
         self.parameters.setName(self.name)
         self.parameters.addChild(dict(name='scanFileName', value='prefix', type ='str'))
-        self.parameters.addChild(dict(name='sampleSize (mm)', value = 5.00, type = 'float'))
+        self.parameters.addChild(dict(name='number projections', value = 1500, type = 'float'))        
         self.parameters.addChild(dict(name='exposureTime (sec)', value = 0.100, type = 'float'))
         self.parameters.addChild(dict(name='rotation centre pos', value = -100, type = 'float'))   
         self.parameters.addChild(dict(name='flat pos', value = -115, type = 'float'))    
-        self.parameters.addChild(dict(name='rot_axis_at_sensor_edge', value = 0.0, type = 'float'))    
+        self.parameters.addChild(dict(name='0-360 deg tomo', value = 0.0, type = 'float'))    
         
     def setMethodText(self):
         prefix = self.parameters['scanFileName'] + '_absct'
-        pxsz = 0.0058
-        sample_size = round(self.parameters['sampleSize (mm)']/pxsz)
+        nproj = round(self.parameters['number of projections'])
         exp_time = float(self.parameters['exposureTime (sec)'])
         rotcen = float(self.parameters['rotation centre pos'])
         flatpos = float(self.parameters['flat pos'])
-        rot_axis_at_sensor_edge = float(self.parameters['rot_axis_at_sensor_edge'])
+        rot_axis_at_sensor_edge = float(self.parameters['0-360 deg tomo'])
         
         loopCounters = self.getParentLoopCounters([])
         self.methodText = self.genSprintfFromLoopCounters(prefix, loopCounters)
         # should really give a warning if Z start, step and end are not well defined
-        self.methodText += "cmd = sprintf(\"absct %s %f %f %f %f %f\", fileName)\n" % (self.percents, exp_time, sample_size, rotcen, flatpos, rot_axis_at_sensor_edge)
+        self.methodText += "cmd = sprintf(\"absct %s %f %f %f %f %f\", fileName)\n" % (self.percents, exp_time, nproj, rotcen, flatpos, rot_axis_at_sensor_edge)
         self.methodText += "eval(cmd)\n"
         
-        self.time = sample_size * exp_time
+#        self.time = sample_size * exp_time
+        self.time = nproj * exp_time
         self.sideText += self.humanTime()
         
 ##############################################################################

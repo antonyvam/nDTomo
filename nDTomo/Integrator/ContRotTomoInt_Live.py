@@ -2,6 +2,7 @@
 """
 Class to integrate XRD-CT data collected with the continuous rotation-translation method.
 The integration can be performed with CPU, GPU, or the multi-CPU ID15A PC.
+The type of integration process is intended to be couple with live visualization.
 
 @author: A. Vamvakeros
 """
@@ -13,13 +14,58 @@ from numpy import zeros, array, arange, mod, ceil, deg2rad, sin, pi, round
 
 class Fast_XRDCT_LiveSqueeze(QThread): 
     
-    '''
+    """
+    
     Integrate continuous rotation-translation XRD-CT data
-    '''    
+	
+        :prefix: prefix used for the filenames of the experimental data
+    
+	:dataset: foldername where the experimental data are stored
+    
+	:xrdctpath: full path where the experimental data are stored
+    
+	:maskname: detector mask file ('mask.edf')
+    
+	:poniname: .poni file ('filename.poni')
+    
+	:na: number of angular steps during the tomographic scan
+    
+	:nt: number of translation steps during the tomographic scan
+    
+	:npt_rad: number of bins used for the diffraction pattern (e.g. 2048)
+    
+	:procunit: processing unit, options are: 'CPU', 'GPU' and 'MultiGPU'
+    
+	:units:  x axis units for the integrated diffraction patterns, options are: 'q_A^-1' or '2th_deg'
+    
+	:prc: percentage to be used for the trimmed mean filter
+    
+	:thres: number of standard deviation values to be used for the adaptive standard deviation filter
+    
+	:datatype: type of image files, options are: 'edf' or 'cbf'
+    
+	:savepath: full path where results will be saved
+    
+	:scantype: scantype, options are: 'Zigzag', 'ContRot' and 'Interlaced'
+    
+	:energy: X-ray energy in keV		
+    
+	:jsonname: full path for the .azimint.json file
+    
+	:omega:	rotation axis motor positions during the tomographic scan (1d array)
+    
+	:trans:	translation axis motor positions during the tomographic scan (1d array)
+    
+	:dio: diode values per point during the tomographic scan (1d array)
+    
+	:etime:	values for exposure time per point during the tomographic scan (1d array)
+    
+    """    
     
     progress = pyqtSignal(int)
     
     def __init__(self,prefix,dataset,xrdctpath,maskname,poniname,na,nt,npt_rad,filt,procunit,units,prc,thres,datatype,savepath,scantype,energy,jsonname,omega,trans,dio,etime):
+
         QThread.__init__(self)
         self.prefix = prefix; self.dataset=dataset; self.xrdctpath = xrdctpath; self.maskname = maskname; self.poniname = poniname
         self.filt=filt; self.procunit=procunit;self.units =units;self.E = energy
@@ -41,17 +87,27 @@ class Fast_XRDCT_LiveSqueeze(QThread):
             print "Cannot open mask file or the xrd-ct dataset directory is wrong"
 
     def run(self):
+        
+        """
+		Initiate the XRD-CT data integration process
+		"""
+        
         self.previousLine = 0
         self.nextLine = 1        
         self.nextimageFile  =  "%s/%s/%s_%.4d.cbf" % (self.xrdctpath, self.dataset, self.dataset, self.na)     
         print self.nextimageFile    
+        
         if self.procunit == "MultiGPU":
             self.periodEventraw = Periodic(1, self.checkForImageFile)   
         else:
             self.periodEventraw = Periodic(1, self.checkForImageFileOar)   
 
     def checkForImageFileOar(self):
-            
+        
+        """
+		Look if data have been generated (CPU and GPU method)
+		"""            
+        
         if os.path.exists(self.nextimageFile) & (self.nextLine == 1):
             print('%s exists' % self.nextimageFile)
             self.periodEventraw.stop()
@@ -68,7 +124,11 @@ class Fast_XRDCT_LiveSqueeze(QThread):
 #            self.periodEventraw.stop()
 
     def setnextimageFileOar(self):
-
+        
+        """
+		Set the next target image file (CPU and GPU method)
+		"""  
+        
         self.previousLine += 1
         self.nextLine += 1
         if self.nextLine < self.nt:
@@ -86,6 +146,10 @@ class Fast_XRDCT_LiveSqueeze(QThread):
             print('All done')
             
     def integrateLineDataOar(self):
+        
+        """
+		Perform the diffraction data integration using pyFAI (CPU and GPU method)
+		"""          
         
         try:
 
@@ -146,12 +210,22 @@ class Fast_XRDCT_LiveSqueeze(QThread):
             exit
         
     def tth2q(self):
+        
+        """
+		Convert 2theta to d and q spacing
+		"""  	
+        
         self.h = 6.620700406E-34;self.c = 3E8
         self.wavel = 1E10*6.242E18*self.h*self.c/(self.E*1E3)
         self.d = self.wavel/(2*sin(deg2rad(0.5*self.tth)))
         self.q = pi*2/self.d
             
     def writehdf5(self):
+        
+        """
+		Export the integrated diffraction data from a linescan as a single .hdf5 file
+		"""  	
+        
         self.hdf5_fn = "%s/%s_linescan_%.3d.hdf5" % (self.savepath, self.dataset, self.nextLine)
         h5f = h5py.File(self.hdf5_fn, "w")
         h5f.create_dataset('I', data=self.Int)
@@ -165,7 +239,11 @@ class Fast_XRDCT_LiveSqueeze(QThread):
         os.system('chmod 777 *.hdf5')
                  
     def checkForImageFile(self):
-            
+        
+        """
+		Look if data have been generated (MultiGPU method)
+		"""                 
+        
         if os.path.exists(self.nextimageFile) & (self.nextLine == 1):
             print('%s exists' % self.nextimageFile)
             self.periodEventraw.stop()
@@ -181,7 +259,11 @@ class Fast_XRDCT_LiveSqueeze(QThread):
             print('or %s does not exist' % self.previoush5File)
 
     def writeLineData(self):
-
+        
+        """
+		Perform the diffraction data integration using the MultiGPU method
+		"""  
+        
         self.json = "%s%s_%.4d.json" % (self.savepath, self.dataset, self.nextLine)
         print(self.json)
 	
@@ -189,6 +271,11 @@ class Fast_XRDCT_LiveSqueeze(QThread):
         self.gpuproc() # integrate the 2D diffraction patterns
             
     def setnextimageFile(self):
+        
+        """
+		Set the next target image file (MultiGPU method)
+		"""  	
+        
         self.nextLine += 1
         self.previoush5File =  "%s/%s_%.4d.azim.h5" % (self.savepath, self.dataset, self.nextLine-1)
         if self.nextLine < self.nt:
@@ -207,6 +294,10 @@ class Fast_XRDCT_LiveSqueeze(QThread):
             
     def creategpujson(self):
         
+        """
+		Create the .json file for the diffraction data integration using the MultiGPU method
+		"""  	        
+        
         start=time.time()
         
         try:
@@ -222,9 +313,6 @@ class Fast_XRDCT_LiveSqueeze(QThread):
             data['method'] = "ocl_csr_nosplit_gpu"
             
             data['npt'] = int(self.npt_rad)
-#            data['npt_azim'] =  256
-#            data['dummy'] = -10.0,
-#            data['delta_dummy'] = 9.5            
 			
             ####### Filters #########
             if self.filt == "No":
@@ -279,7 +367,12 @@ class Fast_XRDCT_LiveSqueeze(QThread):
         print time.time()-start
         
     def gpuproc(self):
-        dahu = 'dahu-reprocess %s &' %self.jsonfile #### try with &
+        
+        """
+		Use the dahu-reprocess method to perform the diffraction data integration using the MultiGPU method
+		"""  		
+        
+        dahu = 'dahu-reprocess %s &' %self.jsonfile
         print 'processing dataset %s' %self.jsonfile	
         os.system(dahu)
 

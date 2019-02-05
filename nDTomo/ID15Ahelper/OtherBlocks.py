@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 16 21:04:54 2017
 
-@author: simon
+Other blocks
+
+@author: S.D.M. Jacques
+
 """
 
 from baseBlocks import Block, BlockGroup
@@ -11,6 +13,13 @@ import settings
         
 ##############################################################################
 class SleepBlock(Block):
+    
+    """
+
+    Sleep block
+
+    """
+    
     def __init__(self):
         Block.__init__(self) #####
 #####        super(SleepBlock, self).__init__()
@@ -37,6 +46,13 @@ class SleepBlock(Block):
         
 ##############################################################################   
 class WaitForUserBlock(Block):
+    
+    """
+
+    Wait-for-user action block
+
+    """    
+    
     def __init__(self):
         Block.__init__(self) #####
 #####        super(WaitForUserBlock, self).__init__()
@@ -65,7 +81,14 @@ class WaitForUserBlock(Block):
         self.name = "%s" % (self.parameters['message'])
     
 ##############################################################################
-class SingleEurothermBlock(Block):
+class HeatingSystemBlock(Block):
+    
+    """
+
+    Heating system block
+
+    """    
+    
     def __init__(self):
         Block.__init__(self) #####
 #####        super(SingleEurothermBlock, self).__init__()
@@ -92,23 +115,3 @@ class SingleEurothermBlock(Block):
         self.parameters.addChild(dict(name='targetTemp', value=25, type = 'int'))
         
 ##############################################################################
-class DualEurothermBlock(Block):
-    pass
-##############################################################################
-class GenericGroupBlock(BlockGroup):
-    def __init__(self):
-        BlockGroup.__init__(self) #####
-#####       super(SimpleForBlock, self).__init__()
-#        super().__init__()
-        self.Type = 'BlockGroup'
-        self.addNode('N')
-        self.addNode('S')
-        self.expanded = True
-        self.visible = True
-        self.name = 'group block'
-#        self.regularColor = QColor(125, 125, 125)
-#        self.initiateParameters()
-        #self.image = QImage('.//images//loop.png')
-        
-    def initiateParameters(self):
-        pass

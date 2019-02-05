@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Jan 31 16:06:07 2019
+Calibration class calls pyFAI-calib to create the detector calibration
+CreatMask class creates a detector mask
 
-@author: Antony
+@author: A. Vamvakeros
 """
 
 from os import system
@@ -14,11 +15,18 @@ from scipy.ndimage import binary_dilation
 class Calibration(QThread):
     
     def __init__(self,calibrant,energy):
+        """
+		:calibrant: experimental file (i.e. calibrant diffraction pattern)
+		:energy: X-ray energy in keV
+		"""
         QThread.__init__(self)
         self.calibrant = calibrant
         self.E = energy
         
     def run(self):
+        """
+		Run pyFAI-calib (detector calibration)
+		"""
         cmd = 'pyFAI-calib -e %.f -c CeO2 -D Pilatus2M_CdTe %s' %(self.E,self.calibrant)
         system(cmd)
     
@@ -26,10 +34,14 @@ class Calibration(QThread):
 class CreatMask(QThread):
     
     def __init__(self,calibrant):
+        """
+		:calibrant: experimental file (i.e. calibrant diffraction pattern)
+		"""	
         QThread.__init__(self)
         self.calibrant = calibrant
         
-        mask_file = '/data/id15/inhouse2/inhouse03/gmask24.10.17.edf'
+        mask_file = '/data/id15/inhouse2/inhouse03/gmask24.10.17.edf' # Static mask for ID15A only
+
         fm=fabio.open(mask_file)
         fd=fabio.open(self.calibrant)
         dmask=binary_dilation(fm.data,structure=ones((1,1))).astype(int)
@@ -42,5 +54,8 @@ class CreatMask(QThread):
         system(perm) 
         
     def run(self):
+        """
+		Run pyFAI-drawmask (detector calibration)
+		"""	
         cmd = 'pyFAI-drawmask %s' %(self.newcalibrant)
         system(cmd)

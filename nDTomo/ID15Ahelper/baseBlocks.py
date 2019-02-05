@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-Created on Thu Nov 16 20:41:06 2017
 
-@author: simon
+Base blocks
+
+@author: S.D.M. Jacques
+
 """
 
 import numpy as np
-from PyQt5.QtCore import QObject, QRect, Qt, QSize, QPoint
-from PyQt5.QtGui import QColor, QFont, QImage, QPixmap
+from PyQt5.QtCore import QRect, Qt, QSize, QPoint
+from PyQt5.QtGui import QColor, QFont, QImage
 from pyqtgraph.parametertree import Parameter
 
 #from PyQt5.QtGui import QPen
@@ -61,6 +63,13 @@ class NodeAddress():
 
 
 class Block():
+    
+    """
+    
+    Main block class
+    
+    """
+    
     def __init__(self):
         from pyqtgraph.parametertree import Parameter
 #        object.__init__(self)

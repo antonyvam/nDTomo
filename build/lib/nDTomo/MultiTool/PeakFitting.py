@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
+
 Single peak batch fitting class for the MultiTool
 
-@author: Antony
+@author: A. Vamvakeros
+
 """
 
 #%
@@ -14,7 +16,31 @@ from PyQt5.QtCore import pyqtSignal, QThread
 class FitData(QThread):
     
     '''
-    Single peak batch fitting class    
+
+    Single peak batch fitting class   
+    
+    :data: the spectral/scattering data
+    
+    :roi: bin number of interest
+
+    :Area: initial value for peak area
+
+    :Areamin: minimum value for peak area
+
+    :Areamax: maximum value for peak area
+
+    :Pos: initial value for peak position
+
+    :Posmin: minimum value for peak position
+
+    :Posmax: maximum value for peak position
+
+    :FWHM: initial value for peak full width at half maximum (FWHM)
+
+    :FWHMmin: minimum value for peak FWHM
+
+    :FWHMmax: maximum value for peak FWHM
+
     '''
     
     fitdone = pyqtSignal()
@@ -44,6 +70,13 @@ class FitData(QThread):
             self.fitdata[:,:,ii] = self.fitdata[:,:,ii]*msk
 
     def run(self):
+        
+        """
+        
+        Initialise the single peak batch fitting process
+        
+        """  
+        
         self.batchfit()
         
     def batchfit(self):
@@ -84,4 +117,10 @@ class FitData(QThread):
         self.fitdone.emit()
 
     def gmodel2(self, x, A, m, w, a, b):
+        
+        """
+        
+        Gaussian model with linear background: A * exp( - (x-m)**2/w) + a*x + b
+        
+        """
         return A * exp( - (x-m)**2/w) + a*x + b

@@ -9,6 +9,17 @@ from threading import Timer, Lock
 
 class Periodic(object):
     
+    """
+    
+    Class used for threading
+    
+        :interval: time interval in seconds
+            
+    :function: the function to be threaded
+    
+    
+    """
+    
     def __init__(self, interval, function, *args, **kwargs):
         self._lock = Lock()
         self._timer = None
