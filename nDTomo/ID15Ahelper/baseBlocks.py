@@ -15,6 +15,7 @@ from pyqtgraph.parametertree import Parameter
 #from PyQt5.QtGui import QPen
 
 class Node():
+
     def __init__(self, Location):
         self.Location = Location
         self.regularColor = QColor(255, 255, 255)
@@ -123,6 +124,13 @@ class Block():
         return s, i
 
     def copy(self):
+		
+        """
+		
+		Method to copy a block
+		
+		"""
+		
         print('coying ..' + self.__class__.__name__)
         copyInstance = self.__class__()
         copyInstance.__dict__= self.__dict__.copy()
@@ -185,6 +193,13 @@ class Block():
         self.nodes = np.append(self.nodes, node)
         
     def drawBlock(self, qp):
+	
+        """
+		
+		Method to draw a block
+		
+		"""
+		
         if not self.visible :
             return
         self.preDrawActions(qp)

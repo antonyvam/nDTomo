@@ -112,7 +112,7 @@ class CreatPDFMask(QThread):
         outfile='PDFmask_%.1fdeg.cbf'%(alpha)
         outbuffer=fabio.cbfimage.cbfimage(data=mask)
         outbuffer.write(outfile)
-        print 'Wrote mask to', outfile    
+        print('Wrote mask to', outfile)
     
         perm = 'chmod 777 %s' %self.outfile
         system(perm) 

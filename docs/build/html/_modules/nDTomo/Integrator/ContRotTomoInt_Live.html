@@ -1,0 +1,490 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>nDTomo.Integrator.ContRotTomoInt_Live &#8212; nDTomo 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for nDTomo.Integrator.ContRotTomoInt_Live</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class to integrate XRD-CT data collected with the continuous rotation-translation method.</span>
+<span class="sd">The integration can be performed with CPU, GPU, or the multi-CPU ID15A PC.</span>
+<span class="sd">The type of integration process is intended to be couple with live visualization.</span>
+
+<span class="sd">@author: A. Vamvakeros</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">.PThread</span> <span class="k">import</span> <span class="n">Periodic</span>
+<span class="kn">from</span> <span class="nn">PyQt5.QtCore</span> <span class="k">import</span> <span class="n">pyqtSignal</span><span class="p">,</span> <span class="n">QThread</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">fabio</span><span class="o">,</span> <span class="nn">h5py</span><span class="o">,</span> <span class="nn">pyFAI</span><span class="o">,</span> <span class="nn">time</span><span class="o">,</span> <span class="nn">json</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">arange</span><span class="p">,</span> <span class="n">mod</span><span class="p">,</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">deg2rad</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">pi</span><span class="p">,</span> <span class="nb">round</span>
+
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze">[docs]</a><span class="k">class</span> <span class="nc">Fast_XRDCT_LiveSqueeze</span><span class="p">(</span><span class="n">QThread</span><span class="p">):</span> 
+    
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    </span>
+<span class="sd">    Integrate continuous rotation-translation XRD-CT data</span>
+<span class="sd">	</span>
+<span class="sd">        :prefix: prefix used for the filenames of the experimental data</span>
+<span class="sd">    </span>
+<span class="sd">	:dataset: foldername where the experimental data are stored</span>
+<span class="sd">    </span>
+<span class="sd">	:xrdctpath: full path where the experimental data are stored</span>
+<span class="sd">    </span>
+<span class="sd">	:maskname: detector mask file (&#39;mask.edf&#39;)</span>
+<span class="sd">    </span>
+<span class="sd">	:poniname: .poni file (&#39;filename.poni&#39;)</span>
+<span class="sd">    </span>
+<span class="sd">	:na: number of angular steps during the tomographic scan</span>
+<span class="sd">    </span>
+<span class="sd">	:nt: number of translation steps during the tomographic scan</span>
+<span class="sd">    </span>
+<span class="sd">	:npt_rad: number of bins used for the diffraction pattern (e.g. 2048)</span>
+<span class="sd">    </span>
+<span class="sd">	:procunit: processing unit, options are: &#39;CPU&#39;, &#39;GPU&#39; and &#39;MultiGPU&#39;</span>
+<span class="sd">    </span>
+<span class="sd">	:units:  x axis units for the integrated diffraction patterns, options are: &#39;q_A^-1&#39; or &#39;2th_deg&#39;</span>
+<span class="sd">    </span>
+<span class="sd">	:prc: percentage to be used for the trimmed mean filter</span>
+<span class="sd">    </span>
+<span class="sd">	:thres: number of standard deviation values to be used for the adaptive standard deviation filter</span>
+<span class="sd">    </span>
+<span class="sd">	:datatype: type of image files, options are: &#39;edf&#39; or &#39;cbf&#39;</span>
+<span class="sd">    </span>
+<span class="sd">	:savepath: full path where results will be saved</span>
+<span class="sd">    </span>
+<span class="sd">	:scantype: scantype, options are: &#39;Zigzag&#39;, &#39;ContRot&#39; and &#39;Interlaced&#39;</span>
+<span class="sd">    </span>
+<span class="sd">	:energy: X-ray energy in keV		</span>
+<span class="sd">    </span>
+<span class="sd">	:jsonname: full path for the .azimint.json file</span>
+<span class="sd">    </span>
+<span class="sd">	:omega:	rotation axis motor positions during the tomographic scan (1d array)</span>
+<span class="sd">    </span>
+<span class="sd">	:trans:	translation axis motor positions during the tomographic scan (1d array)</span>
+<span class="sd">    </span>
+<span class="sd">	:dio: diode values per point during the tomographic scan (1d array)</span>
+<span class="sd">    </span>
+<span class="sd">	:etime:	values for exposure time per point during the tomographic scan (1d array)</span>
+<span class="sd">    </span>
+<span class="sd">    &quot;&quot;&quot;</span>    
+    
+    <span class="n">progress</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">(</span><span class="nb">int</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">prefix</span><span class="p">,</span><span class="n">dataset</span><span class="p">,</span><span class="n">xrdctpath</span><span class="p">,</span><span class="n">maskname</span><span class="p">,</span><span class="n">poniname</span><span class="p">,</span><span class="n">na</span><span class="p">,</span><span class="n">nt</span><span class="p">,</span><span class="n">npt_rad</span><span class="p">,</span><span class="n">filt</span><span class="p">,</span><span class="n">procunit</span><span class="p">,</span><span class="n">units</span><span class="p">,</span><span class="n">prc</span><span class="p">,</span><span class="n">thres</span><span class="p">,</span><span class="n">datatype</span><span class="p">,</span><span class="n">savepath</span><span class="p">,</span><span class="n">scantype</span><span class="p">,</span><span class="n">energy</span><span class="p">,</span><span class="n">jsonname</span><span class="p">,</span><span class="n">omega</span><span class="p">,</span><span class="n">trans</span><span class="p">,</span><span class="n">dio</span><span class="p">,</span><span class="n">etime</span><span class="p">):</span>
+
+        <span class="n">QThread</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span> <span class="o">=</span> <span class="n">xrdctpath</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maskname</span> <span class="o">=</span> <span class="n">maskname</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">poniname</span> <span class="o">=</span> <span class="n">poniname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filt</span><span class="o">=</span><span class="n">filt</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span><span class="o">=</span><span class="n">procunit</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span><span class="n">units</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span> <span class="o">=</span> <span class="n">energy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prc</span><span class="o">=</span><span class="n">prc</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">thres</span> <span class="o">=</span> <span class="n">thres</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">datatype</span> <span class="o">=</span> <span class="n">datatype</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span> <span class="o">=</span> <span class="n">savepath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">na</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">na</span><span class="p">);</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nt</span><span class="p">);</span> <span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">npt_rad</span><span class="p">);</span> <span class="bp">self</span><span class="o">.</span><span class="n">scantype</span> <span class="o">=</span> <span class="n">scantype</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">jsonname</span> <span class="o">=</span> <span class="n">jsonname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">trans</span> <span class="o">=</span> <span class="n">trans</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">dio</span> <span class="o">=</span> <span class="n">dio</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">etime</span> <span class="o">=</span> <span class="n">etime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpuxrdctpath</span> <span class="o">=</span> <span class="s1">&#39;/gz</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+                
+        <span class="n">dpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">dpath</span><span class="p">)</span>		
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">fabio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maskname</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                        
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cannot open mask file or the xrd-ct dataset directory is wrong&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze.run"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initiate the XRD-CT data integration process</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">previousLine</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span> <span class="o">=</span> <span class="mi">1</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span>  <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.cbf&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">)</span>     
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span>    
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;MultiGPU&quot;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEventraw</span> <span class="o">=</span> <span class="n">Periodic</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkForImageFile</span><span class="p">)</span>   
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEventraw</span> <span class="o">=</span> <span class="n">Periodic</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkForImageFileOar</span><span class="p">)</span>   </div>
+
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze.checkForImageFileOar"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze.checkForImageFileOar">[docs]</a>    <span class="k">def</span> <span class="nf">checkForImageFileOar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Look if data have been generated (CPU and GPU method)</span>
+<span class="sd">		&quot;&quot;&quot;</span>            
+        
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> exists&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEventraw</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">integrateLineDataOar</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setnextimageFileOar</span><span class="p">()</span>       
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5_fn</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> exists&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEventraw</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">integrateLineDataOar</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setnextimageFileOar</span><span class="p">()</span>     
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># keep looking</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span> <span class="p">,</span><span class="s1">&#39;does not exist&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;or </span><span class="si">%s</span><span class="s1"> does not exist&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">previousdatFile</span><span class="p">)</span></div>
+<span class="c1">#            self.periodEventraw.stop()</span>
+
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze.setnextimageFileOar"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze.setnextimageFileOar">[docs]</a>    <span class="k">def</span> <span class="nf">setnextimageFileOar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Set the next target image file (CPU and GPU method)</span>
+<span class="sd">		&quot;&quot;&quot;</span>  
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">previousLine</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.cbf&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEventraw</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">:</span> <span class="c1">#might need a sleep to give time to write the last image</span>
+            
+            <span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.cbf&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEventraw</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;All done&#39;</span><span class="p">)</span></div>
+            
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze.integrateLineDataOar"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze.integrateLineDataOar">[docs]</a>    <span class="k">def</span> <span class="nf">integrateLineDataOar</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Perform the diffraction data integration using pyFAI (CPU and GPU method)</span>
+<span class="sd">		&quot;&quot;&quot;</span>          
+        
+        <span class="k">try</span><span class="p">:</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">Int</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">));</span>
+         
+            <span class="n">ai</span> <span class="o">=</span> <span class="n">pyFAI</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">poniname</span><span class="p">)</span>       
+            <span class="n">kk</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">previousLine</span><span class="p">,</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="p">):</span>             
+            
+                <span class="n">start</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">datatype</span> <span class="o">==</span> <span class="s1">&#39;cbf&#39;</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">_</span><span class="si">%.4d</span><span class="s1">.cbf&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="p">,</span><span class="n">ii</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">s</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">_</span><span class="si">%.4d</span><span class="s1">.edf&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="p">,</span><span class="n">ii</span><span class="p">)</span>
+                <span class="n">pat</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span><span class="p">,</span> <span class="n">s</span><span class="p">)</span>
+                <span class="n">f</span> <span class="o">=</span> <span class="n">fabio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">pat</span><span class="p">)</span>
+                <span class="n">d</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;No&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;CPU&quot;</span><span class="p">:</span>
+                        <span class="n">r</span><span class="p">,</span> <span class="n">I</span> <span class="o">=</span> <span class="n">ai</span><span class="o">.</span><span class="n">integrate1d</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">npt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;cython&quot;</span><span class="p">,</span><span class="n">correctSolidAngle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polarization_factor</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;GPU&quot;</span><span class="p">:</span>
+                        <span class="n">r</span><span class="p">,</span> <span class="n">I</span> <span class="o">=</span> <span class="n">ai</span><span class="o">.</span><span class="n">integrate1d</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">npt</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ocl_CSR_gpu&quot;</span><span class="p">,</span><span class="n">correctSolidAngle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polarization_factor</span><span class="o">=</span><span class="mf">0.95</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;Median&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;CPU&quot;</span><span class="p">:</span>
+                        <span class="n">r</span><span class="p">,</span> <span class="n">I</span> <span class="o">=</span> <span class="n">ai</span><span class="o">.</span><span class="n">medfilt1d</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">npt_rad</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="p">),</span> <span class="n">percentile</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;splitpixel&quot;</span><span class="p">,</span> <span class="n">correctSolidAngle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polarization_factor</span><span class="o">=</span><span class="mf">0.95</span><span class="p">);</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;GPU&quot;</span><span class="p">:</span>
+                        <span class="n">r</span><span class="p">,</span> <span class="n">I</span> <span class="o">=</span> <span class="n">ai</span><span class="o">.</span><span class="n">medfilt1d</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">npt_rad</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="p">),</span> <span class="n">percentile</span><span class="o">=</span><span class="mi">50</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ocl_CSR_gpu&quot;</span><span class="p">,</span> <span class="n">correctSolidAngle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polarization_factor</span><span class="o">=</span><span class="mf">0.95</span><span class="p">);</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;trimmed_mean&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;CPU&quot;</span><span class="p">:</span>
+                        <span class="n">r</span><span class="p">,</span> <span class="n">I</span> <span class="o">=</span> <span class="n">ai</span><span class="o">.</span><span class="n">medfilt1d</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">npt_rad</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="p">),</span> <span class="n">percentile</span><span class="o">=</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prc</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span><span class="mi">100</span><span class="o">-</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prc</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)),</span> <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;cython&quot;</span><span class="p">,</span> <span class="n">correctSolidAngle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polarization_factor</span><span class="o">=</span><span class="mf">0.95</span><span class="p">);</span> <span class="c1">#&quot;splitpixel&quot;</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;GPU&quot;</span><span class="p">:</span>
+                        <span class="n">r</span><span class="p">,</span> <span class="n">I</span> <span class="o">=</span> <span class="n">ai</span><span class="o">.</span><span class="n">medfilt1d</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">npt_rad</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="p">),</span> <span class="n">percentile</span><span class="o">=</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prc</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span><span class="mi">100</span><span class="o">-</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prc</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">)),</span> <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ocl_CSR_gpu&quot;</span><span class="p">,</span> <span class="n">correctSolidAngle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polarization_factor</span><span class="o">=</span><span class="mf">0.95</span><span class="p">);</span> 
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;sigma&quot;</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;CPU&quot;</span><span class="p">:</span>
+                        <span class="n">r</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">ai</span><span class="o">.</span><span class="n">sigma_clip</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">npt_rad</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="p">),</span> <span class="n">thres</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thres</span><span class="p">),</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;cython&quot;</span><span class="p">,</span> <span class="n">correctSolidAngle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polarization_factor</span><span class="o">=</span><span class="mf">0.95</span><span class="p">);</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;GPU&quot;</span><span class="p">:</span>
+                        <span class="n">r</span><span class="p">,</span> <span class="n">I</span><span class="p">,</span> <span class="n">std</span> <span class="o">=</span> <span class="n">ai</span><span class="o">.</span><span class="n">sigma_clip</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="n">d</span><span class="p">,</span> <span class="n">npt_rad</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="p">),</span> <span class="n">thres</span><span class="o">=</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thres</span><span class="p">),</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span> <span class="n">unit</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="p">,</span> <span class="n">method</span><span class="o">=</span><span class="s2">&quot;ocl_CSR_gpu&quot;</span><span class="p">,</span> <span class="n">correctSolidAngle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">polarization_factor</span><span class="o">=</span><span class="mf">0.95</span><span class="p">);</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">Int</span><span class="p">[</span><span class="n">kk</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">I</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">]</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">]</span>
+                
+                <span class="n">v</span> <span class="o">=</span> <span class="p">(</span><span class="nb">round</span><span class="p">((</span><span class="mf">100.</span><span class="o">*</span><span class="p">(</span><span class="n">ii</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span><span class="o">/</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">)</span><span class="o">*</span><span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">))))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">progress</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+                <span class="n">kk</span> <span class="o">+=</span> <span class="mi">1</span><span class="p">;</span>
+                <span class="nb">print</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">)</span>
+                    
+    
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Integration done, now saving the data&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">r</span> <span class="o">=</span> <span class="n">r</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">==</span><span class="s1">&#39;q_A^-1&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">==</span><span class="s1">&#39;2th_deg&#39;</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tth</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">r</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tth2q</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">writehdf5</span><span class="p">()</span>
+
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Something is wrong with the actual integration...&quot;</span><span class="p">)</span> 
+            <span class="n">exit</span></div>
+        
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze.tth2q"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze.tth2q">[docs]</a>    <span class="k">def</span> <span class="nf">tth2q</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert 2theta to d and q spacing</span>
+<span class="sd">		&quot;&quot;&quot;</span>  	
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="mf">6.620700406E-34</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="mf">3E8</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wavel</span> <span class="o">=</span> <span class="mf">1E10</span><span class="o">*</span><span class="mf">6.242E18</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="o">*</span><span class="mf">1E3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavel</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">deg2rad</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">tth</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="n">pi</span><span class="o">*</span><span class="mi">2</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span></div>
+            
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze.writehdf5"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze.writehdf5">[docs]</a>    <span class="k">def</span> <span class="nf">writehdf5</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Export the integrated diffraction data from a linescan as a single .hdf5 file</span>
+<span class="sd">		&quot;&quot;&quot;</span>  	
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdf5_fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_linescan_</span><span class="si">%.3d</span><span class="s2">.hdf5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="p">)</span>
+        <span class="n">h5f</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hdf5_fn</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;I&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">Int</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">units</span><span class="o">==</span><span class="s1">&#39;2th_deg&#39;</span><span class="p">:</span>
+            <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;twotheta&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tth</span><span class="p">)</span>
+            <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    	
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="s1">&#39;chmod 777 *.hdf5&#39;</span><span class="p">)</span></div>
+                 
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze.checkForImageFile"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze.checkForImageFile">[docs]</a>    <span class="k">def</span> <span class="nf">checkForImageFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Look if data have been generated (MultiGPU method)</span>
+<span class="sd">		&quot;&quot;&quot;</span>                 
+        
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> exists&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEventraw</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">writeLineData</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setnextimageFile</span><span class="p">()</span>       
+        <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">previoush5File</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> exists&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEventraw</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">writeLineData</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setnextimageFile</span><span class="p">()</span>     
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># keep looking</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span> <span class="p">,</span><span class="s1">&#39;does not exist&#39;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;or </span><span class="si">%s</span><span class="s1"> does not exist&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">previoush5File</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze.writeLineData"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze.writeLineData">[docs]</a>    <span class="k">def</span> <span class="nf">writeLineData</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Perform the diffraction data integration using the MultiGPU method</span>
+<span class="sd">		&quot;&quot;&quot;</span>  
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">json</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.json&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">json</span><span class="p">)</span>
+	
+        <span class="bp">self</span><span class="o">.</span><span class="n">creategpujson</span><span class="p">()</span> <span class="c1"># write the .json files</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpuproc</span><span class="p">()</span> <span class="c1"># integrate the 2D diffraction patterns</span></div>
+            
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze.setnextimageFile"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze.setnextimageFile">[docs]</a>    <span class="k">def</span> <span class="nf">setnextimageFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Set the next target image file (MultiGPU method)</span>
+<span class="sd">		&quot;&quot;&quot;</span>  	
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">previoush5File</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.azim.h5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.cbf&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEventraw</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">:</span> <span class="c1">#might need a sleep to give time to write the last image</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.cbf&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextimageFile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEventraw</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>            
+        <span class="k">else</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;All done&#39;</span><span class="p">)</span>
+            
+        <span class="n">v</span> <span class="o">=</span> <span class="nb">round</span><span class="p">((</span><span class="mi">100</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">progress</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> </div>
+            
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze.creategpujson"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze.creategpujson">[docs]</a>    <span class="k">def</span> <span class="nf">creategpujson</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Create the .json file for the diffraction data integration using the MultiGPU method</span>
+<span class="sd">		&quot;&quot;&quot;</span>  	        
+        
+        <span class="n">start</span><span class="o">=</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span>
+        
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">perm</span> <span class="o">=</span> <span class="s1">&#39;chmod 777 </span><span class="si">%s</span><span class="s1">.h5&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">of</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">perm</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">pass</span>
+        
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jsonname</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">data</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;poni_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s1">&#39;poni&#39;</span><span class="p">]</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;do_SA&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;ocl_csr_nosplit_gpu&quot;</span>
+            
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;npt&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="p">)</span>
+			
+            <span class="c1">####### Filters #########</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;No&quot;</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;plugin_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;id15.IntegrateManyFrames&#39;</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;Median&quot;</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;plugin_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;id15v2.IntegrateManyFrames&#39;</span>
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;integration_method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;medfilt1d&quot;</span>
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;percentile&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">50</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;trimmed_mean&quot;</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;plugin_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;id15v2.IntegrateManyFrames&#39;</span>
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;integration_method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;medfilt1d&quot;</span>
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;percentile&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prc</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">),</span><span class="mi">100</span><span class="o">-</span><span class="nb">round</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prc</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>         
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;sigma&quot;</span><span class="p">:</span>
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;plugin_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;id15v2.IntegrateManyFrames&#39;</span>
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;integration_method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;sigma_clip&quot;</span>                
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;sigma_clip_thresold&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thres</span><span class="p">)</span>
+                <span class="n">data</span><span class="p">[</span><span class="s1">&#39;sigma_clip_max_iter&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">5</span>
+            
+    			<span class="c1"># Number of xrd-ct dataset in the 3D scan</span>
+            <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">):</span>  <span class="c1">#range(self.ntomos, self.ntomos+1): </span>
+                    <span class="c1">#	da = &#39;%s%.2d&#39; %(self.dataset,d)</span>
+                <span class="n">da</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+                <span class="n">cbfs</span> <span class="o">=</span> <span class="p">[]</span>
+        
+                <span class="n">filei</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">)</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span>				
+                <span class="n">filef</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">)</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span>
+                <span class="k">for</span> <span class="n">ii</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">filei</span><span class="p">,</span> <span class="n">filef</span><span class="p">):</span>
+                    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">datatype</span> <span class="o">==</span> <span class="s2">&quot;cbf&quot;</span><span class="p">:</span>
+                        <span class="n">f</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%.4d</span><span class="s1">.cbf&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">da</span><span class="p">,</span><span class="n">ii</span><span class="p">)</span>
+                    <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">datatype</span> <span class="o">==</span> <span class="s2">&quot;edf&quot;</span><span class="p">:</span>
+                        <span class="n">f</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%.4d</span><span class="s1">.edf&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">da</span><span class="p">,</span><span class="n">ii</span><span class="p">)</span>
+        
+                    <span class="n">cbf</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span><span class="p">,</span> <span class="n">da</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                    <span class="n">cbfs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cbf</span><span class="p">)</span>
+        
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;input_files&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">cbfs</span>
+            <span class="n">of</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">/</span><span class="si">%s</span><span class="s1">_</span><span class="si">%.4d</span><span class="s1">.azim&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="n">da</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="p">)</span>
+            <span class="n">data</span><span class="p">[</span><span class="s1">&#39;output_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">of</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">of</span> <span class="o">=</span> <span class="n">of</span>
+            <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;output_file&#39;</span><span class="p">])</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">jsonfile</span> <span class="o">=</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">_</span><span class="si">%.4d</span><span class="s1">.json&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">da</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLine</span><span class="p">)</span>
+        <span class="n">job</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">jsonfile</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">job</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">outfile</span><span class="p">:</span>  
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">outfile</span><span class="p">)</span>
+
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">)</span>
+        
+        <span class="n">perm</span> <span class="o">=</span> <span class="s1">&#39;chmod 777 </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">jsonfile</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">perm</span><span class="p">)</span> 
+        
+        <span class="nb">print</span><span class="p">(</span><span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">start</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Fast_XRDCT_LiveSqueeze.gpuproc"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_Live.Fast_XRDCT_LiveSqueeze.gpuproc">[docs]</a>    <span class="k">def</span> <span class="nf">gpuproc</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Use the dahu-reprocess method to perform the diffraction data integration using the MultiGPU method</span>
+<span class="sd">		&quot;&quot;&quot;</span>  		
+        
+        <span class="n">dahu</span> <span class="o">=</span> <span class="s1">&#39;dahu-reprocess </span><span class="si">%s</span><span class="s1"> &amp;&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">jsonfile</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;processing dataset </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">jsonfile</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">dahu</span><span class="p">)</span></div></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">nDTomo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">nDTomo software suite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../req.html">Installation of nDTomo software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tut_ID15A_helper.html">ID15A helper tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tut_Integrator.html">Integrator tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tut_MultiTool.html">MultiTool tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ID15A_helperAPI.html">ID15Ahelper GUI API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IntegratorAPI.html">Integrator GUI API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MultiToolAPI.html">MultiTool GUI API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sites.html">Websites</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, A. Vamvakeros.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

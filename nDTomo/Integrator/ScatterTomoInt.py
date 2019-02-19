@@ -72,14 +72,14 @@ class XRDCT_Squeeze(QThread):
         self.omega = omega; self.trans = trans
         self.dio = dio; self.etime = etime
         dpath = os.path.join( self.xrdctpath, self.dataset)
-        print dpath
+        print(dpath)
         try:
             os.chdir(dpath)		
             self.mask = fabio.open(self.maskname)
             self.mask = array(self.mask.data)
             
         except:
-            print "Cannot open mask file or the xrd-ct dataset directory is wrong"
+            print("Cannot open mask file or the xrd-ct dataset directory is wrong")
             
     def run(self):
 
@@ -94,7 +94,7 @@ class XRDCT_Squeeze(QThread):
             
             ai = pyFAI.load(self.poniname)        
 
-            print self.xrdctpath, self.dataset, self.prefix
+            print(self.xrdctpath, self.dataset, self.prefix)
             for ii in range(0,self.nt*self.na):
                     start=time.time()
 
@@ -133,20 +133,21 @@ class XRDCT_Squeeze(QThread):
                         v = round((100.*(ii+1))/(int(self.na)*int(self.nt)))
                         self.progress.emit(v)
                         ii += 1;
-                        print s, time.time()-start
+                        print(s, time.time()-start)
                     
-            print "Integration done, now saving the data"
+            print("Integration done, now saving the data")
             self.r = r[0:self.npt_rad-10]
             self.tth = self.r
             self.tth2q()
 
             self.writehdf5()
             
-            print "Saving data done"   
+            print("Saving data done")   
+            
             self.squeeze.emit()
             
         except:
-            print "Something is wrong with the integration..."
+            print("Something is wrong with the integration...")
 
     def tth2q(self):
 
@@ -171,15 +172,23 @@ class XRDCT_Squeeze(QThread):
 		"""  
         
         if self.filt == "No":
+            
             fn = "%s/%s_integrated_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, self.filt,self.procunit)
+            
         elif self.filt == "Median":
+            
             fn = "%s/%s_integrated_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, self.filt,self.procunit)
+            
         elif self.filt == "trimmed_mean":
+            
             fn = "%s/%s_integrated_%.1f_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, float(self.prc), self.filt,self.procunit)
+            
         elif self.filt == "sigma":
-            fn = "%s/%s_integrated_%.1f_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, float(self.thres), self.filt,self.procunit)                
+        
+            fn = "%s/%s_integrated_%.1f_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, float(self.thres), self.filt,self.procunit)        
 
         h5f = h5py.File(fn, "w")
+        
         h5f.create_dataset('data', data=self.data)
         h5f.create_dataset('slow_axis_steps', data=self.na)
         h5f.create_dataset('fast_axis_steps', data=self.nt)
@@ -192,11 +201,12 @@ class XRDCT_Squeeze(QThread):
         h5f.create_dataset('scantype', data=self.scantype)
         h5f.create_dataset('diode', data=self.dio)
         h5f.create_dataset('exptime', data=self.etime)
+        
         h5f.close()
     	
         os.chdir(self.savepath)
+        
         perm = 'chmod 777 %s' %fn
+        
         os.system(perm)
-        
-        
-        
+

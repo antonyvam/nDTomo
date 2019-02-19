@@ -159,12 +159,12 @@ class BlockMainWindow(QMainWindow):
         helpMe = bar.addMenu("Help")
         
         action_New = file.addAction("New")
-        action_Save = QAction(QIcon('.//images//save-button-icon-73092.png'), "Save", self)
+        action_Save = QAction(QIcon('.\\nDTomo\\ID15Ahelper\\images\\save-button-icon.png'), "Save", self)
 #        action_SaveAs = file.addAction("Save As")
         file.addAction(action_Save)
         
-        action_Import = QAction(QIcon('.//images//import.png'), "Import", self)
-        action_Export = QAction(QIcon('.//images//export.png'), "Export", self)
+        action_Import = QAction(QIcon('.\\nDTomo\\ID15Ahelper\\images\\import.png'), "Import", self)
+        action_Export = QAction(QIcon('.\\nDTomo\\ID15Ahelper\\images\\export.png'), "Export", self)
         file.addAction(action_Import)
         file.addAction(action_Export)
         action_Quit = file.addAction("Quit")
@@ -199,7 +199,7 @@ class BlockMainWindow(QMainWindow):
 
         action_StandardView =  viewOptions.addAction(self.expt.blockStyles[0].name)        
         action_BabyView =  viewOptions.addAction(self.expt.blockStyles[1].name)        
-        action_AboutView =  viewOptions.addAction('About')        
+#        action_AboutView =  viewOptions.addAction('About')        
 
 #        action_Support =  helpMe.addAction('Support')        
         action_About =  helpMe.addAction('About')        
@@ -241,7 +241,7 @@ class BlockMainWindow(QMainWindow):
 #        action_group.triggered.connect(lambda: self.expt.addBlock(OtherBlocks.GenericGroupBlock()))
         action_StandardView.triggered.connect(lambda: self.expt.restyle(0))
         action_BabyView.triggered.connect(lambda: self.expt.restyle(1))
-        action_AboutView.triggered.connect(lambda: self.about())        
+#        action_AboutView.triggered.connect(lambda: self.about())        
 ##        action_Support.triggered.connect()        
         action_About.triggered.connect(lambda: self.about())        
 
@@ -276,17 +276,20 @@ class BlockMainWindow(QMainWindow):
         dlg = QFileDialog()
         fileName = dlg.getSaveFileName(self, 'Save File', 'id15_user_mac.mac', filter = '*.mac')
         print(fileName)
-        if len(fileName)>0:
-            print(fileName)
-            file = open(fileName[0],'w')
-            print(file)
-            self.writeCode()
-            text = self.editor.toPlainText()
-            file.write(text)
-            file.close()
+        try:
+            if len(fileName)>0:
+                print(fileName)
+                file = open(fileName[0],'w')
+                print(file)
+                self.writeCode()
+                text = self.editor.toPlainText()
+                file.write(text)
+                file.close()
+        except:
+            print('Select a directory to save the macro')
     
     def about(self):
-        message = '<b>ID15A helper v0.1.0 url:</b><p>'
+        message = '<b>ID15A helper v0.1.0<p>'
         message += '<p><i>Created by <a href=www.finden.co.uk>Finden</a>. Running under license under GPLv3'
         message += '\t '
         sImage = QPixmap(".//images//logoLetters.png")
@@ -306,3 +309,8 @@ def main():
    
 if __name__ == "__main__":
     main()
+    
+    
+#aw = BlockMainWindow()    
+#aw.show()    
+    

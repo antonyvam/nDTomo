@@ -1,0 +1,215 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Integrator tutorial &#8212; nDTomo 0.1.0 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MultiTool tutorial" href="tut_MultiTool.html" />
+    <link rel="prev" title="ID15A helper tutorial" href="tut_ID15A_helper.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <div class="section" id="integrator-tutorial">
+<h1>Integrator tutorial<a class="headerlink" href="#integrator-tutorial" title="Permalink to this headline">¶</a></h1>
+<p>Currently the Integrator GUI is used to process X-ray diffraction/scattering computed tomography data collected at beamline ID15A of the ESRF.
+The main advantages of this GUI over all other competing softwares are:</p>
+<ul class="simple">
+<li>It allows for real-time visualisation of the acquired diffraction/scattering tomography data. This is crucial when one performs an in situ experiment as it allows to take quick decisions rather than having to wait till the end of the scan.  The success of many dynamic experiments depend on this functionality.</li>
+<li><dl class="first docutils">
+<dt>The diffraction scattered data can be treated with filters. These contain:</dt>
+<dd><ul class="first last">
+<li>A median filters</li>
+<li>A trimmed mean filters</li>
+<li>A new superior filter based on an adaptive standard deviation approach</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li><dl class="first docutils">
+<dt>It can handle tomographic data acquired with different acquition strategies:</dt>
+<dd><ul class="first last">
+<li>Conventional zigzag approach</li>
+<li>Interlaced approach</li>
+<li>Continuous rotation-translation approach</li>
+</ul>
+</dd>
+</dl>
+</li>
+<li>Allows for batch processing of multiple tomographic datasets simultaneously. This feature is typically used after the in situ experiment.</li>
+</ul>
+<p>The GUI is shown in the following image:</p>
+<img alt="_images/tut_Integrator_1.png" src="_images/tut_Integrator_1.png" />
+<p>All the parameters can be saved as a .json file (File-&gt;Save integration parameter file).</p>
+<p>Such a file can also be imported later. This saves a lot of time as all the boxes are filled automatically.</p>
+<p>As a rule of thumb, the order of filling the boxes is from top to bottom and from left to right.</p>
+<p>There are four main panels in the Integrator GUI:</p>
+<ol class="arabic simple">
+<li>Detector calibration parameters panel</li>
+<li>XRD-CT data integration parameters panel</li>
+<li>XRD-CT scan parameters panel</li>
+<li>XRD-CT data integration panel</li>
+</ol>
+<div class="section" id="detector-calibration-parameters-panel">
+<h2>Detector calibration parameters panel<a class="headerlink" href="#detector-calibration-parameters-panel" title="Permalink to this headline">¶</a></h2>
+<p>This panel is typically updated once per experiment (but not necessarily) as it focuses on the parameters used to perform the detector calibation.
+It is strongly suggested that the panel is filled with the following order:</p>
+<ol class="arabic simple">
+<li>X-ray energy (keV): The energy of the monochromatic X-ray beam in keV (e.g. 90)</li>
+<li>Calibrant diffraction pattern: Interactively provide the path for the calibrant diffraction pattern</li>
+<li>Create detector mask: Create a mask for the detector using the pyFAI-drawmask package</li>
+<li>Perform detector calibration: Perform the calibration of the Pilatus 2M detector using the pyFAI-calib package</li>
+<li>Number of radial points: The number of bins used for the integrated diffraction patterns (e.g. 2000)</li>
+<li>Create .azimint.json file: Creates a .azimint.json file containing all the information regarding the detector calibration. This is also necessary for the multi-GPU ID15A PC.</li>
+</ol>
+</div>
+<div class="section" id="xrd-ct-data-integration-parameters-panel">
+<h2>XRD-CT data integration parameters panel<a class="headerlink" href="#xrd-ct-data-integration-parameters-panel" title="Permalink to this headline">¶</a></h2>
+<p>This panel focuses on the experimental parameters used for the diffraction/scattering tomography experiment.
+It is strongly suggested that the panel is filled with the following order:</p>
+<ol class="arabic simple">
+<li>Poni file path: Interactively provide the path for the .poni file created during the detector calibration process</li>
+<li>Detector mask path: Interactively provide the path for the edf mask file created during the detector calibration process</li>
+<li>json path: Interactively provide the path for the .azimint.json file created during the detector calibration process</li>
+<li>Sinogram data save path: Interactively provide the path to be used for saving the integrated data</li>
+<li>XRD-CT dataset path: Interactively provide the path to the experimental data by selecting the appropriate folder</li>
+<li>Image filetype: Choose between cbf and edf files</li>
+<li>Processing unit: There are three options including CPU, GPU and the ID15A GPU dedicated PC</li>
+<li>Filters: Filter to be used during the integration of the 2D diffraction patterns. Options include no filter, median, trimmed mean and adaptivr standard deviation filter.</li>
+</ol>
+</div>
+<div class="section" id="xrd-ct-scan-parameters-panel">
+<h2>XRD-CT scan parameters panel<a class="headerlink" href="#xrd-ct-scan-parameters-panel" title="Permalink to this headline">¶</a></h2>
+<p>Most of the values in this panel are filled automatically but the user can also insert the values manually.
+It is strongly suggested that the panel is filled with the following order:</p>
+<ol class="arabic simple">
+<li>Prefix: The prefix used in the files (images) created during the tomographic scan. Typically this is the same as the correspong folder name.</li>
+<li>Type of XRD-CT scan: The type of data acquisition strategy followed during the tomographic scan. Options are: zigzag, interlaced and continuous rotation-translation</li>
+<li>Load XRD-CT spec file: Interactively provide the path for the spec file that contains the information regarding the motor positions during the tomographic scan.</li>
+<li>Number of translation steps: The number of translation positions used during the tomographic scan</li>
+<li>Number of projections: The number of angles used during the tomographic scan</li>
+<li>Scan range (mm): The scan range (in mm) used during the tomographic scan. Typically this is larger than the sample size.</li>
+<li>Sample size (mm): The sample size (in mm) used during the tomographic scan. This calculates the number of angles to be used during the tomographic scan.</li>
+<li>Step size (mm): The translation step size (in mm).</li>
+</ol>
+</div>
+<div class="section" id="xrd-ct-data-integration-panel">
+<h2>XRD-CT data integration panel<a class="headerlink" href="#xrd-ct-data-integration-panel" title="Permalink to this headline">¶</a></h2>
+<p>This is the final panel and is used to perform the integration of the XRD-CT data. There are two main options:</p>
+<ol class="arabic simple">
+<li>Data integration: The selected folder will be processed and the tomographic data will be saved as a 2D matrix. This 2D matrix can then need to be opened by the MultiTool GUI which will automatically reshape it to form the sinogram data volume.</li>
+<li>Data integration with live protting: This options enables the live visualisation functionality of the GUI. The diffraction data will be integrated and the results will be displayed live. The data are also reshaped into the sinogram volume in real-time. This allows the exploration of the data while they are neing acquired.</li>
+</ol>
+<p>Finally, there is the option to batch process multiple datasets simultaneously. In practise, up to five datasets should be processed at the same time. The user can select multiple folders and perform the batch processing. A progress bar is generated for each dataset so that the user can keep track of the overall progress.</p>
+</div>
+</div>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="index.html">nDTomo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="intro.html">nDTomo software suite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="req.html">Installation of nDTomo software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut_ID15A_helper.html">ID15A helper tutorial</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Integrator tutorial</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#detector-calibration-parameters-panel">Detector calibration parameters panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#xrd-ct-data-integration-parameters-panel">XRD-CT data integration parameters panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#xrd-ct-scan-parameters-panel">XRD-CT scan parameters panel</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#xrd-ct-data-integration-panel">XRD-CT data integration panel</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tut_MultiTool.html">MultiTool tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ID15A_helperAPI.html">ID15Ahelper GUI API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="IntegratorAPI.html">Integrator GUI API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MultiToolAPI.html">MultiTool GUI API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="refs.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sites.html">Websites</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="tut_ID15A_helper.html" title="previous chapter">ID15A helper tutorial</a></li>
+      <li>Next: <a href="tut_MultiTool.html" title="next chapter">MultiTool tutorial</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, A. Vamvakeros.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+      |
+      <a href="_sources/tut_Integrator.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

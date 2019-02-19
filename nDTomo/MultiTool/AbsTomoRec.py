@@ -12,11 +12,11 @@ from numpy import concatenate, log, flipud, zeros, sqrt, sum, arange, min, max, 
 try:
     from scipy.misc import imresize
 except:
-    print "Cannot import imresize and/or imrotate"
+    print("Cannot import imresize and/or imrotate")
 try:
     from  silx.opencl.backprojection import Backprojection as fbp
 except:
-    print "Silx is not installed or there is a problem with pyopencl"
+    print("Silx is not installed or there is a problem with pyopencl")
 import h5py
 
 class ReconABSCT(QThread):
@@ -48,9 +48,9 @@ class ReconABSCT(QThread):
         QThread.__init__(self)
         self.sinos = transpose(sinos,(1,2,0))
 #        self.sinos = self.sinos[:,50:self.sinos.shape[1]-50,:] # The GUI should ask how many extra images we are collecting, in this case it is 100 images
-        print self.sinos.shape
+        print(self.sinos.shape)
         self.sc = sc
-        print self.sc
+        print(self.sc)
         self.savepathabs = savepathabs
         self.dataset = dataset
         self.absscantype = absscantype
@@ -59,14 +59,14 @@ class ReconABSCT(QThread):
         if self.absscantype == "360":
             
             self.sn = zeros((self.sinos.shape[0],self.sinos.shape[1],self.sinos.shape[2]))
-            print self.sn.shape
+            print(self.sn.shape)
             
             for ii in range(0,self.sinos.shape[2]):
                 s1 = self.sinos[0:self.sinos.shape[0]-self.offset,0:self.sinos.shape[1]/2,ii]
                 s2 = flipud(self.sinos[0:self.sinos.shape[0]-self.offset,self.sinos.shape[1]/2:self.sinos.shape[1],ii])
                 self.sn[:,:,ii] = concatenate((s1,s2),axis = 0)       
                 
-                print 'Stitching sinogram %d out of %d' %(ii+1,self.sinos.shape[2])
+                print('Stitching sinogram %d out of %d' %(ii+1,self.sinos.shape[2]))
             self.sinos = self.sn
         
         
@@ -76,7 +76,7 @@ class ReconABSCT(QThread):
             
             for ii in range(0,self.sinos.shape[2]):
                 self.sn[:,:,ii] = imresize(self.sinos[:,:,ii], self.sc, 'bilinear')
-                print 'Resizing image %d out of %d' %(ii,self.sinos.shape[2])
+                print('Resizing image %d out of %d' %(ii,self.sinos.shape[2]))
                 
         else:
             self.sn = self.sinos
@@ -100,7 +100,7 @@ class ReconABSCT(QThread):
 #        self.theta = np.arange(0,180-180./(npr-1),180./(npr-1))
         
         self.theta = arange(0,180,180./(npr))
-        print self.theta.shape
+        print(self.theta.shape)
 #        self.sinos = self.sinos[0:self.sinos.shape[0],0:len(self.theta),:]
         self.total = self.sn.shape[2]
         
@@ -128,7 +128,7 @@ class ReconABSCT(QThread):
         for ii in range(0,self.sn.shape[1]):
             dpair = (mean(self.sn[0:self.ofs,ii,:],axis = 0) + mean(self.sn[self.sn.shape[0]-self.ofs:self.sn.shape[0],ii,:],axis = 0))/2
             self.sn[:,ii,:] = self.sn[:,ii,:] - dpair
-        print "Air background subtracted"
+        print("Air background subtracted")
             
     def sinocentering(self):
         
@@ -149,7 +149,7 @@ class ReconABSCT(QThread):
         
         st = []; ind = [];
         
-        print "Trying to centre the global sinogram..."
+        print("Trying to centre the global sinogram...")
         for kk in range(0,len(cr)):
             
             xnew = cr[kk] + arange(-ceil(s.shape[0]/2),ceil(s.shape[0]/2)-1)
@@ -167,7 +167,7 @@ class ReconABSCT(QThread):
             st.append((std((sn[:,0]-re)))); ind.append(kk)
     #        plt.figure(1);plt.clf();plt.plot(sn[:,0]);plt.plot(re);plt.pause(0.001);
     
-            print 'Offset no. %d out of %d' %(kk,len(cr))
+            print('Offset no. %d out of %d' %(kk,len(cr)))
     
         m = argmin(st)
         print(cr[m])
@@ -184,10 +184,10 @@ class ReconABSCT(QThread):
                     
 #                v = (100.*(mm+1))/self.sn.shape[2]
                 mm = mm + 1
-                print 'Centering sinogram %d out of %d' %(ll,self.sn.shape[2])
+                print('Centering sinogram %d out of %d' %(ll,self.sn.shape[2]))
                 
         self.sn = sn
-        print "All sinograms centered"
+        print("All sinograms centered")
         
     def rec_skimage(self):
         
@@ -283,7 +283,7 @@ class ReconABSCT(QThread):
             
             h5f.close()
         
-            print 'Dataset %s has been processed and saved' %(self.output)
+            print('Dataset %s has been processed and saved' %(self.output))
             
             perm = 'chmod 777 %s' %self.output
             try:

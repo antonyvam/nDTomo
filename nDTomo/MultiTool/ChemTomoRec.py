@@ -13,7 +13,7 @@ import os, h5py
 try:
     from  silx.opencl.backprojection import Backprojection as fbp
 except:
-    print "Silx is not installed or there is a problem with pyopencl"
+    print("Silx is not installed or there is a problem with pyopencl")
     
 class ReconstructData(QThread):
 
@@ -353,7 +353,7 @@ class BatchProcessing(QThread):
         try:
             self.bp = where(self.bp<0,0,self.bp)
         except:
-            print "No negative values in the reconstructed data"
+            print("No negative values in the reconstructed data")
         
     def savedata(self):
 
@@ -371,7 +371,7 @@ class BatchProcessing(QThread):
 #            h5f.create_dataset('scantype', data=self.scantype)
             h5f.close()
         
-            print 'Dataset %s has been processed and saved' %(self.output)
+            print('Dataset %s has been processed and saved' %(self.output))
             
             perm = 'chmod 777 %s' %self.output
             try:

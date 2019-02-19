@@ -1,24 +1,6 @@
 ID15Ahelper GUI API reference
 =============================
 
-The "baseBlocks" module
-^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: nDTomo.ID15Ahelper.baseBlocks
-	:members:	
-	
-The "BlockDocument" module
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: nDTomo.ID15Ahelper.BlockDocument
-	:members:	
-	
-The "BlockStyles" module
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-.. automodule:: nDTomo.ID15Ahelper.BlockStyles
-	:members:	
-	
 The "LoopBlocks" module
 ^^^^^^^^^^^^^^^^^^^^^^^
 

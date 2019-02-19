@@ -1,0 +1,424 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>nDTomo.Integrator.ContRotTomoInt_LiveRead &#8212; nDTomo 0.1.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+   
+  <link rel="stylesheet" href="../../../_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for nDTomo.Integrator.ContRotTomoInt_LiveRead</h1><div class="highlight"><pre>
+<span></span><span class="c1"># -*- coding: utf-8 -*-</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Class to read live XRD-CT integrated data collected with the continuous rotation-translation method</span>
+
+<span class="sd">@author: A. Vamvakeros</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">from</span> <span class="nn">PyQt5.QtCore</span> <span class="k">import</span> <span class="n">pyqtSignal</span><span class="p">,</span> <span class="n">QThread</span>
+<span class="kn">import</span> <span class="nn">os</span><span class="o">,</span> <span class="nn">fabio</span><span class="o">,</span> <span class="nn">h5py</span>
+<span class="kn">from</span> <span class="nn">numpy</span> <span class="k">import</span> <span class="n">zeros</span><span class="p">,</span> <span class="n">array</span><span class="p">,</span> <span class="n">arange</span><span class="p">,</span> <span class="n">mod</span><span class="p">,</span> <span class="n">ceil</span><span class="p">,</span> <span class="n">deg2rad</span><span class="p">,</span> <span class="n">sin</span><span class="p">,</span> <span class="n">pi</span>
+<span class="kn">from</span> <span class="nn">.PThread</span> <span class="k">import</span> <span class="n">Periodic</span>
+
+<div class="viewcode-block" id="Fast_XRDCT_LiveRead"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_LiveRead.Fast_XRDCT_LiveRead">[docs]</a><span class="k">class</span> <span class="nc">Fast_XRDCT_LiveRead</span><span class="p">(</span><span class="n">QThread</span><span class="p">):</span> 
+    
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    </span>
+<span class="sd">    Read integrated data live    </span>
+<span class="sd">    </span>
+<span class="sd">        :prefix: prefix used for the filenames of the experimental data</span>
+<span class="sd">    </span>
+<span class="sd">	:dataset: foldername where the experimental data are stored</span>
+<span class="sd">    </span>
+<span class="sd">	:xrdctpath: full path where the experimental data are stored</span>
+<span class="sd">    </span>
+<span class="sd">	:maskname: detector mask file (&#39;mask.edf&#39;)</span>
+<span class="sd">    </span>
+<span class="sd">	:poniname: .poni file (&#39;filename.poni&#39;)</span>
+<span class="sd">    </span>
+<span class="sd">	:na: number of angular steps during the tomographic scan</span>
+<span class="sd">    </span>
+<span class="sd">	:nt: number of translation steps during the tomographic scan</span>
+<span class="sd">    </span>
+<span class="sd">	:npt_rad: number of bins used for the diffraction pattern (e.g. 2048)</span>
+<span class="sd">    </span>
+<span class="sd">	:procunit: processing unit, options are: &#39;CPU&#39;, &#39;GPU&#39; and &#39;MultiGPU&#39;</span>
+<span class="sd">    </span>
+<span class="sd">	:units:  x axis units for the integrated diffraction patterns, options are: &#39;q_A^-1&#39; or &#39;2th_deg&#39;</span>
+<span class="sd">    </span>
+<span class="sd">	:prc: percentage to be used for the trimmed mean filter</span>
+<span class="sd">    </span>
+<span class="sd">	:thres: number of standard deviation values to be used for the adaptive standard deviation filter</span>
+<span class="sd">    </span>
+<span class="sd">	:datatype: type of image files, options are: &#39;edf&#39; or &#39;cbf&#39;</span>
+<span class="sd">    </span>
+<span class="sd">	:savepath: full path where results will be saved</span>
+<span class="sd">    </span>
+<span class="sd">	:scantype: scantype, options are: &#39;Zigzag&#39;, &#39;ContRot&#39; and &#39;Interlaced&#39;</span>
+<span class="sd">    </span>
+<span class="sd">	:energy: X-ray energy in keV		</span>
+<span class="sd">    </span>
+<span class="sd">	:jsonname: full path for the .azimint.json file</span>
+<span class="sd">    </span>
+<span class="sd">	:omega:	rotation axis motor positions during the tomographic scan (1d array)</span>
+<span class="sd">    </span>
+<span class="sd">	:trans:	translation axis motor positions during the tomographic scan (1d array)</span>
+<span class="sd">    </span>
+<span class="sd">	:dio: diode values per point during the tomographic scan (1d array)</span>
+<span class="sd">    </span>
+<span class="sd">	:etime:	values for exposure time per point during the tomographic scan (1d array)</span>
+<span class="sd">    </span>
+<span class="sd">    &#39;&#39;&#39;</span>    
+    
+    <span class="n">updatedata</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+    <span class="n">exploredata</span> <span class="o">=</span> <span class="n">pyqtSignal</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">prefix</span><span class="p">,</span><span class="n">dataset</span><span class="p">,</span><span class="n">xrdctpath</span><span class="p">,</span><span class="n">maskname</span><span class="p">,</span><span class="n">poniname</span><span class="p">,</span><span class="n">na</span><span class="p">,</span><span class="n">nt</span><span class="p">,</span><span class="n">npt_rad</span><span class="p">,</span><span class="n">filt</span><span class="p">,</span><span class="n">procunit</span><span class="p">,</span><span class="n">units</span><span class="p">,</span><span class="n">prc</span><span class="p">,</span><span class="n">thres</span><span class="p">,</span><span class="n">datatype</span><span class="p">,</span><span class="n">savepath</span><span class="p">,</span><span class="n">scantype</span><span class="p">,</span><span class="n">energy</span><span class="p">,</span><span class="n">jsonname</span><span class="p">,</span><span class="n">omega</span><span class="p">,</span><span class="n">trans</span><span class="p">,</span><span class="n">dio</span><span class="p">,</span><span class="n">etime</span><span class="p">):</span>
+        <span class="n">QThread</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prefix</span> <span class="o">=</span> <span class="n">prefix</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="o">=</span><span class="n">dataset</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span> <span class="o">=</span> <span class="n">xrdctpath</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">maskname</span> <span class="o">=</span> <span class="n">maskname</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">poniname</span> <span class="o">=</span> <span class="n">poniname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">filt</span><span class="o">=</span><span class="n">filt</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span><span class="o">=</span><span class="n">procunit</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">units</span> <span class="o">=</span><span class="n">units</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span> <span class="o">=</span> <span class="n">energy</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prc</span><span class="o">=</span><span class="n">prc</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">thres</span> <span class="o">=</span> <span class="n">thres</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">datatype</span> <span class="o">=</span> <span class="n">datatype</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span> <span class="o">=</span> <span class="n">savepath</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">na</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">na</span><span class="p">);</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">nt</span><span class="p">);</span> <span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">npt_rad</span><span class="p">);</span> <span class="bp">self</span><span class="o">.</span><span class="n">scantype</span> <span class="o">=</span> <span class="n">scantype</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">jsonname</span> <span class="o">=</span> <span class="n">jsonname</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">omega</span> <span class="o">=</span> <span class="n">omega</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">trans</span> <span class="o">=</span> <span class="n">trans</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">dio</span> <span class="o">=</span> <span class="n">dio</span><span class="p">;</span> <span class="bp">self</span><span class="o">.</span><span class="n">etime</span> <span class="o">=</span> <span class="n">etime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">gpuxrdctpath</span> <span class="o">=</span> <span class="s1">&#39;/gz</span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">))</span>
+                
+        <span class="n">dpath</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span> <span class="bp">self</span><span class="o">.</span><span class="n">xrdctpath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="n">dpath</span><span class="p">)</span>		
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">fabio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">maskname</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">mask</span> <span class="o">=</span> <span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+            
+<span class="c1">#            if self.filt == &quot;No&quot;:</span>
+<span class="c1">#	            self.sinos = np.zeros((self.nt*self.na,2000));</span>
+<span class="c1">#            else:</span>
+<span class="c1">#                self.sinos = np.zeros((self.nt*self.na,self.npt_rad-10));</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">sinos</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">));</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">sinos</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+            
+        <span class="k">except</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Cannot open mask file or the xrd-ct dataset directory is wrong&quot;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Fast_XRDCT_LiveRead.run"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_LiveRead.Fast_XRDCT_LiveRead.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Initiate the XRD-CT data live read process</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span> <span class="o">=</span> <span class="mi">1</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;MultiGPU&quot;</span><span class="p">:</span>
+        <span class="c1">#### For GPU machine</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nextFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.azim.h5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">targetFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.azim.h5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEvent</span> <span class="o">=</span> <span class="n">Periodic</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkForFile</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+        <span class="c1">#### For OAR</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nextFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_linescan_</span><span class="si">%.3d</span><span class="s2">.hdf5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">targetFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_linescan_</span><span class="si">%.3d</span><span class="s2">.hdf5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEvent</span> <span class="o">=</span> <span class="n">Periodic</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">checkForFile</span><span class="p">)</span>        </div>
+
+<div class="viewcode-block" id="Fast_XRDCT_LiveRead.checkForFile"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_LiveRead.Fast_XRDCT_LiveRead.checkForFile">[docs]</a>    <span class="k">def</span> <span class="nf">checkForFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Look for integrated data file </span>
+<span class="sd">		&quot;&quot;&quot;</span>   
+        
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextFile</span><span class="p">)</span> <span class="o">&amp;</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targetFile</span><span class="p">):</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> exists&#39;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextFile</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">periodEvent</span><span class="o">.</span><span class="n">stop</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hdfLineScanRead</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setNextFile</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">setTargetFile</span><span class="p">()</span>
+            <span class="c1">### I should be sending a signal here, this should be caught by the GUI and update the figures</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">updatedata</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span> <span class="c1"># keep looking</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1"> or </span><span class="si">%s</span><span class="s1"> does not exist&#39;</span> <span class="o">%</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextFile</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">targetFile</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="Fast_XRDCT_LiveRead.hdfLineScanRead"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_LiveRead.Fast_XRDCT_LiveRead.hdfLineScanRead">[docs]</a>    <span class="k">def</span> <span class="nf">hdfLineScanRead</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Read integrated data </span>
+<span class="sd">		&quot;&quot;&quot;</span> 
+        
+        <span class="k">with</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextFile</span><span class="p">,</span><span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;MultiGPU&quot;</span><span class="p">:</span>
+            <span class="c1">#### For GPU  </span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;No&quot;</span><span class="p">:</span>
+<span class="c1">#                    data = f[&#39;/entry_0000/PyFAI/process_integrate1d/I&#39;][:] </span>
+<span class="c1">#                    self.tth = f[&#39;/entry_0000/PyFAI/process_integrate1d/2th&#39;][:]</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/entry_0000/PyFAI/process_integrate1d/I&#39;</span><span class="p">][:,</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">tth</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/entry_0000/PyFAI/process_integrate1d/2th&#39;</span><span class="p">][:,</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">]</span>           
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;Median&quot;</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/entry_0000/PyFAI/process_medfilt1d/I&#39;</span><span class="p">][:,</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">tth</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/entry_0000/PyFAI/process_medfilt1d/2th&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">]</span>             
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;trimmed_mean&quot;</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/entry_0000/PyFAI/process_medfilt1d/I&#39;</span><span class="p">][:,</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">tth</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/entry_0000/PyFAI/process_medfilt1d/2th&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">]</span>
+                <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;sigma&quot;</span><span class="p">:</span>
+                    <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/entry_0000/PyFAI/process_sigma_clip/I&#39;</span><span class="p">][:,</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">]</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">tth</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/entry_0000/PyFAI/process_sigma_clip/2th&#39;</span><span class="p">][</span><span class="mi">0</span><span class="p">:</span><span class="bp">self</span><span class="o">.</span><span class="n">npt_rad</span><span class="o">-</span><span class="mi">10</span><span class="p">]</span>      
+            <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#### For OAR</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/I&#39;</span><span class="p">][:]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">tth</span> <span class="o">=</span> <span class="n">f</span><span class="p">[</span><span class="s1">&#39;/twotheta&#39;</span><span class="p">][:]</span>
+            <span class="n">f</span><span class="o">.</span><span class="n">close</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">tth2q</span><span class="p">()</span>
+            
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span> <span class="c1"># this is a fix as we dont know the number of channels or the x scale</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">zeros</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">,</span> <span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="p">))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+        
+        <span class="n">v1</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">v2</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span><span class="mi">2</span><span class="p">))</span>
+        <span class="n">ll</span> <span class="o">=</span> <span class="n">v1</span> <span class="o">+</span> <span class="n">v2</span><span class="p">;</span>
+               
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">scantype</span> <span class="o">==</span> <span class="s2">&quot;ContRot&quot;</span><span class="p">:</span>
+            
+            <span class="n">ind</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ceil</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">))</span>
+            
+            <span class="k">if</span> <span class="n">mod</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ind</span><span class="p">,:,:]</span> <span class="o">=</span> <span class="n">data</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="n">ll</span><span class="o">-</span><span class="n">ind</span><span class="p">,:]</span> <span class="o">=</span> <span class="n">data</span> <span class="c1">#data[::-1]</span>
+                
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">exploredata</span><span class="o">.</span><span class="n">emit</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Fast_XRDCT_LiveRead.tth2q"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_LiveRead.Fast_XRDCT_LiveRead.tth2q">[docs]</a>    <span class="k">def</span> <span class="nf">tth2q</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Convert 2theta to d and q spacing</span>
+<span class="sd">		&quot;&quot;&quot;</span>  	
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">h</span> <span class="o">=</span> <span class="mf">6.620700406E-34</span><span class="p">;</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span> <span class="o">=</span> <span class="mf">3E8</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">wavel</span> <span class="o">=</span> <span class="mf">1E10</span><span class="o">*</span><span class="mf">6.242E18</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">h</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">c</span><span class="o">/</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">E</span><span class="o">*</span><span class="mf">1E3</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">d</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">wavel</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">sin</span><span class="p">(</span><span class="n">deg2rad</span><span class="p">(</span><span class="mf">0.5</span><span class="o">*</span><span class="bp">self</span><span class="o">.</span><span class="n">tth</span><span class="p">)))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">q</span> <span class="o">=</span> <span class="n">pi</span><span class="o">*</span><span class="mi">2</span><span class="o">/</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span></div>
+        
+<div class="viewcode-block" id="Fast_XRDCT_LiveRead.setNextFile"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_LiveRead.Fast_XRDCT_LiveRead.setNextFile">[docs]</a>    <span class="k">def</span> <span class="nf">setNextFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Look for the target h5 file. If all done, save the integrated data as a sinongram volume.</span>
+<span class="sd">		&quot;&quot;&quot;</span>  	        
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span> <span class="o">+=</span> <span class="mi">1</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;MultiGPU&quot;</span><span class="p">:</span>
+            <span class="c1">#### For GPU</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nextFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.azim.h5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="p">)</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextFile</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">periodEvent</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;All done&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">isLive</span> <span class="o">=</span> <span class="kc">False</span>     
+                <span class="bp">self</span><span class="o">.</span><span class="n">tth2q</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">writesinos</span><span class="p">()</span>            
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Saving data done&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">removedata</span><span class="p">()</span>            
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Deleted integrated linescans&quot;</span><span class="p">)</span>
+                
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="c1">#### For OAR</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="o">+</span><span class="mi">1</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">nextFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_linescan_</span><span class="si">%.3d</span><span class="s2">.hdf5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="p">)</span>
+
+                <span class="nb">print</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">nextFile</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">periodEvent</span><span class="o">.</span><span class="n">start</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;All done&#39;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">isLive</span> <span class="o">=</span> <span class="kc">False</span>     
+                <span class="bp">self</span><span class="o">.</span><span class="n">tth2q</span><span class="p">()</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">writesinos</span><span class="p">()</span>            
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Saving data done&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">removedata</span><span class="p">()</span>            
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Deleted integrated linescans&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Fast_XRDCT_LiveRead.setTargetFile"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_LiveRead.Fast_XRDCT_LiveRead.setTargetFile">[docs]</a>    <span class="k">def</span> <span class="nf">setTargetFile</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Set the next target h5 file</span>
+<span class="sd">		&quot;&quot;&quot;</span>  
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;MultiGPU&quot;</span><span class="p">:</span>
+            <span class="c1">#### For GPU        </span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">targetFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.azim.h5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">targetFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_</span><span class="si">%.4d</span><span class="s2">.azim.h5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1">#### For OAR</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">targetFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_linescan_</span><span class="si">%.3d</span><span class="s2">.hdf5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">targetFile</span> <span class="o">=</span>  <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_linescan_</span><span class="si">%.3d</span><span class="s2">.hdf5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">nextLineNumber</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Fast_XRDCT_LiveRead.writesinos"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_LiveRead.Fast_XRDCT_LiveRead.writesinos">[docs]</a>    <span class="k">def</span> <span class="nf">writesinos</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Export the sinogram data volume as a single .hdf5 file</span>
+<span class="sd">		&quot;&quot;&quot;</span>    
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;No&quot;</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_integrated_</span><span class="si">%s</span><span class="s2">_Filter_</span><span class="si">%s</span><span class="s2">.hdf5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">procunit</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;Median&quot;</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_integrated_</span><span class="si">%s</span><span class="s2">_Filter_</span><span class="si">%s</span><span class="s2">.hdf5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">procunit</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;trimmed_mean&quot;</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_integrated_</span><span class="si">%.1f</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_Filter_</span><span class="si">%s</span><span class="s2">.hdf5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">prc</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">procunit</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span> <span class="o">==</span> <span class="s2">&quot;sigma&quot;</span><span class="p">:</span>
+            <span class="n">fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">_integrated_</span><span class="si">%.1f</span><span class="s2">_</span><span class="si">%s</span><span class="s2">_Filter_</span><span class="si">%s</span><span class="s2">.hdf5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="nb">float</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">thres</span><span class="p">),</span> <span class="bp">self</span><span class="o">.</span><span class="n">filt</span><span class="p">,</span><span class="bp">self</span><span class="o">.</span><span class="n">procunit</span><span class="p">)</span>                
+
+        <span class="n">h5f</span> <span class="o">=</span> <span class="n">h5py</span><span class="o">.</span><span class="n">File</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="s2">&quot;w&quot;</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;data&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;twotheta&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tth</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;q&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">q</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;d&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">d</span><span class="p">)</span>        
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;slow_axis_steps&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">na</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;fast_axis_steps&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">nt</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;diode&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">dio</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;exptime&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">etime</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;omega&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">omega</span><span class="p">)</span>
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;translations&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">trans</span><span class="p">)</span>      
+        <span class="n">h5f</span><span class="o">.</span><span class="n">create_dataset</span><span class="p">(</span><span class="s1">&#39;scantype&#39;</span><span class="p">,</span> <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">scantype</span><span class="p">)</span>     
+        <span class="n">h5f</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+    	
+        <span class="n">os</span><span class="o">.</span><span class="n">chdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">)</span>
+        <span class="n">perm</span> <span class="o">=</span> <span class="s1">&#39;chmod 777 </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">fn</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">perm</span><span class="p">)</span></div>
+        
+<div class="viewcode-block" id="Fast_XRDCT_LiveRead.removedata"><a class="viewcode-back" href="../../../IntegratorAPI.html#nDTomo.Integrator.ContRotTomoInt_LiveRead.Fast_XRDCT_LiveRead.removedata">[docs]</a>    <span class="k">def</span> <span class="nf">removedata</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">		Remove integrated linescan data</span>
+<span class="sd">		&quot;&quot;&quot;</span>
+        
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">procunit</span> <span class="o">==</span> <span class="s2">&quot;MultiGPU&quot;</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">*.azim.h5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;rm </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">fn</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>        
+        
+                <span class="n">fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">*.json&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;rm </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">fn</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No .azim.h5 files present in the folder&#39;</span><span class="p">)</span>
+        
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">*linescan*.hdf5&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;rm </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">fn</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>        
+        
+                <span class="n">fn</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">%s</span><span class="s2">/</span><span class="si">%s</span><span class="s2">*.json&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">savepath</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="s1">&#39;rm </span><span class="si">%s</span><span class="s1">&#39;</span> <span class="o">%</span><span class="n">fn</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">system</span><span class="p">(</span><span class="n">cmd</span><span class="p">)</span>
+            <span class="k">except</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;No *linescan*.hdf5 files present in the folder&#39;</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">nDTomo</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../intro.html">nDTomo software suite</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../req.html">Installation of nDTomo software</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tut_ID15A_helper.html">ID15A helper tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tut_Integrator.html">Integrator tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../tut_MultiTool.html">MultiTool tutorial</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../ID15A_helperAPI.html">ID15Ahelper GUI API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../IntegratorAPI.html">Integrator GUI API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../MultiToolAPI.html">MultiTool GUI API reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../refs.html">References</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sites.html">Websites</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2019, A. Vamvakeros.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.12</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

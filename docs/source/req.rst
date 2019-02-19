@@ -21,7 +21,7 @@ Dependencies
 ^^^^^^^^^^^^
 nDTomo is a Python library which relies on the following packages:
 
-* Python: version 2.7
+* Python: version 2.7 or 3 (tested on 3.7.1)
 * PyQt5
 * Numpy: version 1.8 or newer
 * Scipy: version 0.14 or newer

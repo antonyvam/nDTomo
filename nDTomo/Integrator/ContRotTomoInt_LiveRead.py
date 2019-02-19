@@ -86,10 +86,10 @@ class Fast_XRDCT_LiveRead(QThread):
 #            else:
 #                self.sinos = np.zeros((self.nt*self.na,self.npt_rad-10));
             self.sinos = zeros((self.nt*self.na,self.npt_rad-10));
-            print self.sinos.shape
+            print(self.sinos.shape)
             
         except:
-            print "Cannot open mask file or the xrd-ct dataset directory is wrong"
+            print("Cannot open mask file or the xrd-ct dataset directory is wrong")
 
     def run(self):
         
@@ -159,7 +159,7 @@ class Fast_XRDCT_LiveRead(QThread):
             
         if self.nextLineNumber == 1: # this is a fix as we dont know the number of channels or the x scale
             self.data = zeros((self.nt, self.na, data.shape[1] ))
-            print self.data.shape
+            print(self.data.shape)
         
         v1 = len(arange(0,self.data.shape[0],2))
         v2 = len(arange(1,self.data.shape[0],2))
@@ -201,32 +201,32 @@ class Fast_XRDCT_LiveRead(QThread):
             if self.nextLineNumber < self.nt+1:
                 self.nextFile =  "%s/%s_%.4d.azim.h5" % (self.savepath, self.dataset, self.nextLineNumber)
 
-                print self.nextFile
+                print(self.nextFile)
                 self.periodEvent.start()
             else:
                 print('All done')
                 self.isLive = False     
                 self.tth2q()
                 self.writesinos()            
-                print "Saving data done"  
+                print("Saving data done")
                 self.removedata()            
-                print "Deleted integrated linescans"  
+                print("Deleted integrated linescans")
                 
         else: 
             #### For OAR
             if self.nextLineNumber < self.nt+1:
                 self.nextFile =  "%s/%s_linescan_%.3d.hdf5" % (self.savepath, self.dataset, self.nextLineNumber)
 
-                print self.nextFile
+                print(self.nextFile)
                 self.periodEvent.start()
             else:
                 print('All done')
                 self.isLive = False     
                 self.tth2q()
                 self.writesinos()            
-                print "Saving data done"  
+                print("Saving data done")
                 self.removedata()            
-                print "Deleted integrated linescans"               
+                print("Deleted integrated linescans")
 
     def setTargetFile(self):
 
@@ -297,7 +297,7 @@ class Fast_XRDCT_LiveRead(QThread):
                 cmd = 'rm %s' %fn
                 os.system(cmd)
             except:
-                print 'No .azim.h5 files present in the folder'
+                print('No .azim.h5 files present in the folder')
         
         else:
             try:
@@ -309,4 +309,4 @@ class Fast_XRDCT_LiveRead(QThread):
                 cmd = 'rm %s' %fn
                 os.system(cmd)
             except:
-                print 'No *linescan*.hdf5 files present in the folder' 
+                print('No *linescan*.hdf5 files present in the folder')

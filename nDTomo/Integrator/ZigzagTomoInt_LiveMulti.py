@@ -88,10 +88,10 @@ class XRDCT_ID15ASqueeze(QThread):
 #                self.sinos = np.zeros((self.nt*self.na,self.npt_rad-10));
                 
             self.sinos = zeros((self.nt*self.na,self.npt_rad-10));
-            print self.sinos.shape
+            print(self.sinos.shape)
             
         except:
-            print "Cannot open mask file or the xrd-ct dataset directory is wrong"
+            print("Cannot open mask file or the xrd-ct dataset directory is wrong")
             
 
     def run(self):
@@ -103,7 +103,7 @@ class XRDCT_ID15ASqueeze(QThread):
         self.previousLine = 0
         self.nextLine = 1        
         self.nextimageFile  =  "%s/%s/%s_%.4d.cbf" % (self.xrdctpath, self.dataset, self.dataset, self.nt)     
-        print self.nextimageFile    
+        print(self.nextimageFile)
           
         self.periodEventraw = Periodic(1, self.checkForImageFile)
 
@@ -149,11 +149,11 @@ class XRDCT_ID15ASqueeze(QThread):
         self.previoush5File =  "%s/%s_%.4d.azim.h5" % (self.savepath, self.dataset, self.nextLine-1)
         if self.nextLine < self.na:
             self.nextimageFile =  "%s%s/%s_%.4d.cbf" % (self.xrdctpath, self.dataset, self.dataset, self.nextLine*self.nt)
-            print self.nextimageFile
+            print(self.nextimageFile)
             self.periodEventraw.start()
         elif self.nextLine == self.na: #might need a sleep to give time to write the last image
             self.nextimageFile =  "%s%s/%s_%.4d.cbf" % (self.xrdctpath, self.dataset, self.dataset, self.nextLine*self.nt-1)
-            print self.nextimageFile
+            print(self.nextimageFile)
             self.periodEventraw.start()            
         else:
             print('Integration done')
@@ -236,15 +236,15 @@ class XRDCT_ID15ASqueeze(QThread):
         if self.nextLineNumber < self.na+1:
             self.nextFile =  "%s/%s_%.4d.azim.h5" % (self.savepath, self.dataset, self.nextLineNumber)
 
-            print self.nextFile
+            print(self.nextFile)
             self.periodEvent.start()
         else:
             print('All done')
             self.tth2q()
             self.writesinos()            
-            print "Saving data done"  
+            print("Saving data done")  
             self.removedata()            
-            print "Deleted integrated linescans"     
+            print("Deleted integrated linescans")     
 
     def setTargetFile(self):
 
@@ -370,7 +370,7 @@ class XRDCT_ID15ASqueeze(QThread):
             of = '%s/%s_%.4d.azim' % (self.savepath, da, self.nextLine)
             data['output_file'] = of
             self.of = of
-            print data['output_file']
+            print(data['output_file'])
         
         self.jsonfile = '%s_%.4d.json' % (da, self.nextLine)
         job = os.path.join( self.savepath, self.jsonfile)
@@ -382,7 +382,7 @@ class XRDCT_ID15ASqueeze(QThread):
         perm = 'chmod 777 %s' %self.jsonfile
         os.system(perm) 
         
-        print time.time()-start
+        print(time.time()-start)
         
     def gpuproc(self):
         
@@ -391,5 +391,5 @@ class XRDCT_ID15ASqueeze(QThread):
 		"""  
         
         dahu = 'dahu-reprocess %s &' %self.jsonfile #### try with &
-        print 'processing dataset %s' %self.jsonfile	
+        print('processing dataset %s' %self.jsonfile)
         os.system(dahu)

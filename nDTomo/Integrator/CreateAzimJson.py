@@ -82,13 +82,13 @@ class CreatAzimint(QThread):
                     args=line.split()
                     Rot3 = float(args[1])
                     
-            print Wavelength
-            print Distance
-            print Poni1
-            print Poni2
-            print Rot1
-            print Rot2
-            print Rot3
+            print(Wavelength)
+            print(Distance)
+            print(Poni1)
+            print(Poni2)
+            print(Rot1)
+            print(Rot2)
+            print(Rot3)
             
         data["wavelength"] = Wavelength
         data["rot1"] = Rot1

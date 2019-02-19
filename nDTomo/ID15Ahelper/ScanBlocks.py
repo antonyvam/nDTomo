@@ -8,7 +8,6 @@ Scan blocks
 """
 
 
-import settings
 from baseBlocks import Block, EasternBlock
 from PyQt5.QtGui import QColor, QPen, QFont, QImage
 from PyQt5.QtCore import Qt, QRect, QSize, QPoint
@@ -147,13 +146,13 @@ class HORSCAN_Block(ScanBlock):
         self.parameters.addChild(dict(name='scanFileName', value='prefix', type ='str'))
         self.parameters.addChild(dict(name='scanRange (mm)', value = 2.00, type = 'float'))
         self.parameters.addChild(dict(name='exposureTime (sec)', value = 0.020, type = 'float'))
-        self.parameters.addChild(dict(name='resolution (microns)', value = 50, type = 'int'))
+        self.parameters.addChild(dict(name='resolution (mm)', value = 0.050, type = 'int'))
         
     def setMethodText(self):
         prefix = self.parameters['scanFileName'] + '_aeroyScan'
         scan_range = self.parameters['scanRange (mm)']
         exp_time = float(self.parameters['exposureTime (sec)'])
-        y_resolution = float(self.parameters['resolution (microns)'])/1000.0
+        y_resolution = float(self.parameters['resolution (mm)'])
 
         loopCounters = self.getParentLoopCounters([])
         self.methodText = self.genSprintfFromLoopCounters(prefix, loopCounters)
@@ -226,7 +225,7 @@ class XRDMAP_Block(ScanBlock):
         self.parameters.setName(self.name)
         self.parameters.addChild(dict(name='scanFileName', value='prefix', type ='str'))
         self.parameters.addChild(dict(name='scanRange (mm)', value = 2.00, type = 'float'))
-        self.parameters.addChild(dict(name='resolution (microns)', value = 50, type = 'int'))
+        self.parameters.addChild(dict(name='resolution (mm)', value = 0.050, type = 'int'))
         self.parameters.addChild(dict(name='exposureTime (sec)', value = 0.020, type = 'float'))
         self.parameters.addChild(dict(name='Z start (mm)', value = 0.0, type = 'float'))
         self.parameters.addChild(dict(name='Z end (mm)', value = 1.0, type = 'float'))
@@ -236,7 +235,7 @@ class XRDMAP_Block(ScanBlock):
         prefix = self.parameters['scanFileName'] + '_map'
         scan_range = self.parameters['scanRange (mm)']
         exp_time = float(self.parameters['exposureTime (sec)'])
-        y_resolution = float(self.parameters['resolution (microns)'])/1000.0
+        y_resolution = float(self.parameters['resolution (mm)'])
         
         z_min = self.parameters['Z start (mm)']
         z_max = self.parameters['Z end (mm)']
@@ -285,7 +284,7 @@ class InterlacedXRDCT_Block(ScanBlock):
         loopCounters = self.getParentLoopCounters([])
         
         self.methodText = self.genSprintfFromLoopCounters(prefix, loopCounters)
-        self.methodText += "cmd = sprintf(\"xrdct3d %s %f %f %f %f\", fileName)\n" % (self.percents, sample_size, scan_range, y_resolution, exp_time)
+        self.methodText += "cmd = sprintf(\"xrdct3d_interlaced %s %f %f %f %f\", fileName)\n" % (self.percents, sample_size, scan_range, y_resolution, exp_time)
         self.methodText += "eval(cmd)\n"
         self.time = (sample_size/y_resolution)*(scan_range/y_resolution) * exp_time
         self.sideText = self.humanTime()
@@ -366,7 +365,7 @@ class XRDCT3D_Block(ScanBlock):
         sample_size = self.parameters['sampleSize (mm)']
         scan_range = self.parameters['scanRange (mm)']
         exp_time = float(self.parameters['exposureTime (sec)'])
-        y_resolution = float(self.parameters['resolution (microns)'])
+        y_resolution = float(self.parameters['resolution (mm)'])
 
         z_min = self.parameters['Z start (mm)']
         z_max = self.parameters['Z end (mm)']
@@ -415,7 +414,7 @@ class FASTXRDCT_Block(ScanBlock):
         sample_size = self.parameters['sampleSize (mm)']
         scan_range = self.parameters['scanRange (mm)']
         exp_time = float(self.parameters['exposureTime (sec)'])
-        y_resolution = float(self.parameters['resolution (microns)'])
+        y_resolution = float(self.parameters['resolution (mm)'])
         loopCounters = self.getParentLoopCounters([])
         self.methodText = self.genSprintfFromLoopCounters(prefix, loopCounters)
         self.methodText += "cmd = sprintf(\"continuous_rot_xrdct3d %s %f %f %f %f\", fileName)\n" % (self.percents, sample_size, scan_range, y_resolution, exp_time)
@@ -457,7 +456,7 @@ class FASTXRDCT3D_Block(ScanBlock):
         sample_size = self.parameters['sampleSize (mm)']
         scan_range = self.parameters['scanRange (mm)']
         exp_time = float(self.parameters['exposureTime (sec)'])
-        y_resolution = float(self.parameters['resolution (microns)'])
+        y_resolution = float(self.parameters['resolution (mm)'])
 
         z_min = self.parameters['Z start (mm)']
         z_max = self.parameters['Z end (mm)']
@@ -494,7 +493,7 @@ class ABSCT_Block(ScanBlock):
     def initiateParameters(self):
         self.parameters.setName(self.name)
         self.parameters.addChild(dict(name='scanFileName', value='prefix', type ='str'))
-        self.parameters.addChild(dict(name='number projections', value = 1500, type = 'float'))        
+        self.parameters.addChild(dict(name='number of projections', value = 1500, type = 'float'))        
         self.parameters.addChild(dict(name='exposureTime (sec)', value = 0.100, type = 'float'))
         self.parameters.addChild(dict(name='rotation centre pos', value = -100, type = 'float'))   
         self.parameters.addChild(dict(name='flat pos', value = -115, type = 'float'))    

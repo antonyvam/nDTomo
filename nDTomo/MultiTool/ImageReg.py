@@ -66,7 +66,7 @@ class AlignImages(QThread):
             self.progress_al.emit(v)
             
         m = argmin(dia)
-        print ang[m]
+        print(ang[m])
         
         thetan = self.theta + ang[m]
         self.iman = iradon(fpa, theta=thetan, circle=True)

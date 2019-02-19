@@ -83,7 +83,7 @@ class XRDCT_LiveSqueeze(QThread):
             self.mask = array(self.mask.data)
                         
         except:
-            print "Cannot open mask file or the xrd-ct dataset directory is wrong"
+            print("Cannot open mask file or the xrd-ct dataset directory is wrong")
 
     def run(self):
         
@@ -95,7 +95,7 @@ class XRDCT_LiveSqueeze(QThread):
         self.nextLine = 1        
         self.nextimageFile  =  "%s/%s/%s_%.4d.cbf" % (self.xrdctpath, self.dataset, self.dataset, self.nt)     
         
-        print self.nextimageFile    
+        print(self.nextimageFile)
         
         if self.procunit == "MultiGPU":
             self.periodEventraw = Periodic(1, self.checkForImageFile)   
@@ -134,13 +134,13 @@ class XRDCT_LiveSqueeze(QThread):
         if self.nextLine < self.na:
 
             self.nextimageFile =  "%s/%s/%s_%.4d.cbf" % (self.xrdctpath, self.dataset, self.dataset, self.nextLine*self.nt)
-            print self.nextimageFile
+            print(self.nextimageFile)
             self.periodEventraw.start()
 
         elif self.nextLine == self.na: #might need a sleep to give time to write the last image
             
             self.nextimageFile =  "%s/%s/%s_%.4d.cbf" % (self.xrdctpath, self.dataset, self.dataset, self.nextLine*self.nt-1)
-            print self.nextimageFile
+            print(self.nextimageFile)
             self.periodEventraw.start()   
         else:
             print('All done')
@@ -194,10 +194,10 @@ class XRDCT_LiveSqueeze(QThread):
                 v = (round((100.*(ii+1))/(int(self.na)*int(self.nt))))
                 self.progress.emit(v)
                 kk += 1;
-                print s, time.time()-start
+                print(s, time.time()-start)
                     
     
-            print "Integration done, now saving the data"
+            print("Integration done, now saving the data")
             self.r = r
             if self.units=='q_A^-1':
                 self.q = self.r
@@ -207,7 +207,7 @@ class XRDCT_LiveSqueeze(QThread):
             self.writehdf5()
 
         except:
-            print "Something is wrong with the actual integration..." 
+            print("Something is wrong with the actual integration...")
         
     def tth2q(self):
         
@@ -280,11 +280,11 @@ class XRDCT_LiveSqueeze(QThread):
         self.previoush5File =  "%s/%s_%.4d.azim.h5" % (self.savepath, self.dataset, self.nextLine-1)
         if self.nextLine < self.na:
             self.nextimageFile =  "%s%s/%s_%.4d.cbf" % (self.xrdctpath, self.dataset, self.dataset, self.nextLine*self.nt)
-            print self.nextimageFile
+            print(self.nextimageFile)
             self.periodEventraw.start()
         elif self.nextLine == self.na: #might need a sleep to give time to write the last image
             self.nextimageFile =  "%s%s/%s_%.4d.cbf" % (self.xrdctpath, self.dataset, self.dataset, self.nextLine*self.nt-1)
-            print self.nextimageFile
+            print(self.nextimageFile)
             self.periodEventraw.start()            
         else:
             print('All done')
@@ -358,7 +358,7 @@ class XRDCT_LiveSqueeze(QThread):
             of = '%s/%s_%.4d.azim' % (self.savepath, da, self.nextLine)
             data['output_file'] = of
             self.of = of
-            print data['output_file']
+            print(data['output_file'])
         
         self.jsonfile = '%s_%.4d.json' % (da, self.nextLine)
         job = os.path.join( self.savepath, self.jsonfile)
@@ -370,7 +370,7 @@ class XRDCT_LiveSqueeze(QThread):
         perm = 'chmod 777 %s' %self.jsonfile
         os.system(perm) 
         
-        print time.time()-start
+        print(time.time()-start)
         
     def gpuproc(self):
         
@@ -379,5 +379,5 @@ class XRDCT_LiveSqueeze(QThread):
 		""" 
         
         dahu = 'dahu-reprocess %s &' %self.jsonfile #### try with &
-        print 'processing dataset %s' %self.jsonfile	
+        print('processing dataset %s' %self.jsonfile)
         os.system(dahu)

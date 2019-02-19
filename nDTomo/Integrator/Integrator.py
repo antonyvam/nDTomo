@@ -7,7 +7,7 @@ The main code for the Integrator GUI
 
 from __future__ import unicode_literals
 import sys
-import os, h5py, json, getpass
+import os, json, getpass
 #import numpy as np
 from numpy import mean, zeros, sum, max, arange, ceil, interp, std, argmin, transpose, floor, tile, swapaxes, round, sqrt, where, empty, searchsorted
 
@@ -93,7 +93,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.setWindowTitle("XRD-CT data integrator")
+        self.setWindowTitle("Integrator")
 
         self.left = 50
         self.top = 50
@@ -380,7 +380,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.l.addWidget(self.setsamplesize,11,4)        
 
         self.label15 = QtWidgets.QLabel(self)
-        self.label15.setText('Step size (microns)')
+        self.label15.setText('Step size (mm)')
         self.l.addWidget(self.label15,11,5)
 
         self.setstepsize = QtWidgets.QLineEdit(self)
@@ -471,11 +471,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         calibrant_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open calibrant diffraction image', "", "*.cbf *.edf")
         self.calibrant = calibrant_fileName
         self.calibpath.setText(self.calibrant)
-        print self.calibrant
+        print(self.calibrant)
         
     def calibrantpath2(self,s):
         self.calibrant = str(s)
-        print self.calibrant
+        print(self.calibrant)
         
     def selEnergy(self,s):
         self.E = float(s)
@@ -495,7 +495,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def loadponifile2(self,s):
         self.poniname = str(s)
-        print self.poniname
+        print(self.poniname)
         
     def loadmaskfile(self):
         mask_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open detector mask', "", "*.cbf *.edf")
@@ -504,7 +504,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def loadmaskfile2(self,s):
         self.maskname = str(s)
-        print self.maskname
+        print(self.maskname)
 
     def createPDFmask(self):
         self.createdetpdfmask = CreatPDFMask(self.poniname,self.maskname)
@@ -529,12 +529,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
         jsonpath = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select directory of .azimint.json file"))
         self.jsonname = '%s/.azimint.json' %(jsonpath)
-        print self.jsonname
+        print(self.jsonname)
         self.jsonpath.setText(self.jsonname)  
         
     def loadjsonfile2(self,s):
         self.jsonname = str(s)
-        print self.jsonname
+        print(self.jsonname)
         
     def selSavepath(self):
         savepath = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select directory to save sinogram data"))
@@ -543,7 +543,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def selSavepath2(self,s):
         self.savepath = str(s)
-        print self.savepath
+        print(self.savepath)
         
     def selXRDCTpath(self):
 
@@ -566,21 +566,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 #                print '.par file does not exist or prefix is different'
 
             self.specfile = '%s/%s.spec' %(self.xrdctpath, self.dataset)
-            print self.specfile  
+            print(self.specfile)  
             
             try:
                 self.readspecinfo()
                 self.xrdctspecpath.setText(self.specfile)
             except: 
-                print '.spec file does not exist or prefix is different'    
+                print('.spec file does not exist or prefix is different')    
                 
             self.xrdctpath = "%sxrdct/" %(prefix[0])
-            print self.xrdctpath  
+            print(self.xrdctpath)  
 
         
     def selXRDCTpath2(self,s):
         self.xrdctpath = str(s)
-        print self.xrdctpath
+        print(self.xrdctpath)
         
 
     def changeXAxis(self,ind):
@@ -590,7 +590,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         elif ind == 1:
             self.units = "q_A^-1"
 #        self.units  = '"%s"' %self.units
-        print self.units
+        print(self.units)
     
 #    def Session(self,ind):
 #        if ind == 0:
@@ -605,7 +605,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         elif ind == 1:
             self.datatype = "edf"
 
-        print self.datatype   
+        print(self.datatype)
          
     def ProcessingUnit(self,ind):
         
@@ -654,7 +654,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.xrdctspecpath.setText(self.specfile)
                 
             except:
-                print "There might be a problem with the directories"
+                print("There might be a problem with the directories")
                 
         else:
             try:
@@ -694,7 +694,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.xrdctspecpath.setText(self.specfile)
                 
             except:
-                print "There might be a problem with the directories"            
+                print("There might be a problem with the directories")            
             
             
             
@@ -725,10 +725,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
         if self.filt == "trimmed_mean":
             self.prc = s
-            print self.prc
+            print(self.prc)
         elif self.filt == "sigma":
             self.thres = s
-            print self.thres
+            print(self.thres)
             
     def ChooseScanType(self,ind):
         if ind == 0:
@@ -743,7 +743,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         spec_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open File', "", "*.spec")
         if len(spec_fileName)>0:
             self.specfile = spec_fileName
-            print self.specfile
+            print(self.specfile)
             self.xrdctspecpath.setText(self.specfile)
             self.readspecinfo()
 
@@ -789,7 +789,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                                 n=n+1
 #                self.nt = len(y)
 #                self.na = len(omega)
-                print nomega, ny
+                print(nomega, ny)
                 self.omega = omega
                 self.trans = y
                 self.nomega = nomega
@@ -798,7 +798,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.etime = etime
                 
             except:
-                print 'Can not find spec file',self.specfile,'skipping directory'
+                print('Can not find spec file',self.specfile,'skipping directory')
 
         elif self.scantype=='ContRot':
             try:
@@ -826,7 +826,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
 #                self.nt = len(y)
 #                self.na = len(omega)
-                print nomega, ny
+                print(nomega, ny)
                 self.omega = omega
                 self.trans = y
                 self.nomega = nomega
@@ -834,7 +834,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.dio = dio
                 self.etime = etime                
             except:
-                print 'Cannot find spec file',self.specfile,'skipping directory'
+                print('Cannot find spec file',self.specfile,'skipping directory')
 
 
         self.na = self.nomega
@@ -844,44 +844,44 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
     def setnumtra(self,s):
         self.nt = int(s)
-        print self.nt
+        print(self.nt)
         self.calcpar2()
         
     def setnumang(self,s):
         self.na = int(s)
-        print self.na
+        print(self.na)
         self.calcpar2()
         
     def setdatasetname(self,s):
         self.dataset = str(s)
-        print self.dataset
+        print(self.dataset)
 
     def setscans(self,s):
         self.scansize = float(s)
-        print self.scansize
+        print(self.scansize)
         self.calcpar()
         
     def setsamps(self,s):
         self.samplesize = float(s)
-        print self.samplesize
+        print(self.samplesize)
         self.calcpar()
         
     def setsteps(self,s):
         self.stepsize = float(s)
-        print self.stepsize
+        print(self.stepsize)
         
     def calcpar(self):
         try:
-            self.nt = self.scansize*1E3/float(self.stepsize) + 1
-            self.na = self.samplesize*1E3/float(self.stepsize) + 1
+            self.nt = self.scansize/float(self.stepsize) + 1
+            self.na = self.samplesize/float(self.stepsize) + 1
             self.setnt.setText(str(int(self.nt)));self.setna.setText(str(int(self.na)));
         except: 
             pass
             
     def calcpar2(self):
         try:
-            self.scansize = (self.nt - 1) * float(self.stepsize)/1E3
-            self.samplesize = (self.na - 1) * float(self.stepsize)/1E3
+            self.scansize = (self.nt - 1) * float(self.stepsize)
+            self.samplesize = (self.na - 1) * float(self.stepsize)
             self.setscanrange.setText(str(self.scansize));self.setsamplesize.setText(str(self.samplesize));
         except:
             pass
@@ -1007,13 +1007,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.Squeezing.periodEventraw.stop()
                 self.Squeezing.terminate()            
             except:
-                print 'No data being integrated'
+                print('No data being integrated')
                 
             try:
                 self.Reading.periodEvent.stop()
                 self.Reading.terminate() 
             except:
-                print 'No data being read'        
+                print('No data being read') 
         
         elif self.liveoption == 0 and self.procunit == "MultiGPU":
             self.Squeezing.periodEvent.stop()
@@ -1224,10 +1224,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def changedata(self,ind):
         if ind == 1:
             self.data = self.Rec.bp
-            print "Should be reconstructed data displayed"
+            print("Should be reconstructed data displayed")
         else:
             self.data = self.Reading.data
-            print "Should be sinogram data displayed"
+            print("Should be sinogram data displayed")
             
         self.update_rec()        
         
@@ -1247,7 +1247,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             try:
                 self.newpath = oldpath.split("xrdct/");
                 self.newpath = self.newpath[1]
-                print self.newpath
+                print(self.newpath)
                 if len(self.newpath)>0:
                     self.datalist.addItem(self.newpath)        
             except:
@@ -1268,7 +1268,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.pbutton15.setEnabled(False)     
         
         datasets = [] 
-        for index in xrange(self.datalist.count()):
+        for index in range(self.datalist.count()):
             datasets.append(self.datalist.item(index).text())
             
         self.datasets = datasets
@@ -1292,12 +1292,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             self.specfile = '%s/%s/%s.spec' %(self.xrdctpath, self.dataset, self.dataset)
             try:
-                print self.specfile
+                print(self.specfile)
                 self.readspecinfo()
                 na = self.nomega
                 nt = self.ny
             except: 
-                print '.spec file does not exist or prefix is different' 
+                print('.spec file does not exist or prefix is different') 
             
              
             if self.procunit == "MultiGPU":
@@ -1363,7 +1363,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             st = self.fn.split(".json")
             if len(st)<2:
                 self.fn = "%s.json" %self.fn
-                print self.fn
+                print(self.fn)
     
             with open(self.fn, 'w') as outfile:  
                 json.dump(self.d, outfile)
@@ -1394,7 +1394,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.xrdctspecpath.setText(self.specfile)
                 self.readspecinfo()
             except:
-                print "No .spec file"
+                print("No .spec file")
     		
             if self.procunit == "MultiGPU":
                 self.ChooseProcUnit.setCurrentIndex(0)
@@ -1434,10 +1434,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.fileQuit()
 
     def about(self):
-        message = '<b>Integrator GUI for ID15A v0.1.0 url:</b><p>'
+        message = '<b>Integrator for ID15A v0.1.0<p>'
         message += '<p><i>Created by <a href=www.finden.co.uk>Finden</a>. Running under license under GPLv3'
         message += '\t '
-        sImage = QtWidgets.QPixmap(".//images//logoLetters.png")
+        sImage = QtGui.QPixmap(".//images//logoLetters.png")
         d = QtWidgets.QMessageBox()
         d.setWindowTitle('About')
         d.setIconPixmap(sImage)

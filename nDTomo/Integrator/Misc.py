@@ -18,7 +18,7 @@ class SliceTransformations():
         self.data[:,1::2,:] = self.data[::-1,1::2,:]
 
     def transpose2D(self):
-	self.data = transpose(self.data,(1,0))
+        self.data = transpose(self.data,(1,0))
 
     def transpose3D(self):
-	self.data = transpose(self.data,(1,0,2))
+        self.data = transpose(self.data,(1,0,2))

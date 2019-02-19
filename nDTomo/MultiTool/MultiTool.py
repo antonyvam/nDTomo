@@ -20,7 +20,7 @@ import numpy as np
 try:
     from scipy.misc import imresize
 except:
-    print "Cannot import imresize and/or imrotate"
+    print("Cannot import imresize and/or imrotate")
     
 from skimage.transform import radon, iradon
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
@@ -32,7 +32,7 @@ import matplotlib.pyplot as plt
 try:
     import fabio
 except:
-    print "Cannot import fabio"
+    print("Cannot import fabio")
     
 try:
     os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
@@ -108,6 +108,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.zim = 0
         self.sc = 1
         
+        self.peaktype = 'Gaussian'
         self.Area = 1.; self.Areamin = 0.; self.Areamax = 1000.; 
         self.Pos = 50.; self.Posmin = self.Pos - 5; self.Posmax = self.Pos + 5; 
         self.FWHM = 1.; self.FWHMmin = 0.; self.FWHMmax = 100.;
@@ -119,7 +120,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.setWindowTitle("Visualiser")
+        self.setWindowTitle("MultiTool")
 
 #        self.left = 100
 #        self.top = 100
@@ -128,7 +129,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 #        self.setGeometry(self.left, self.top, self.width, self.height)
 
         self.file_menu = QtWidgets.QMenu('&File', self)
-        self.file_menu.addAction('&Open XRD-CT Scan Parametes File', self.loadparfile)             
+#        self.file_menu.addAction('&Open XRD-CT Scan Parametes File', self.loadparfile)             
         self.file_menu.addAction('&Open XRD-CT data', self.fileOpen, QtCore.Qt.CTRL + QtCore.Qt.Key_O)
 #        self.file_menu.addAction('&Open XRD-CT reconstructed images', self.loadxrdct)
         self.file_menu.addAction('&Open micro-CT data', self.loadabsct)           
@@ -153,12 +154,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.tabs.addTab(self.tab1,"XRD-CT data")
         self.tabs.addTab(self.tab2,"Absorption correction") 
         self.tabs.addTab(self.tab3,"Peak fitting") 
-        self.tabs.addTab(self.tab4,"ABS/PHC-CT data") 
+        self.tabs.addTab(self.tab4,"ABS-CT data") 
         
-        self.tab1.layout = QtWidgets.QGridLayout(self)       
-        self.tab2.layout = QtWidgets.QGridLayout(self)
-        self.tab3.layout = QtWidgets.QGridLayout(self)
-        self.tab4.layout = QtWidgets.QGridLayout(self)
+
+        self.tab1.layout = QtWidgets.QGridLayout()       
+        self.tab2.layout = QtWidgets.QGridLayout()
+        self.tab3.layout = QtWidgets.QGridLayout()
+        self.tab4.layout = QtWidgets.QGridLayout()
 
         # set up the mapper
         self.mapperWidget = QtWidgets.QWidget(self)
@@ -174,7 +176,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         vbox1.addWidget(self.mapperToolbar)
         vbox1.addWidget(self.mapper)
         self.mapperWidget.setLayout(vbox1)
-       
+
+
+        
         #set up the plotter
         self.plotterWidget = QtWidgets.QWidget(self)
         self.plotter = MyCanvas()
@@ -193,6 +197,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.tabs)
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.mapperExplorerDock)
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.plotterExplorerDock)
+
+  
         
         # set up the abs-ct mapper
         self.mapperWidget_absct = QtWidgets.QWidget(self)
@@ -221,8 +227,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mapperWidget_xrdct.setLayout(vbox3)
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.mapperExplorerDock_xrdct)
         self.mapperExplorerDock_xrdct.setVisible(False)
-
-                
+    
+        
         ############### TAB 1 -  XRD-CT panel ############### 
         
         self.DatasetLabel = QtWidgets.QLabel(self)
@@ -325,7 +331,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.tab1.layout.addWidget(self.ChooseData,4,3)   
 
 
-
         self.label17 = QtWidgets.QLabel(self)
         self.label17.setText('Perform batch XRD-CT reconstruction')
         self.tab1.layout.addWidget(self.label17,5,0)
@@ -364,12 +369,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.spinbox.valueChanged.connect(self.changeImage)
         self.spinbox.setMaximumWidth(150)
         self.tab2.layout.addWidget(self.spinbox,2,1)
+        self.spinbox.setEnabled(False)
         
         self.slider = QtWidgets.QSlider(QtCore.Qt.Horizontal, self)
 #        self.slider.setFocusPolicy(QtCore.Qt.NoFocus)
         self.slider.valueChanged[int].connect(self.changeImage)
         self.slider.setMaximumWidth(150)
         self.tab2.layout.addWidget(self.slider,2,2)
+        self.slider.setEnabled(False)
         
         self.Labelx = QtWidgets.QLabel(self)
         self.Labelx.setText('XRD-CT image (channel)')
@@ -421,6 +428,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.CheckBox3=QtWidgets.QCheckBox("Align micro-CT and XRD-CT datasets",self) # QtWidgets.QPushButton
         self.CheckBox3.stateChanged.connect(self.AlignData) #mybutton1.pressed.connect(self.viewdata)     
         self.tab2.layout.addWidget(self.CheckBox3,6,0)
+        self.CheckBox3.setEnabled(False)
      
         self.progressbar_align = QtWidgets.QProgressBar(self)
         self.progressbar_align.setMaximumWidth(200)
@@ -499,19 +507,19 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ChooseFunction.setEnabled(True)
         self.tab3.layout.addWidget(self.ChooseFunction,4,1)   
 
-        self.LabelTypeOpt = QtWidgets.QLabel(self)
-        self.LabelTypeOpt.setText('Optimization')
-        self.tab3.layout.addWidget(self.LabelTypeOpt,4,2)
+#        self.LabelTypeOpt = QtWidgets.QLabel(self)
+#        self.LabelTypeOpt.setText('Optimization')
+#        self.tab3.layout.addWidget(self.LabelTypeOpt,4,2)
         
-        self.ChooseOpt = QtWidgets.QComboBox(self)
-        self.ChooseOpt.addItems(["Constained", "Unconstrained"])
-        self.ChooseOpt.currentIndexChanged.connect(self.profile_function)
-        self.ChooseOpt.setEnabled(True)
-        self.tab3.layout.addWidget(self.ChooseOpt,4,3)   
+#        self.ChooseOpt = QtWidgets.QComboBox(self)
+#        self.ChooseOpt.addItems(["Constained", "Unconstrained"])
+#        self.ChooseOpt.currentIndexChanged.connect(self.profile_function)
+#        self.ChooseOpt.setEnabled(True)
+#        self.tab3.layout.addWidget(self.ChooseOpt,4,3)   
         
-        self.LabelLiveOpt = QtWidgets.QLabel(self)
-        self.LabelLiveOpt.setText('Live Plot')
-        self.tab3.layout.addWidget(self.LabelLiveOpt,4,4)
+#        self.LabelLiveOpt = QtWidgets.QLabel(self)
+#        self.LabelLiveOpt.setText('Live Plot')
+#        self.tab3.layout.addWidget(self.LabelLiveOpt,4,4)
         
         self.ChooseLive = QtWidgets.QComboBox(self)
         self.ChooseLive.addItems(["No", "Yes"])
@@ -673,7 +681,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.tab4.layout.addWidget(self.pbutton_abspath,1,1)
 
 
-        self.pbutton_flat = QtWidgets.QPushButton("Flat field data path",self)
+        self.pbutton_flat = QtWidgets.QPushButton("Flat field images path",self)
         self.pbutton_flat.clicked.connect(self.read_flat)
         self.tab4.layout.addWidget(self.pbutton_flat,2,0)
         
@@ -682,7 +690,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.pbutton_flatpath.setMaximumWidth(400)
         self.tab4.layout.addWidget(self.pbutton_flatpath,2,1)
 
-        self.pbutton_dark = QtWidgets.QPushButton("Dark current data path",self)
+        self.pbutton_dark = QtWidgets.QPushButton("Dark images path",self)
         self.pbutton_dark.clicked.connect(self.read_dark)
         self.tab4.layout.addWidget(self.pbutton_dark,3,0)
         
@@ -879,7 +887,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if len(self.hdf_fileName)>0 and len(self.dproi)>0:
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
             sn = "%s_%s_%s.hdf5" %(s,str(self.row),str(self.col))
-            print sn
+            print(sn)
 
             h5f = h5py.File(sn, "w")
             h5f.create_dataset('I', data=self.dproi)
@@ -933,11 +941,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 os.system(perm) 
                 
             except:
-                print "Something is wrong with the local diffraction pattern"
+                print("Something is wrong with the local diffraction pattern")
                 
             
         else:
-            print "Something is wrong with the data"
+            print("Something is wrong with the data")
         
     def exportim(self):
         
@@ -950,7 +958,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if len(self.hdf_fileName)>0 and len(self.imoi)>0:
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
             sn = "%s_channel_%s.hdf5" %(s,str(self.nx))
-            print sn
+            print(sn)
 
             h5f = h5py.File(sn, "w")
             h5f.create_dataset('I', data=self.imoi)
@@ -961,10 +969,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             os.system(perm)    
             
             sn = "%s_channel_%s.png" %(s,str(self.nx))
-            plt.imsave(sn,self.imoi)
+            plt.imsave(sn,self.imoi,cmap=self.cmap)
                         
         else:
-            print "Something is wrong with the data"
+            print("Something is wrong with the data")
             
     def selEnergy(self, value):
         self.E = value
@@ -977,7 +985,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
     def viewdata(self,s):
         if s == 2 and self.data.shape[2]>0:
-            print self.data.shape
+            print(self.data.shape)
             self.explore()
 
     def norm(self,s):
@@ -1000,14 +1008,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.xaxis = self.q
             self.xaxislabel = 'Q'
         elif ind == 2:
-            self.xaxis = self.d
+            self.xaxis = self.d[::-1]
             self.xaxislabel = 'd'
         self.update()
         
     def changecolormap(self,ind):
         
         self.cmap = self.cmap_list[ind]
-        print self.cmap
+        print(self.cmap)
         try:
             self.update()
         except: 
@@ -1022,7 +1030,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mapper.fig.canvas.mpl_connect('motion_notify_event', self.onMapMoveEvent)        
         
         
-        self.cb = self.mapper.fig.colorbar(self.map_data)
+#        self.cb = self.mapper.fig.colorbar(self.map_data)
         
         self.mapper.show()
         self.mapper.draw()  
@@ -1056,7 +1064,14 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if event.inaxes:
                 self.col = int(event.xdata.round())
                 self.row = int(event.ydata.round())
-                self.dproi = self.data[self.row,self.col,:]
+                
+                
+                
+                if self.xaxislabel == 'd':
+                    self.dproi = self.data[self.row,self.col,::-1]
+                else:
+                    self.dproi = self.data[self.row,self.col,:]
+                
                 self.histogramCurve[0].set_data(self.xaxis, self.dproi) 
                 self.histogramCurve[0].set_label(str(self.row)+','+str(self.col))
                 self.histogramCurve[0].set_visible(True)          
@@ -1099,13 +1114,19 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             col = int(event.xdata.round())
             row = int(event.ydata.round())
             
-            dproi = self.data[row,col,:]
+            if self.xaxislabel == 'd':
+                dproi = self.data[row,col,::-1]
+            else:
+                dproi = self.data[row,col,:]            
+            
+            
             self.activeCurve[0].set_data(self.xaxis, dproi) 
             self.mapper.axes.relim()
             self.activeCurve[0].set_label(str(row)+','+str(col))
 #            self.mapper.axes.autoscale(enable=True, axis='both', tight=True)#.axes.autoscale_view(False,True,True)
             self.activeCurve[0].set_visible(True)
-            self.plotter.axes.set_ylim(0,np.max(dproi))
+            if np.max(dproi)>0:
+                self.plotter.axes.set_ylim(0,np.max(dproi))
 
         else:
             self.activeCurve[0].set_visible(False)
@@ -1146,7 +1167,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 #            self.mapper.fig.delaxes(self.mapper.fig.axes[1])
 #            self.cb.remove()
 #            self.cb = self.mapper.fig.colorbar(self.map_data)
+            
+#            self.cb.set_clim(np.self.CMin,self.CMax)
+            
+            
+            try:
+                self.cb.remove()
+            except:
+                pass
             ############
+            
+            
             
             
             self.mapper.draw()             
@@ -1218,7 +1249,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         try:
             self.bp = np.where(self.bp<0,0,self.bp)
         except:
-            print "No negative values in the reconstructed data"
+            print("No negative values in the reconstructed data")
         self.data = self.bp
         self.ChooseData.setCurrentIndex(1)
         self.update()
@@ -1228,10 +1259,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def changedata(self,ind):
         if ind == 1:
             self.data = self.bp
-            print "Should be reconstructed data displayed"
+            print("Should be reconstructed data displayed")
         else:
             self.data = self.sinos
-            print "Should be sinogram data displayed"
+            print("Should be sinogram data displayed")
             
         self.update()
 
@@ -1276,7 +1307,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         # Need to disable some buttons
         
         datasets = [] 
-        for index in xrange(self.datalist.count()):
+        for index in range(self.datalist.count()):
             datasets.append(self.datalist.item(index).text())
             
         self.datasets = datasets
@@ -1298,7 +1329,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             filename = filename[0]
                     
             output = '%s/%s_processed.hdf5' %(self.pathslist[ii],filename)
-            print output
+            print(output)
         
             self.BatchProc.append(BatchProcessing(self.data,self.sinonorm,self.ofs,self.crsr,self.scantype,output,self.tth,self.q,self.d))
 
@@ -1339,105 +1370,123 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             try:
                 self.explore_absct()
             except:
-                print 'No micro-CT data'
-        else:
-            try:
-                dim = self.bp.shape
-                if len(dim) == 3:
-                    self.data = self.bp
-                else:
-                    self.data = self.sinos
-                    
-                try:
-                    self.histogramCurve.pop(0).remove()
-                    self.activeCurve.pop(0).remove()
-                    self.vCurve.remove()
-                except:
-                    	pass
-#                self.plotter.axes.clear()
-
-                self.mapperExplorerDock_absct.setVisible(False)
-                self.mapperExplorerDock_xrdct.setVisible(False)
-                self.mapperExplorerDock.setVisible(True)                        
-                self.plotterExplorerDock.setVisible(True)
-                self.explore()
-            except:
-                print 'No XRD-CT data'
+                print('No micro-CT data')
+#        else:
+#            try:
+#                dim = self.bp.shape
+#                if len(dim) == 3:
+#                    self.data = self.bp
+#                else:
+#                    self.data = self.sinos
+#                    
+#                try:
+#                    self.histogramCurve.pop(0).remove()
+#                    self.activeCurve.pop(0).remove()
+#                    self.vCurve.remove()
+#                except:
+#                    	pass
+##                self.plotter.axes.clear()
+#
+#                self.mapperExplorerDock_absct.setVisible(False)
+#                self.mapperExplorerDock_xrdct.setVisible(False)
+#                self.mapperExplorerDock.setVisible(True)                        
+#                self.plotterExplorerDock.setVisible(True)
+#                self.explore()
+#            except:
+#                print('No XRD-CT data')
             
     def explore_absct(self):
         
-        self.data = self.bpa
         
-        dim = self.data.shape
+        try:
         
-        if len(dim)==2:
-            self.mapper.axes.clear()
-            self.mapper.axes.imshow(self.data,cmap='jet')
-            title = 'micro-CT image'
-            self.mapper.axes.set_title(title, fontstyle='italic')
-    
-            self.mapper.show()
-            self.mapper.draw()          
+            self.data = self.bpa
             
-        elif len(dim)==3:
+            dim = self.data.shape
             
-            self.mapperExplorerDock.setVisible(False)                        
-            self.plotterExplorerDock.setVisible(False)
-            self.mapperExplorerDock_absct.setVisible(True)
-            self.mapperExplorerDock_xrdct.setVisible(True)
-
+            if len(dim)==2:
+                self.mapper.axes.clear()
+                self.mapper.axes.imshow(self.data,cmap='jet')
+                title = 'micro-CT image'
+                self.mapper.axes.set_title(title, fontstyle='italic')
+        
+                self.mapper.show()
+                self.mapper.draw()          
                 
-            self.mapper_absct.axes.clear()
-            self.mapper_absct.axes.imshow(np.mean(self.data,axis=2),cmap='jet')
-            title = 'Mean micro-CT image'
-            self.mapper_absct.axes.set_title(title, fontstyle='italic')
-            self.mapper_absct.show()
-            self.mapper_absct.draw()  
+            elif len(dim)==3:
+                
+                self.mapperExplorerDock.setVisible(False)                        
+                self.plotterExplorerDock.setVisible(False)
+                self.mapperExplorerDock_absct.setVisible(True)
+                self.mapperExplorerDock_xrdct.setVisible(True)
+    
+                    
+                self.mapper_absct.axes.clear()
+                self.mapper_absct.axes.imshow(np.mean(self.data,axis=2),cmap='jet')
+                title = 'Mean micro-CT image'
+                self.mapper_absct.axes.set_title(title, fontstyle='italic')
+                self.mapper_absct.show()
+                self.mapper_absct.draw()  
+                
+                self.mapper_xrdct.axes.clear()
+                self.mapper_xrdct.axes.imshow(np.mean(self.bp,axis=2),cmap='jet')
+                title = 'Mean XRD-CT image'
+                self.mapper_xrdct.axes.set_title(title, fontstyle='italic')
+                self.mapper_xrdct.show()
+                self.mapper_xrdct.draw()              
             
-            self.mapper_xrdct.axes.clear()
-            self.mapper_xrdct.axes.imshow(np.mean(self.bp,axis=2),cmap='jet')
-            title = 'Mean XRD-CT image'
-            self.mapper_xrdct.axes.set_title(title, fontstyle='italic')
-            self.mapper_xrdct.show()
-            self.mapper_xrdct.draw()              
+        except:
+            
+            print('Problem with ABS-CT data')
+            
         
     def changeImage(self, value):
         
-        dim = self.data.shape
-        if len(dim)==3:
-            if value>self.bpa.shape[2]:
-                value = self.bpa.shape[2]
-            elif value<0:
-                value = 0
-            self.spinbox.setValue(value)
-            self.slider.setValue(value)
+        try:
+            dim = self.data.shape
+            if len(dim)==3:
+                if value>self.bpa.shape[2]:
+                    value = self.bpa.shape[2]
+                elif value<0:
+                    value = 0
+                self.spinbox.setValue(value)
+                self.slider.setValue(value)
+                
+                self.selectedChannels = value;
+                self.mapper_absct.axes.clear() # not fast
+                self.mapper_absct.axes.imshow(self.bpa[:,:,value],cmap='jet')
+                title = "Micro-CT image no. %d" % (value)
+                self.mapper_absct.axes.set_title(title)
+                self.mapper_absct.show()
+                self.mapper_absct.draw()  
+
+        except:
             
-            self.selectedChannels = value;
-            self.mapper_absct.axes.clear() # not fast
-            self.mapper_absct.axes.imshow(self.bpa[:,:,value],cmap='jet')
-            title = "Micro-CT image no. %d" % (value)
-            self.mapper_absct.axes.set_title(title)
-            self.mapper_absct.show()
-            self.mapper_absct.draw()  
+            print('Problem with ABS-CT data')            
 
     def changeImage_xrd(self, value):
         
-        dim = self.bp.shape
-        if len(dim)==3:
-            if value>self.bp.shape[2]:
-                value = self.bp.shape[2]
-            elif value<0:
-                value = 0
-            self.spinbox_xrd.setValue(value)
-            self.spinbox_xrd.setValue(value)
+        try:        
+            dim = self.bp.shape
+            if len(dim)==3:
+                if value>self.bp.shape[2]:
+                    value = self.bp.shape[2]
+                elif value<0:
+                    value = 0
+                self.spinbox_xrd.setValue(value)
+                self.spinbox_xrd.setValue(value)
+                
+                self.selectedChannels = value;
+                self.mapper_xrdct.axes.clear() # not fast
+                self.mapper_xrdct.axes.imshow(self.bp[:,:,value],cmap='jet')
+                title = "XRD-CT image channel %d" % (value)
+                self.mapper_xrdct.axes.set_title(title)
+                self.mapper_xrdct.show()
+                self.mapper_xrdct.draw()  
+
+        except:
             
-            self.selectedChannels = value;
-            self.mapper_xrdct.axes.clear() # not fast
-            self.mapper_xrdct.axes.imshow(self.bp[:,:,value],cmap='jet')
-            title = "XRD-CT image channel %d" % (value)
-            self.mapper_xrdct.axes.set_title(title)
-            self.mapper_xrdct.show()
-            self.mapper_xrdct.draw()  
+            print('Problem with XRD-CT data')      
             
     def setxrdpixsize(self, value):
         self.pxsxrd = np.asarray(value , dtype="float64")    
@@ -1447,22 +1496,27 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
     def setabscorim(self,value):
         
-        dim = self.bpa.shape
-        if len(dim)==3:
-            self.ima = self.bpa[:,:,value]
-        elif len(dim)==2:
-            self.ima = self.bpa
+        try:
+            dim = self.bpa.shape
+            if len(dim)==3:
+                self.ima = self.bpa[:,:,value]
+            elif len(dim)==2:
+                self.ima = self.bpa
+
+        except:
+            
+            print('Problem with ABS-CT data')    
             
     def AlignData(self,s):
         if s==2:
         
             # Rescale the micro-ct image        
             r = self.pxsabs/self.pxsxrd;
-            print r
+            print(r)
             self.ima = imresize(self.ima, r, 'bilinear')
             self.bpx = np.sum(self.bp,axis=2)
             if self.ima.shape[0]<self.bpx.shape[0]:
-                print 'hello'
+                print('hello')
                 self.bpan = np.zeros((self.bpx.shape[0],self.bpx.shape[1]))
                 self.bpan[0:self.ima.shape[0],0:self.ima.shape[1]] = self.ima
                 self.ima = self.bpan
@@ -1490,7 +1544,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.ima = self.ima/m
             
             im = np.concatenate((self.ima, self.bpx), axis=1)
-            plt.figure(6);plt.clf();plt.imshow(im, cmap = 'jet');plt.title('Rescaled micro-CT image and global XRD-CT image');plt.colorbar();plt.pause(0.01);
+            plt.figure(6);plt.clf();plt.imshow(im, cmap = 'jet');plt.title('Rescaled micro-CT image and global XRD-CT image');plt.colorbar();
+            plt.pause(0.01);
             # Align the two images
             
             roi_ii = np.arange(-30,31);
@@ -1524,7 +1579,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             di = np.array(di)
             m = np.argmin(di)
-            print indr[m], indc[m]
+            print(indr[m], indc[m])
             
             ii = indr[m]; jj = indc[m];
             self.iman = np.zeros((self.ima.shape[0],self.ima.shape[1]))
@@ -1594,7 +1649,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
         self.iman = self.Align.iman
         im = np.concatenate((self.iman, self.bpx), axis=1)
-        plt.figure(8);plt.clf();plt.imshow(im, cmap = 'jet');plt.title('Aligned rescaled micro-CT image and global XRD-CT image');plt.colorbar();plt.pause(0.01);
+        plt.figure(8);plt.clf();plt.imshow(im, cmap = 'jet');plt.title('Aligned rescaled micro-CT image and global XRD-CT image');plt.colorbar();
+        plt.pause(0.01);
         self.CheckBox4.setEnabled(True)
         
     def abscor(self,s):
@@ -1616,7 +1672,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             npr = scor.shape[1]
             theta = np.linspace(0., 180., npr, endpoint=False)
-            print scor.shape,theta.shape
+            print(scor.shape,theta.shape)
             
             self.bpcor = iradon(scor, theta=theta, circle=True)
             self.bpcor = np.where(self.bpcor<0,0,self.bpcor)
@@ -1670,7 +1726,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if len(self.hdf_fileName)>0 and len(self.imroi)>0:
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
             sn = "%s_roi_%sto%s.hdf5" %(s,str(self.ch1),str(self.ch2))
-            print sn
+            print(sn)
 
             h5f = h5py.File(sn, "w")
             h5f.create_dataset('I', data=self.imroi)
@@ -1682,18 +1738,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             os.system(perm)    
                         
         else:
-            print "Something is wrong with the data"
+            print("Something is wrong with the data")
         
     def profile_function(self,ind):
         if ind == 0:
             self.peaktype = "Gaussian"
-            print "Gaussian profile"
+            print("Gaussian profile")
         elif ind == 1:
             self.peaktype = "Lorentzian"
-            print "Lorentzian profile"
+            print("Lorentzian profile")
         elif ind == 2:
-            self.peaktype = "Pseudo"
-            print "Pseudo-Voigt profile"
+            self.peaktype = "Pseudo-Voigt"
+            print("Pseudo-Voigt profile")
 
 
     def channel_initial(self, value):
@@ -1727,50 +1783,50 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.FWHMMaxSel.setText(str(self.FWHMmax))
             
         except:
-            print 'No data'
+            print('No data')
         
     def selArea(self,value):
         self.Area = float(value)
-        print self.Area
+        print(self.Area)
 
     def selAreaMin(self,value):
         self.Areamin = float(value)
-        print self.Areamin
+        print(self.Areamin)
 
     def selAreaMax(self,value):
         self.Areamax = float(value)
-        print self.Areamax
+        print(self.Areamax)
 
     def selPos(self,value):
         self.Pos = float(value)
-        print self.Pos
+        print(self.Pos)
     
     def selPosMin(self,value):
         self.Posmin = float(value)
-        print self.Posmin
+        print(self.Posmin)
 
     def selPosMax(self,value):
         self.Posmax = float(value)
-        print self.Posmax
+        print(self.Posmax)
 
     def selFWHM(self,value):
         self.FWHM = float(value)
-        print self.FWHM
+        print(self.FWHM)
 
     def selFWHMMin(self,value):
         self.FWHMmin = float(value)
-        print self.FWHMmin
+        print(self.FWHMmin)
 
     def selFWHMMax(self,value):
         self.FWHMmax = float(value)
-        print self.FWHMmax
+        print(self.FWHMmax)
 
     def batchpeakfit(self):
 
         self.roi = np.arange(self.pos1,self.pos2+1)
         self.pbutton_fit.setEnabled(False)
         
-        self.PeakFitData = FitData(self.data,self.roi,self.Area,self.Areamin,self.Areamax,self.Pos,self.Posmin,self.Posmax,self.FWHM,self.FWHMmin,self.FWHMmax)
+        self.PeakFitData = FitData(self.peaktype,self.data,self.roi,self.Area,self.Areamin,self.Areamax,self.Pos,self.Posmin,self.Posmax,self.FWHM,self.FWHMmin,self.FWHMmax)
         self.PeakFitData.start()            
         self.PeakFitData.progress_fit.connect(self.progressbar_fit.setValue)
         self.PeakFitData.fitdone.connect(self.updatefitdata)
@@ -1848,7 +1904,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
             sn = "%s_fit_phase.hdf5" %(s)
-            print sn
+            print(sn)
 
             h5f = h5py.File(sn, "w")
             h5f.create_dataset('I', data=self.res['Phase'])
@@ -1860,7 +1916,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
             sn = "%s_fit_position.hdf5" %(s)
-            print sn
+            print(sn)
 
             h5f = h5py.File(sn, "w")
             h5f.create_dataset('I', data=self.res['Position'])
@@ -1872,7 +1928,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
             sn = "%s_fit_FWHM.hdf5" %(s)
-            print sn
+            print(sn)
 
             h5f = h5py.File(sn, "w")
             h5f.create_dataset('I', data=self.res['FWHM'])
@@ -1884,7 +1940,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
             sn = "%s_fit_Background1.hdf5" %(s)
-            print sn
+            print(sn)
 
             h5f = h5py.File(sn, "w")
             h5f.create_dataset('I', data=self.res['Background1'])
@@ -1896,7 +1952,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
             sn = "%s_fit_Background2.hdf5" %(s)
-            print sn
+            print(sn)
 
             h5f = h5py.File(sn, "w")
             h5f.create_dataset('I', data=self.res['Background2'])
@@ -1906,8 +1962,23 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             perm = 'chmod 777 %s' %sn
             os.system(perm)    
             
+            if self.peaktype == "Pseudo-Voigt":
+            
+                s = self.hdf_fileName.split('.hdf5'); s = s[0]
+                sn = "%s_fit_fraction.hdf5" %(s)
+                print(sn)
+    
+                h5f = h5py.File(sn, "w")
+                h5f.create_dataset('I', data=self.res['Fraction'])
+                h5f.create_dataset('Type', data='Fraction')            
+                h5f.close()
+            
+                perm = 'chmod 777 %s' %sn
+                os.system(perm)    
+            
+            
         else:
-            print "Something is wrong with the data"        
+            print("Something is wrong with the data")
         
         
     ####################### ABS/PHC-CT data #######################
@@ -1928,7 +1999,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 dark_im = dark_im + self.dark.getframe(ii).data
             self.dark_im = dark_im/nd
             self.dark_im = np.array(self.dark_im, dtype = float)
-            print 'Dark current image into memory'
+            print('Dark current image into memory')
 
             self.mapper.axes.clear() # not fast
             self.mapper.axes.imshow(self.dark_im,cmap='jet')
@@ -1953,7 +2024,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 flat_im = flat_im + self.flat.getframe(ii).data
             self.flat_im = flat_im/nd
             self.flat_im = np.array(self.flat_im, dtype = float) - self.dark_im
-            print 'Flat field image into memory'
+            print('Flat field image into memory')
             
             self.mapper.axes.clear() # not fast
             self.mapper.axes.imshow(self.flat_im,cmap='jet')
@@ -1969,7 +2040,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
         if len(self.ifn)>0:
             
-            print self.ifn
+            print(self.ifn)
             self.pbutton_abspath.setText(self.ifn)            
             
             prefix = self.ifn.split("absct/")
@@ -1980,8 +2051,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             self.i = fabio.open(self.ifn)
             self.nd = self.i.nframes
-            print 'Absorption/phase contrast CT data into memory'
-            print '%d projections' %self.nd
+            print('Absorption/phase contrast CT data into memory')
+            print('%d projections' %self.nd)
             self.PlotRadio.setEnabled(True)
             
             self.imoi = self.i.getframe(1).data
@@ -2007,23 +2078,23 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
     def select_rowi(self,ind):
         self.roixi = ind
-        print self.roixi
+        print(self.roixi)
         
     def select_rowf(self,ind):
         self.roixf = ind
-        print self.roixf
+        print(self.roixf)
 
     def select_coli(self,ind):
         self.roiyi = ind
-        print self.roiyi
+        print(self.roiyi)
 
     def select_colf(self,ind):
         self.roiyf = ind      
-        print self.roiyf
+        print(self.roiyf)
         
     def select_proj(self,ind):
         self.projn = ind
-        print self.projn        
+        print(self.projn)       
         
     def plot_radiograph(self):
 
@@ -2033,7 +2104,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             if self.nd>1:
                 self.imoi = self.i.getframe(self.projn).data[self.roixi:self.roixf,self.roiyi:self.roiyf]
-                print self.imoi.shape
+                print(self.imoi.shape)
                 self.imoi = np.abs(-np.log((self.imoi-self.dark_im[self.roixi:self.roixf,self.roiyi:self.roiyf])/self.flat_im[self.roixi:self.roixf,self.roiyi:self.roiyf]))
                 
                 self.mapper.axes.clear() # not fast
@@ -2046,7 +2117,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.NormAbsVol.setEnabled(True)
         except:
             
-            print 'Something is wrong with the roi or with the CT data'
+            print('Something is wrong with the roi or with the CT data')
             
     def selSavepath(self):
         savepath = str(QtWidgets.QFileDialog.getExistingDirectory(self, "Select directory to save sinogram data"))
@@ -2070,25 +2141,25 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def setscale(self,val):
         
         self.sc = float(val) #np.asarray(val , dtype="float64")
-        print self.sc
+        print(self.sc)
         
     def changescantype(self,ind):
         if ind == 0:
             self.absscantype = "180"
-            print "0 - 180"
+            print("0 - 180")
 #            self.labelst.setEnabled(False)
         elif ind == 1:
             self.absscantype = "360"
-            print "0 - 360"
+            print("0 - 360")
 #            self.labelst.setEnabled(True)
 
     def select_ofs(self,ind):
         self.offset = ind
-        print self.offset    
+        print(self.offset)    
         
     def select_zim(self,ind):
         self.zim = ind
-        print self.zim  
+        print(self.zim)  
         
     def plot_stitched(self):
         
@@ -2096,20 +2167,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 #        self.zim = np.round(self.zim.shape[0]/2)
         
         self.sino = np.zeros((len(range(self.roiyi,self.roiyf)),self.nd))
-        print self.sino.shape
+        print(self.sino.shape)
         for ii in range(0,self.nd):
             self.sino[:,ii] = (self.i.getframe(ii).data[self.zim,self.roiyi:self.roiyf]-self.dark_im[self.zim,self.roiyi:self.roiyf])/(self.flat_im[self.zim,self.roiyi:self.roiyf])
 
         self.sino = np.abs(-np.log((self.sino)) )                  
         self.sino = self.sino[:,50:self.sino.shape[1]-50]
-        print self.sino.shape
+        print(self.sino.shape)
         
         if self.absscantype == "360":
             
             s1 = self.sino[0:self.sino.shape[0]-self.offset,0:self.sino.shape[1]/2]
-            print s1.shape
+            print(s1.shape)
             s2 = np.flipud(self.sino[0:self.sino.shape[0]-self.offset,self.sino.shape[1]/2:self.sino.shape[1]])
-            print s2.shape
+            print(s2.shape)
             self.sino = np.concatenate((s1,s2),axis = 0)
 
         self.mapper.axes.clear() # not fast
@@ -2165,7 +2236,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         try:
             self.ReconABS.terminate()
         except:
-            print 'No process to terminate'
+            print('No process to terminate')
         self.progressabsbar.setValue(0)
 
         self.spinboxabs.setEnabled(False)
@@ -2175,7 +2246,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
         h5_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open micro-CT data', "", "*.hdf5")
 
-        print h5_fileName
+        print(h5_fileName)
         with h5py.File(h5_fileName,'r') as f:
             self.bpa = f['/bpa'][:]
         self.bpa = np.array(self.bpa)
@@ -2184,13 +2255,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.zaxis = np.arange(1,self.bpa.shape[2]+1)
         except:
             self.zaxis = 1
-        print self.bpa.shape
+        print(self.bpa.shape)
 
         dim = self.bpa.shape
         if len(dim) == 3:
             self.slider.setMaximum(dim[2]-1)
             self.spinbox.setMaximum(dim[2]-1)
             self.abscorim.setMaximum(dim[2]-1)
+        
+        self.spinbox.setEnabled(False)
+        self.slider.setEnabled(False)
+        self.CheckBox3.setEnabled(False)
+
         
     def fileOpen(self):
         
@@ -2199,6 +2275,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.bp = np.zeros(())
         
         if len(self.hdf_fileName)>0:
+            
             self.loadxrdct()
        
             datasetname = self.hdf_fileName.split("/")
@@ -2219,10 +2296,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.spinbox_xrd.setMaximum(self.data.shape[2])        
     
             try:
-                self.cb.remove()
                 self.histogramCurve.pop(0).remove()
                 self.activeCurve.pop(0).remove()
                 self.vCurve.remove()
+#                self.cb.remove()
             except:
                 pass
     
@@ -2238,13 +2315,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.data = f['/data'][:]
                 except:
                     try:
-                        self.sinos = f['/Sinograms'][:]
                         self.bp = f['/Reconstructed'][:]
                         self.data = self.bp
+                        self.q = f['/q'][:]
+                        self.sinos = f['/Sinograms'][:]
                         self.ChooseData.setCurrentIndex(1)
                         self.ReconstructVol.setEnabled(True)
                         self.ChooseData.setEnabled(True)
-                        self.q = f['/q'][:]
+                        
+                        
                     except:
                         try:
                             self.data = f['/I'][:]
@@ -2309,10 +2388,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 #            print self.y.shape
         
         if self.scantype == 'zigzag' and len(self.data.shape)<3:
-            self.data = np.reshape(self.data,(int(self.na),int(self.nt),self.data.shape[1]))
-            self.data = np.transpose(self.data,(1,0,2))
-            self.data[:,0::2,:] = self.data[::-1,0::2,:]
-            self.sinos = self.data
+            try:
+                self.data = np.reshape(self.data,(int(self.na),int(self.nt),self.data.shape[1]))
+                self.data = np.transpose(self.data,(1,0,2))
+                self.data[:,0::2,:] = self.data[::-1,0::2,:]
+                self.sinos = self.data
+            except:
+                print('Problem reshaping the data')
             
         elif self.scantype == 'fast' and len(self.data.shape)<3:
                         
@@ -2328,7 +2410,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 		    
             useful = in_y[0]+in_a[0]+1;
 		    
-            print useful
+            print(useful)
 		    
 		    #%
 		    
@@ -2381,30 +2463,16 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 		        self.xaxis = self.q
 		        self.xaxislabel = 'Q'          
 		        self.ChooseXAxis.setEnabled(False)
-        print self.data.shape
-	       
-
-    def loadparfile(self):   
-    
-        fn, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Scan Parameters File', "", "*.json")
-    
+        print(self.data.shape)
+        
+        
+        
         try:
-            if len(fn)>0:
-                d = json.load(open(fn))
-                self.E = d["Energy"];self.datatype=d["Datatype"];self.calibrant=d["CalibrantPath"];self.poniname=d["PoniPath"];self.maskname=d["MaskPath"];self.mask=d["Mask"];
-                self.jsonname=d["JsonPath"];self.npt_rad=d["RadialPoints"];self.units=d["Units"];self.savepath=d["SavePath"];self.xrdctpath=d["XRDCTPath"];self.procunit=d["ProcessingUnit"];
-                self.filt=d["Filter"];self.prc=d["TrimmedMean"];self.thres=d["Sigma"];self.scantype=d["ScanType"];self.parfile=d["ParFile"];
-                self.nt=d["SlowAxisSteps"];self.na=d["FastAxisSteps"];
-                self.dataset=d["Dataset"];self.prefix=d["Prefix"];#;self.omega=d["Omega"];self.trans=d["Translations"]
-        		
-                self.E = float(self.E);self.na = int(self.na);self.nt = int(self.nt);
-        		# now need to display these things
-    #                self.EnergySel.setText(str(self.E));
-    
+            self.progressbar_s.setValue(0)
+            self.progressbar.setValue(0)       
         except:
             pass
-
-
+	       
         
     def savexrdct(self):
 
@@ -2415,7 +2483,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             st = self.fn.split(".hdf5")
             if len(st)<2:
                 self.fn = "%s.hdf5" %self.fn
-                print self.fn
+                print(self.fn)
 
 #            with open(self.fn, 'w') as outfile:  
 #                json.dump(self.dict, outfile)
@@ -2445,10 +2513,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.fileQuit()
 
     def about(self):
-        message = '<b>MultiTool v0.1.0 url:</b><p>'
+        message = '<b>MultiTool v0.1.0<p>'
         message += '<p><i>Created by <a href=www.finden.co.uk>Finden</a>. Running under license under GPLv3'
         message += '\t '
-        sImage = QtWidgets.QPixmap(".//images//logoLetters.png")
+        sImage = QtGui.QPixmap(".//images//logoLetters.png")
         d = QtWidgets.QMessageBox()
         d.setWindowTitle('About')
         d.setIconPixmap(sImage)

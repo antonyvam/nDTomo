@@ -3,7 +3,7 @@
 Calibration class calls pyFAI-calib to create the detector calibration
 CreatMask class creates a detector mask
 
-@author: A. Vamvakeros
+@authors: A. Vamvakeros, the methods of the CreatMask class were written by G. Vaughan
 """
 
 from os import system
