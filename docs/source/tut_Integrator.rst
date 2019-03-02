@@ -17,7 +17,7 @@ The main advantages of this GUI over all other competing softwares are:
 
 The GUI is shown in the following image:
 
-.. image:: ../images/tut_Integrator_1.png 
+.. image:: images/tut_Integrator_1.jpg 
 
 All the parameters can be saved as a .json file (File->Save integration parameter file).
 

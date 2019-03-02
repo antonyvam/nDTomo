@@ -40,13 +40,13 @@ This allows for data collected at other beamlines and synchrotron to be used wit
 
 A screenshot of the XRD-CT data tab is shown below:
 
-.. image:: ../images/tut_MultiTool_1.png
+.. image:: images/tut_MultiTool_1.jpg
 
 Once the data are loaded, the user is able to choose different colormaps and select the desired x axis (options are 2theta, q and q spacing).
 The user can explore the data interactively by scrolling either in the spectral/scattering domain (the corresponding chemical images on the left figure are automatically updated) or by hovering the mouse over the image (the corresponding chemical signals on the right figure are automatically updated).
 An example of XRD-CT sinogram data volume exploration is shown in the image below:
 
-.. image:: ../images/tut_MultiTool_1a.png
+.. image:: images/tut_MultiTool_1a.jpg
 
 Left clicking on a pixel in the chemical images leads to keeping in memory the corresponding chemical signal. 
 The user can then export this signal (e.g. local diffraction pattern) by clicking the corresponding button in the MultiTool GUI.
@@ -75,7 +75,7 @@ This part of the MultiTool GUI focuses on the absorption correction of XRD-CT da
 The user can interactively explore the micro-CT data (figure on the left hand side) and directly compare them with the XRD-CT data (figure on the right hand side).
 A screeshot of the absorption correction tab is provided below:
 
-.. image:: ../images/tut_MultiTool_2.png
+.. image:: images/tut_MultiTool_2.jpg
 
 The two sliders and the corresponding spinboxes are used to scroll along the third dimension in the micro-CT (third dimension is the height) and XRD-CT data (third dimension is the scattering domain).
 This feature allows the users to find the micro-CT image that corresponds to the XRD-CT data.
@@ -92,7 +92,7 @@ This part of the MultiTool GUI focuses on the analysis of the reconstructed chem
 
 A screeshot of the absorption correction tab is provided below:
 
-.. image:: ../images/tut_MultiTool_3.png
+.. image:: images/tut_MultiTool_3.jpg
 
 Background subtraction for a region of interest
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -127,7 +127,7 @@ The user has to provide the following information:
 
 A screeshot of the absorption correction tab is provided below:
 
-.. image:: ../images/tut_MultiTool_4.png
+.. image:: images/tut_MultiTool_4.jpg
 
 The MultiTool GUI allows for interactive cropping of the radiographs prior to reconstruction. This is performed by adjusting the row start/end and column start/end values.
 The use can also select a projection of interest and inspect/plot it (radiograph).

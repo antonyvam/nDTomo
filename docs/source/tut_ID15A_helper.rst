@@ -16,7 +16,7 @@ An example is provided in the following image
 
 The ID15A helper GUI automatically generates the spec code as shown in the following image:
 
-.. image:: ../images/tut_ID15Ahelper_2.jpg 
+.. image:: images/tut_ID15Ahelper_2.jpg 
 
 The code can be exported as a .mac file in order to be compiled and excecuted at the beamline PC.
 It is also possible to export the exprimental protocol as a .blox file which contains the various blocks.
