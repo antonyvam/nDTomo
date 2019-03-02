@@ -13,8 +13,9 @@ It is recommended to install first the anaconda (Python 3 version) distribution 
 
 Building procedure
 ^^^^^^^^^^^^^^^^^^
-Open a terminal, navigate to the nDTomo folder and install it using the setup.py file:
-python setup.py build
+
+Open a terminal, navigate to the nDTomo folder and install it using the setup.py file::
+	python setup.py install
 
 In Windows the GUIs can also be run directly using the corresponding .bat or .exe files:
 
