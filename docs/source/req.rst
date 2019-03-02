@@ -17,6 +17,13 @@ Building procedure
 Open a terminal, navigate to the nDTomo folder and install it using the setup.py file::
 	python setup.py install
 
+The GUIs can be opened using a terminal and typing::
+	python BlockApp.py &
+	
+	python Integrator.py &
+	
+	python MultiTool.py &
+	
 In Windows the GUIs can also be run directly using the corresponding .bat or .exe files:
 
 * ID15Ahelper
