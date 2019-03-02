@@ -2,6 +2,8 @@ nDTomo software suite
 ===========
 The nDTomo software suite contains GUIs for the acquisition, pre-processing and analysis of X-ray chemical tomography data
 
+Full documentation provided at: https://ndtomo.readthedocs.io
+
 ID15A helper
 -------------
 A GUI to help generate .mac scripts for the ID15A beamline. These are macros that can be used during an experiment. 
