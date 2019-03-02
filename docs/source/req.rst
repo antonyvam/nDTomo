@@ -36,3 +36,17 @@ nDTomo is a Python library which relies on the following packages:
 * h5py (to access HDF5 files)
 * pyqtgraph (for the ID15A helper GUI)
 * pyFAI: version 0.13 or newer (for the Intergator GUI)
+
+
+Contributors
+^^^^^^^^^^^^
+
+ * Antony Vamvakeros (Finden)
+ * Simon Jacques (Finden)
+ * Gavin Vaughan (ESRF)
+ 
+Indirect contributors (ideas...)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+ * Marco di Michiel (ESRF)
+ * Jérôme Kieffer (ESRF)
