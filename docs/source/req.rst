@@ -6,12 +6,17 @@ Repository
 The nDTomo project repository is available for download from GitHub: 
 https://github.com/antonyvam/nDTomo
 
+Anaconda
+^^^^^^^^
+
+It is recommended to install first the anaconda distribution of Python. To install conda please see either `conda <https://conda.io/docs/install/quick.html>`_ or `Anaconda <https://www.continuum.io/downloads>`_.
+
 Building procedure
 ^^^^^^^^^^^^^^^^^^
 Open a terminal, navigate to the nDTomo folder and install it using the setup.py file:
 python setup.py build
 
-In Windows the GUIs can also be run directly using the corresponding .bat files:
+In Windows the GUIs can also be run directly using the corresponding .bat or .exe files:
 
 * ID15Ahelper
 * Integrator
