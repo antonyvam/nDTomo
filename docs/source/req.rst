@@ -9,7 +9,7 @@ https://github.com/antonyvam/nDTomo
 Anaconda
 ^^^^^^^^
 
-It is recommended to install first the anaconda distribution of Python. To install conda please see either `conda <https://conda.io/docs/install/quick.html>`_ or `Anaconda <https://www.continuum.io/downloads>`_.
+It is recommended to install first the anaconda (Python 3 version) distribution of Python as it comes with PyQt5. To install conda please see `Anaconda <https://www.anaconda.com/>`_.
 
 Building procedure
 ^^^^^^^^^^^^^^^^^^
