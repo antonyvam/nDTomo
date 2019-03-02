@@ -7,17 +7,20 @@ doc/build
 *.pyc
 MANIFEST
 
+# Packages
+/*.egg
+/*.egg-info
+/dist
+/build
+/eggs
+/develop-eggs
+/.installed.cfg
+
 # Cython generated files
 __pycache__
 
-# Editor files
-.idea
-.idea/*
-*~
-.project
-.pydevproject
-.settings/*
-.DS_Store
+# Installer logs
+/pip-log.txt
 
 # Windows temp files
 Thumbs.db
@@ -36,13 +39,3 @@ tmp*
 *.xml
 *.db
 *.tar.bz2
-
-dataset/
-datasets/
-*.egg-info*
-
-
-# notebook checkpoints
-*.ipynb_checkpoints/
-# notebook nbconvert
-*.nbconvert.ipynb
