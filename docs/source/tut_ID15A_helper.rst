@@ -12,7 +12,7 @@ The blocks belong into five major categories:
 
 An example is provided in the following image:
 
-.. image:: ../images/tutID15Ahelper1.png 
+.. figure:: ../images/tutID15Ahelper1.png 
 
 The ID15A helper GUI automatically generates the spec code as shown in the following image:
 
