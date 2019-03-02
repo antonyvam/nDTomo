@@ -12,13 +12,11 @@ The blocks belong into five major categories:
 
 An example is provided in the following image
 
-.. image:: images/tutID15Ahelper1.png 
-
-.. image:: images/ESRF.jpg
+.. image:: images/tut_ID15Ahelper_1.jpg 
 
 The ID15A helper GUI automatically generates the spec code as shown in the following image:
 
-.. image:: ../images/tut_ID15Ahelper_2.png 
+.. image:: ../images/tut_ID15Ahelper_2.jpg 
 
 The code can be exported as a .mac file in order to be compiled and excecuted at the beamline PC.
 It is also possible to export the exprimental protocol as a .blox file which contains the various blocks.
