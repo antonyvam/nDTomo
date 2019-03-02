@@ -1,0 +1,48 @@
+# Build files
+build
+dist
+doc/build
+*.so
+*.pyd
+*.pyc
+MANIFEST
+
+# Cython generated files
+__pycache__
+
+# Editor files
+.idea
+.idea/*
+*~
+.project
+.pydevproject
+.settings/*
+.DS_Store
+
+# Windows temp files
+Thumbs.db
+
+# PyLint, Coverage reports
+.pylint_cache/*
+htmlcov/*
+
+# Tmp files
+*tmp
+tmp*
+
+*.edf
+*.info
+*.cfg
+*.xml
+*.db
+*.tar.bz2
+
+dataset/
+datasets/
+*.egg-info*
+
+
+# notebook checkpoints
+*.ipynb_checkpoints/
+# notebook nbconvert
+*.nbconvert.ipynb
