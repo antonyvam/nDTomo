@@ -8,6 +8,7 @@ Class used to integrate XRD-CT using CPU or GPU
 from numpy import sin, deg2rad, pi, concatenate, log, flipud, zeros, sqrt, sum, arange, min, max, floor, where, mean, array, exp, inf, ceil, interp, std, argmin, transpose, tile, swapaxes, round
 from PyQt5.QtCore import pyqtSignal, QThread
 import os, time, h5py, fabio, pyFAI
+from pyFAI.method_registry import IntegrationMethod
 
 class XRDCT_Squeeze(QThread):
     

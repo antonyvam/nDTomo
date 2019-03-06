@@ -10,6 +10,7 @@ The type of integration process is intended to be couple with live visualization
 from PThread import Periodic
 from PyQt5.QtCore import pyqtSignal, QThread
 import os, fabio, h5py, pyFAI, time, json
+from pyFAI.method_registry import IntegrationMethod
 from numpy import zeros, array, arange, mod, ceil, deg2rad, sin, pi, round
 
 class Fast_XRDCT_LiveSqueeze(QThread): 

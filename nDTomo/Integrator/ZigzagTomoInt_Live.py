@@ -11,6 +11,7 @@ from PyQt5.QtCore import pyqtSignal, QThread
 import os, fabio, h5py, pyFAI, time, json
 from numpy import zeros, array, arange, mod, ceil, deg2rad, sin, pi
 from PThread import Periodic
+from pyFAI.method_registry import IntegrationMethod
 
 class XRDCT_LiveSqueeze(QThread): 
     
