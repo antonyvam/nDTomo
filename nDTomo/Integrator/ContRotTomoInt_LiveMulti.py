@@ -105,8 +105,11 @@ class Fast_XRDCT_ID15ASqueeze(QThread):
         self.nextLine = 1        
         self.nextimageFile  =  "%s/%s/%s_%.4d.cbf" % (self.xrdctpath, self.dataset, self.dataset, self.na)     
         print(self.nextimageFile)
-          
-        self.periodEventraw = Periodic(1, self.checkForImageFile)
+         
+        if os.path.exists(self.nextimageFile):
+            self.periodEventraw = Periodic(1, self.checkForImageFile)
+        else:
+            print('The path is wrong or there are no frames present')
 
     def checkForImageFile(self):
 
