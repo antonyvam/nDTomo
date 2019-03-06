@@ -30,16 +30,21 @@ from PDFmask import CreatPDFMask
 
 from CreateAzimJson import CreatAzimint
 
-from ScatterTomoInt import XRDCT_Squeeze
-
-from ZigzagTomoInt_Live import XRDCT_LiveSqueeze
 from ZigzagTomoInt_LiveRead import XRDCT_LiveRead
 from ZigzagTomoInt_LiveMulti import XRDCT_ID15ASqueeze
 
-from ContRotTomoInt_Live import Fast_XRDCT_LiveSqueeze
 from ContRotTomoInt_LiveRead import Fast_XRDCT_LiveRead
 from ContRotTomoInt_LiveMulti import Fast_XRDCT_ID15ASqueeze
 
+username = getpass.getuser()
+print('User is %s' %username)
+
+if username != 'opid15':
+    from ScatterTomoInt import XRDCT_Squeeze
+    from ContRotTomoInt_Live import Fast_XRDCT_LiveSqueeze
+    from ZigzagTomoInt_Live import XRDCT_LiveSqueeze
+else:
+    print('modules using pyFAI not loaded')
         
 
 class ApplicationWindow(QtWidgets.QMainWindow):
@@ -86,10 +91,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.stepsize = 0
         self.dio = []; self.etime = []
         self.xaxis = zeros(())
-        
-        self.username = getpass.getuser()
-        print('User is %s' %self.username)
-        
         
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
