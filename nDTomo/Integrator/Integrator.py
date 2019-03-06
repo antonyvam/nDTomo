@@ -246,23 +246,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.savedatapath.textChanged.connect(self.selSavepath2)
         self.l.addWidget(self.savedatapath,5,2)
 
-        self.pbutton8 = QtWidgets.QPushButton("XRD-CT dataset path",self)
-        self.pbutton8.clicked.connect(self.selXRDCTpath)
-        self.l.addWidget(self.pbutton8,5,3)
+        self.label11 = QtWidgets.QLabel(self)
+        self.label11.setText('Type of XRD-CT scan')
+        self.l.addWidget(self.label11,5,3)
         
-        self.datapath = QtWidgets.QLineEdit(self)
-        self.datapath.textChanged.connect(self.selXRDCTpath2)
-        self.l.addWidget(self.datapath,5,4)
-
-#        self.label5 = QtWidgets.QLabel(self)
-#        self.label5.setText('X-axis units')
-#        self.l.addWidget(self.label5,5,5)
-#        
-#        self.ChooseXAxis = QtWidgets.QComboBox(self)
-#        self.ChooseXAxis.addItems(["2theta", "Q"])
-#        self.ChooseXAxis.currentIndexChanged.connect(self.changeXAxis)
-#        self.l.addWidget(self.ChooseXAxis,5,6) 
-
+        self.ChooseScan = QtWidgets.QComboBox(self)
+        self.ChooseScan.addItems(["Zigzag", "Continuous rotation", "Interlaced"])
+        self.ChooseScan.currentIndexChanged.connect(self.ChooseScanType)
+        self.l.addWidget(self.ChooseScan,5,4)  
+        
         self.labelIm = QtWidgets.QLabel(self)
         self.labelIm.setText('Image filetype')
         self.l.addWidget(self.labelIm,5,5)
@@ -292,8 +284,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.l.addWidget(self.ChooseFilters,6,4)     
 
         self.labelF = QtWidgets.QLabel(self)
-        self.labelF.setText('Trimmed mean value')    
-#        self.labelF.setVisible(False)
+        self.labelF.setText('Trimmed mean value')
         self.l.addWidget(self.labelF,6,5)
  
         self.filtervalue = QtWidgets.QLineEdit(self)
@@ -308,22 +299,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.label7.setText('XRD-CT scan parameters')
         self.l.addWidget(self.label7,7,1)
 
+        self.pbutton8 = QtWidgets.QPushButton("XRD-CT dataset path",self)
+        self.pbutton8.clicked.connect(self.selXRDCTpath)
+        self.l.addWidget(self.pbutton8,8,1)
+        
+        self.datapath = QtWidgets.QLineEdit(self)
+        self.datapath.textChanged.connect(self.selXRDCTpath2)
+        self.l.addWidget(self.datapath,8,2)
+
         self.label10 = QtWidgets.QLabel(self)
         self.label10.setText('Prefix')
-        self.l.addWidget(self.label10,8,1)
+        self.l.addWidget(self.label10,8,3)
 
         self.xrdctname = QtWidgets.QLineEdit(self)
         self.xrdctname.textChanged.connect(self.setdatasetname)
-        self.l.addWidget(self.xrdctname,8,2)     
-
-        self.label11 = QtWidgets.QLabel(self)
-        self.label11.setText('Type of XRD-CT scan')
-        self.l.addWidget(self.label11,8,3)
-        
-        self.ChooseScan = QtWidgets.QComboBox(self)
-        self.ChooseScan.addItems(["Zigzag", "Continuous rotation", "Interlaced"])
-        self.ChooseScan.currentIndexChanged.connect(self.ChooseScanType)
-        self.l.addWidget(self.ChooseScan,8,4)  
+        self.l.addWidget(self.xrdctname,8,4)     
         
         self.pbutton10 = QtWidgets.QPushButton("Load XRD-CT spec file",self)
         self.pbutton10.clicked.connect(self.readspecfile)
@@ -331,13 +321,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
         self.xrdctspecpath = QtWidgets.QLineEdit(self)
         self.l.addWidget(self.xrdctspecpath,8,6)
-        
-#        self.pbutton9 = QtWidgets.QPushButton("Load XRD-CT par file",self)
-#        self.pbutton9.clicked.connect(self.readparfile)
-#        self.l.addWidget(self.pbutton9,8,7)
-        
-#        self.xrdctparpath = QtWidgets.QLineEdit(self)
-#        self.l.addWidget(self.xrdctparpath,8,8)
 
         self.label8 = QtWidgets.QLabel(self)
         self.label8.setText('Number of translation steps')
