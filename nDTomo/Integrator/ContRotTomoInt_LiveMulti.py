@@ -334,19 +334,21 @@ class Fast_XRDCT_ID15ASqueeze(QThread):
             data = json.load(f)
             data['poni_file'] = data['poni']
             data['do_SA'] = 0
-            data['method'] = "ocl_csr_nosplit_gpu"
+#            data['method'] = "ocl_csr_nosplit_gpu"
             
             data['npt'] = int(self.npt_rad)
-#            data['npt_azim'] = 256
-#            data['do_SA'] = False
-#            data['do_polarziation'] = True
-#            data['polarization_factor'] = 0.97
+            data['do_SA'] = False
+            data['do_polarziation'] = True
+            data['polarization_factor'] = 0.97
             data['dummy'] = -10.0
             data['delta_dummy'] = 9.5
 			
             ####### Filters #########
             if self.filt == "No":
-                data['plugin_name'] = 'id15.IntegrateManyFrames'
+#                data['plugin_name'] = 'id15.IntegrateManyFrames'
+                data['plugin_name'] = 'id15v2.IntegrateManyFrames'
+                data['integration_method'] = "integrate1d"
+                data['method']  =  [1, "no", "CSR", "opencl"]
             elif self.filt == "Median":
                 data['plugin_name'] = 'id15v2.IntegrateManyFrames'
                 data['integration_method'] = "medfilt1d"
