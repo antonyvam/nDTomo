@@ -8,7 +8,6 @@ Class used to integrate XRD-CT using CPU or GPU
 from numpy import sin, deg2rad, pi, concatenate, log, flipud, zeros, sqrt, sum, arange, min, max, floor, where, mean, array, exp, inf, ceil, interp, std, argmin, transpose, tile, swapaxes, round
 from PyQt5.QtCore import pyqtSignal, QThread
 import os, time, h5py, fabio, pyFAI
-from pyFAI.method_registry import IntegrationMethod
 
 class XRDCT_Squeeze(QThread):
     
@@ -110,32 +109,24 @@ class XRDCT_Squeeze(QThread):
     
                         if self.filt == "No":
                             if self.procunit == "CPU":
-                                self.method = IntegrationMethod(dim=1, split="no", algo="CSR", impl="python")
-                                r, I = ai.integrate1d(data=d, npt=self.npt_rad, mask=self.mask, unit=self.units, method=self.method,correctSolidAngle=False, polarization_factor=0.95)
+                                r, I = ai.integrate1d(data=d, npt=self.npt_rad, mask=self.mask, unit=self.units, method="cython",correctSolidAngle=False, polarization_factor=0.95)
                             elif self.procunit == "GPU":
-                                self.method = IntegrationMethod(dim=1, split="no", algo="CSR", impl="opencl", target=(1,1))
-                                r, I = ai.integrate1d(data=d, npt=self.npt_rad, mask=self.mask, unit=self.units, method=self.method,correctSolidAngle=False, polarization_factor=0.95)
+                                r, I = ai.integrate1d(data=d, npt=self.npt_rad, mask=self.mask, unit=self.units, method="ocl_CSR_gpu",correctSolidAngle=False, polarization_factor=0.95)
                         elif self.filt == "Median":
                             if self.procunit == "CPU":
-                                self.method = IntegrationMethod(dim=2, split="no", algo="CSR", impl="python")
-                                r, I = ai.medfilt1d(data=d, npt_rad=int(self.npt_rad), percentile=50, unit=self.units, mask=self.mask, method=self.method, correctSolidAngle=False, polarization_factor=0.95);
+                                r, I = ai.medfilt1d(data=d, npt_rad=int(self.npt_rad), percentile=50, unit=self.units, mask=self.mask, method="splitpixel", correctSolidAngle=False, polarization_factor=0.95);
                             elif self.procunit == "GPU":
-                                self.method = IntegrationMethod(dim=2, split="no", algo="CSR", impl="opencl", target=(1,1))
-                                r, I = ai.medfilt1d(data=d, npt_rad=int(self.npt_rad), percentile=50, unit=self.units, mask=self.mask, method=self.method, correctSolidAngle=False, polarization_factor=0.95);
+                                r, I = ai.medfilt1d(data=d, npt_rad=int(self.npt_rad), percentile=50, unit=self.units, mask=self.mask, method="ocl_CSR_gpu", correctSolidAngle=False, polarization_factor=0.95);
                         elif self.filt == "trimmed_mean":
                             if self.procunit == "CPU":
-                                self.method = IntegrationMethod(dim=2, split="no", algo="CSR", impl="python")
-                                r, I = ai.medfilt1d(data=d, npt_rad=int(self.npt_rad), percentile=(round(float(self.prc)/2),100-round(float(self.prc)/2)), unit=self.units, mask=self.mask, method=self.method, correctSolidAngle=False, polarization_factor=0.95); #"splitpixel"
+                                r, I = ai.medfilt1d(data=d, npt_rad=int(self.npt_rad), percentile=(round(float(self.prc)/2),100-round(float(self.prc)/2)), unit=self.units, mask=self.mask, method="cython", correctSolidAngle=False, polarization_factor=0.95); #"splitpixel"
                             elif self.procunit == "GPU":
-                                self.method = IntegrationMethod(dim=2, split="no", algo="CSR", impl="opencl", target=(1,1))
-                                r, I = ai.medfilt1d(data=d, npt_rad=int(self.npt_rad), percentile=(round(float(self.prc)/2),100-round(float(self.prc)/2)), unit=self.units, mask=self.mask, method=self.method, correctSolidAngle=False, polarization_factor=0.95); 
+                                r, I = ai.medfilt1d(data=d, npt_rad=int(self.npt_rad), percentile=(round(float(self.prc)/2),100-round(float(self.prc)/2)), unit=self.units, mask=self.mask, method="ocl_CSR_gpu", correctSolidAngle=False, polarization_factor=0.95); 
                         elif self.filt == "sigma":
                             if self.procunit == "CPU":
-                                self.method = IntegrationMethod(dim=2, split="no", algo="CSR", impl="python")
-                                r, I, stdn = ai.sigma_clip(data=d, npt_rad=int(self.npt_rad), thres=float(self.thres), max_iter=5, unit=self.units, mask=self.mask, method=self.method, correctSolidAngle=False, polarization_factor=0.95);
+                                r, I, stdf = ai.sigma_clip(data=d, npt_rad=int(self.npt_rad), thres=float(self.thres), max_iter=5, unit=self.units, mask=self.mask, method="cython", correctSolidAngle=False, polarization_factor=0.95);
                             elif self.procunit == "GPU":
-                                self.method = IntegrationMethod(dim=2, split="no", algo="CSR", impl="opencl", target=(1,1))
-                                r, I, stdn = ai.sigma_clip(data=d, npt_rad=int(self.npt_rad), thres=float(self.thres), max_iter=5, unit=self.units, mask=self.mask, method=self.method, correctSolidAngle=False, polarization_factor=0.95);
+                                r, I, stdf = ai.sigma_clip(data=d, npt_rad=int(self.npt_rad), thres=float(self.thres), max_iter=5, unit=self.units, mask=self.mask, method="ocl_CSR_gpu", correctSolidAngle=False, polarization_factor=0.95);
 
                         self.data[ii,:] = I[0:self.npt_rad-10]
                         
