@@ -41,7 +41,7 @@ setup(
 		"h5py >= 2.7.1",
 		"matplotlib >= 1.4.2",
 		"numpy >= 1.8.2",
-		"pyFAI >=0.13.0",
+		"pyFAI >=0.14.0, <=0.17.0",
 		"scipy >=0.14.0",
 		"silx >=0.6.0",
 		"scikit-image >=0.10.0",
