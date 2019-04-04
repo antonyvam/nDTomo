@@ -14,7 +14,7 @@ u('Qt5Agg')
 
 from PyQt5 import QtCore, QtWidgets, QtGui
 
-import sys, os, h5py, json
+import sys, os, h5py
 import numpy as np
 
 try:
@@ -107,7 +107,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.offset = 0 
         self.zim = 0
         self.sc = 1
-        
+        self.row = 0
+        self.col = 0
+        self.nx = 0
+    
         self.peaktype = 'Gaussian'
         self.Area = 1.; self.Areamin = 0.; self.Areamax = 1000.; 
         self.Pos = 50.; self.Posmin = self.Pos - 5; self.Posmax = self.Pos + 5; 
@@ -885,17 +888,18 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         """
         
         if len(self.hdf_fileName)>0 and len(self.dproi)>0:
+            
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
             sn = "%s_%s_%s.hdf5" %(s,str(self.row),str(self.col))
             print(sn)
 
             h5f = h5py.File(sn, "w")
             h5f.create_dataset('I', data=self.dproi)
-            if len(self.tth)>0:
+            if self.naxes[0]>0:
                 h5f.create_dataset('twotheta', data=self.tth)
-            if len(self.q)>0:
+            if self.naxes[1]>0:
                 h5f.create_dataset('q', data=self.q)
-            if len(self.d)>0:
+            if self.naxes[2]>0:
                 h5f.create_dataset('d', data=self.d)
             
             h5f.close()
@@ -903,47 +907,48 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             perm = 'chmod 777 %s' %sn
             os.system(perm)    
             
-            try:
-                xy = np.column_stack((self.tth,self.dproi*1E3))
+            if self.naxes[0]>0:
+                xy = np.column_stack((self.tth,self.dproi))
                 sn = "%s_%s_%s_twotheta.asc" %(s,str(self.row),str(self.col))
                 np.savetxt(sn,xy)
                 perm = 'chmod 777 %s' %sn
                 os.system(perm) 
             
-                xy = np.column_stack((self.q,self.dproi*1E3))
+            if self.naxes[1]>0:
+                xy = np.column_stack((self.q,self.dproi))
                 sn = "%s_%s_%s_q.asc" %(s,str(self.row),str(self.col))
                 np.savetxt(sn,xy)
                 perm = 'chmod 777 %s' %sn
                 os.system(perm) 
                 
-                xy = np.column_stack((self.d,self.dproi*1E3))
+            if self.naxes[2]>0:
+                xy = np.column_stack((self.d,self.dproi))
                 sn = "%s_%s_%s_d.asc" %(s,str(self.row),str(self.col))
                 np.savetxt(sn,xy)
                 perm = 'chmod 777 %s' %sn
                 os.system(perm) 
-                
-                xy = np.column_stack((self.tth,self.dproi*1E3))
+
+            if self.naxes[0]>0:                
+                xy = np.column_stack((self.tth,self.dproi))
                 sn = "%s_%s_%s_twotheta.xy" %(s,str(self.row),str(self.col))
                 np.savetxt(sn,xy)
                 perm = 'chmod 777 %s' %sn
                 os.system(perm) 
-                
-                xy = np.column_stack((self.q,self.dproi*1E3))
+
+            if self.naxes[1]>0:                
+                xy = np.column_stack((self.q,self.dproi))
                 sn = "%s_%s_%s_q.xy" %(s,str(self.row),str(self.col))
                 np.savetxt(sn,xy)
                 perm = 'chmod 777 %s' %sn
                 os.system(perm) 
                 
-                xy = np.column_stack((self.d,self.dproi*1E3))
+            if self.naxes[2]>0:                
+                xy = np.column_stack((self.d,self.dproi))
                 sn = "%s_%s_%s_d.xy" %(s,str(self.row),str(self.col))
                 np.savetxt(sn,xy)
                 perm = 'chmod 777 %s' %sn
                 os.system(perm) 
                 
-            except:
-                print("Something is wrong with the local diffraction pattern")
-                
-            
         else:
             print("Something is wrong with the data")
         
@@ -1023,7 +1028,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
     def explore(self):
                 
-        self.map_data = self.mapper.axes.imshow(np.mean(self.data,axis=2),cmap=self.cmap)
+        self.imoi = np.mean(self.data,axis=2)
+        self.map_data = self.mapper.axes.imshow(self.imoi, cmap=self.cmap)
         title = 'Mean Sinogram'
         self.mapper.axes.set_title(title, fontstyle='italic')
         self.mapper.fig.canvas.mpl_connect('button_press_event', self.onMapClick)
@@ -1199,8 +1205,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def update(self):
         self.mapper.axes.clear() # not fast
         # this bit is messy
+        
+        self.imoi = np.mean(self.data, axis = 2)
         if (not self.selectedChannels):
-            self.mapper.axes.imshow(np.mean(self.data,2),cmap=self.cmap)
+            self.mapper.axes.imshow(self.imoi ,cmap=self.cmap)
             title = 'Mean image'
         else:
             if self.selectedChannels.size == 1:
@@ -2285,7 +2293,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             
             self.ReconstructVol.setEnabled(True)
             self.ProcessVol.setEnabled(True)
-            self.ChooseXAxis.setEnabled(True)
     
             self.crspinbox1.setMaximum(self.data.shape[2])
             self.crspinbox2.setMaximum(self.data.shape[2])
@@ -2318,11 +2325,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         self.bp = f['/Reconstructed'][:]
                         self.data = self.bp
                         self.q = f['/q'][:]
+                        self.xaxis = self.q
+                        self.xaxislabel = 'Q'
                         self.sinos = f['/Sinograms'][:]
                         self.ChooseData.setCurrentIndex(1)
-                        self.ReconstructVol.setEnabled(True)
+                        self.ReconstructVol.setEnabled(True) 
                         self.ChooseData.setEnabled(True)
-                        
                         
                     except:
                         try:
@@ -2334,11 +2342,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         except:
                             pass
     
-                # Just for battery stuff
+                # Just for old data
                 try:
                     self.sinos = f['/sinograms_coarse'][:];self.sinos = np.transpose(self.sinos,(2,1,0))
                     self.bp = f['/reconstructed_coarse'][:];self.bp = np.transpose(self.bp,(2,1,0))
                     self.q = f['/q'][:]
+                    self.xaxis = self.q
+                    self.xaxislabel = 'Q'
                     self.data = self.bp
                     self.ChooseData.setCurrentIndex(1)
                     self.ReconstructVol.setEnabled(True)
@@ -2350,6 +2360,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     self.tth = f['/twotheta'][:]
                     self.q = f['/q'][:]
                     self.d = f['/d'][:]
+                    self.xaxis = self.tth
+                    self.ChooseXAxis.setEnabled(True)
+                    self.ChooseData.setEnabled(True)
                     self.na = f['/slow_axis_steps'].value
                     self.nt = f['/fast_axis_steps'].value                      
                     self.scantype = f['/scantype'].value
@@ -2455,18 +2468,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 #        else:
 #            self.sinos = self.data
 
-
-		        
-        if len(self.tth.shape)>0:
-		        self.xaxis = self.tth
-        else:                
-		        self.xaxis = self.q
-		        self.xaxislabel = 'Q'          
-		        self.ChooseXAxis.setEnabled(False)
+                
         print(self.data.shape)
         
-        
-        
+        self.naxes = [len(self.tth.shape),len(self.q.shape),len(self.d.shape)]
+                
         try:
             self.progressbar_s.setValue(0)
             self.progressbar.setValue(0)       
