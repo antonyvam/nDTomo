@@ -97,8 +97,9 @@ class XRDCT_Squeeze(QThread):
             print(self.xrdctpath, self.dataset, self.prefix)
             
             if self.datatype == 'h5':
-                pat = '%s/%s/%s_0000.h5' %(self.xrdctpath, self.dataset, self.dataset)
-                f = h5py.File(pat, 'r')
+                pat = '%s%s/%s_0000.h5' %(self.xrdctpath, self.dataset, self.dataset)
+                fl = h5py.File(pat, 'r')
+                print(pat)
                 
             if self.filt == "No":
                 if self.procunit == "CPU":
@@ -116,14 +117,14 @@ class XRDCT_Squeeze(QThread):
                     start=time.time()
 
                     if self.datatype == 'cbf':
-                        pat = '%s/%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,ii)
+                        pat = '%s%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,ii)
                     elif self.datatype == 'edf':
-                        pat = '%s/%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,ii)
+                        pat = '%s%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,ii)
                         
                     if os.path.exists(pat) and ii>0:
                         
                         if self.datatype == 'h5':
-                            d = f['/entry_0000/measurement/Pilatus/data/'][ii]
+                            d = fl['/entry_0000/measurement/Pilatus/data/'][ii]
                         else:
                             f = fabio.open(pat)
                             d = array(f.data)
