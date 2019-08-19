@@ -160,6 +160,10 @@ class XRDCT_LiveSqueeze(QThread):
             ai = pyFAI.load(self.poniname)       
             kk = 0
             
+            if self.datatype == 'h5':
+                fn = '%s/%s/%s_0000.h5' %(self.xrdctpath, self.dataset, self.dataset)
+                f = h5py.File(fn, 'r')
+                
             if self.filt == "No":
                 if self.procunit == "CPU":
                     Imethod = pyFAI.method_registry.IntegrationMethod(dim = 1, split = "no", algo = "histogram", impl = "cython")
@@ -171,16 +175,21 @@ class XRDCT_LiveSqueeze(QThread):
                 elif self.procunit == "GPU":
                     Imethod = pyFAI.method_registry.IntegrationMethod(dim = 2, split = "no", algo = "histogram", impl = "opencl")
                     
+            ntot = self.nt*self.na
+
             for ii in range(int(self.nt)*self.previousLine,int(self.nt)*self.nextLine):             
             
                 start=time.time()
                 if self.datatype == 'cbf':
-                    s = '%s/%s_%.4d.cbf' % (self.dataset,self.prefix,ii)
+                    pat = '%s/%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,ii)
+                elif self.datatype == 'edf':
+                    pat = '%s/%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,ii)
+                    
+                if self.datatype == 'h5':
+                    d = f['/entry_0000/measurement/Pilatus/data/'][ii]
                 else:
-                    s = '%s/%s_%.4d.edf' % (self.dataset,self.prefix,ii)
-                pat = os.path.join(self.xrdctpath, s)
-                f = fabio.open(pat)
-                d = array(f.data)
+                    f = fabio.open(pat)
+                    d = array(f.data)
 
                 if self.filt == "No":
                     r, I = ai.integrate1d(data=d, npt=self.npt_rad, mask=self.mask, unit=self.units, method=Imethod,correctSolidAngle=False, polarization_factor=0.95)
@@ -196,7 +205,7 @@ class XRDCT_LiveSqueeze(QThread):
                 v = (round((100.*(ii+1))/(int(self.na)*int(self.nt))))
                 self.progress.emit(v)
                 kk += 1;
-                print(s, time.time()-start)
+                print('Frame %d out of %d' %(ii, ntot), time.time()-start)
                     
     
             print("Integration done, now saving the data")
