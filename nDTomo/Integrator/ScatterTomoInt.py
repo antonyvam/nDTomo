@@ -97,8 +97,8 @@ class XRDCT_Squeeze(QThread):
             print(self.xrdctpath, self.dataset, self.prefix)
             
             if self.datatype == 'h5':
-                fn = '%s/%s/%s_0000.h5' %(self.xrdctpath, self.dataset, self.dataset)
-                f = h5py.File(fn, 'r')
+                pat = '%s/%s/%s_0000.h5' %(self.xrdctpath, self.dataset, self.dataset)
+                f = h5py.File(pat, 'r')
                 
             if self.filt == "No":
                 if self.procunit == "CPU":
