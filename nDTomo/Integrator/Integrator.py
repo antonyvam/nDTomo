@@ -1036,7 +1036,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mapper.fig.canvas.mpl_connect('motion_notify_event', self.onMapMoveEvent)        
         
         
-        self.cb = self.mapper.fig.colorbar(self.map_data)
+#        self.cb = self.mapper.fig.colorbar(self.map_data)
         
         self.mapper.show()
         self.mapper.draw()  
