@@ -764,12 +764,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 for i in range(0,len(lines)):
                     if '#L' in lines[i]:
                         if lines[i].split()[1] == 'TrigTime':
+                            cols = line.split()
+                            aerox_UpPos = cols.index('aerox_UpPos') - 1
+                            aerox_DownPos = cols.index('aerox_DownPos') - 1
+                            aeroy_UpPos = cols.index('aeroy_UpPos') - 1
+                            aeroy_DownPos = cols.index('aeroy_DownPos') - 1
+                            TrigTime = cols.index('TrigTime') - 1
+                            mon = cols.index('mon') - 1     
+                            
                             for j in range(i+1,i+1+ny):
                                 args=lines[j].split()
-                                omega[n]=(float(args[1])+float(args[2]))/2.0
-                                y[n]=(float(args[3])+float(args[4]))/2.0
-                                dio[n]=float(args[5])
-                                etime[n]=float(args[7])
+                                omega[n]=(float(args[aerox_UpPos])+float(args[aerox_DownPos]))/2.0
+                                y[n]=(float(args[aeroy_UpPos])+float(args[aeroy_DownPos]))/2.0
+                                dio[n]=float(args[mon])
+                                etime[n]=float(args[TrigTime])
                                 n=n+1
 #                self.nt = len(y)
 #                self.na = len(omega)
