@@ -261,7 +261,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.l.addWidget(self.labelIm,5,5)
         
         self.ChooseImageType = QtWidgets.QComboBox(self)
-        self.ChooseImageType.addItems(["cbf", "edf"]) # Future version should include "hdf5", "lz4"
+        self.ChooseImageType.addItems(["cbf", "edf", "h5"]) # Future version should include "hdf5", "lz4"
         self.ChooseImageType.currentIndexChanged.connect(self.ChooseDataType)
         self.l.addWidget(self.ChooseImageType,5,6) 
         
@@ -588,7 +588,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.datatype = "cbf"
         elif ind == 1:
             self.datatype = "edf"
-
+        elif ind == 2:
+            self.datatype = "h5"
         print(self.datatype)
          
     def ProcessingUnit(self,ind):
@@ -1378,7 +1379,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.jsonname=d["JsonPath"];self.npt_rad=d["RadialPoints"];self.units=d["Units"];self.savepath=d["SavePath"];self.xrdctpath=d["XRDCTPath"];self.procunit=d["ProcessingUnit"];
             self.filt=d["Filter"];self.prc=d["TrimmedMean"];self.thres=d["Sigma"];self.scantype=d["ScanType"];
             self.nt=d["SlowAxisSteps"];self.na=d["FastAxisSteps"];
-            self.dataset=d["Dataset"];self.prefix=d["Prefix"];#;self.omega=d["Omega"];self.trans=d["Translations"]
+            self.dataset=d["Dataset"];self.prefix=d["Prefix"];
     		
             self.E = float(self.E);self.na = int(self.na);self.nt = int(self.nt);
     		# now need to display these things
@@ -1391,7 +1392,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.xrdctspecpath.setText(self.specfile)
                 self.readspecinfo()
             except:
-                print("No .spec file")
+                print("Problem reading the .spec file")
     		
             if self.procunit == "MultiGPU":
                 self.ChooseProcUnit.setCurrentIndex(0)
