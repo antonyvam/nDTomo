@@ -2561,16 +2561,16 @@ class FileDialog(QtWidgets.QFileDialog):
                 if isinstance(view.model(), QtWidgets.QFileSystemModel):
                     view.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
                     
-#def main():
-#    qApp = QtWidgets.QApplication(sys.argv)
-#    aw = ApplicationWindow()
-#    aw.show()
-#    sys.exit(qApp.exec_())
-#    qApp.exec_()
-#    
-#if __name__ == "__main__":
-#    main()
+def main():
+    qApp = QtWidgets.QApplication(sys.argv)
+    aw = ApplicationWindow()
+    aw.show()
+    sys.exit(qApp.exec_())
+    qApp.exec_()
     
-aw = ApplicationWindow()    
-aw.show()
+if __name__ == "__main__":
+    main()
+    
+#aw = ApplicationWindow()    
+#aw.show()
     
