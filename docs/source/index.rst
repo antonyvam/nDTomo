@@ -13,8 +13,5 @@ Contents
    tut_ID15A_helper
    tut_Integrator
    tut_MultiTool
-   ID15A_helperAPI
-   IntegratorAPI
-   MultiToolAPI
    refs
    sites
