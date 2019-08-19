@@ -931,7 +931,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     else:
                         self.Squeezing = XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime)
                         self.Squeezing.start()
-#                    self.Squeezing.squeeze.connect(self.writeintdata)
                     
                 self.Squeezing.progress.connect(self.progressbar.setValue)
                     
@@ -954,7 +953,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     else:
                         self.Squeezing = XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime)
                         self.Squeezing.start()
-                    self.Squeezing.squeeze.connect(self.writeintdata)
                     
                 self.Squeezing.progress.connect(self.progressbar.setValue)
                 
