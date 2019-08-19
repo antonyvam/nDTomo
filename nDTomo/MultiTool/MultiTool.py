@@ -2409,19 +2409,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             except:
                 print('Problem reshaping the data')
             
-        elif self.scantype == 'fast' and len(self.data.shape)<3:
+        elif self.scantype == 'ContRot' and len(self.data.shape)<3:
                         
             cr = -100.0;
 
             in_y = np.array(np.where(self.y>cr)); 
-            in_y = in_y[:,0];
-		    
-            an_step = self.omega[1] - self.omega[0];
-            omega_roi = self.omega[in_y[0]::];
-            in_a = np.array(np.where(omega_roi>(360-an_step)));
-            in_a = in_a[:,0];
-		    
-            useful = in_y[0]+in_a[0]+1;
+            in_y = np.transpose(in_y, (1, 0))		    
+            t = np.array(np.where(np.mod(in_y,self.na) == 0))
+            ind = t[0,0]
+            
+            useful = in_y[ind];
+            useful = int(useful[0])
 		    
             print(useful)
 		    
@@ -2430,38 +2428,37 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 		    
             xold = self.y[0:useful];
             yold = np.sum(self.data[0:useful,:],axis = 1);
-
+            
             xnew = np.linspace(xold[0],xold[-1],len(xold));
             ynew = np.interp(xnew, xold, yold, left=0 , right=0)
-
-   
-
-            sn = np.reshape(ynew,(useful/self.na,self.na))
-	#            plt.figure(5);plt.clf();plt.imshow(sn, cmap = 'jet');plt.show();
-		    
+            
+            
+            sn = np.reshape(ynew,(int(useful/self.na),int(self.na)))
+#            	#            plt.figure(5);plt.clf();plt.imshow(sn, cmap = 'jet');plt.show();
+#            		    
             s1 = sn[0::2,:]
             s2 = sn[1::2,:]
-		    
-	#            snew = np.zeros((s1.shape[0]+s1.shape[0],s1.shape[1]))
-	#            snew[0:s1.shape[0]] = s1
-	#            snew[s1.shape[0]::] = s2[::-1,:]
-		    
-	#            plt.figure(6);plt.clf();plt.imshow(snew, cmap = 'jet');plt.show();
-		    
-		    
+#            		    
+#            snew = np.zeros((s1.shape[0]+s2.shape[0],s1.shape[1]))
+#            snew[0:s1.shape[0]] = s1[0:s1.shape[0],:]
+#            snew[s1.shape[0]::] = s2[::-1,:]
+            		    
+#            plt.figure(6);plt.clf();plt.imshow(snew, cmap = 'jet');plt.show();
+            		    
+            		    
             snew = np.zeros((s1.shape[0]+s1.shape[0]-1,s1.shape[1],self.data.shape[1]))
-
+            
             for ii in range(0,self.data.shape[1]):
-		        
+            		        
                 yold = self.data[0:useful,ii];
                 ynew = np.interp(xnew, xold, yold, left=0 , right=0)
-		    
-                sn = np.reshape(ynew,(useful/self.na,self.na))
+                		    
+                sn = np.reshape(ynew,(int(useful/self.na),int(self.na)))
                 s1 = sn[0::2,:]
                 s2 = sn[1::2,:]
-		    
-                snew[0:s1.shape[0]-1,:,ii] = s1[0:s1.shape[0]-1,:]
-                snew[s1.shape[0]-1::,:,ii] = s2[::-1,:]
+                		    
+                snew[0:s1.shape[0],:,ii] = s1[0:s1.shape[0],:]
+                snew[s1.shape[0]::,:,ii] = s2[::-1,:]
 		    
             self.data = snew
             self.sinos = self.data
@@ -2564,16 +2561,16 @@ class FileDialog(QtWidgets.QFileDialog):
                 if isinstance(view.model(), QtWidgets.QFileSystemModel):
                     view.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
                     
-def main():
-    qApp = QtWidgets.QApplication(sys.argv)
-    aw = ApplicationWindow()
-    aw.show()
-    sys.exit(qApp.exec_())
-    qApp.exec_()
+#def main():
+#    qApp = QtWidgets.QApplication(sys.argv)
+#    aw = ApplicationWindow()
+#    aw.show()
+#    sys.exit(qApp.exec_())
+#    qApp.exec_()
+#    
+#if __name__ == "__main__":
+#    main()
     
-if __name__ == "__main__":
-    main()
-    
-#aw = ApplicationWindow()    
-#aw.show()
+aw = ApplicationWindow()    
+aw.show()
     
