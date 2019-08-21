@@ -1332,8 +1332,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.Squeezing[ii].terminate()
 #            self.progressbarbatch[ii].setValue(0)
             self.l.removeWidget(self.progressbarbatch[ii])
-            self.progressbarbatch[ii].deleteLater()
-            self.progressbarbatch[ii] = None
+            try:
+                self.progressbarbatch[ii].deleteLater()
+                self.progressbarbatch[ii] = None
+            except:
+                pass
             
             self.l.removeWidget(self.labels[ii])
             self.labels[ii].deleteLater()

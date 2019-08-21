@@ -2409,7 +2409,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             except:
                 print('Problem reshaping the data')
             
-        elif self.scantype == 'ContRot' and len(self.data.shape)<3:
+        elif (self.scantype == 'ContRot' or self.scantype == 'fast') and len(self.data.shape)<3:
                         
             cr = -100.0;
 
@@ -2446,7 +2446,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 #            plt.figure(6);plt.clf();plt.imshow(snew, cmap = 'jet');plt.show();
             		    
             		    
-            snew = np.zeros((s1.shape[0]+s1.shape[0]-1,s1.shape[1],self.data.shape[1]))
+            snew = np.zeros((s1.shape[0]+s2.shape[0],s1.shape[1],self.data.shape[1]))
             
             for ii in range(0,self.data.shape[1]):
             		        
@@ -2573,4 +2573,4 @@ if __name__ == "__main__":
     
 #aw = ApplicationWindow()    
 #aw.show()
-    
+#    
