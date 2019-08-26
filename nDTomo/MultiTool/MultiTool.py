@@ -2384,15 +2384,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 except:
                     pass
 		    
-#        try:
-#            if len(self.dio.shape)>0 and len(self.etime.shape)>0:
-#    
-#                for ii in range(0,self.data.shape[0]):
-#                    self.data[ii,:] = self.data[ii,:]/self.dio[ii]
-#    #                self.data[ii,:] = self.data[ii,:]/self.etime[ii]   
-#                print 'Diode normalization done'
-#        except:
-#            print 'No diode values'
+        try:
+            if len(self.dio.shape)>0 and len(self.etime.shape)>0:
+    
+                for ii in range(0,self.data.shape[0]):
+                    self.data[ii,:] = self.data[ii,:]/self.dio[ii]
+    #                self.data[ii,:] = self.data[ii,:]/self.etime[ii]   
+                print('Diode normalization done')
+        except:
+            print('No diode values')
             
 #        if self.scantype == 'zigzag':
 #            self.y = np.reshape(self.y,(int(self.na),int(self.nt)))
