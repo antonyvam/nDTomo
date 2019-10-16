@@ -144,7 +144,8 @@ class XRDCT_Squeeze(QThread):
                             elif self.datatype == 'edf':
                                 pat = '%s%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,kk)
                                 
-                            if os.path.exists(pat) and ii>0:
+                            print(pat)
+                            if os.path.exists(pat):
                                 
                                 if self.datatype == 'h5':
                                     d = fl['/entry_0000/measurement/Pilatus/data/'][kk]
