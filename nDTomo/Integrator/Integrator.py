@@ -383,6 +383,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ChooseIntegration.currentIndexChanged.connect(self.doliveplot)
         self.l.addWidget(self.ChooseIntegration,13,1)  
         
+        self.labeldi = QtWidgets.QLabel(self)
+        self.labeldi.setText('Rebin frames')
+        self.l.addWidget(self.labeldi,13,2)        
+        
         self.pbutton11 = QtWidgets.QPushButton("Start Integration",self)
         self.pbutton11.clicked.connect(self.processxrdct)
         self.l.addWidget(self.pbutton11,14,1)
