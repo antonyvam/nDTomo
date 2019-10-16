@@ -62,7 +62,7 @@ class XRDCT_Squeeze(QThread):
     squeeze = pyqtSignal()
     progress = pyqtSignal(int)
     
-    def __init__(self,prefix,dataset,xrdctpath,maskname,poniname,na,nt,npt_rad,filt,procunit,units,prc,thres,datatype,savepath,scantype,energy,omega,trans,dio,etime):
+    def __init__(self,prefix,dataset,xrdctpath,maskname,poniname,na,nt,npt_rad,filt,procunit,units,prc,thres,datatype,savepath,scantype,energy,omega,trans,dio,etime,rebin):
         QThread.__init__(self)
 		
         self.prefix = prefix; self.dataset=dataset; self.xrdctpath = xrdctpath; self.maskname = maskname; self.poniname = poniname
@@ -70,7 +70,7 @@ class XRDCT_Squeeze(QThread):
         self.prc=prc;self.thres = thres;self.datatype = datatype;self.savepath = savepath
         self.na = int(na); self.nt = int(nt); self.npt_rad = int(npt_rad); self.scantype = scantype; #self.jsonname = jsonname
         self.omega = omega; self.trans = trans
-        self.dio = dio; self.etime = etime
+        self.dio = dio; self.etime = etime; self.rebin = rebin
         dpath = os.path.join( self.xrdctpath, self.dataset)
         print(dpath)
         try:
@@ -113,37 +113,59 @@ class XRDCT_Squeeze(QThread):
                     Imethod = pyFAI.method_registry.IntegrationMethod(dim = 2, split = "no", algo = "histogram", impl = "opencl")            
             
             ntot = self.nt*self.na
-            for ii in range(0,ntot):
+            
+            try:
+                if self.datatype == 'cbf':
+                    pat = '%s%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,0)
+                elif self.datatype == 'edf':
+                    pat = '%s%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,0)
+                    
+                if os.path.exists(pat):
+                    
+                    if self.datatype == 'h5':
+                        self.imsize = fl['/entry_0000/measurement/Pilatus/data/'][0]
+                    else:
+                        f = fabio.open(pat)
+                        self.imsize = array(f.data)      
+                    self.imd = zeros((self.imsize.shape[0],self.imsize.shape[1]))
+            except:
+                print('Problem reading the first frame')
+            
+            for ii in range(0,ntot,self.rebin):
                     start=time.time()
 
-                    if self.datatype == 'cbf':
-                        pat = '%s%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,ii)
-                    elif self.datatype == 'edf':
-                        pat = '%s%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,ii)
-                        
-                    if os.path.exists(pat) and ii>0:
-                        
-                        if self.datatype == 'h5':
-                            d = fl['/entry_0000/measurement/Pilatus/data/'][ii]
-                        else:
-                            f = fabio.open(pat)
-                            d = array(f.data)
-    
-                        if self.filt == "No":
-                            r, I = ai.integrate1d(data=d, npt=self.npt_rad, mask=self.mask, unit=self.units, method=Imethod,correctSolidAngle=False, polarization_factor=0.95)
-                        elif self.filt == "Median":
-                            r, I = ai.medfilt1d(data=d, npt_rad=int(self.npt_rad), percentile=50, unit=self.units, mask=self.mask, method=Imethod, correctSolidAngle=False, polarization_factor=0.95);
-                        elif self.filt == "trimmed_mean":
-                            r, I = ai.medfilt1d(data=d, npt_rad=int(self.npt_rad), percentile=(round(float(self.prc)/2),100-round(float(self.prc)/2)), unit=self.units, mask=self.mask, method=Imethod, correctSolidAngle=False, polarization_factor=0.95); #"splitpixel"
-                        elif self.filt == "sigma":
-                            r, I, stdf = ai.sigma_clip(data=d, npt_rad=int(self.npt_rad), thres=float(self.thres), max_iter=5, unit=self.units, mask=self.mask, method=Imethod, correctSolidAngle=False, polarization_factor=0.95);
+                    for kk in range(ii,ii+self.rebin):
 
-                        self.data[ii,:] = I[0:self.npt_rad-10]
-                        
-                        v = round((100.*(ii+1))/(int(self.na)*int(self.nt)))
-                        self.progress.emit(v)
-                        ii += 1;
-                        print('Frame %d out of %d' %(ii, ntot), time.time()-start)
+
+                        if self.datatype == 'cbf':
+                            pat = '%s%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,ii)
+                        elif self.datatype == 'edf':
+                            pat = '%s%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,ii)
+                            
+                        if os.path.exists(pat) and ii>0:
+                            
+                            if self.datatype == 'h5':
+                                d = fl['/entry_0000/measurement/Pilatus/data/'][kk]
+                            else:
+                                f = fabio.open(pat)
+                                d = array(f.data)
+                        self.imd = self.imd + d
+    
+                    if self.filt == "No":
+                        r, I = ai.integrate1d(data=self.imd, npt=self.npt_rad, mask=self.mask, unit=self.units, method=Imethod,correctSolidAngle=False, polarization_factor=0.95)
+                    elif self.filt == "Median":
+                        r, I = ai.medfilt1d(data=self.imd, npt_rad=int(self.npt_rad), percentile=50, unit=self.units, mask=self.mask, method=Imethod, correctSolidAngle=False, polarization_factor=0.95);
+                    elif self.filt == "trimmed_mean":
+                        r, I = ai.medfilt1d(data=self.imd, npt_rad=int(self.npt_rad), percentile=(round(float(self.prc)/2),100-round(float(self.prc)/2)), unit=self.units, mask=self.mask, method=Imethod, correctSolidAngle=False, polarization_factor=0.95); #"splitpixel"
+                    elif self.filt == "sigma":
+                        r, I, stdf = ai.sigma_clip(data=self.imd, npt_rad=int(self.npt_rad), thres=float(self.thres), max_iter=5, unit=self.units, mask=self.mask, method=Imethod, correctSolidAngle=False, polarization_factor=0.95);
+
+                    self.data[ii,:] = I[0:self.npt_rad-10]
+                    
+                    v = round((100.*(ii+1))/(int(self.na)*int(self.nt)))
+                    self.progress.emit(v)
+                    ii += 1;
+                    print('Frame %d out of %d' %(ii, ntot), time.time()-start)
                     
             print("Integration done, now saving the data")
             self.r = r[0:self.npt_rad-10]
