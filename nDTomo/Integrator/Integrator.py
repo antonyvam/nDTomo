@@ -388,10 +388,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.labeldi.setText('Rebin frames')
         self.l.addWidget(self.labeldi,13,2)        
 
-        self.ChooseRein = QtWidgets.QComboBox(self)
-        self.ChooseRein.addItems(["No", "Every 2"])
-        self.ChooseRein.currentIndexChanged.connect(self.dorebin)
-        self.l.addWidget(self.ChooseRein,13,3)  
+        self.ChooseRebin = QtWidgets.QComboBox(self)
+        self.ChooseRebin.addItems(["No", "Every 2"])
+        self.ChooseRebin.currentIndexChanged.connect(self.dorebin)
+        self.l.addWidget(self.ChooseRebin,13,3)  
         
         self.pbutton11 = QtWidgets.QPushButton("Start Integration",self)
         self.pbutton11.clicked.connect(self.processxrdct)

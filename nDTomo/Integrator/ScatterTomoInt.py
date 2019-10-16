@@ -112,31 +112,45 @@ class XRDCT_Squeeze(QThread):
                 elif self.procunit == "GPU":
                     Imethod = pyFAI.method_registry.IntegrationMethod(dim = 2, split = "no", algo = "histogram", impl = "opencl")            
             
-            ntot = self.nt*self.na
+            ntot = (self.nt*self.na)/self.rebin
             
-            try:
-                if self.datatype == 'cbf':
-                    pat = '%s%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,0)
-                elif self.datatype == 'edf':
-                    pat = '%s%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,0)
-                    
-                if os.path.exists(pat):
-                    
-                    if self.datatype == 'h5':
-                        self.imsize = fl['/entry_0000/measurement/Pilatus/data/'][0]
-                    else:
-                        f = fabio.open(pat)
-                        self.imsize = array(f.data)      
-                    self.imd = zeros((self.imsize.shape[0],self.imsize.shape[1]))
-            except:
-                print('Problem reading the first frame')
+            if self.datatype == 'cbf':
+                pat = '%s%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,0)
+            elif self.datatype == 'edf':
+                pat = '%s%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,0)
+                
+            if os.path.exists(pat):
+                
+                if self.datatype == 'h5':
+                    self.imsize = fl['/entry_0000/measurement/Pilatus/data/'][0]
+                else:
+                    f = fabio.open(pat)
+                    self.imsize = array(f.data)      
+                self.imd = zeros((self.imsize.shape[0],self.imsize.shape[1]))
+                print(self.imd.shape)
             
+            mm = 0
             for ii in range(0,ntot,self.rebin):
                     start=time.time()
 
-                    for kk in range(ii,ii+self.rebin):
-
-
+                    if self.rebin>1:
+                        self.imd = zeros((self.imsize.shape[0],self.imsize.shape[1]))
+                        for kk in range(ii,ii+self.rebin):
+    
+                            if self.datatype == 'cbf':
+                                pat = '%s%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,kk)
+                            elif self.datatype == 'edf':
+                                pat = '%s%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,kk)
+                                
+                            if os.path.exists(pat) and ii>0:
+                                
+                                if self.datatype == 'h5':
+                                    d = fl['/entry_0000/measurement/Pilatus/data/'][kk]
+                                else:
+                                    f = fabio.open(pat)
+                                    d = array(f.data)
+                            self.imd = self.imd + d
+                    else:
                         if self.datatype == 'cbf':
                             pat = '%s%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,ii)
                         elif self.datatype == 'edf':
@@ -148,8 +162,8 @@ class XRDCT_Squeeze(QThread):
                                 d = fl['/entry_0000/measurement/Pilatus/data/'][kk]
                             else:
                                 f = fabio.open(pat)
-                                d = array(f.data)
-                        self.imd = self.imd + d
+                                d = array(f.data)         
+                            self.imd = d
     
                     if self.filt == "No":
                         r, I = ai.integrate1d(data=self.imd, npt=self.npt_rad, mask=self.mask, unit=self.units, method=Imethod,correctSolidAngle=False, polarization_factor=0.95)
@@ -160,11 +174,11 @@ class XRDCT_Squeeze(QThread):
                     elif self.filt == "sigma":
                         r, I, stdf = ai.sigma_clip(data=self.imd, npt_rad=int(self.npt_rad), thres=float(self.thres), max_iter=5, unit=self.units, mask=self.mask, method=Imethod, correctSolidAngle=False, polarization_factor=0.95);
 
-                    self.data[ii,:] = I[0:self.npt_rad-10]
+                    self.data[mm,:] = I[0:self.npt_rad-10]
+                    mm += 1
                     
                     v = round((100.*(ii+1))/(int(self.na)*int(self.nt)))
                     self.progress.emit(v)
-                    ii += 1;
                     print('Frame %d out of %d' %(ii, ntot), time.time()-start)
                     
             print("Integration done, now saving the data")
