@@ -135,16 +135,13 @@ class XRDCT_Squeeze(QThread):
 
                     if self.rebin>1:
                         self.imd = zeros((self.imsize.shape[0],self.imsize.shape[1]))
-                        print(ii)
                         for kk in range(ii,ii+self.rebin):
-                            print(kk)
     
                             if self.datatype == 'cbf':
                                 pat = '%s%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,kk)
                             elif self.datatype == 'edf':
                                 pat = '%s%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,kk)
                                 
-                            print(pat)
                             if os.path.exists(pat):
                                 
                                 if self.datatype == 'h5':
@@ -152,7 +149,6 @@ class XRDCT_Squeeze(QThread):
                                 else:
                                     f = fabio.open(pat)
                                     d = array(f.data)
-                            print(kk, self.imd.shape, d.shape)
                             self.imd = self.imd + d
                     else:
                         if self.datatype == 'cbf':
