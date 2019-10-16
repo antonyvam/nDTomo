@@ -911,7 +911,8 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.rebin = 1
         elif s == 1:
             self.rebin = 2
-            
+        print(self.rebin)
+        
     def processxrdct(self):
         
         """
@@ -968,7 +969,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                         self.Squeezing.start()
                         self.Squeezing.liveRead()
                     else:
-                        self.Squeezing = XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime)
+                        self.Squeezing = XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime,self.rebin)
                         self.Squeezing.start()
                     
                 self.Squeezing.progress.connect(self.progressbar.setValue)
