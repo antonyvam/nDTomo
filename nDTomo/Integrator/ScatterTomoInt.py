@@ -149,6 +149,7 @@ class XRDCT_Squeeze(QThread):
                                 else:
                                     f = fabio.open(pat)
                                     d = array(f.data)
+                            print(kk, self.imd.shape, d.shape)
                             self.imd = self.imd + d
                     else:
                         if self.datatype == 'cbf':
