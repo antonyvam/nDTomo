@@ -1321,7 +1321,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 elif self.scantype == 'ContRot':
                     self.Squeezing.append(Fast_XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime))
             else:
-                self.Squeezing.append(XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime))
+                self.Squeezing.append(XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime,self.rebin))
 
             
             self.progressbarbatch.append(QtWidgets.QProgressBar(self))
