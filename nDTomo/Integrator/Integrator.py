@@ -386,6 +386,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.labeldi = QtWidgets.QLabel(self)
         self.labeldi.setText('Rebin frames')
         self.l.addWidget(self.labeldi,13,2)        
+
+        self.ChooseRein = QtWidgets.QComboBox(self)
+        self.ChooseRein.addItems(["No", "Every 2"])
+        self.ChooseRein.currentIndexChanged.connect(self.dorebin)
+        self.l.addWidget(self.ChooseRein,13,3)  
         
         self.pbutton11 = QtWidgets.QPushButton("Start Integration",self)
         self.pbutton11.clicked.connect(self.processxrdct)
@@ -899,7 +904,13 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.liveoption = 1
             self.mapperExplorerDock.setVisible(1)
             self.plotterExplorerDock.setVisible(1)  
-                    
+
+    def dorebin(self,s):
+        if s == 0:
+            self.rebin = 0
+        elif s == 1:
+            self.rebin = 2
+            
     def processxrdct(self):
         
         """
