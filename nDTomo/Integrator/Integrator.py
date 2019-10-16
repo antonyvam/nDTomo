@@ -91,6 +91,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.stepsize = 0
         self.dio = []; self.etime = []
         self.xaxis = zeros(())
+        self.rebin = 1
         
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
