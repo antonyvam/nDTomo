@@ -135,7 +135,9 @@ class XRDCT_Squeeze(QThread):
 
                     if self.rebin>1:
                         self.imd = zeros((self.imsize.shape[0],self.imsize.shape[1]))
+                        print(ii)
                         for kk in range(ii,ii+self.rebin):
+                            print(kk)
     
                             if self.datatype == 'cbf':
                                 pat = '%s%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,kk)
