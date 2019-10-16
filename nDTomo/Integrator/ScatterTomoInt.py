@@ -90,7 +90,6 @@ class XRDCT_Squeeze(QThread):
 		"""
         
         try:
-            self.data = zeros((self.nt*self.na,self.npt_rad-10));
             
             ai = pyFAI.load(self.poniname)        
 
@@ -112,7 +111,8 @@ class XRDCT_Squeeze(QThread):
                 elif self.procunit == "GPU":
                     Imethod = pyFAI.method_registry.IntegrationMethod(dim = 2, split = "no", algo = "histogram", impl = "opencl")            
             
-            ntot = (self.nt*self.na)/self.rebin
+            ntot = (self.nt*self.na)
+            self.data = zeros((ntot/self.rebin,self.npt_rad-10));
             
             if self.datatype == 'cbf':
                 pat = '%s%s/%s_%.4d.cbf' % (self.xrdctpath, self.dataset,self.prefix,0)
