@@ -70,7 +70,7 @@ class XRDCT_Squeeze(QThread):
         self.prc=prc;self.thres = thres;self.datatype = datatype;self.savepath = savepath
         self.na = int(na); self.nt = int(nt); self.npt_rad = int(npt_rad); self.scantype = scantype; #self.jsonname = jsonname
         self.omega = omega; self.trans = trans
-        self.dio = dio; self.etime = etime; self.rebin = rebin
+        self.dio = dio; self.etime = etime; self.rebin = int(rebin)
         dpath = os.path.join( self.xrdctpath, self.dataset)
         print(dpath)
         try:
