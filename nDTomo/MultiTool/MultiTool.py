@@ -2400,7 +2400,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 #            self.y[:,0::2] = self.y[::-1,0::2]
 #            print self.y.shape
         
-        if self.scantype == 'zigzag' and len(self.data.shape)<3:
+        if (self.scantype == 'zigzag' or self.scantype == 'Zigzag') and len(self.data.shape)<3:
             try:
                 self.data = np.reshape(self.data,(int(self.na),int(self.nt),self.data.shape[1]))
                 self.data = np.transpose(self.data,(1,0,2))
