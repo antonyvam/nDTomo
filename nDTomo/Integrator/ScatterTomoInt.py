@@ -142,13 +142,11 @@ class XRDCT_Squeeze(QThread):
                             elif self.datatype == 'edf':
                                 pat = '%s%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,kk)
                                 
-                            if os.path.exists(pat):
-                                
-                                if self.datatype == 'h5':
-                                    d = fl['/entry_0000/measurement/Pilatus/data/'][kk]
-                                else:
-                                    f = fabio.open(pat)
-                                    d = array(f.data)
+                            if self.datatype == 'h5':
+                                d = fl['/entry_0000/measurement/Pilatus/data/'][kk]
+                            else:
+                                f = fabio.open(pat)
+                                d = array(f.data)
                             self.imd = self.imd + d
                     else:
                         if self.datatype == 'cbf':
@@ -156,14 +154,12 @@ class XRDCT_Squeeze(QThread):
                         elif self.datatype == 'edf':
                             pat = '%s%s/%s_%.4d.edf' % (self.xrdctpath, self.dataset,self.prefix,ii)
                             
-                        if os.path.exists(pat) and ii>0:
-                            
-                            if self.datatype == 'h5':
-                                d = fl['/entry_0000/measurement/Pilatus/data/'][kk]
-                            else:
-                                f = fabio.open(pat)
-                                d = array(f.data)         
-                            self.imd = d
+                        if self.datatype == 'h5':
+                            d = fl['/entry_0000/measurement/Pilatus/data/'][ii]
+                        else:
+                            f = fabio.open(pat)
+                            d = array(f.data)         
+                        self.imd = d
     
                     if self.filt == "No":
                         r, I = ai.integrate1d(data=self.imd, npt=self.npt_rad, mask=self.mask, unit=self.units, method=Imethod,correctSolidAngle=False, polarization_factor=0.95)
