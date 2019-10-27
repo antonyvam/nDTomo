@@ -74,6 +74,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.filt = "No"
         self.prc = 10
         self.thres = 3
+        self.asym = 10
         self.scantype = "Zigzag"
         self.parfile = []
         self.nt = []
