@@ -62,12 +62,12 @@ class XRDCT_Squeeze(QThread):
     squeeze = pyqtSignal()
     progress = pyqtSignal(int)
     
-    def __init__(self,prefix,dataset,xrdctpath,maskname,poniname,na,nt,npt_rad,filt,procunit,units,prc,thres,datatype,savepath,scantype,energy,omega,trans,dio,etime,rebin):
+    def __init__(self,prefix,dataset,xrdctpath,maskname,poniname,na,nt,npt_rad,filt,procunit,units,prc,thres,asym,datatype,savepath,scantype,energy,omega,trans,dio,etime,rebin):
         QThread.__init__(self)
 		
         self.prefix = prefix; self.dataset=dataset; self.xrdctpath = xrdctpath; self.maskname = maskname; self.poniname = poniname
         self.filt=filt; self.procunit=procunit;self.units =units;self.E = energy
-        self.prc=prc;self.thres = thres;self.datatype = datatype;self.savepath = savepath
+        self.prc=prc;self.thres = thres;self.asym = asym;self.datatype = datatype;self.savepath = savepath
         self.na = int(na); self.nt = int(nt); self.npt_rad = int(npt_rad); self.scantype = scantype; #self.jsonname = jsonname
         self.omega = omega; self.trans = trans
         self.dio = dio; self.etime = etime; self.rebin = int(rebin)
@@ -173,6 +173,8 @@ class XRDCT_Squeeze(QThread):
                         r, I = ai.medfilt1d(data=self.imd, npt_rad=int(self.npt_rad), percentile=(round(float(self.prc)/2),100-round(float(self.prc)/2)), unit=self.units, mask=self.mask, method=Imethod, correctSolidAngle=False, polarization_factor=0.95); #"splitpixel"
                     elif self.filt == "sigma":
                         r, I, stdf = ai.sigma_clip(data=self.imd, npt_rad=int(self.npt_rad), thres=float(self.thres), max_iter=5, unit=self.units, mask=self.mask, method=Imethod, correctSolidAngle=False, polarization_factor=0.95);
+                    elif self.filt == "assymetric":
+                        r, I = ai.medfilt1d(data=self.imd, npt_rad=int(self.npt_rad), percentile=(0,100-round(float(self.asym))), unit=self.units, mask=self.mask, method=Imethod, correctSolidAngle=False, polarization_factor=0.95); #"splitpixel"
 
                     self.data[mm,:] = I[0:self.npt_rad-10]
                     mm += 1
@@ -233,6 +235,10 @@ class XRDCT_Squeeze(QThread):
         
             fn = "%s/%s_integrated_%.1f_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, float(self.thres), self.filt,self.procunit)        
 
+        elif self.filt == "assymetric":
+            
+            fn = "%s/%s_integrated_%.1f_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, float(self.asym), self.filt,self.procunit)
+ 
         h5f = h5py.File(fn, "w")
         
         h5f.create_dataset('data', data=self.data)

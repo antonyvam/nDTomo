@@ -280,7 +280,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.l.addWidget(self.label6,6,3)
         
         self.ChooseFilters = QtWidgets.QComboBox(self)
-        self.ChooseFilters.addItems(["No filters", "Median filter", "Trimmed mean filter",  "Standard deviation filter"])
+        self.ChooseFilters.addItems(["No filters", "Median filter", "Trimmed mean filter",  "Standard deviation filter", "Assymetric filter"])
         self.ChooseFilters.currentIndexChanged.connect(self.DecideFilter)
 #        self.ChooseFilters.setEnabled(False)
         self.l.addWidget(self.ChooseFilters,6,4)     
@@ -698,21 +698,27 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.filt = "No"
             self.labelF.setEnabled(False)
             self.filtervalue.setEnabled(False)
+            
         elif ind == 1:
             self.filt = "Median"        
             self.labelF.setEnabled(False)
             self.filtervalue.setEnabled(False)
+            
         elif ind == 2:
             self.filt = "trimmed_mean"     
-            
             self.labelF.setText('Trimmed mean value (%)')  
             self.labelF.setEnabled(True)
             self.filtervalue.setEnabled(True)
             
         elif ind == 3:
             self.filt = "sigma"       
-            
             self.labelF.setText('Sigma threshold value')  
+            self.labelF.setEnabled(True)
+            self.filtervalue.setEnabled(True)
+
+        elif ind == 4:
+            self.filt = "assymetric"       
+            self.labelF.setText('Assymetry value (%)')  
             self.labelF.setEnabled(True)
             self.filtervalue.setEnabled(True)
             
@@ -724,6 +730,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         elif self.filt == "sigma":
             self.thres = s
             print(self.thres)
+        elif self.filt == "assymetric":
+            self.asym = s
+            print(self.asym)
             
     def ChooseScanType(self,ind):
         if ind == 0:
@@ -932,9 +941,9 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             if self.scantype == 'Zigzag':
 
                 if self.liveoption == 1:
-                    self.Squeezing = XRDCT_LiveSqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Squeezing = XRDCT_LiveSqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Squeezing.start()  
-                    self.Reading = XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Reading = XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Reading.start()  
                     self.Reading.exploredata.connect(self.explore)
                     self.Reading.updatedata.connect(self.update)
@@ -943,11 +952,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     
                 elif self.liveoption == 0:
                     if self.procunit == "MultiGPU":
-                        self.Squeezing = XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                        self.Squeezing = XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                         self.Squeezing.start()
                         self.Squeezing.liveRead()
                     else:
-                        self.Squeezing = XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime,self.rebin)
+                        self.Squeezing = XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime,self.rebin)
                         self.Squeezing.start()
                     
                 self.Squeezing.progress.connect(self.progressbar.setValue)
@@ -956,20 +965,20 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             elif self.scantype == 'ContRot':
 
                 if self.liveoption == 1:
-                    self.Squeezing = Fast_XRDCT_LiveSqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Squeezing = Fast_XRDCT_LiveSqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Squeezing.start()  
-                    self.Reading = Fast_XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Reading = Fast_XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Reading.start()  
                     self.Reading.exploredata.connect(self.explore)
                     self.Reading.updatedata.connect(self.update)
                     
                 elif self.liveoption == 0:
                     if self.procunit == "MultiGPU":
-                        self.Squeezing = Fast_XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                        self.Squeezing = Fast_XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                         self.Squeezing.start()
                         self.Squeezing.liveRead()
                     else:
-                        self.Squeezing = XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime,self.rebin)
+                        self.Squeezing = XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime,self.rebin)
                         self.Squeezing.start()
                     
                 self.Squeezing.progress.connect(self.progressbar.setValue)
@@ -996,12 +1005,12 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         na = float(self.na); nt = float(self.nt);npt_rad = float(self.npt_rad);
         try:
             if self.scantype == 'Zigzag':
-                    self.Reading = XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Reading = XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Reading.start()  
                     self.Reading.exploredata.connect(self.explore)
                     self.Reading.updatedata.connect(self.update)
             elif self.scantype == 'ContRot':                    
-                    self.Reading = Fast_XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
+                    self.Reading = Fast_XRDCT_LiveRead(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime)
                     self.Reading.start()  
                     self.Reading.exploredata.connect(self.explore)
                     self.Reading.updatedata.connect(self.update)
@@ -1317,11 +1326,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
              
             if self.procunit == "MultiGPU":
                 if self.scantype == 'Zigzag':
-                    self.Squeezing.append(XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime))
+                    self.Squeezing.append(XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime))
                 elif self.scantype == 'ContRot':
-                    self.Squeezing.append(Fast_XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime))
+                    self.Squeezing.append(Fast_XRDCT_ID15ASqueeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.jsonname,self.omega,self.trans,self.dio,self.etime))
             else:
-                self.Squeezing.append(XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime,self.rebin))
+                self.Squeezing.append(XRDCT_Squeeze(self.prefix,self.dataset,self.xrdctpath,self.maskname,self.poniname,na,nt,npt_rad,self.filt,self.procunit,self.units,self.prc,self.thres,self.asym,self.datatype,self.savepath,self.scantype,self.E,self.omega,self.trans,self.dio,self.etime,self.rebin))
 
             
             self.progressbarbatch.append(QtWidgets.QProgressBar(self))
@@ -1375,7 +1384,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 
             self.d = {"Energy":float(self.E), "Datatype":self.datatype,"CalibrantPath":self.calibrant,"PoniPath":self.poniname,"MaskPath":self.maskname, "Mask":self.mask, "JsonPath":self.jsonname, 
     		     "RadialPoints":int(self.npt_rad), "Units":self.units, "SavePath":self.savepath, "XRDCTPath":self.xrdctpath, "ProcessingUnit":self.procunit, "Filter":self.filt, 
-    		     "TrimmedMean":int(self.prc), "Sigma":int(self.thres), "ScanType":self.scantype, "SpecFile":self.specfile, "SlowAxisSteps":int(self.nt), "FastAxisSteps":int(self.na),
+    		     "TrimmedMean":int(self.prc), "Sigma":int(self.thres), "Assymetric":int(self.asym),"ScanType":self.scantype, "SpecFile":self.specfile, "SlowAxisSteps":int(self.nt), "FastAxisSteps":int(self.na),
     		     "Dataset":self.dataset, "Prefix":self.prefix}#, "Omega":self.omega, "Translations":self.trans}
     
             st = self.fn.split(".json")
@@ -1398,6 +1407,10 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.E = d["Energy"];self.datatype=d["Datatype"];self.calibrant=d["CalibrantPath"];self.poniname=d["PoniPath"];self.maskname=d["MaskPath"];self.mask=d["Mask"];
             self.jsonname=d["JsonPath"];self.npt_rad=d["RadialPoints"];self.units=d["Units"];self.savepath=d["SavePath"];self.xrdctpath=d["XRDCTPath"];self.procunit=d["ProcessingUnit"];
             self.filt=d["Filter"];self.prc=d["TrimmedMean"];self.thres=d["Sigma"];self.scantype=d["ScanType"];
+            try:
+                self.asym=d["Assymetric"];
+            except:
+                pass
             self.nt=d["SlowAxisSteps"];self.na=d["FastAxisSteps"];
             self.dataset=d["Dataset"];self.prefix=d["Prefix"];
     		
@@ -1433,7 +1446,11 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 self.ChooseFilters.setCurrentIndex(3)
                 self.filtervalue.setEnabled(True) 
                 self.filtervalue.setText(str(self.thres))
-		        
+            elif self.filt == "assymetric":
+                self.ChooseFilters.setCurrentIndex(4)
+                self.filtervalue.setEnabled(True) 
+                self.filtervalue.setText(str(self.asym))		        
+            
             
             if self.scantype == "Zigzag":
                 self.ChooseScan.setCurrentIndex(0)

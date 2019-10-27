@@ -64,11 +64,11 @@ class Fast_XRDCT_ID15ASqueeze(QThread):
     
     progress = pyqtSignal(int)
     
-    def __init__(self,prefix,dataset,xrdctpath,maskname,poniname,na,nt,npt_rad,filt,procunit,units,prc,thres,datatype,savepath,scantype,energy,jsonname,omega,trans,dio,etime):
+    def __init__(self,prefix,dataset,xrdctpath,maskname,poniname,na,nt,npt_rad,filt,procunit,units,prc,thres,asym,datatype,savepath,scantype,energy,jsonname,omega,trans,dio,etime):
         QThread.__init__(self)
         self.prefix = prefix; self.dataset=dataset; self.xrdctpath = xrdctpath; self.maskname = maskname; self.poniname = poniname
         self.filt=filt; self.procunit=procunit;self.units =units;self.E = energy
-        self.prc=prc;self.thres = thres;self.datatype = datatype;self.savepath = savepath
+        self.prc=prc;self.thres = thres;self.asym = asym;self.datatype = datatype;self.savepath = savepath
         self.na = int(na); self.nt = int(nt); self.npt_rad = int(npt_rad); self.scantype = scantype; self.jsonname = jsonname
         self.omega = omega; self.trans = trans;self.dio = dio; self.etime = etime
         self.gpuxrdctpath = '/gz%s' %self.xrdctpath
@@ -283,6 +283,8 @@ class Fast_XRDCT_ID15ASqueeze(QThread):
             fn = "%s/%s_integrated_%.1f_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, float(self.prc), self.filt,self.procunit)
         elif self.filt == "sigma":
             fn = "%s/%s_integrated_%.1f_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, float(self.thres), self.filt,self.procunit)                
+        elif self.filt == "assymetric":
+            fn = "%s/%s_integrated_%.1f_%s_Filter_%s.hdf5" % (self.savepath, self.dataset, float(self.asym), self.filt,self.procunit)
         
         h5f = h5py.File(fn, "w")
         h5f.create_dataset('data', data=self.sinos)
@@ -362,6 +364,10 @@ class Fast_XRDCT_ID15ASqueeze(QThread):
                 data['integration_method'] = "sigma_clip"                
                 data['sigma_clip_thresold'] = float(self.thres)
                 data['sigma_clip_max_iter'] = 5
+            elif self.filt == "assymetric":
+                data['plugin_name'] = 'id15v2.IntegrateManyFrames'
+                data['integration_method'] = "medfilt1d"
+                data['percentile'] = (0,100-round(float(self.asym)))         
             
     			# Number of xrd-ct dataset in the 3D scan
             for d in range(0, 1):  #range(self.ntomos, self.ntomos+1): 
