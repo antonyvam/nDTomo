@@ -775,7 +775,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 for i in range(0,len(lines)):
                     if '#L' in lines[i]:
                         if lines[i].split()[1] == 'TrigTime':
-                            cols = line.split()
+                            cols = lines[i].split()
                             aerox_UpPos = cols.index('aerox_UpPos') - 1
                             aerox_DownPos = cols.index('aerox_DownPos') - 1
                             aeroy_UpPos = cols.index('aeroy_UpPos') - 1
