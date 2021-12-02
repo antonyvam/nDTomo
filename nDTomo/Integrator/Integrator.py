@@ -24,25 +24,25 @@ os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
 
 #% import nDTomo classes
 
-from DCalibration import Calibration, CreatMask
+from .DCalibration import Calibration, CreatMask
 
-from PDFmask import CreatPDFMask
+from .PDFmask import CreatPDFMask
 
-from CreateAzimJson import CreatAzimint
+from .CreateAzimJson import CreatAzimint
 
-from ZigzagTomoInt_LiveRead import XRDCT_LiveRead
-from ZigzagTomoInt_LiveMulti import XRDCT_ID15ASqueeze
+from .ZigzagTomoInt_LiveRead import XRDCT_LiveRead
+from .ZigzagTomoInt_LiveMulti import XRDCT_ID15ASqueeze
 
-from ContRotTomoInt_LiveRead import Fast_XRDCT_LiveRead
-from ContRotTomoInt_LiveMulti import Fast_XRDCT_ID15ASqueeze
+from .ContRotTomoInt_LiveRead import Fast_XRDCT_LiveRead
+from .ContRotTomoInt_LiveMulti import Fast_XRDCT_ID15ASqueeze
 
 username = getpass.getuser()
 print('User is %s' %username)
 
 if username != 'opid15':
-    from ScatterTomoInt import XRDCT_Squeeze
-    from ContRotTomoInt_Live import Fast_XRDCT_LiveSqueeze
-    from ZigzagTomoInt_Live import XRDCT_LiveSqueeze
+    from .ScatterTomoInt import XRDCT_Squeeze
+    from .ContRotTomoInt_Live import Fast_XRDCT_LiveSqueeze
+    from .ZigzagTomoInt_Live import XRDCT_LiveSqueeze
 else:
     print('modules using pyFAI not loaded')
         

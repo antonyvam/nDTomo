@@ -41,11 +41,11 @@ setup(
 		"h5py >= 2.7.1",
 		"matplotlib >= 1.4.2",
 		"numpy >= 1.8.2",
-		"pyFAI >=0.14.0, <=0.17.0",
-		"scipy >=0.14.0",
-		"silx >=0.6.0",
 		"scikit-image >=0.10.0",
 		"pyqtgraph",
+		"scipy >=0.14.0",
+		"silx",
+		"pyFAI",
 	],
 	packages=find_packages(),
 	extras_require={
@@ -55,6 +55,9 @@ setup(
     package_data={
         '': ['*.txt', '*.rst'],
     },
+    entry_points={
+        'gui_scripts': ['ID15helper = nDTomo.ID15helper.BlockApp:main', 'Integrator = nDTomo.Integrator.Integrator:main', 'MultiTool = nDTomo.MultiTool.MultiTool:main']
+    },		
 	license="LICENSE.txt",
 	classifiers=[
 		"Intended Audience :: Science/Research",
