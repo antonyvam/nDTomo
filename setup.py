@@ -40,6 +40,7 @@ setup(
 		"fabio", "h5py", "matplotlib", "numpy", "pyFAI", "scipy",
 		"pyqtgraph", "scikit-image",  "PyQt5", "xdesign", "cached_property",
 		"hyperspy", "hyperspy_gui_ipywidgets", "hyperspy_gui_traitsui",
+		"periodictable", "ase",
 	],
 	packages=find_packages(),
 	extras_require={
