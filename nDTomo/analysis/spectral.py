@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec  3 10:33:54 2019
+Created on Tue Dec  3 10:55:36 2019
 
 @author: Antony
 """
 
 import numpy as np
+import h5py
+
 tand = lambda x: np.tan(x*np.pi/180.)
 atand = lambda x: 180.*np.arctan(x)/np.pi
 
@@ -56,3 +58,45 @@ def CagliottiLS(pars, tantth, y):
     return y - (Cagliotti(tantth[:,0], pars[0], pars[1], pars[2]))
 
 
+
+def savepeakfits(fn, Areas, Pos, Sigma):
+    '''
+    It takes a filename (use .h5 or .hdf5) and the Areas, Pos, Sigma which are dictionaries
+    '''
+    
+    h5f = h5py.File(fn, "w")
+    
+    for ii in range(0,len(Areas.keys())):
+        
+        h5f.create_dataset('Peak_Area_%d' %ii, data=Areas[ii])
+        h5f.create_dataset('Peak_Position_%d' %ii, data=Pos[ii])
+        h5f.create_dataset('Peak_FWHM_%d' %ii, data=Sigma[ii])
+        
+    h5f.close()
+	
+def loadpeakfits(fn, peaks):
+    '''
+    It takes a filename (use .h5 or .hdf5) and the Areas, Pos, Sigma which are dictionaries
+    '''
+
+    Areas = {}
+    Pos = {}
+    Sigma = {}
+    
+    with h5py.File(fn,'r') as f:
+        
+        for ii in range(0,peaks):
+            
+            Areas[ii] = f['/Peak_Area_%d' %ii][:]
+            Pos[ii] = f['/Peak_Position_%d' %ii][:]
+            Sigma[ii] = f['/Peak_FWHM_%d' %ii][:]
+            
+        Bkga = f['/Bkga'][:]
+        Bkgb = f['/Bkgb'][:]
+            
+        try:
+            Bkgc = f['/Bkgc'][:]
+        except:
+            pass
+        
+    return Areas, Pos, Sigma, Bkga, Bkgb, Bkgc
