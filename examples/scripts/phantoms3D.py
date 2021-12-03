@@ -5,13 +5,14 @@ Creating a 3D phantoms for testing neural networks
 @author: Antony Vamvakeros
 """
 
+#%%
+
 from xdesign import Mesh, HyperbolicConcentric,SiemensStar, Circle, Triangle, DynamicRange, DogaCircles, Phantom, Polygon, Point, SimpleMaterial, plot_phantom, discrete_phantom, SlantedSquares
 import matplotlib.pyplot as plt
 import numpy as np
 import os, sys, glob, time, h5py
 import hyperspy.api as hs
 from skimage.transform import iradon, radon
-
 
 
 #%% Create the phase maps
@@ -99,7 +100,7 @@ plt.show()
 Let's read the diffraction patterns that correspond to the five components
 '''
 
-with h5py.File('./data/patterns.h5', 'r') as f:
+with h5py.File('../../utils/patterns/patterns.h5', 'r') as f:
     
     print(f.keys())
 
@@ -111,7 +112,9 @@ with h5py.File('./data/patterns.h5', 'r') as f:
 
     tth = np.array(f['tth'][:])
     q = np.array(f['q'][:])
-    
+
+print(tth.shape)
+
 #%% Plotting
 
 '''
