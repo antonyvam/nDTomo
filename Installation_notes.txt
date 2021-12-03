@@ -1,3 +1,5 @@
+# Tested with python v3.8
+
 Extra packages to be installed:
 
 conda install -c astra-toolbox/label/dev astra-toolbox
