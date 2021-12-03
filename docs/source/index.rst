@@ -10,7 +10,6 @@ Contents
    
    intro
    req
-   tut_ID15A_helper
    tut_Integrator
    tut_MultiTool
    refs
