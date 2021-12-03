@@ -41,17 +41,17 @@ except:
     
 #% import nDTomo classes
     
-from PeakFitting import FitData
+from .PeakFitting import FitData
 
-from ChemTomoSinograms import SinoProcessing
+from .ChemTomoSinograms import SinoProcessing
 
-from ChemTomoRec import ReconstructData, BatchProcessing
+from .ChemTomoRec import ReconstructData, BatchProcessing
         
-from ImageReg import AlignImages      
+from .ImageReg import AlignImages      
         
-from NormAbs import NormaliseABSCT
+from .NormAbs import NormaliseABSCT
 
-from AbsTomoRec import ReconABSCT
+from .AbsTomoRec import ReconABSCT
 
 #try:
 #    import tomopy
