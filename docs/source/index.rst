@@ -12,5 +12,4 @@ Contents
    req
    tut_Integrator
    tut_MultiTool
-   refs
    sites
