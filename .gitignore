@@ -7,6 +7,9 @@ doc/build
 *.pyc
 MANIFEST
 
+# Data
+data
+
 # Packages
 /*.egg
 /*.egg-info
