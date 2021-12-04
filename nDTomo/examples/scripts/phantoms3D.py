@@ -124,16 +124,16 @@ Let's plot the five diffraction patterns
 plt.figure(1);plt.clf()
 
 plt.plot(q, dpAl)
-plt.plot(q, dpCu)
-plt.plot(q, dpFe)
-plt.plot(q, dpPt)
-plt.plot(q, dpZn)
+plt.plot(q, dpCu+0.05*1)
+plt.plot(q, dpFe+0.05*2)
+plt.plot(q, dpPt+0.05*3)
+plt.plot(q, dpZn+0.05*4)
 
 
-#%% Phantom
+#%% Phantoms
 
 '''
-Create the XRD-CT and micro-CT phantoms
+Create the XRD map and micro-CT phantoms
 '''
 
 xrdct_Al = np.tile(dpAl, (nt, nt, 1))
