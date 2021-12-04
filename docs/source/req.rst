@@ -16,36 +16,28 @@ Building procedure
 
 Open a terminal, navigate to the nDTomo folder and install it using the setup.py file::
 
-	python setup.py install
+	pip install .
 
 The GUIs can be opened using a terminal and typing::
 
-	python BlockApp.py &
-	
-	python Integrator.py &
-	
-	python MultiTool.py &
-	
-In Windows the GUIs can also be run directly using the corresponding .bat or .exe files:
+	Integrator
 
-* ID15Ahelper
-* Integrator
-* MultiTool
-
+	MultiTool
+	
 Dependencies
 ^^^^^^^^^^^^
 nDTomo is a Python library which relies on the following packages:
 
-* Python: version 2.7 or 3 (tested on 3.7.1)
+* Python: version 3.8
 * PyQt5
-* Numpy: version 1.8 or newer
-* Scipy: version 0.14 or newer
-* Matplotlib: version 1.4 or newer
-* Fabio: version 0.6 or newer
-* Scikit-image: version 0.10 or newer
-* h5py (to access HDF5 files)
-* pyqtgraph (for the ID15A helper GUI)
-* pyFAI: version 0.13 or newer (for the Intergator GUI)
+* Numpy
+* Scipy
+* Matplotlib
+* Fabio
+* Scikit-image
+* h5py
+* pyqtgraph
+* pyFAI
 
 
 Contributors
@@ -54,9 +46,12 @@ Contributors
  * Antony Vamvakeros (Finden)
  * Simon Jacques (Finden)
  * Gavin Vaughan (ESRF)
+ * Dorota Matras (Diamond Light Source)
+ * Hongyang Dong (University College London)
  
 Indirect contributors (ideas...)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
  * Marco di Michiel (ESRF)
  * Jérôme Kieffer (ESRF)
+ 

@@ -31,4 +31,4 @@
 ::
 ::
 ::978f952a14a936cc963da21a135fa983
-cmd /c python nDTomo\Integrator\Integrator.py &
+cmd /c python nDTomo\vis\Integrator\Integrator.py &

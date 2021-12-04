@@ -2,7 +2,7 @@
 # coding: utf8
 # /*##########################################################################
 #
-# Copyright (c) 2018 Finden
+# Copyright (c) 2021 Finden
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,32 +31,26 @@ with open("README.md", "r") as fh:
 
 setup(
 	name="nDTomo",
-	version="0.1.0",
+	version="2021.12",
 	description="nDTomo software suite",
 	url="http://github.com/antonyvam/nDTomo",
 	author="A. Vamvakeros",
-	author_email="antony@finden.co.uk",
+	author_email="antonyvam@gmail.com",
 	install_requires=[
-		"fabio >= 0.6.0",
-		"h5py >= 2.7.1",
-		"matplotlib >= 1.4.2",
-		"numpy >= 1.8.2",
-		"scikit-image >=0.10.0",
-		"pyqtgraph",
-		"scipy >=0.14.0",
-		"silx",
-		"pyFAI",
+		"fabio", "h5py", "matplotlib", "numpy", "pyFAI", "scipy",
+		"pyqtgraph", "scikit-image",  "PyQt5", "xdesign", "cached_property",
+		"hyperspy", "hyperspy_gui_ipywidgets", "hyperspy_gui_traitsui",
+		"periodictable", "ase",
 	],
 	packages=find_packages(),
 	extras_require={
-		"PDF":  ["diffpy"],
-		"Iterative algorithms": ["tomopy", "astra"],
+		"tensorflow":  ["tensorflow-gpu==2.3"],
 	},
     package_data={
         '': ['*.txt', '*.rst'],
     },
     entry_points={
-        'gui_scripts': ['ID15helper = nDTomo.ID15helper.BlockApp:main', 'Integrator = nDTomo.Integrator.Integrator:main', 'MultiTool = nDTomo.MultiTool.MultiTool:main']
+        'gui_scripts': ['Integrator = nDTomo.vis.Integrator.Integrator:main', 'MultiTool = nDTomo.vis.MultiTool.MultiTool:main']
     },		
 	license="LICENSE.txt",
 	classifiers=[
