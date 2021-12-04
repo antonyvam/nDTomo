@@ -14,7 +14,7 @@ It is recommended to install first the anaconda (Python 3 version) distribution 
 Building procedure
 ^^^^^^^^^^^^^^^^^^
 
-Open a terminal, navigate to the nDTomo folder and install it using the setup.py file::
+Open a terminal, navigate to the nDTomo folder where the setup.py file is locacted and run the following::
 
 	pip install .
 
@@ -38,6 +38,7 @@ nDTomo is a Python library which relies on the following packages:
 * h5py
 * pyqtgraph
 * pyFAI
+* astra-toolbox
 
 
 Contributors
@@ -55,3 +56,12 @@ Indirect contributors (ideas...)
  * Marco di Michiel (ESRF)
  * Jérôme Kieffer (ESRF)
  
+Beta testers
+^^^^^^^^^^^^
+
+ * Steve Price (Finden)
+ * Donal Finegan (NREL)
+ * Tom Heenan (University College London)
+
+
+
