@@ -100,7 +100,7 @@ plt.show()
 Let's read the diffraction patterns that correspond to the five components
 '''
 
-with h5py.File('../../utils/patterns/patterns.h5', 'r') as f:
+with h5py.File('nDTomo/examples/patterns/patterns.h5', 'r') as f:
     
     print(f.keys())
 
@@ -113,7 +113,7 @@ with h5py.File('../../utils/patterns/patterns.h5', 'r') as f:
     tth = np.array(f['tth'][:])
     q = np.array(f['q'][:])
 
-print(tth.shape)
+print(dpAl.shape, tth.shape, tth.shape)
 
 #%% Plotting
 
