@@ -155,6 +155,53 @@ xrdct = xrdct_Al + xrdct_Cu + xrdct_Fe + xrdct_Pt + xrdct_Zn
 
 print(xrdct.shape)
 
+
+#%%
+
+plt.figure(1);plt.clf()
+plt.plot(np.mean(np.mean(xrdct, axis =0), axis = 0))
+plt.show()
+
+#%%
+
+
+photon_count = 500
+
+im = xrdct[:,:,53] + 1E-9
+imn = np.random.poisson(im * photon_count)/ photon_count
+# imn = imn * 1 # To make the reconstructed image be approaximately in the 0-1 range
+
+plt.figure(1);plt.clf();
+plt.imshow(imn, cmap = 'jet')
+plt.colorbar()
+plt.show()
+
+#%%
+
+xrdct_n1 = np.zeros_like(xrdct)
+xrdct_n2 = np.zeros_like(xrdct)
+
+for ii in range(xrdct.shape[2]):
+    
+    im = xrdct[:,:,ii] + 1E-9
+    xrdct_n1[:,:,ii] = np.random.poisson(im * photon_count)/ photon_count
+    xrdct_n2[:,:,ii] = np.random.poisson(im * photon_count)/ photon_count
+    
+    print(ii)
+
+
+#%% Export the volumes
+
+with h5py.File('data/Phantom_noisy.h5', "w") as f:
+    f.create_dataset('ground_truth', data = xrdct)
+    f.create_dataset('vol1', data = xrdct_n1)
+    f.create_dataset('vol2', data = xrdct_n2)
+
+f.close()
+
+#%%
+
+
 microct = np.zeros_like(xrdct)
 
 for ii in range(microct.shape[2]):
