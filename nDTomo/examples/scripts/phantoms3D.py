@@ -199,6 +199,65 @@ with h5py.File('data/Phantom_noisy.h5', "w") as f:
 
 f.close()
 
+#%% Read the spectra
+
+'''
+Let's read the XANES spectra that correspond to the five components
+'''
+
+with h5py.File('nDTomo/examples/patterns/AllSpectra.h5', 'r') as f:
+    
+    print(f.keys())
+
+    sNMC = np.array(f['NMC'][:])
+    sNi2O3 = np.array(f['Ni2O3'][:])
+    sNiOH2 = np.array(f['NiOH2'][:])
+    sNiS = np.array(f['NiS'][:])
+    sNifoil = np.array(f['Nifoil'][:])
+
+    E = np.array(f['energy'][:])
+
+print(sNMC.shape, E.shape)
+
+#%% Plotting
+
+'''
+Let's plot the five diffraction patterns
+'''
+
+plt.figure(1);plt.clf()
+
+plt.plot(E, sNMC)
+plt.plot(E, sNi2O3+0.05*1)
+plt.plot(E, sNiOH2+0.05*2)
+plt.plot(E, sNiS+0.05*3)
+plt.plot(E, sNifoil+0.05*4)
+
+#%% Phantoms
+
+'''
+Create the XRD map and micro-CT phantoms
+'''
+
+xanesct_NMC = np.tile(sNMC, (nt, nt, 1))
+xanesct_Ni2O3 = np.tile(sNi2O3, (nt, nt, 1))
+xanesct_NiOH2 = np.tile(sNiOH2, (nt, nt, 1))
+xanesct_NiS = np.tile(sNiS, (nt, nt, 1))
+xanesct_Nifoil = np.tile(sNifoil, (nt, nt, 1))
+
+for ii in range(xrdct_Al.shape[2]):
+    
+    xanesct_NMC[:,:,ii] = xanesct_NMC[:,:,ii]*imAl
+    xanesct_Ni2O3[:,:,ii] = xanesct_Ni2O3[:,:,ii]*imCu
+    xanesct_NiOH2[:,:,ii] = xanesct_NiOH2[:,:,ii]*imFe
+    xanesct_NiS[:,:,ii] = xanesct_NiS[:,:,ii]*imPt
+    xanesct_Nifoil[:,:,ii] = xanesct_Nifoil[:,:,ii]*imZn
+
+
+xanesct = xanesct_NMC + xanesct_Ni2O3 + xanesct_NiOH2 + xanesct_NiS + xanesct_Nifoil
+
+print(xanesct.shape)
+
 #%%
 
 
