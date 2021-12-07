@@ -23,7 +23,9 @@ Let's create five maps that correspond to five sample components
 
 from nDTomo.sim.shapes.phantoms import phantom5c
 
-imAl, imCu, imFe, imPt, imZn = phantom5c(256)
+nt = 256
+
+imAl, imCu, imFe, imPt, imZn = phantom5c(nt)
 
 plt.figure(1);plt.clf();
 plt.imshow(imAl, cmap = 'jet')
