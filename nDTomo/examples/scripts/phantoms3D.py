@@ -119,7 +119,10 @@ print(xrdct.shape)
 
 #%% Create the sinogram XRD-CT volume and add Poisson noise
 
-s = np.zeros((xrdct.shape[0], xrdct.shape[1], xrdct.shape[2]))
+nproj = 2*nt
+theta = np.arange(0, 180, 180/nproj)
+
+s = np.zeros((xrdct.shape[0], nproj, xrdct.shape[2]))
 
 for ii in range(xrdct.shape[2]):
     
