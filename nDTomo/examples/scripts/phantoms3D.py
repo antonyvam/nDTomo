@@ -117,7 +117,16 @@ xrdct = xrdct_Al + xrdct_Cu + xrdct_Fe + xrdct_Pt + xrdct_Zn
 
 print(xrdct.shape)
 
+#%% Create the sinogram XRD-CT volume and add Poisson noise
 
+s = np.zeros((xrdct.shape[0], xrdct.shape[1], xrdct.shape[2]))
+
+for ii in range(xrdct.shape[2]):
+    
+    s[:,:,ii] = radon(xrdct[:,:,ii], theta)
+
+    print(ii)
+    
 #%%
 
 plt.figure(1);plt.clf()
@@ -125,7 +134,6 @@ plt.plot(np.mean(np.mean(xrdct, axis =0), axis = 0))
 plt.show()
 
 #%%
-
 
 photon_count = 500
 
