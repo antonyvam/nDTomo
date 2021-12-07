@@ -21,49 +21,9 @@ from skimage.transform import iradon, radon
 Let's create five maps that correspond to five sample components
 '''
 
-# Make a circle with a triangle cut out
-m = Mesh()
-m.append(Circle(Point([0.0, 0.0]), radius=0.5))
-m.append(-Triangle(Point([-0.3, -0.2]),
-                   Point([0.0, -0.3]),
-                   Point([0.3, -0.2])))
+from nDTomo.sim.shapes.phantoms import phantom5c
 
-Al = Phantom(geometry=m)
-
-# Make two eyes separately
-eyeL = Phantom(geometry=Circle(Point([-0.2, 0.0]), radius=0.1))
-eyeR = Phantom(geometry=Circle(Point([0.2, 0.0]), radius=0.1))
-
-
-material = SimpleMaterial(mass_attenuation=1.0)
-
-Al.material = SimpleMaterial(mass_attenuation=1.0)
-eyeL.material = SimpleMaterial(mass_attenuation=1.0)
-eyeR.material = SimpleMaterial(mass_attenuation=1.0)
-
-Al.append(eyeL)
-Al.append(eyeR)
-
-m = Mesh()
-m.append(Triangle(Point([-0.3, -0.2]),
-                   Point([0.0, -0.3]),
-                   Point([0.3, -0.2])))
-
-Zn = Phantom(geometry=m)
-Zn.material = SimpleMaterial(mass_attenuation=1.0)
-
-
-Cu = SlantedSquares(count=16, angle=15/360*2*np.pi, gap=0.05)
-Fe = DogaCircles(n_sizes=8, size_ratio=0.75, n_shuffles=2)
-Pt = SiemensStar(32)
-
-nt = 256
-imAl = discrete_phantom(Al, nt, prop='mass_attenuation')
-imCu = discrete_phantom(Cu, nt, prop='mass_attenuation')
-imFe = discrete_phantom(Fe, nt, prop='mass_attenuation')
-imPt = discrete_phantom(Pt, nt, prop='mass_attenuation')
-imZn = discrete_phantom(Zn, nt, prop='mass_attenuation')
-
+imAl, imCu, imFe, imPt, imZn = phantom5c(256)
 
 plt.figure(1);plt.clf();
 plt.imshow(imAl, cmap = 'jet')
