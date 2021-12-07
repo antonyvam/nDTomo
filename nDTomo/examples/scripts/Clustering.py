@@ -15,11 +15,13 @@ import h5py
 
 #%% Load the dataset
 
-fn = 'Phantom_xrdct.h5'
+fn = 'data\Phantom_xrdct.h5'
+fn = 'data\Phantom_xanes.h5'
 
 with h5py.File(fn, 'r') as f:
     xrdct = np.array(f['data'][:])
 
+xrdct = xrdct + np.min(xrdct)
 #%% PCA: Spectra
 
 data = np.reshape(xrdct, (xrdct.shape[0]*xrdct.shape[1],xrdct.shape[2]))
@@ -78,7 +80,7 @@ for ii in range(clusters):
     ims[:,:,ii] = np.mean(xrdct[:,:,np.squeeze(inds[ii])], axis = 2)
 
 
-ii = 4
+ii = 3
 im = ims[:,:,ii]
 
 plt.figure(1);plt.clf()
@@ -118,7 +120,7 @@ for ii in range(np.max(labels)):
     print(ii)
     
 #%%
-ii = 1
+ii = 5
 im = ims[:,:,ii]
 
 plt.figure(1);plt.clf()
@@ -141,7 +143,7 @@ for ii in range(clusters):
     ims[:,:,ii] = np.mean(xrdct[:,:,np.squeeze(inds[ii])], axis = 2)
 
 #%
-ii = 4
+ii = 2
 im = ims[:,:,ii]
 
 plt.figure(1);plt.clf()
@@ -159,11 +161,11 @@ data = np.reshape(xrdct, (xrdct.shape[0]*xrdct.shape[1],xrdct.shape[2])).transpo
 
 print(data.shape)
 
-nmf = NMF(n_components=6).fit(data+0.0001)
+nmf = NMF(n_components=10).fit(data+0.01)
 print(nmf.components_.shape)
 
 #%%
-ii = 0
+ii = 6
 im = nmf.components_[ii,:]
 im = np.reshape(im, (xrdct.shape[0],xrdct.shape[1]))
 
@@ -202,7 +204,7 @@ data = np.reshape(xrdct, (xrdct.shape[0]*xrdct.shape[1],xrdct.shape[2]))
 
 print(data.shape)
 
-lda = LatentDirichletAllocation(n_components=6, max_iter=5, learning_method="online", learning_offset=50.0, random_state=0).fit(data + 0.0001)
+lda = LatentDirichletAllocation(n_components=6, max_iter=5, learning_method="online", learning_offset=50.0, random_state=0).fit(data + 0.01)
 print(lda.components_.shape)
 
 #%%
@@ -239,7 +241,7 @@ data = np.reshape(xrdct, (xrdct.shape[0]*xrdct.shape[1],xrdct.shape[2]))
 
 print(data.shape)
 
-nmf = NMF(n_components=6).fit(data+0.0001)
+nmf = NMF(n_components=6).fit(data+0.01)
 print(nmf.components_.shape)
 
 #%%
@@ -247,7 +249,7 @@ print(nmf.components_.shape)
 plt.figure(2);plt.clf()
 for ii in range(5):
     
-    plt.plot(q, nmf.components_[ii,:]/np.max(nmf.components_[ii,:]) + 0.05*ii)
+    plt.plot(E, nmf.components_[ii,:]/np.max(nmf.components_[ii,:]) + 0.05*ii)
 
 plt.show()
 

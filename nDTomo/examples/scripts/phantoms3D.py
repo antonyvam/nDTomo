@@ -245,7 +245,7 @@ xanesct_NiOH2 = np.tile(sNiOH2, (nt, nt, 1))
 xanesct_NiS = np.tile(sNiS, (nt, nt, 1))
 xanesct_Nifoil = np.tile(sNifoil, (nt, nt, 1))
 
-for ii in range(xrdct_Al.shape[2]):
+for ii in range(xanesct_NMC.shape[2]):
     
     xanesct_NMC[:,:,ii] = xanesct_NMC[:,:,ii]*imAl
     xanesct_Ni2O3[:,:,ii] = xanesct_Ni2O3[:,:,ii]*imCu
@@ -257,6 +257,13 @@ for ii in range(xrdct_Al.shape[2]):
 xanesct = xanesct_NMC + xanesct_Ni2O3 + xanesct_NiOH2 + xanesct_NiS + xanesct_Nifoil
 
 print(xanesct.shape)
+
+#%% Export the volumes
+
+with h5py.File('data/Phantom_xanes.h5', "w") as f:
+    f.create_dataset('data', data = xanesct)
+f.close()
+
 
 #%%
 
