@@ -14,11 +14,9 @@ from skimage.transform import iradon, radon
 import h5py
 from nDTomo.utils.misc import ndtomopath
 
-
 '''
 Need to convert the function to class
 '''
-
 
 def sstar(npix, nstars=32):
     phase = SiemensStar(nstars)
@@ -69,7 +67,6 @@ def face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], t
     
     return(im)
     
-
 def phantom5c(npix):
         
     im1 = sstar(npix, nstars=32)
@@ -81,10 +78,8 @@ def phantom5c(npix):
     
     return(im1, im2, im3, im4, im5)
 
-
 def load_example_patterns():
     
-
     fn = '%s\examples\patterns\patterns.h5' %(ndtomopath())
 
     with h5py.File(fn, 'r') as f:
