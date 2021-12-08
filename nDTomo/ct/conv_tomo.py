@@ -58,6 +58,22 @@ def fbpvol(svol, scan = 180):
     return(vol)
 
 
+def create_ramp_filter(s, ang):
+    N1 = s.shape[1];
+    freqs = np.linspace(-1, 1, N1);
+    myFilter = np.abs( freqs );
+    myFilter = np.tile(myFilter, (len(ang), 1));
+    return(myFilter)
+
+def ramp(detector_width):
+    filter_array = np.zeros(detector_width)
+    frequency_spacing = 0.5 / (detector_width / 2.0)
+    for i in range(0, filter_array.shape[0]):
+        if i <= filter_array.shape[0] / 2.0:
+            filter_array[i] = i * frequency_spacing
+        elif i > filter_array.shape[0] / 2.0:
+            filter_array[i] = 0.5 - (((i - filter_array.shape[0] / 2.0)) * frequency_spacing)
+    return filter_array.astype(np.float32)
 
 def paralleltomo(N, theta, p, w):
     

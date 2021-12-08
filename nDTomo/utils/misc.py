@@ -6,7 +6,7 @@ Misc tools for nDTomo
 """
 
 import numpy as np
-import pkgutil
+import pkgutil, h5py
 
 def ndtomopath():
     
@@ -100,7 +100,19 @@ def cirmask(im, npx=0):
     return(im)
 
 
-
+def h5read(filename):
+    df = {}
+    with h5py.File(filename, 'r') as f:
+        # List all groups
+        print("Keys: %s" % f.keys())
+        a_group_key = list(f.keys())
+    
+        # Get the data
+        for key in a_group_key:
+            
+            df[key] = np.array(list(f[key][()]))
+            
+    return(df)
 
 
 
