@@ -14,10 +14,10 @@ import periodictable as elements
 
 # import periodictable as elements
 '''Import DiffracTools code'''
-import CSReader
-import ReflectionsGeneration as rf
-from libraries import SpaceGroups as sglib
-from libraries import atmdata
+from nDTomo.sim.xrd1d import CSReader
+import nDTomo.sim.xrd1d.ReflectionsGeneration as rf
+from nDTomo.sim.xrd1d.libraries import SpaceGroups as sglib
+from nDTomo.sim.xrd1d.libraries import atmdata
 
 sind = lambda x: np.sin(x*np.pi/180.)
 asind = lambda x: 180.*np.arcsin(x)/np.pi

@@ -11,6 +11,9 @@ import numpy as np
 import os, sys, glob, time, h5py
 import hyperspy.api as hs
 from skimage.transform import iradon, radon
+import h5py
+from nDTomo.utils.misc import ndtomopath
+
 
 '''
 Need to convert the function to class
@@ -77,3 +80,49 @@ def phantom5c(npix):
          e1p = [-0.2, 0.0], e1r=0.1, e2p = [0.2, 0.0], e2r=0.1 )
     
     return(im1, im2, im3, im4, im5)
+
+
+    
+    
+
+def load_patterns():
+    
+
+    fn = '%s\examples\patterns\patterns.h5' %(ndtomopath())
+
+    with h5py.File(fn, 'r') as f:
+        
+        print(f.keys())
+        
+        dpAl = np.array(f['Al'][:])
+        dpCu = np.array(f['Cu'][:])
+        dpFe = np.array(f['Fe'][:])
+        dpPt = np.array(f['Pt'][:])
+        dpZn = np.array(f['Zn'][:])
+        
+        tth = np.array(f['tth'][:])
+        q = np.array(f['q'][:])
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
