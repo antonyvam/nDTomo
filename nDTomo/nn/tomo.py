@@ -5,6 +5,10 @@ Tensorflow functions for tomography
 
 import tensorflow as tf
 import tensorflow_addons as tfa
+import math as m
+
+def tomo_transf(im):
+    return(tf.transpose(tf.reshape(im, (im.shape[0], im.shape[1], 1, 1)), (2, 0, 1, 3)))
 
 def tomo_radon(rec, ang, norm = False):
     nang = ang.shape[0]
@@ -24,10 +28,11 @@ def tomo_bp(sinoi, ang, norm = False):
     prj = tf.tile(prj, [d_tmp[2], 1, 1, 1])
     prj = tf.transpose(prj, [1, 0, 2, 3])
     prj = tfa.image.rotate(prj, ang, interpolation = 'bilinear')
-    bp = tf.reduce_mean(prj, 0)
+    # bp = tf.reduce_mean(prj, 0)
+    bp = tf.reduce_sum(prj, 0)* tf.constant(m.pi) / (2 * len(ang))
     if norm == True:
         bp = tf.image.per_image_standardization(bp)
-    bp = tf.reshape(bp, [1, bp.shape[0], bp.shape[1], bp.shape[2]])
+    bp = tf.reshape(bp, [1, bp.shape[0], bp.shape[1], 1])
     return bp
 
 def tomo_fbp(sinogram, ang):
@@ -56,18 +61,8 @@ def filter_sino(s, flt):
     filtered_sinogram = tf.math.real(filtered_sino)
     return(filtered_sinogram)
 
-def backpaint(filtered_sinogram, ang):
 
-    d_tmp = filtered_sinogram.shape
-    prj = tf.reshape(filtered_sinogram, [1, d_tmp[0], d_tmp[1], 1])
-    prj = tf.tile(prj, [d_tmp[1], 1, 1, 1])
-    prj = tf.transpose(prj, [1, 0, 2, 3])
-    prj = tfa.image.rotate(prj, ang, interpolation='bilinear')
-    bp = tf.reduce_sum(prj, 0)* np.pi / (2 * len(ang))
-    bp = tf.reshape(bp, [1, bp.shape[0], bp.shape[1], 1])
-    return(bp)
-
-def mask_circle(img, npix):    
+def mask_circle(img, npix=0):    
     # Mask everything outside the reconstruction circle
     sz = tf.math.floor(float(img.shape[1]))
     x = tf.range(0,sz)

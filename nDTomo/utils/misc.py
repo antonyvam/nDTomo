@@ -6,8 +6,15 @@ Misc tools for nDTomo
 """
 
 import numpy as np
+import matplotlib.pyplot as plt
 import pkgutil, h5py
 
+def showim(im):
+    plt.figure(1);plt.clf()
+    plt.imshow(im, cmap = 'jet')
+    plt.colorbar()
+    plt.show()
+    
 def ndtomopath():
     
     '''
