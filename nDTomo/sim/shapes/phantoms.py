@@ -67,6 +67,19 @@ def face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], t
     
     return(im)
     
+def phantom1c(npix):
+        
+    im1 = sstar(npix, nstars=32)
+    im2 = dcircles(npix, n_sizes=8, size_ratio=0.75, n_shuffles=2)
+    im3 = ssquares(npix, count=16, angle=15/360*2*np.pi, gap=0.05)
+    im4 = tri(npix, p1 = [-0.3, -0.2], p2 = [0.0, -0.3], p3 = [0.3, -0.2])
+    im5 = face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], tp3 = [0.3, -0.2],
+         e1p = [-0.2, 0.0], e1r=0.1, e2p = [0.2, 0.0], e2r=0.1 )
+    
+    im = im1 + im2 + im3 + im4 + im5
+    im = im/np.max(im)
+    return(im)
+
 def phantom5c(npix):
         
     im1 = sstar(npix, nstars=32)
