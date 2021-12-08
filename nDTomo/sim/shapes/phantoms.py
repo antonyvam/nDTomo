@@ -82,10 +82,7 @@ def phantom5c(npix):
     return(im1, im2, im3, im4, im5)
 
 
-    
-    
-
-def load_patterns():
+def load_example_patterns():
     
 
     fn = '%s\examples\patterns\patterns.h5' %(ndtomopath())
@@ -102,6 +99,110 @@ def load_patterns():
         
         tth = np.array(f['tth'][:])
         q = np.array(f['q'][:])
+
+    return(dpAl, dpCu, dpFe, dpPt, dpZn, tth, q)
+
+def phantom5c_microct(npix):
+    
+    
+    imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
+    dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
+    
+    vol_Al = np.tile(dpAl, (npix, npix, 1))
+    vol_Cu = np.tile(dpCu, (npix, npix, 1))
+    vol_Fe = np.tile(dpFe, (npix, npix, 1))
+    vol_Pt = np.tile(dpPt, (npix, npix, 1))
+    vol_Zn = np.tile(dpZn, (npix, npix, 1))
+    
+    microct =  np.zeros_like(vol_Al)
+    
+    for ii in range(vol_Al.shape[2]):
+        
+        im = (vol_Al[:,:,ii]*imAl +  vol_Cu[:,:,ii]*imCu + vol_Fe[:,:,ii]*imFe
+              + vol_Pt[:,:,ii]*imPt + vol_Zn[:,:,ii]*imZn)
+        
+        microct[:,:,ii] = im/np.max(im)    
+
+    return(microct)
+
+def phantom5c_xrdct(npix):
+    
+    
+    imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
+    dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
+    
+    vol_Al = np.tile(dpAl, (npix, npix, 1))
+    vol_Cu = np.tile(dpCu, (npix, npix, 1))
+    vol_Fe = np.tile(dpFe, (npix, npix, 1))
+    vol_Pt = np.tile(dpPt, (npix, npix, 1))
+    vol_Zn = np.tile(dpZn, (npix, npix, 1))
+    
+    xrdct =  np.zeros_like(vol_Al)
+    
+    for ii in range(xrdct.shape[2]):
+        
+        xrdct[:,:,ii] = (vol_Al[:,:,ii]*imAl +  vol_Cu[:,:,ii]*imCu + vol_Fe[:,:,ii]*imFe
+              + vol_Pt[:,:,ii]*imPt + vol_Zn[:,:,ii]*imZn)
+        
+    return(xrdct)
+
+def load_example_xanes():
+    
+
+    fn = '%s\examples\patterns\AllSpectra.h5' %(ndtomopath())
+
+    with h5py.File(fn, 'r') as f:
+        
+        print(f.keys())
+        
+        sNMC = np.array(f['NMC'][:])
+        sNi2O3 = np.array(f['Ni2O3'][:])
+        sNiOH2 = np.array(f['NiOH2'][:])
+        sNiS = np.array(f['NiS'][:])
+        sNifoil = np.array(f['Nifoil'][:])
+    
+        E = np.array(f['energy'][:])
+
+    return(sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E)
+
+def phantom5c_xanesct(npix):
+    
+    
+    imNMC, imNi2O3, imNiOH2, imNiS, imNifoil = phantom5c(npix)
+    sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E = load_example_xanes()
+    
+    vol_NMC = np.tile(dpAl, (npix, npix, 1))
+    vol_Ni2O3 = np.tile(dpCu, (npix, npix, 1))
+    vol_NiOH2 = np.tile(dpFe, (npix, npix, 1))
+    vol_NiS = np.tile(dpPt, (npix, npix, 1))
+    vol_Nifoil = np.tile(dpZn, (npix, npix, 1))
+    
+    xanesct =  np.zeros_like(vol_Al)
+    
+    for ii in range(xanesct.shape[2]):
+        
+        xanesct[:,:,ii] = (vol_NMC[:,:,ii]*imNMC +  vol_Ni2O3[:,:,ii]*imNi2O3 + vol_NiOH2[:,:,ii]*imNiOH2
+              + vol_NiS[:,:,ii]*imNiS + vol_Nifoil[:,:,ii]*imNifoil)
+        
+    return(xanesct)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
