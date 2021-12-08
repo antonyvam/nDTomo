@@ -274,17 +274,20 @@ def DnCNN(nt):
     
     inpt = Input(shape=(nt,nt,1))
     # 1st layer, Conv+relu
-    x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='same')(inpt)
+    x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='valid')(inpt)
     x = Activation('relu')(x)
     # 15 layers, Conv+BN+relu
     for i in range(15):
-        x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='same')(x)
+        x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='valid')(x)
         x = BatchNormalization(axis=-1, epsilon=1e-3)(x)
         x = Activation('relu')(x)   
     # last layer, Conv
-    x = Conv2D(filters=1, kernel_size=(3,3), strides=(1,1), padding='same')(x)
-    x = Subtract()([inpt, x])   # input - noise
-    model = Model(inputs=inpt, outputs=x)
+    x = Conv2D(filters=1, kernel_size=(3,3), strides=(1,1), padding='valid')(x)
+    # x = Subtract()([inpt, x])   # input - noise
+    
+    # added = Add()([inpt, x])
+    
+    model = Model(inpt, x)
     
     return model
 
@@ -341,6 +344,7 @@ def unet2D_small(ntr, skip = False, pad='same'):
             kernel_initializer = 'he_normal')(conv1)
     conv1 = Conv2D(64, 3, activation = 'relu', padding = pad, 
             kernel_initializer = 'he_normal')(conv1)
+    conv1 = BatchNormalization()(conv1)
     conv1 = SpatialDropout2D(0.1)(conv1)
 
     conv2 = Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
@@ -349,6 +353,7 @@ def unet2D_small(ntr, skip = False, pad='same'):
             kernel_initializer = 'he_normal')(conv2)
     conv2 = Conv2D(64, 3, activation = 'relu', padding = pad, 
             kernel_initializer = 'he_normal')(conv2)
+    conv2 = BatchNormalization()(conv2)
     conv2 = SpatialDropout2D(0.1)(conv2)
 
     conv3 = Conv2D(64, 3, strides = 2, activation = 'relu', padding = pad, 
@@ -357,6 +362,7 @@ def unet2D_small(ntr, skip = False, pad='same'):
             kernel_initializer = 'he_normal')(conv3)
     conv3 = Conv2D(64, 3, activation = 'relu', padding = pad, 
             kernel_initializer = 'he_normal')(conv3)
+    conv3 = BatchNormalization()(conv3)
     conv3 = SpatialDropout2D(0.1)(conv3)
 
     conv4 = Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
@@ -365,6 +371,7 @@ def unet2D_small(ntr, skip = False, pad='same'):
             kernel_initializer = 'he_normal')(conv4)
     conv4 = Conv2D(64, 3, activation = 'relu', padding = pad, 
             kernel_initializer = 'he_normal')(conv4)
+    conv4 = BatchNormalization()(conv4)
     conv4 = SpatialDropout2D(0.1)(conv4)
 
     conv5 = Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
@@ -373,6 +380,7 @@ def unet2D_small(ntr, skip = False, pad='same'):
             kernel_initializer = 'he_normal')(conv5)
     conv5 = Conv2D(64, 3, activation = 'relu', padding = pad, 
             kernel_initializer = 'he_normal')(conv5)
+    conv5 = BatchNormalization()(conv5)
     conv5 = SpatialDropout2D(0.1)(conv5)
 
     up6 = Conv2D(64, 2, activation = 'relu', padding = pad, 
@@ -387,6 +395,7 @@ def unet2D_small(ntr, skip = False, pad='same'):
             kernel_initializer = 'he_normal')(merge6)
     conv6 = Conv2D(64, 3, activation = 'relu', padding = pad, 
             kernel_initializer = 'he_normal')(conv6)
+    conv6 = BatchNormalization()(conv6)
     conv6 = SpatialDropout2D(0.1)(conv6)
 
     up7 = Conv2D(64, 2, activation = 'relu', padding = pad, 
@@ -401,6 +410,7 @@ def unet2D_small(ntr, skip = False, pad='same'):
             kernel_initializer = 'he_normal')(merge7)
     conv7 = Conv2D(64, 3, activation = 'relu', padding = pad, 
             kernel_initializer = 'he_normal')(conv7)
+    conv7 = BatchNormalization()(conv7)
     conv7 = SpatialDropout2D(0.1)(conv7)
 
     up8 = Conv2D(64, 2, activation = 'relu', padding = pad, 
@@ -415,6 +425,7 @@ def unet2D_small(ntr, skip = False, pad='same'):
             kernel_initializer = 'he_normal')(merge8)
     conv8 = Conv2D(64, 3, activation = 'relu', padding = pad, 
             kernel_initializer = 'he_normal')(conv8)
+    conv8 = BatchNormalization()(conv8)
     conv8 = SpatialDropout2D(0.1)(conv8)
 
     up9 = Conv2D(64, 2, activation = 'relu', padding = pad, 
@@ -431,6 +442,7 @@ def unet2D_small(ntr, skip = False, pad='same'):
             kernel_initializer = 'he_normal')(conv9)
     conv9 = Conv2D(32, 3, activation = 'relu', padding = pad, 
             kernel_initializer = 'he_normal')(conv9)
+    conv9 = BatchNormalization()(conv9)
     conv9 = SpatialDropout2D(0.1)(conv9)
 
     conv10 = Conv2D(1, 1, activation = 'linear')(conv9)

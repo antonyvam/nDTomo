@@ -28,8 +28,8 @@ def tomo_bp(sinoi, ang, norm = False):
     prj = tf.tile(prj, [d_tmp[2], 1, 1, 1])
     prj = tf.transpose(prj, [1, 0, 2, 3])
     prj = tfa.image.rotate(prj, ang, interpolation = 'bilinear')
-    # bp = tf.reduce_mean(prj, 0)
-    bp = tf.reduce_sum(prj, 0)* tf.constant(m.pi) / (2 * len(ang))
+    bp = tf.reduce_mean(prj, 0)
+    # bp = tf.reduce_sum(prj, 0)* tf.constant(m.pi) / (2 * len(ang))
     if norm == True:
         bp = tf.image.per_image_standardization(bp)
     bp = tf.reshape(bp, [1, bp.shape[0], bp.shape[1], 1])
