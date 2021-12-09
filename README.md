@@ -11,12 +11,14 @@ To install from git:
 ```pip install git+https://github.com/antonyvam/nDTomo.git```
 
 For development work:
+
 ```
 git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
 pip install -e .
 ```
 
 For a user at the Diamond Light Source:
+
 ```
 git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
 module load python/3
@@ -27,8 +29,10 @@ Extra packages to be installed
 ------------------------------
 
 Tomography:
+
 ```conda install -c astra-toolbox/label/dev astra-toolbox```
 
 NeuralNets:
+
 ```pip install tensorflow==2.7 tensorflow-addons==0.15```
 
