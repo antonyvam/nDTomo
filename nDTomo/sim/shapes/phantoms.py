@@ -179,13 +179,13 @@ def phantom5c_xanesct(npix):
     imNMC, imNi2O3, imNiOH2, imNiS, imNifoil = phantom5c(npix)
     sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E = load_example_xanes()
     
-    vol_NMC = np.tile(dpAl, (npix, npix, 1))
-    vol_Ni2O3 = np.tile(dpCu, (npix, npix, 1))
-    vol_NiOH2 = np.tile(dpFe, (npix, npix, 1))
-    vol_NiS = np.tile(dpPt, (npix, npix, 1))
-    vol_Nifoil = np.tile(dpZn, (npix, npix, 1))
+    vol_NMC = np.tile(sNMC, (npix, npix, 1))
+    vol_Ni2O3 = np.tile(sNi2O3, (npix, npix, 1))
+    vol_NiOH2 = np.tile(sNiOH2, (npix, npix, 1))
+    vol_NiS = np.tile(sNiS, (npix, npix, 1))
+    vol_Nifoil = np.tile(sNifoil, (npix, npix, 1))
     
-    xanesct =  np.zeros_like(vol_Al)
+    xanesct =  np.zeros_like(vol_NMC)
     
     for ii in range(xanesct.shape[2]):
         
