@@ -6,6 +6,9 @@ Full documentation provided at: https://ndtomo.readthedocs.io
 
 Tested with python v3.8
 
+To install from git:
+ - `pip install git+https://github.com/antonyvam/nDTomo.git`
+ 
 Extra packages to be installed:
 
 conda install -c astra-toolbox/label/dev astra-toolbox
