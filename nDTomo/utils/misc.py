@@ -22,7 +22,7 @@ def ndtomopath():
     '''
     
     package = pkgutil.get_loader('nDTomo')
-    ndtomo_path = package.path
+    ndtomo_path = package.get_filename('nDTomo')
     ndtomo_path = ndtomo_path.split('__init__.py')[0]
             
     return(ndtomo_path)
