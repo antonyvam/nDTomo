@@ -7,6 +7,7 @@ Full documentation provided at: https://ndtomo.readthedocs.io
 Tested with python v3.8
 
 To install from git:
+
 ```pip install git+https://github.com/antonyvam/nDTomo.git```
 
 For development work:
