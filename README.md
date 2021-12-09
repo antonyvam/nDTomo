@@ -15,7 +15,15 @@ git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
 pip install -e .
 ```
 
-Extra packages to be installed:
+For a user at the Diamond Light Source:
+```
+git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
+module load python/3
+python setup.py install --user
+```
+
+Extra packages to be installed
+------------------------------
 
 Tomography: 
  `conda install -c astra-toolbox/label/dev astra-toolbox`
