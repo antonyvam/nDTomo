@@ -4,7 +4,10 @@ The nDTomo software suite contains GUIs for the simulation, visualisation and an
 
 Full documentation provided at: https://ndtomo.readthedocs.io
 
-Tested with python v3.8
+Installation instructions
+-------------------------
+The nDTomo is currently being developed using python v3.8
+In order to use all features, one has to use anaconda (e.g. for astra-toolbox).
 
 To install from git:
 
@@ -25,8 +28,8 @@ module load python/3
 python setup.py install --user
 ```
 
-Extra packages to be installed
-------------------------------
+Extra packages to be installed (not essential)
+----------------------------------------------
 
 Tomography:
 
