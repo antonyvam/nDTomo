@@ -7,7 +7,7 @@ Full documentation provided at: https://ndtomo.readthedocs.io
 Tested with python v3.8
 
 To install from git:
-`pip install git+https://github.com/antonyvam/nDTomo.git`
+```pip install git+https://github.com/antonyvam/nDTomo.git```
 
 For development work:
 ```
@@ -26,8 +26,8 @@ Extra packages to be installed
 ------------------------------
 
 Tomography:
-`conda install -c astra-toolbox/label/dev astra-toolbox`
+```conda install -c astra-toolbox/label/dev astra-toolbox```
 
 NeuralNets:
-`pip install tensorflow==2.7 tensorflow-addons==0.15`
+```pip install tensorflow==2.7 tensorflow-addons==0.15```
 
