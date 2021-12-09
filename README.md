@@ -7,6 +7,7 @@ Full documentation provided at: https://ndtomo.readthedocs.io
 Installation instructions
 -------------------------
 The nDTomo is currently being developed using python v3.8
+
 In order to use all features, one has to use anaconda (e.g. for astra-toolbox).
 
 To install from git:
