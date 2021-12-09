@@ -67,6 +67,19 @@ def face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], t
     
     return(im)
     
+def phantom1c(npix):
+        
+    im1 = sstar(npix, nstars=32)
+    im2 = dcircles(npix, n_sizes=8, size_ratio=0.75, n_shuffles=2)
+    im3 = ssquares(npix, count=16, angle=15/360*2*np.pi, gap=0.05)
+    im4 = tri(npix, p1 = [-0.3, -0.2], p2 = [0.0, -0.3], p3 = [0.3, -0.2])
+    im5 = face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], tp3 = [0.3, -0.2],
+         e1p = [-0.2, 0.0], e1r=0.1, e2p = [0.2, 0.0], e2r=0.1 )
+    
+    im = im1 + im2 + im3 + im4 + im5
+    im = im/np.max(im)
+    return(im)
+
 def phantom5c(npix):
         
     im1 = sstar(npix, nstars=32)
@@ -166,13 +179,13 @@ def phantom5c_xanesct(npix):
     imNMC, imNi2O3, imNiOH2, imNiS, imNifoil = phantom5c(npix)
     sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E = load_example_xanes()
     
-    vol_NMC = np.tile(dpAl, (npix, npix, 1))
-    vol_Ni2O3 = np.tile(dpCu, (npix, npix, 1))
-    vol_NiOH2 = np.tile(dpFe, (npix, npix, 1))
-    vol_NiS = np.tile(dpPt, (npix, npix, 1))
-    vol_Nifoil = np.tile(dpZn, (npix, npix, 1))
+    vol_NMC = np.tile(sNMC, (npix, npix, 1))
+    vol_Ni2O3 = np.tile(sNi2O3, (npix, npix, 1))
+    vol_NiOH2 = np.tile(sNiOH2, (npix, npix, 1))
+    vol_NiS = np.tile(sNiS, (npix, npix, 1))
+    vol_Nifoil = np.tile(sNifoil, (npix, npix, 1))
     
-    xanesct =  np.zeros_like(vol_Al)
+    xanesct =  np.zeros_like(vol_NMC)
     
     for ii in range(xanesct.shape[2]):
         

@@ -5,8 +5,16 @@ Misc tools for nDTomo
 @author: Antony
 """
 
-import pkgutil
+import numpy as np
+import matplotlib.pyplot as plt
+import pkgutil, h5py
 
+def showim(im):
+    plt.figure(1);plt.clf()
+    plt.imshow(im, cmap = 'jet')
+    plt.colorbar()
+    plt.show()
+    
 def ndtomopath():
     
     '''
@@ -14,7 +22,7 @@ def ndtomopath():
     '''
     
     package = pkgutil.get_loader('nDTomo')
-    ndtomo_path = package.path
+    ndtomo_path = package.get_filename('nDTomo')
     ndtomo_path = ndtomo_path.split('__init__.py')[0]
             
     return(ndtomo_path)
@@ -72,10 +80,46 @@ def addpnoise3D(vol, ct):
     return(vol)
 
 
+def cirmask(im, npx=0):
+    
+    """
+    
+    Apply a circular mask to the image/volume
+    
+    """
+    
+    sz = np.floor(im.shape[0])
+    x = np.arange(0,sz)
+    x = np.tile(x,(int(sz),1))
+    y = np.swapaxes(x,0,1)
+    
+    xc = np.round(sz/2)
+    yc = np.round(sz/2)
+    
+    r = np.sqrt(((x-xc)**2 + (y-yc)**2));
+    
+    dim =  im.shape
+    if len(dim)==2:
+        im = np.where(r>np.floor(sz/2) - npx,0,im)
+    elif len(dim)==3:
+        for ii in range(0,dim[2]):
+            im[:,:,ii] = np.where(r>np.floor(sz/2),0,im[:,:,ii])
+    return(im)
 
 
-
-
+def h5read(filename):
+    df = {}
+    with h5py.File(filename, 'r') as f:
+        # List all groups
+        print("Keys: %s" % f.keys())
+        a_group_key = list(f.keys())
+    
+        # Get the data
+        for key in a_group_key:
+            
+            df[key] = np.array(list(f[key][()]))
+            
+    return(df)
 
 
 

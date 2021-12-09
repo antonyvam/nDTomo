@@ -10,10 +10,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import sparse
-sys.path.insert(0, "D:\\Dropbox (Personal)\\Python\\")
-sys.path.insert(0, "C:\\Users\\Antony\\Dropbox (Personal)\\")
-
-import paralleltomo
+import nDTomo.ct.paralleltomo
 
 
 #%%

@@ -11,8 +11,17 @@ from sklearn.datasets import load_digits
 from sklearn.decomposition import PCA, NMF, FastICA, LatentDirichletAllocation
 from sklearn.cluster import KMeans, SpectralClustering, DBSCAN, AgglomerativeClustering
 import h5py
+import hyperspy.api as hs
 
+from nDTomo.sim.shapes.phantoms import phantom5c_xanesct, phantom5c_xrdct
 
+#%%
+
+npix = 200
+chemct = phantom5c_xrdct(npix)
+
+hs.signals.Signal2D(np.transpose(chemct, (2,1,0))).plot()
+ 
 #%% Load the dataset
 
 fn = 'data\Phantom_xrdct.h5'
