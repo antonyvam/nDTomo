@@ -25,7 +25,9 @@ python setup.py install --user
 Extra packages to be installed
 ------------------------------
 
-Tomography: 
- `conda install -c astra-toolbox/label/dev astra-toolbox`
-NeuralNets: 
- `pip install tensorflow==2.7 tensorflow-addons==0.15`
+Tomography:
+`conda install -c astra-toolbox/label/dev astra-toolbox`
+
+NeuralNets:
+`pip install tensorflow==2.7 tensorflow-addons==0.15`
+
