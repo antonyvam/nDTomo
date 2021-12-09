@@ -2,10 +2,15 @@
 build
 dist
 doc/build
+docs/build
 *.so
 *.pyd
 *.pyc
 MANIFEST
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
 
 # Data
 data
@@ -17,6 +22,7 @@ data
 /build
 /eggs
 /develop-eggs
+/wheels
 /.installed.cfg
 
 # Cython generated files
@@ -42,3 +48,7 @@ tmp*
 *.xml
 *.db
 *.tar.bz2
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
