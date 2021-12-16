@@ -23,14 +23,18 @@ def tomo_radon(rec, ang, norm = False):
     sino = tf.reshape(sino, [sino.shape[0], sino.shape[1], sino.shape[2], 1])
     return sino
 
-def tomo_bp(sinoi, ang, norm = False):
+def tomo_bp(sinoi, ang, projmean = False, norm = False):
     d_tmp = sinoi.shape
     prj = tf.reshape(sinoi, [1, d_tmp[1], d_tmp[2], 1])
     prj = tf.tile(prj, [d_tmp[2], 1, 1, 1])
     prj = tf.transpose(prj, [1, 0, 2, 3])
     prj = tfa.image.rotate(prj, ang, interpolation = 'bilinear')
-    bp = tf.reduce_mean(prj, 0)
-    # bp = tf.reduce_sum(prj, 0)* tf.constant(m.pi) / (2 * len(ang))
+    
+    if projmean == True:
+        bp = tf.reduce_mean(prj, 0)
+    else:
+        bp = tf.reduce_sum(prj, 0)* tf.constant(m.pi) / (2 * len(ang))
+    
     if norm == True:
         bp = tf.image.per_image_standardization(bp)
     bp = tf.reshape(bp, [1, bp.shape[0], bp.shape[1], 1])
@@ -51,6 +55,13 @@ def tomo_fbp(sinogram, ang):
     rec = tomo_bp(filtered_sinogram, ang)
 
     return(rec)
+
+def create_ramp_filter(s, ang):
+    N1 = s.shape[1]
+    freqs = np.linspace(-1, 1, N1)
+    myFilter = np.abs( freqs )
+    myFilter = np.tile(myFilter, (len(ang), 1))
+    return(myFilter)
 
 def filter_sino(s, flt):
 
