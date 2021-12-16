@@ -6,6 +6,7 @@ Tensorflow functions for tomography
 import tensorflow as tf
 import tensorflow_addons as tfa
 import math as m
+import numpy as np
 
 def tomo_transf(im):
     return(tf.transpose(tf.reshape(im, (im.shape[0], im.shape[1], 1, 1)), (2, 0, 1, 3)))

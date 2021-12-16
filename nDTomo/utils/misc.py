@@ -29,13 +29,13 @@ def ndtomopath():
 
 def addpnoise1D(sp, ct):
     
-    mi = np.min(im)
+    mi = np.min(sp)
     
-    if sp < 0:
+    if mi < 0:
         
         sp = sp - sp + np.finfo(np.float32).eps
         
-    elif sp == 0:
+    elif mi == 0:
         
         sp = sp + np.finfo(np.float32).eps
     
