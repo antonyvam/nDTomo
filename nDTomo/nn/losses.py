@@ -28,8 +28,8 @@ def dice_coef(y_true, y_pred, smooth=1):
          =  2*sum(|A*B|)/(sum(A^2)+sum(B^2))
     ref: https://arxiv.org/pdf/1606.04797v1.pdf
     """
-    intersection = tf.keras.sum(K.abs(y_true * y_pred), axis=-1)
-    return (2. * intersection + smooth) / (tf.keras.sum(tf.keras.square(y_true),-1) + tf.keras.sum(K.square(y_pred),-1) + smooth)
+    intersection = tf.keras.sum(tf.keras.abs(y_true * y_pred), axis=-1)
+    return (2. * intersection + smooth) / (tf.keras.sum(tf.keras.square(y_true),-1) + tf.keras.sum(tf.keras.square(y_pred),-1) + smooth)
 
 def dice_coef_loss(y_true, y_pred):
     return 1-dice_coef(y_true, y_pred)
