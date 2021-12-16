@@ -23,7 +23,7 @@ def radonvol(vol, nproj, scan = 180):
     
     for ii in range(s.shape[2]):
         
-        s[:,:,ii] = radon(xrdct[:,:,ii], theta)
+        s[:,:,ii] = radon(vol[:,:,ii], theta)
     
         print(ii)           
         
