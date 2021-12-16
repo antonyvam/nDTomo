@@ -40,10 +40,26 @@ def tomo_bp(sinoi, ang, projmean = False, norm = False):
     bp = tf.reshape(bp, [1, bp.shape[0], bp.shape[1], 1])
     return bp
 
+def ramp_tf(detector_width):
+    
+    '''
+    Creation of ramp filter
+    Need to do this in tf
+    '''
+    
+    filter_array = np.zeros(detector_width)
+    frequency_spacing = 0.5 / (detector_width / 2.0)
+    for i in range(0, filter_array.shape[0]):
+        if i <= filter_array.shape[0] / 2.0:
+            filter_array[i] = i * frequency_spacing
+        elif i > filter_array.shape[0] / 2.0:
+            filter_array[i] = 0.5 - (((i - filter_array.shape[0] / 2.0)) * frequency_spacing)
+    return(convert(filter_array.astype(np.float32)))
+
 def tomo_fbp(sinogram, ang):
     d_tmp = sinogram.shape
     soi = tf.reshape(sinogram, [d_tmp[1], d_tmp[2]])
-    ft = np.array([ramp(d_tmp[2])])
+    ft = np.array([ramp_tf(d_tmp[2])])
     ft = tf.reshape(ft, [1, d_tmp[2]])
     ft = tf.tile(ft, [d_tmp[1], 1])
 
