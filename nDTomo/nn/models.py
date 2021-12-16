@@ -14,7 +14,7 @@ import tensorflow_addons as tfa
 from tensorflow_addons.layers import WeightNormalization
 from tensorflow.keras.models import Sequential, Model
 from tensorflow.keras.optimizers import SGD, Adam
-from tensorflow.keras.layers import Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
+from tensorflow.keras.layers import Conv1D, UpSampling1D, Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
 from tensorflow.keras import backend as K
 from tensorflow.keras.callbacks import EarlyStopping
 
