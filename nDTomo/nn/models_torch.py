@@ -140,7 +140,7 @@ class Autoencoder(nn.Module):
                                 nn.ReLU(),
                                 )
             
-        self.conv2d_dual = nn.Sequential(nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1, bias=False),
+        self.conv2d_dual = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.BatchNorm2d(64),
                                     nn.ReLU(),
                                     nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
