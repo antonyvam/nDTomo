@@ -13,10 +13,21 @@ import hyperspy.api as hs
 from skimage.transform import iradon, radon
 import h5py
 from nDTomo.utils.misc import ndtomopath
+from skimage.data import shepp_logan_phantom
 
 '''
 Need to convert the function to class
 '''
+
+def SheppLogan(npix):
+
+    '''
+    Create a Shepp Logan phantom using skimage
+    '''
+
+    im = skimage.data.shepp_logan_phantom()
+    im = skimage.transform.rescale(im, scale=npix./im.shape[0], mode='reflect')
+    return(im)
 
 def sstar(npix, nstars=32):
     phase = SiemensStar(nstars)
