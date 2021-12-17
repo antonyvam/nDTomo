@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec  7 15:44:31 2021
+Create phantoms (2D/3D) for image processing and analysis experiments
 
-@author: Antony
+@author: Antony Vamvakeros
 """
 
+from nDTomo.utils.misc import ndtomopath
 from xdesign import Mesh, HyperbolicConcentric,SiemensStar, Circle, Triangle, DynamicRange, DogaCircles, Phantom, Polygon, Point, SimpleMaterial, plot_phantom, discrete_phantom, SlantedSquares
 import matplotlib.pyplot as plt
 import numpy as np
 import os, sys, glob, time, h5py
+from skimage.data import shepp_logan_phantom
+from skimage.transform import rescale
 import hyperspy.api as hs
-import skimage
-import h5py
-from nDTomo.utils.misc import ndtomopath
 
 '''
 Need to convert the function to class
@@ -24,8 +24,8 @@ def SheppLogan(npix):
     Create a Shepp Logan phantom using skimage
     '''
 
-    im = skimage.data.shepp_logan_phantom()
-    im = skimage.transform.rescale(im, scale=npix/im.shape[0], mode='reflect')
+    im = shepp_logan_phantom()
+    im = rescale(im, scale=npix/im.shape[0], mode='reflect')
     return(im)
 
 def sstar(npix, nstars=32):
