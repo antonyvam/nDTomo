@@ -175,7 +175,6 @@ class Autoencoder(nn.Module):
 
         x6 = self.up(x5)
         x6 = self.crop(x6, x4)
-        x6 = torch.cat([x6, x4], dim=1)
         x6 = self.conv2d_dual(x6)
 
         x7 = self.up(x6)
