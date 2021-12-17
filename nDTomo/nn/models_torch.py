@@ -25,7 +25,6 @@ class UNet(nn.Module):
                                     nn.ReLU(),
                                     nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.ReLU(),
-                                    nn.BatchNorm2d(64),
                                     nn.Dropout2d(0.1))
 
         self.conv2d_down = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1, bias=False),
@@ -34,7 +33,6 @@ class UNet(nn.Module):
                                     nn.ReLU(),
                                     nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.ReLU(),
-                                    nn.BatchNorm2d(64),
                                     nn.Dropout2d(0.1))
 
         self.up = nn.Sequential(nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
@@ -44,8 +42,8 @@ class UNet(nn.Module):
                                     nn.ReLU(),
                                     nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.ReLU(),
-                                    nn.BatchNorm2d(64),
                                     nn.Dropout2d(0.1))
+                                    # nn.BatchNorm2d(64),
 
         self.out = nn.Conv2d(64, 1, kernel_size=1)
     
