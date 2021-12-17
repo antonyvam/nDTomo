@@ -67,6 +67,17 @@ def Amatrix_torch(A, gpu = True):
 
     return(Atorch, AtorchT)
 
+def Sino_torch(Atorch, im, ntr, npr):
+
+    '''
+    Prepare the image for cuda and create the sinogram using the A matrix
+    '''
+
+    imt = torch.from_numpy(im).float()
+    imt = torch.reshape(imt, (ntr*ntr , 1))
+    s = Amatrix_sino(Atorch, imt.cuda(), npr, ntr)
+
+    return(s)
 
 def Amatrix_sino(Atorch, im, npr, ntr):
 
@@ -89,8 +100,6 @@ def Amatrix_rec(AtorchT, s, ntr):
     rec = torch.reshape(rec, (ntr, ntr))
 
     return(rec)
-
-
 
 def RotMat(theta):
 
