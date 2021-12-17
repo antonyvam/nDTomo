@@ -10,6 +10,7 @@ Need to debug the angles for radon/iradon
 import torch
 import torchvision.transforms.functional as TF
 from numpy import vstack
+import torch.nn.functional as F
 
 def radon_torch(img, theta, nproj):
 
@@ -88,3 +89,28 @@ def Amatrix_rec(AtorchT, s, ntr):
     rec = torch.reshape(rec, (ntr, ntr))
 
     return(rec)
+
+
+
+def RotMat(theta):
+
+    '''
+    Create 2D rotation matrix
+    '''
+
+    theta = torch.tensor(theta)
+    rotmat = torch.tensor([[torch.cos(theta), -torch.sin(theta), 0],
+                         [torch.sin(theta), torch.cos(theta), 0]])
+    return(rotmat)
+
+
+def imrotate_torch(im, theta, dtype):
+
+    '''
+    Rotate 2D image using the rotation matrix
+    '''
+
+    rot_mat = RotMat(theta)[None, ...].type(dtype).repeat(im.shape[0],1,1)
+    grid = F.affine_grid(rot_mat, im.size()).type(dtype)
+    imr = F.grid_sample(im, grid)
+    return(imr)
