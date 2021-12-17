@@ -26,7 +26,7 @@ def SheppLogan(npix):
     '''
 
     im = skimage.data.shepp_logan_phantom()
-    im = skimage.transform.rescale(im, scale=npix./im.shape[0], mode='reflect')
+    im = skimage.transform.rescale(im, scale=npix/im.shape[0], mode='reflect')
     return(im)
 
 def sstar(npix, nstars=32):
