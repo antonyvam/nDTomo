@@ -133,7 +133,7 @@ def Amatrix_sino(Atf, im, npr, ntr):
     Create sinogram using the A matrix
     '''
 
-    stf = tf.sparse.sparse_dense_matmul(Atorch, im)
+    stf = tf.sparse.sparse_dense_matmul(Atf, im)
     stf = tf.reshape(stf, (npr, ntr))
 
     return(stf)
