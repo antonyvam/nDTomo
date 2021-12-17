@@ -2,7 +2,7 @@
 """
 Tomography tools for nDTomo
 
-@author: Antony
+@author: Antony Vamvakeros
 """
 
 
