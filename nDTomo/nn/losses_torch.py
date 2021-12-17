@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 """
+Losses for pytorch
 
-@author: Antony
+@author: Antony Vamvakeros
 
 """
 #%%

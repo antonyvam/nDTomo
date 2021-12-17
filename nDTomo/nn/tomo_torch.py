@@ -3,6 +3,8 @@
 Pytorch functions for tomography
 
 Need to debug the angles for radon/iradon
+
+@author: Antony Vamvakeros
 """
 
 import torch
@@ -67,12 +69,20 @@ def Amatrix_torch(A, gpu = True):
 
 def Amatrix_sino(Atorch, im, npr, ntr):
 
+    '''
+    Create sinogram using the A matrix
+    '''
+
     stf = torch.matmul(Atorch, im)
     stf = torch.reshape(stf, (npr, ntr))
 
     return(stf)
 
 def Amatrix_rec(AtorchT, s, ntr):
+
+    '''
+    Create reconstructed image using the A matrix
+    '''
 
     rec = torch.matmul(AtorchT,s)
     rec = torch.reshape(rec, (ntr, ntr))
