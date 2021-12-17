@@ -10,10 +10,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import os, sys, glob, time, h5py
 import hyperspy.api as hs
-from skimage.transform import iradon, radon
+import skimage
 import h5py
 from nDTomo.utils.misc import ndtomopath
-from skimage.data import shepp_logan_phantom
 
 '''
 Need to convert the function to class
