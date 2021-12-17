@@ -104,7 +104,7 @@ def RotMat(theta):
     return(rotmat)
 
 
-def imrotate_torch(im, theta, dtype):
+def imrotate_torch(im, theta, dtype = torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor):
 
     '''
     Rotate 2D image using the rotation matrix
