@@ -22,46 +22,37 @@ class UNet(nn.Module):
         self.conv2d_initial = nn.Sequential(nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.BatchNorm2d(64),
                                     nn.ReLU(),
-                                    nn.Dropout2d(0.01),
                                     nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.BatchNorm2d(64),
                                     nn.ReLU(),
-                                    nn.Dropout2d(0.01),
                                     nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.BatchNorm2d(64),
                                     nn.ReLU(),
-                                    nn.Dropout2d(0.01),
                                     )
 
         self.conv2d_down = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1, bias=False),
                                     nn.BatchNorm2d(64),
                                     nn.ReLU(),
-                                    nn.Dropout2d(0.01),
                                     nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.BatchNorm2d(64),
                                     nn.ReLU(),
-                                    nn.Dropout2d(0.01),
                                     nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.BatchNorm2d(64),
                                     nn.ReLU(),
-                                    nn.Dropout2d(0.01),
                                     )
 
         self.up = nn.Sequential(nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
                                 nn.Conv2d(64, 64, kernel_size=2, stride=1, padding=1, bias=False),
                                 nn.BatchNorm2d(64),
                                 nn.ReLU(),
-                                nn.Dropout2d(0.01),
                                 )
             
         self.conv2d_dual = nn.Sequential(nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.BatchNorm2d(64),
                                     nn.ReLU(),
-                                    nn.Dropout2d(0.01),
                                     nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.BatchNorm2d(64),
                                     nn.ReLU(),
-                                    nn.Dropout2d(0.01),
                                     )
 
         self.out = nn.Conv2d(64, 1, kernel_size=1)
