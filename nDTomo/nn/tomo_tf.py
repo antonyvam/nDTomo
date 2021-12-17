@@ -107,3 +107,44 @@ def mask_circle(img, npix=0):
 def convert(arg):
     arg = tf.convert_to_tensor(arg, dtype=tf.float32)
     return arg
+
+
+def Amatrix_tf(A, gpu = True):
+
+    '''
+    Create the tf sparse A matrix and its transpose
+    This can be improved
+    '''
+
+    Acoo = A.tocoo()
+
+    values = Acoo.data
+    indices = np.vstack((Acoo.row, Acoo.col))
+
+    Atf = tf.SparseTensor(indices, Acoo.data, Acoo.shape)
+
+    ATtf = tf.sparse.transpose(Atf)
+
+    return(Atf, ATtf)
+
+def Amatrix_sino(Atf, im, npr, ntr):
+
+    '''
+    Create sinogram using the A matrix
+    '''
+
+    stf = tf.sparse.sparse_dense_matmul(Atorch, im)
+    stf = tf.reshape(stf, (npr, ntr))
+
+    return(stf)
+
+def Amatrix_rec(ATtf, s, ntr):
+
+    '''
+    Create reconstructed image using the A matrix
+    '''
+
+    rec = tf.sparse.sparse_dense_matmul(ATtf,s)
+    rec = tf.reshape(rec, (ntr, ntr))
+
+    return(rec)

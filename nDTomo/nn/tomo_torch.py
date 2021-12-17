@@ -41,7 +41,7 @@ def radon_torch(s, theta, nproj):
 def Amatrix_torch(A, gpu = True):
 
     '''
-    Create the torch sparse A matrix and its tranpose
+    Create the torch sparse A matrix and its transpose
     This can be improved
     '''
 
