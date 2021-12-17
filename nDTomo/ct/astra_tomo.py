@@ -11,6 +11,8 @@ def Amatrix_astra(ntr, ang):
 
     '''
     Create A matrix using the astra toolbox
+    Might need to delete extra stuff
+
     Be careful how you define the projection angles
     Example:
     npr = 180
@@ -23,5 +25,8 @@ def Amatrix_astra(ntr, ang):
     matrix_id = astra.projector.matrix(proj_id)
     A = astra.matrix.get(matrix_id)
     A = scipy.sparse.csr_matrix.astype(A, dtype = 'float32')
+
+    astra.projector.delete(proj_id)
+    astra.data2d.delete(matrix_id)
 
     return(A)
