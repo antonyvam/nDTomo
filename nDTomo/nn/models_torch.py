@@ -40,7 +40,9 @@ class UNet(nn.Module):
                                     nn.ReLU())
 
         self.up = nn.Sequential(nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
-                                nn.Conv2d(64, 64, kernel_size=2, stride=1, padding=1, bias=False))
+                                nn.Conv2d(64, 64, kernel_size=2, stride=1, padding=1, bias=False),
+                                nn.BatchNorm2d(64),
+                                nn.ReLU())
             
         self.conv2d_dual = nn.Sequential(nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.BatchNorm2d(64),
