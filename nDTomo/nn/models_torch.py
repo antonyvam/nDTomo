@@ -110,7 +110,7 @@ class Autoencoder(nn.Module):
 
     def __init__(self):
         
-        super(UNet, self).__init__()
+        super(Autoencoder, self).__init__()
         
         self.conv2d_initial = nn.Sequential(nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1, bias=False),
                                     nn.BatchNorm2d(64),
