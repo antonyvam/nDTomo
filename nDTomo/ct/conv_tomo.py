@@ -8,7 +8,7 @@ Tomography tools for nDTomo
 
 import numpy as np
 from skimage.transform import iradon, radon
-from scipy import sparse
+from scipy import sparse, ndimage
 
 
 def radonvol(vol, nproj, scan = 180):
@@ -48,7 +48,7 @@ def fbpvol(svol, scan = 180):
     
     for ii in range(svol.shape[2]):
         
-        vol[:,:,ii] = iradon(svol[:,:,ii], theta, nt)
+        vol[:,:,ii] = iradon(svol[:,:,ii], theta, nt, circle = True)
     
         print(ii)           
         
@@ -58,7 +58,175 @@ def fbpvol(svol, scan = 180):
     return(vol)
 
 
+def proj_com(projs):
+    
+    '''
+    
+    Calculate the centre of mass of projection images (3D volume)
+    3rd dimenion is the projection angle
+    
+    @author: Dorota Matras
+    
+    '''
+
+    ver = np.zeros((projs.shape[2]))
+    
+    hor = np.zeros((projs.shape[2]))   
+    
+    
+    for aa in range(projs.shape[2]):
+    
+        com = ndimage.measurements.center_of_mass(projs[:,:,aa])
+    
+        ver[aa] = com[0]
+    
+        hor[aa] = com[1]
+    
+    of_h = hor - hor[0]
+    
+    of_v = ver - ver[0]
+    
+    return(of_h, of_v)
+
+
+def proj_align_vertical(projs, of_v):
+
+    '''
+    
+    Interpolate projection data vertically to obtain aligned projection data
+    3rd dimenion is the projection angle
+    
+    @author: Dorota Matras
+    
+    '''
+
+
+    projs_new = np.zeros_like(projs)
+         
+    
+    # First we align vertically 
+    
+    for aa in range(0,projs.shape[2]):
+    
+    
+        xold = np.arange(0, projs.shape[0])
+    
+    
+        xnew =  xold + of_v[aa]
+            
+    
+        for bb in range(0,projs.shape[1]):
+    
+    
+            projs_new[:,bb,aa] = np.interp(xnew, xold, projs[:,bb,aa])
+    
+    return(projs_new)
+    
+    
+def proj_align_horizontal(projs, of_h):
+
+    '''
+    
+    Interpolate projection data horizontally to obtain aligned projection data
+    3rd dimenion is the projection angle
+    
+    @author: Dorota Matras
+    
+    '''
+
+
+    projs_new = np.zeros_like(projs)
+         
+    
+    # First we align vertically 
+    
+    for aa in range(0,projs.shape[2]):
+    
+    
+        xold = np.arange(0, projs.shape[0])
+    
+    
+        xnew =  xold + of_h[aa]
+            
+    
+        for bb in range(0,projs.shape[0]):
+    
+    
+            projs_new[:,bb,aa] = np.interp(xnew, xold, projs[bb,:,aa])
+    
+    return(projs_new)
+     
+    
+def sino_com_align(vol, crsr = 40, interp0s = False):
+
+    '''
+    
+    Calculate centre of rotation for each sinogram in stack and align
+    Sinograms are stacked along the first dimension
+    Returns centered sinograms stacked along the third dimension
+    
+    @author: Dorota Matras
+    
+    '''
+    
+    svol = np.zeros((vol.shape[1], vol.shape[2], vol.shape[0]))
+    da = np.zeros((vol.shape[0]))  
+    
+    for z in range(vol.shape[0]):
+    
+    
+        s = vol[z,:,:]
+    
+        
+        cr =  np.arange(s.shape[0]/2 - crsr, s.shape[0]/2 + crsr, 0.1)
+    
+    
+        xold = np.arange(0,s.shape[0])
+    
+           
+        st = []; ind = [];
+    
+    
+        for kk in range(0,len(cr)):
+    
+               
+            xnew = cr[kk] + np.arange(-np.ceil(s.shape[0]/2),np.ceil(s.shape[0]/2))
+    
+            sn = np.zeros((len(xnew),s.shape[1]))
+    
+    
+            for ii in range(0,s.shape[1]):
+
+                if interp0s == True:
+    
+                    sn[:,ii] = np.interp(xnew, xold, s[:,ii], left=0 , right=0)
+                    
+                else:
+                    
+                    sn[:,ii] = np.interp(xnew, xold, s[:,ii])
+    
+    
+            re = sn[::-1,-1]    
+        #        re = sn[:,:1]
+    
+            st.append((np.std((sn[:,0]-re)))); ind.append(kk)
+        
+        m = np.argmin(st)
+       
+        da[z] = cr[m] # you can choose one value – mean from the da stack and rerun this part using cr[m] as a constant value being the median or mean in the da
+           
+        xnew = cr[m] + np.arange(-np.ceil(s.shape[0]/2),np.ceil(s.shape[0]/2))
+    
+        for ii in range(0,s.shape[1]):
+    
+            sn[:,ii] = np.interp(xnew, xold, s[:,ii])  
+    
+        svol[:,:,z] = sn
+        
+    return(svol, da)
+
 def create_ramp_filter(s, ang):
+    
     N1 = s.shape[1];
     freqs = np.linspace(-1, 1, N1);
     myFilter = np.abs( freqs );
@@ -66,6 +234,7 @@ def create_ramp_filter(s, ang):
     return(myFilter)
 
 def ramp(detector_width):
+    
     filter_array = np.zeros(detector_width)
     frequency_spacing = 0.5 / (detector_width / 2.0)
     for i in range(0, filter_array.shape[0]):
@@ -118,7 +287,11 @@ def paralleltomo(N, theta, p, w):
      June 21, 2011, DTU Informatics.
     
      Reference: A. C. Kak and M. Slaney, Principles of Computerized 
-     Tomographic Imaging, SIAM, Philadelphia, 2001.    
+     Tomographic Imaging, SIAM, Philadelphia, 2001.   
+     
+     Original Matlab code from AIR Tools
+     Adapted in python by Antony Vamvakeros
+     
     '''
     
 #    theta = 0:179
@@ -284,6 +457,10 @@ def myphantom(N):
     
              A    a     b    x0    y0    phi
         ---------------------------------
+    
+    Original Matlab code from AIR Tools
+    Adapted in python by Antony Vamvakeros
+    
     '''
     
 

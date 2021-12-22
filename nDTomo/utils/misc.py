@@ -2,7 +2,7 @@
 """
 Misc tools for nDTomo
 
-@author: Antony
+@author: Antony Vamvakeros
 """
 
 import numpy as np
@@ -120,7 +120,6 @@ def h5read(filename):
             df[key] = np.array(list(f[key][()]))
             
     return(df)
-
 
 
 
