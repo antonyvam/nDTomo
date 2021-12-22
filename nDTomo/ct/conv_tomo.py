@@ -510,7 +510,11 @@ def myphantom(N):
 
 def myphantom2(N):
     
-
+    '''
+    Original Matlab code from AIR Tools
+    Adapted in python by Antony Vamvakeros    
+    '''
+    
     X = np.zeros((N,N))
     for i in range(0, N):
         for j in range(0,N):
