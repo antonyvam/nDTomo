@@ -42,7 +42,6 @@ htmlcov/*
 *tmp
 tmp*
 
-*.edf
 *.info
 *.cfg
 *.xml
