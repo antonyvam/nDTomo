@@ -44,7 +44,8 @@ setup(
 	],
 	packages=find_packages(),
 	extras_require={
-		"tensorflow":  ["tensorflow-gpu==2.3"],
+		"tensorflow": ["tensorflow-gpu==2.7"],
+        "tensorflow-addons": ["tensorflow-addons==0.15"],
 	},
     package_data={
         '': ['*.txt', '*.rst'],
