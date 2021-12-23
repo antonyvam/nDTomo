@@ -55,11 +55,10 @@ plt.show()
 
 npt_rad = 790
 
-Imethod = pyFAI.method_registry.IntegrationMethod.select_method(dim=1, split="bbox", algo="csr", impl="opencl", target_type="gpu")
-# tth, I = ai.integrate1d(data=im, npt=npt_rad, mask=msk, unit="2th_deg", method='csr_ocl_gpu', correctSolidAngle=False, polarization_factor=0.95)
-
 
 kwargs = {"npt":npt_rad,
+          "unit":"2th_deg",
+          "mask":msk,
           "correctSolidAngle": False,
           "polarization_factor": 0.95}
 
@@ -68,10 +67,9 @@ kwargs["method"] = pyFAI.method_registry.IntegrationMethod.select_method(dim=1, 
                                                    impl="opencl",
                                                    target_type="gpu")[0]
 
-
 print(kwargs)
 
-tth, I = ai.integrate1d(data = im, unit="2th_deg", mask=msk, **kwargs)
+tth, I = ai.integrate1d(data = im, **kwargs)
 
 plt.figure(2);plt.clf();
 plt.plot(tth,I)
