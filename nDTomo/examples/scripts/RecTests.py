@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Dec 23 21:57:46 2019
 
-@author: Antony
+@author: Antony Vamvakeros
+
 """
 
 
@@ -10,7 +10,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import sparse
-import nDTomo.ct.paralleltomo
+import nDTomo.ct.paralleltomo as paralleltomo
 
 
 #%%
@@ -20,7 +20,7 @@ nT = 251
 nP = 251
 theta = np.arange(0, 180, 180/nP)
 
-A, b, x = paralleltomo.paralleltomo(nT, theta, nT, nT)
+A, b, x = paralleltomo(nT, theta, nT, nT)
 
 #x = np.reshape(x, (nT,nT))
 #x = np.transpose(x)
