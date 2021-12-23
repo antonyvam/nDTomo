@@ -29,6 +29,22 @@ module load python/3
 python setup.py install --user
 ```
 
+PyFAI
+-----
+The pyFAI version used in the nDTomo is 0.19
+
+To run with GPU, you need to install pyopencl
+
+For Windows, try installing Christoph Gohlke's repository: http://www.lfd.uci.edu/~gohlke/pythonlibs/
+
+For example: 
+
+```
+pip install pyopencl-2021.2.10-cp38-cp38-win_amd64.whl
+```
+
+PyFAI installation instructions can be found here: http://www.silx.org/doc/pyFAI/dev/operations/index.html
+
 Extra packages to be installed (not essential)
 ----------------------------------------------
 
