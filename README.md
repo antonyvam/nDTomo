@@ -52,7 +52,7 @@ Tomography:
 
 ```conda install -c astra-toolbox/label/dev astra-toolbox```
 
-NeuralNets:
+NeuralNets with Tensorflow (make sure to follow these instruction for GPU support: https://www.tensorflow.org/install/gpu):
 
 ```pip install tensorflow==2.7 tensorflow-addons==0.15```
 
