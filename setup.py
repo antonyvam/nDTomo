@@ -51,7 +51,7 @@ setup(
         '': ['*.txt', '*.rst'],
     },
     entry_points={
-        'gui_scripts': ['Integrator = nDTomo.vis.Integrator.Integrator:main', 'MultiTool = nDTomo.vis.MultiTool.MultiTool:main']
+        'gui_scripts': ['Integrator = nDTomo.vis.Integrator.Integrator:main', 'MultiTool = nDTomo.vis.MultiTool.MultiTool:main', 'EasyVis = nDTomo.vis.EasyVis.EasyVis:main']
     },		
 	license="LICENSE.txt",
 	classifiers=[
