@@ -270,7 +270,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.mapper.fig.canvas.mpl_connect('motion_notify_event', self.onMapMoveEvent)        
         
         
-#        self.cb = self.mapper.fig.colorbar(self.map_data)
+        # self.cb = self.mapper.fig.colorbar(self.map_data)
         
         self.mapper.show()
         self.mapper.draw()  
@@ -401,26 +401,17 @@ class ApplicationWindow(QtWidgets.QMainWindow):
 #            self.map_data = self.mapper.axes.imshow(self.imoi,cmap='jet')
             self.map_data = self.mapper.axes.imshow(self.imoi,cmap = self.cmap)
             title = "Channel = %d; %s = %.3f" % (self.nx, self.xaxislabel, self.xaxis[self.nx])
-            self.mapper.axes.set_title(title)
 
-            ############       
-#            self.mapper.fig.delaxes(self.mapper.fig.axes[1])
-#            self.cb.remove()
-#            self.cb = self.mapper.fig.colorbar(self.map_data)
-            
-#            self.cb.set_clim(np.self.CMin,self.CMax)
-            
-            
             try:
                 self.cb.remove()
             except:
                 pass
-            ############
             
+            # self.cb = self.mapper.fig.colorbar(self.map_data)
+
+            self.mapper.axes.set_title(title)
+            self.mapper.draw() 
             
-            
-            
-            self.mapper.draw()             
             
             self.vCurve.set_xdata(x) 
                 
