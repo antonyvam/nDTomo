@@ -7,16 +7,12 @@ Create phantoms (2D/3D) for image processing and analysis experiments
 
 from nDTomo.utils.misc import ndtomopath
 from xdesign import Mesh, HyperbolicConcentric,SiemensStar, Circle, Triangle, DynamicRange, DogaCircles, Phantom, Polygon, Point, SimpleMaterial, plot_phantom, discrete_phantom, SlantedSquares
-import matplotlib.pyplot as plt
 import numpy as np
-import os, sys, glob, time, h5py
+import h5py
 from skimage.data import shepp_logan_phantom
 from skimage.transform import rescale
-import hyperspy.api as hs
 
-'''
-Need to convert the function to class
-'''
+# Might need to convert the functions to class methods
 
 def SheppLogan(npix):
 
