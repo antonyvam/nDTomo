@@ -29,22 +29,41 @@ def SheppLogan(npix):
     return(im)
 
 def sstar(npix, nstars=32):
+    
+    '''
+    SiemensStar image from xdesign
+    '''
+    
     phase = SiemensStar(nstars)
     im = discrete_phantom(phase, npix, prop='mass_attenuation')
     return(im)
 
 def dcircles(npix, n_sizes=8, size_ratio=0.75, n_shuffles=2):
+
+    '''
+    DogaCircles image from xdesign
+    '''
+
     phase = DogaCircles(n_sizes=n_sizes, size_ratio=size_ratio, n_shuffles=n_shuffles)
     im = discrete_phantom(phase, npix, prop='mass_attenuation')
     return(im)
 
 def ssquares(npix, count=16, angle=15/360*2*np.pi, gap=0.05):
+
+    '''
+    SlantedSquares image from xdesign
+    '''
+
     phase = SlantedSquares(count=count, angle=angle, gap=gap)
     im = discrete_phantom(phase, npix, prop='mass_attenuation')
     return(im)
 
 def tri(npix, p1 = [-0.3, -0.2], p2 = [0.0, -0.3], p3 = [0.3, -0.2]):
     
+    '''
+    Triangle image from xdesign
+    '''
+
     m = Mesh()
     m.append(Triangle(Point(p1), Point(p2), Point(p3)))
     phase = Phantom(geometry=m)
@@ -54,6 +73,10 @@ def tri(npix, p1 = [-0.3, -0.2], p2 = [0.0, -0.3], p3 = [0.3, -0.2]):
 
 def face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], tp3 = [0.3, -0.2],
          e1p = [-0.2, 0.0], e1r=0.1, e2p = [0.2, 0.0], e2r=0.1 ):
+    
+    '''
+    Face image from xdesign
+    '''
     
     # Make a circle with a triangle cut out
     m = Mesh()
@@ -79,6 +102,10 @@ def face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], t
     
 def phantom1c(npix):
         
+    '''
+    Phantom image using a combination of five images created with xdesign: SlantedSquares, SiemensStar, DogaCircles, Triangle and Face
+    '''    
+    
     im1 = sstar(npix, nstars=32)
     im2 = dcircles(npix, n_sizes=8, size_ratio=0.75, n_shuffles=2)
     im3 = ssquares(npix, count=16, angle=15/360*2*np.pi, gap=0.05)
@@ -92,6 +119,10 @@ def phantom1c(npix):
 
 def phantom5c(npix):
         
+    '''
+    Five images created with xdesign: SlantedSquares, SiemensStar, DogaCircles, Triangle and Face
+    '''    
+
     im1 = sstar(npix, nstars=32)
     im2 = dcircles(npix, n_sizes=8, size_ratio=0.75, n_shuffles=2)
     im3 = ssquares(npix, count=16, angle=15/360*2*np.pi, gap=0.05)
@@ -102,6 +133,11 @@ def phantom5c(npix):
     return(im1, im2, im3, im4, im5)
 
 def load_example_patterns():
+    
+    '''
+    Load a test dataset containing five diffraction patterns
+    '''    
+    
     
     fn = '%s\examples\patterns\patterns.h5' %(ndtomopath())
 
@@ -122,6 +158,9 @@ def load_example_patterns():
 
 def phantom5c_microct(npix):
     
+    '''
+    micro-CT phantom using 5 components
+    '''
     
     imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
     dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
@@ -145,6 +184,9 @@ def phantom5c_microct(npix):
 
 def phantom5c_xrdct(npix):
     
+    '''
+    XRD-CT phantom using 5 components
+    '''
     
     imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
     dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
@@ -166,6 +208,9 @@ def phantom5c_xrdct(npix):
 
 def load_example_xanes():
     
+    '''
+    Load a test dataset containing five XANES spectra
+    '''    
 
     fn = '%s\examples\patterns\AllSpectra.h5' %(ndtomopath())
 
@@ -185,6 +230,9 @@ def load_example_xanes():
 
 def phantom5c_xanesct(npix):
     
+    '''
+    XANES-CT phantom using 5 components
+    '''
     
     imNMC, imNi2O3, imNiOH2, imNiS, imNifoil = phantom5c(npix)
     sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E = load_example_xanes()
