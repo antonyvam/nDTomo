@@ -196,7 +196,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         if len(self.hdf_fileName)>0 and len(self.dproi)>0:
             
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
-            sn = "%s_%s_%s.hdf5" %(s,str(self.row),str(self.col))
+            sn = "%s_%s_%s.h5" %(s,str(self.row),str(self.col))
             print(sn)
 
             h5f = h5py.File(sn, "w")
@@ -233,7 +233,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
         if len(self.hdf_fileName)>0 and len(self.imoi)>0:
             s = self.hdf_fileName.split('.hdf5'); s = s[0]
-            sn = "%s_channel_%s.hdf5" %(s,str(self.nx))
+            sn = "%s_channel_%s.h5" %(s,str(self.nx))
             print(sn)
 
             h5f = h5py.File(sn, "w")
@@ -264,7 +264,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 
         self.imoi = np.mean(self.data,axis=2)
         self.map_data = self.mapper.axes.imshow(self.imoi, cmap=self.cmap)
-        title = 'Mean Sinogram'
+        title = 'Mean image'
         self.mapper.axes.set_title(title, fontstyle='italic')
         self.mapper.fig.canvas.mpl_connect('button_press_event', self.onMapClick)
         self.mapper.fig.canvas.mpl_connect('motion_notify_event', self.onMapMoveEvent)        
@@ -516,6 +516,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                 
                 try:
                     self.data = f['/data'][:]
+                    self.data = np.transpose(self.data, (2,1,0))
                     self.xaxis = np.arange(0, self.data.shape[2])
                     
                 except:
@@ -527,7 +528,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
                     except:
                         pass
 
-                
+        
         print(self.data.shape)
                         
 	       
