@@ -9,9 +9,17 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pkgutil, h5py
 from pystackreg import StackReg
+from scipy.interpolate import interp1d
 
-def showim(im):
-    plt.figure(1);plt.clf()
+def showplot(spectrum, fignum = 1):
+    
+    plt.figure(fignum);plt.clf()
+    plt.plot(spectrum)
+    plt.show()
+    
+def showim(im, fignum = 1):
+    
+    plt.figure(fignum);plt.clf()
     plt.imshow(im, cmap = 'jet')
     plt.colorbar()
     plt.show()
@@ -179,8 +187,40 @@ def maskvolume(vol, msk):
     Apply a mask to a 3D array
     It assumes that the spectral/heigh dimension is the 3rd dimension    
     '''
+    voln = np.zeros_like(vol)
+    
     for ii in range(vol.shape[2]):
         
-        vol[:,:,ii] = vol[:,:,ii]*msk
+        voln[:,:,ii] = vol[:,:,ii]*msk
         
-    return(msk)
+    return(voln)
+
+def interpvol(vol, xold, xnew):
+    
+    '''
+    Linear interpolation of a 3D matrix
+    It assumes that the spectral/heigh dimension is the 3rd dimension   
+    '''
+    
+    spectrum = np.sum(np.sum(vol, axis = 0), axis = 0)
+    f = interp1d(xold, spectrum, kind='linear', bounds_error=False, fill_value=0)
+    voln = np.zeros((vol.shape[0], vol.shape[1], len(xnew)))
+    
+    for ii in range(voln.shape[0]):
+        for jj in range(voln.shape[1]):
+            
+            voln[ii,jj,:] = f(xnew)    
+    
+        print('Interpolating line %s' %ii)
+    return(voln)
+
+
+
+
+
+
+
+
+
+
+
