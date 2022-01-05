@@ -29,6 +29,12 @@ module load python/3
 python setup.py install --user
 ```
 
+The GUIs require PyQt5 but I have removed it from the setup.py because it breaks the spyder IDE. If you don't use anaconds/spyder, then you can install it with pip: 
+
+```
+pip install PyQt5
+```
+
 PyFAI
 -----
 The pyFAI version used in the nDTomo is 0.19
