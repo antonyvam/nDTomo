@@ -29,7 +29,7 @@ module load python/3
 python setup.py install --user
 ```
 
-The GUIs require PyQt5 but I have removed it from the setup.py because it breaks the spyder IDE. If you don't use anaconda/spyder, then you can install it with pip: 
+The GUIs require PyQt5 but I have removed it from the setup.py because it breaks the spyder IDE. If you don't use anaconda/spyder (PyQt5 is included in anaconda), then you can install it with pip: 
 
 ```
 pip install PyQt5
