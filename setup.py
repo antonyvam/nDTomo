@@ -38,7 +38,7 @@ setup(
 	author_email="antonyvam@gmail.com",
 	install_requires=[
 		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy",
-		"pyqtgraph", "scikit-image",  "PyQt5", "xdesign", "cached_property",
+		"pyqtgraph", "scikit-image",  "PyQt5<5.13", "xdesign", "cached_property",
 		"hyperspy", "hyperspy_gui_ipywidgets", "hyperspy_gui_traitsui",
 		"periodictable", "ase", "scikit-learn",
 	],
