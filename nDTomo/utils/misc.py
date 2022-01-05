@@ -8,6 +8,7 @@ Misc tools for nDTomo
 import numpy as np
 import matplotlib.pyplot as plt
 import pkgutil, h5py
+from pystackreg import StackReg
 
 def showim(im):
     plt.figure(1);plt.clf()
@@ -122,12 +123,64 @@ def h5read(filename):
     return(df)
 
 
+def regimage(ref, mov):
 
+    '''
+    Register an image using a transformation matrix
+    Uses rigid body transformation (i.e. translation/rotation only)
+    '''
+    
+    sr = StackReg(StackReg.RIGID_BODY)
+    reg = sr.register_transform(ref, mov)
+    tmat = sr.register(ref, mov)
+    reg = sr.transform(mov, tmat)
+    
+    plt.figure(1);plt.clf()
+    plt.imshow(np.concatenate((ref, mov, reg), axis = 1), cmap = 'jet')
+    plt.colorbar()
+    plt.axis('tight')
+    plt.show()
+    
+    plt.figure(2);plt.clf()
+    plt.imshow(np.concatenate((ref, mov, reg), axis = 0), cmap = 'jet')
+    plt.colorbar()
+    plt.axis('tight')
+    plt.show()
+    
+    plt.figure(3);plt.clf()
+    plt.imshow(np.concatenate((mov - ref , reg - ref), axis = 1), cmap = 'jet')
+    plt.clim(-0.3, 0.3)
+    plt.colorbar()
+    plt.show()
 
+    return(reg, tmat)
 
+def regvol(vol, tmat):
+    
+    '''
+    Register a volume using a transformation matrix
+    It assumes that the spectral/heigh dimension is the 3rd dimension
+    Uses rigid body transformation (i.e. translation/rotation only)
+    '''
+    
+    sr = StackReg(StackReg.RIGID_BODY)
+    
+    for ii in range(vol.shape[2]):
+        
+        vol[:,:,ii] = sr.transform(vol[:,:,ii], tmat)
+        
+        print(ii)
 
+    return(vol)
 
-
-
-
-
+def maskvolume(vol, msk):
+    
+    '''
+    Apply a mask to a 3D array
+    It assumes that the spectral/heigh dimension is the 3rd dimension    
+    '''
+    for ii in range(vol.shape[2]):
+        
+        vol[:,:,ii] = vol[:,:,ii]*msk
+        
+    return(msk)
