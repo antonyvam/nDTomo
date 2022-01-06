@@ -195,30 +195,39 @@ def maskvolume(vol, msk):
         
     return(voln)
 
-def interpvol(vol, xold, xnew):
+def interpvol(vol, xold, xnew, progress=False):
     
     '''
     Linear interpolation of a 3D matrix
     It assumes that the spectral/heigh dimension is the 3rd dimension   
     '''
-    
-    spectrum = np.sum(np.sum(vol, axis = 0), axis = 0)
-    f = interp1d(xold, spectrum, kind='linear', bounds_error=False, fill_value=0)
+        
     voln = np.zeros((vol.shape[0], vol.shape[1], len(xnew)))
     
     for ii in range(voln.shape[0]):
         for jj in range(voln.shape[1]):
             
+            f = interp1d(xold, vol[ii,jj,:], kind='linear', bounds_error=False, fill_value=0)
             voln[ii,jj,:] = f(xnew)    
     
-        print('Interpolating line %s' %ii)
+        if progress == True:
+            print('Interpolating line %s' %ii)
+            
     return(voln)
 
+def mask_thr(vol, roi, thr, fignum = 1):
+    
+    im = np.sum(vol[:,:,roi], axis = 2)
+    im = im/np.max(im)
+    msk = np.where(im<thr, 0, 1)
 
+    plt.figure(fignum);plt.clf()
+    plt.imshow(np.concatenate((im, msk), axis = 1), cmap = 'jet')
+    plt.colorbar()
+    plt.axis('tight')
+    plt.show()
 
-
-
-
+    return(msk)
 
 
 
