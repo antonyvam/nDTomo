@@ -230,6 +230,55 @@ def mask_thr(vol, roi, thr, fignum = 1):
     return(msk)
 
 
+def tth2q(tth, E):
+
+    """
+	Convert 2theta to q
+	"""  	
+    
+    h = 6.620700406E-34;c = 3E8
+    wavel = 1E10*6.242E18*h*c/(E*1E3)
+    q = np.pi*2/(wavel/(2*np.sin(np.deg2rad(0.5*tth))))
+
+    return(q)
+
+
+
+def q2tth(q, E):
+
+    """
+	Convert q to 2theta
+	"""  	
+    
+    h = 6.620700406E-34;c = 3E8
+    wavel = 1E10*6.242E18*h*c/(E*1E3)
+    
+    
+    tth = np.rad2deg(2*np.arcsin(wavel/(4*np.pi/q)))
+
+    return(tth)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
