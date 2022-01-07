@@ -24,6 +24,24 @@ def showim(im, fignum = 1):
     plt.colorbar()
     plt.show()
     
+def plotfigs(imagelist, legendlist, rows=1, cols=5, figsize=(20,3), cl=True):
+    
+    '''
+    Create a collage of images without xticks/yticks
+    
+    @author: Antony Vamvakeros and Thanasis Giokaris
+    '''
+    fig, axes = plt.subplots(rows, cols, figsize=figsize)
+    
+    for ii in range(len(imagelist)):
+        
+        i = axes[ii].imshow(imagelist[ii])
+        axes[ii].set_axis_off()
+        axes[ii].set_title(legendlist[ii])
+
+        if cl==True:
+            fig.colorbar(i, ax=axes[ii])
+        
 def ndtomopath():
     
     '''
