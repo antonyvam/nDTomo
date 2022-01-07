@@ -202,6 +202,30 @@ def phantom5c_xrdct(npix):
         
     return(xrdct)
 
+
+def phantom5c_xrdct_images(npix, imAl, imCu, imFe, imPt, imZn):
+    
+    '''
+    XRD-CT phantom using 5 components
+    '''
+
+    dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
+    
+    vol_Al = np.tile(dpAl, (npix, npix, 1))
+    vol_Cu = np.tile(dpCu, (npix, npix, 1))
+    vol_Fe = np.tile(dpFe, (npix, npix, 1))
+    vol_Pt = np.tile(dpPt, (npix, npix, 1))
+    vol_Zn = np.tile(dpZn, (npix, npix, 1))
+    
+    xrdct =  np.zeros_like(vol_Al)
+    
+    for ii in range(xrdct.shape[2]):
+        
+        xrdct[:,:,ii] = (vol_Al[:,:,ii]*imAl +  vol_Cu[:,:,ii]*imCu + vol_Fe[:,:,ii]*imFe
+              + vol_Pt[:,:,ii]*imPt + vol_Zn[:,:,ii]*imZn)
+        
+    return(xrdct)
+
 def load_example_xanes():
     
     '''

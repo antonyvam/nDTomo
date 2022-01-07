@@ -7,33 +7,11 @@ Dimensionality reduction/ cluster analysis using a phantom xrd-ct dataset
 
 #%%
 
-from nDTomo.sim.shapes.phantoms import phantom5c_xanesct, phantom5c_xrdct, load_example_patterns, phantom5c
+from nDTomo.sim.shapes.phantoms import phantom5c_xanesct, phantom5c_xrdct, load_example_patterns, phantom5c, phantom5c_xrdct_images
 from nDTomo.utils import hyperexpl
 import numpy as np
 import matplotlib.pyplot as plt
-
-#%% Create the chemical tomography dataset
-
-'''
-We will create a chemical tomography phantom using nDTomo
-Here we create an XRD-CT dataset using 5 chemical components; this corresponds to five unique spectra (diffraction patterns in this case) and five unique images
-This is a 3D matrix (array) with dimenion sizes (x, y, spectral): 200 x 200 x 250
-So this corresponds to 250 images, each having 200 x 200 pixels
-The goal is to perform dimensionality reduction/cluster analysis and extract these five images and/or spectra
-The various methods can be applied either to the image domain by treating the volume as a stack of images (250 images, each having 200 x 200 pixels), 
-or in the spectral domain (200 x 200 spectra with 250 points in each spectrum)
-'''
-
-npix = 200
-chemct = phantom5c_xrdct(npix)
-print(chemct.shape)
-
-
-#%% Visualise the hyperspectral volume
-
-hs = hyperexpl.HyperSliceExplorer(chemct, np.arange(0,chemct.shape[2]), 'Channels')
-hs.explore()
-
+import time, h5py
 
 #%% Ground truth
 
@@ -56,6 +34,7 @@ plt.show()
 These are the five ground truth componet images
 '''
 
+npix = 200
 imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
 
 plt.figure(2);plt.clf()
@@ -77,6 +56,30 @@ plt.show()
 plt.figure(6);plt.clf()
 plt.imshow(imZn)
 plt.show()
+
+
+#%% Create the chemical tomography dataset
+
+'''
+We will create a chemical tomography phantom using nDTomo
+Here we create an XRD-CT dataset using 5 chemical components; this corresponds to five unique spectra (diffraction patterns in this case) and five unique images
+This is a 3D matrix (array) with dimenion sizes (x, y, spectral): 200 x 200 x 250
+So this corresponds to 250 images, each having 200 x 200 pixels
+The goal is to perform dimensionality reduction/cluster analysis and extract these five images and/or spectra
+The various methods can be applied either to the image domain by treating the volume as a stack of images (250 images, each having 200 x 200 pixels), 
+or in the spectral domain (200 x 200 spectra with 250 points in each spectrum)
+'''
+
+
+chemct = phantom5c_xrdct_images(npix, imAl, imCu, imFe, imPt, imZn)
+print(chemct.shape)
+
+
+#%% Visualise the hyperspectral volume
+
+hs = hyperexpl.HyperSliceExplorer(chemct, np.arange(0,chemct.shape[2]), 'Channels')
+hs.explore()
+
 
 
 #%% We can try first using the scikit-learn library
@@ -221,11 +224,14 @@ data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2])).tra
 
 print(data.shape)
 
+start = time.time()
 nmf = NMF(n_components=10).fit(data+0.01)
+print('NMF analysis too %s seconds' %(time.time() - start))
+
 print(nmf.components_.shape)
 
 #%%
-ii = 1
+ii = 4
 im = nmf.components_[ii,:]
 im = np.reshape(im, (chemct.shape[0],chemct.shape[1]))
 
