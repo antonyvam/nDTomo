@@ -376,6 +376,71 @@ plt.show()
 
 
 #%%
+from clustimage import Clustimage
+
+
+# init
+cl = Clustimage()
+
+results = cl.fit_transform(data)
+
+print(results.keys())
+
+
+#%%
+
+
+# Get the unique images
+unique_samples = cl.unique()
+# 
+print(unique_samples.keys())
+
+data[unique_samples['idx'],:]
+
+
+cl.plot_unique()
+
+
+#%%
+
+# No images in scatterplot
+cl.scatter(zoom=None)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
