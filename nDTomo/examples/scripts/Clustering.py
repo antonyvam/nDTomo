@@ -9,6 +9,7 @@ Dimensionality reduction/ cluster analysis using a phantom xrd-ct dataset
 
 from nDTomo.sim.shapes.phantoms import phantom5c_xanesct, phantom5c_xrdct, load_example_patterns, phantom5c, phantom5c_xrdct_images
 from nDTomo.utils import hyperexpl
+from nDTomo.utils.misc import addpnoise2D, addpnoise3D
 import numpy as np
 import matplotlib.pyplot as plt
 import time, h5py
@@ -226,7 +227,7 @@ print(data.shape)
 
 start = time.time()
 nmf = NMF(n_components=10).fit(data+0.01)
-print('NMF analysis too %s seconds' %(time.time() - start))
+print('NMF analysis took %s seconds' %(time.time() - start))
 
 print(nmf.components_.shape)
 
@@ -316,3 +317,78 @@ for ii in range(5):
     plt.plot( nmf.components_[ii,:]/np.max(nmf.components_[ii,:]) + 0.05*ii)
 
 plt.show()
+
+
+
+
+
+
+
+#%% Let's add some noise!!!
+
+im = np.mean(chemct, axis = 2)
+
+# ct is count time (seconds)
+imn = addpnoise2D(im, ct=500)
+
+plt.figure(1);plt.clf()
+plt.imshow(np.concatenate((im, imn), axis = 1), cmap = 'jet')
+plt.colorbar()
+plt.show()
+
+#%% Noisy volume
+
+start = time.time()
+chemct_noisy = addpnoise3D(chemct, ct=500)
+print('Adding noise took %s seconds' %(time.time() - start))
+
+print(chemct_noisy.shape)
+
+
+#%% Visualise the hyperspectral volume
+
+hs = hyperexpl.HyperSliceExplorer(chemct_noisy, np.arange(0,chemct_noisy.shape[2]), 'Channels')
+hs.explore()
+
+#%% NMF: Images
+
+data = np.reshape(chemct_noisy, (chemct_noisy.shape[0]*chemct_noisy.shape[1],chemct_noisy.shape[2])).transpose()
+
+print(data.shape)
+
+start = time.time()
+nmf = NMF(n_components=6).fit(data+0.01)
+print('NMF analysis took %s seconds' %(time.time() - start))
+
+print(nmf.components_.shape)
+
+#%%
+ii = 2
+im = nmf.components_[ii,:]
+im = np.reshape(im, (chemct_noisy.shape[0],chemct_noisy.shape[1]))
+
+plt.figure(1);plt.clf()
+plt.imshow(im)
+plt.colorbar()
+plt.show()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

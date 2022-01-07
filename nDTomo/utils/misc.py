@@ -72,7 +72,7 @@ def addpnoise3D(vol, ct):
     
     mi = np.min(vol)
     
-    if vol < 0:
+    if mi < 0:
         
         vol = vol - mi + np.finfo(np.float32).eps
         
