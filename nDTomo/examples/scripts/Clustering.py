@@ -245,12 +245,12 @@ data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2])).tra
 
 print(data.shape)
 
-# fica = FastICA(n_components=6).fit(data+0.0001)
-# print(nmf.components_.shape)
+fica = FastICA(n_components=6).fit(data+0.0001)
+print(nmf.components_.shape)
 
-ica = FastICA()
-S_ = ica.fit_transform(data)
-A_ = ica.mixing_.T
+# ica = FastICA()
+# S_ = ica.fit_transform(data)
+# A_ = ica.mixing_.T
 
 #%%
 ii = 2
