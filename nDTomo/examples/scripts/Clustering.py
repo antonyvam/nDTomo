@@ -14,6 +14,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import time, h5py
 
+from sklearn.decomposition import PCA, NMF, FastICA, LatentDirichletAllocation
+from sklearn.cluster import KMeans, SpectralClustering, DBSCAN, AgglomerativeClustering
+from clustimage import Clustimage
+
 #%% Ground truth
 
 '''
@@ -80,13 +84,6 @@ print(chemct.shape)
 
 hs = hyperexpl.HyperSliceExplorer(chemct, np.arange(0,chemct.shape[2]), 'Channels')
 hs.explore()
-
-
-
-#%% We can try first using the scikit-learn library
-
-from sklearn.decomposition import PCA, NMF, FastICA, LatentDirichletAllocation
-from sklearn.cluster import KMeans, SpectralClustering, DBSCAN, AgglomerativeClustering
 
 #%% PCA: Spectra
 
@@ -248,8 +245,12 @@ data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2])).tra
 
 print(data.shape)
 
-fica = FastICA(n_components=6).fit(data+0.0001)
-print(nmf.components_.shape)
+# fica = FastICA(n_components=6).fit(data+0.0001)
+# print(nmf.components_.shape)
+
+ica = FastICA()
+S_ = ica.fit_transform(data)
+A_ = ica.mixing_.T
 
 #%%
 ii = 2
@@ -376,7 +377,6 @@ plt.show()
 
 
 #%%
-from clustimage import Clustimage
 
 
 # init
