@@ -9,7 +9,7 @@ Dimensionality reduction/ cluster analysis using a phantom xrd-ct dataset
 
 from nDTomo.sim.shapes.phantoms import phantom5c_xanesct, phantom5c_xrdct, load_example_patterns, phantom5c, phantom5c_xrdct_images
 from nDTomo.utils import hyperexpl
-from nDTomo.utils.misc import addpnoise2D, addpnoise3D
+from nDTomo.utils.misc import addpnoise2D, addpnoise3D, interpvol
 import numpy as np
 import matplotlib.pyplot as plt
 import time, h5py
@@ -82,6 +82,12 @@ chemct = phantom5c_xrdct_images(npix, imAl, imCu, imFe, imPt, imZn)
 print(chemct.shape)
 
 
+#%% Interpolate in the spectral dimension
+
+nchan = 1000
+chemcti = interpvol(chemct, xold=np.linspace(0, chemct.shape[2], chemct.shape[2]), xnew=np.linspace(0, chemct.shape[2], nchan))
+print(chemcti.shape)
+
 #%% Visualise the hyperspectral volume
 
 hs = hyperexpl.HyperSliceExplorer(chemct, np.arange(0,chemct.shape[2]), 'Channels')
@@ -92,8 +98,8 @@ hs.explore()
 s = Signal1D(chemct+0.01)
 
 # s.decomposition(algorithm="SVD")
-# s.decomposition(algorithm="NMF", output_dimension=5)
-s.decomposition(algorithm="MLPCA", output_dimension=5)
+s.decomposition(algorithm="NMF", output_dimension=10)
+# s.decomposition(algorithm="MLPCA", output_dimension=10)
 
 factors = s.get_decomposition_factors()
 
@@ -393,9 +399,7 @@ plt.colorbar()
 plt.show()
 
 
-
-
-#%%
+#%% Clustimage
 
 
 # init
@@ -404,9 +408,6 @@ cl = Clustimage()
 results = cl.fit_transform(data)
 
 print(results.keys())
-
-
-#%%
 
 
 # Get the unique images
@@ -427,6 +428,38 @@ cl.scatter(zoom=None)
 
 
 
+#%% Experimental data
+
+datasets = ['Mn_catalyst_ch4149_rt', 'BCFZ_Mn_catalyst_ch4149_rt_abscor',
+            'SOFC2_fresh_z-4.000', 'NMC532_pristine',
+            'POXhr']
+
+p = 'Y:\\Development\\'
+
+dd = 4
+
+fn = '%s%s_rec.h5' %(p, datasets[dd])
+
+with h5py.File(fn, 'r') as f:
+    vol = np.array(f['data'][:])
+
+vol = np.transpose(vol, (2,1,0))
+
+print(vol.shape)
+
+vol = np.where(vol<0, 0, vol)
+
+#%%
+
+s = Signal1D(vol+0.0001)
+
+s.decomposition(algorithm="NMF", output_dimension=10)
+
+factors = s.get_decomposition_factors()
+
+print(factors.data.shape, len(factors))
+
+s.plot_decomposition_results()
 
 
 
