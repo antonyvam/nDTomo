@@ -453,7 +453,9 @@ vol = np.where(vol<0, 0, vol)
 
 s = Signal1D(vol+0.0001)
 
+start = time.time()
 s.decomposition(algorithm="NMF", output_dimension=10)
+print('NMF analysis took %s seconds' %(time.time() - start))
 
 factors = s.get_decomposition_factors()
 
