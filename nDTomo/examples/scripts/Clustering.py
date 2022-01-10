@@ -18,6 +18,8 @@ from sklearn.decomposition import PCA, NMF, FastICA, LatentDirichletAllocation
 from sklearn.cluster import KMeans, SpectralClustering, DBSCAN, AgglomerativeClustering
 from clustimage import Clustimage
 
+from hyperspy.signals import Signal1D, Signal2D
+
 #%% Ground truth
 
 '''
@@ -84,6 +86,23 @@ print(chemct.shape)
 
 hs = hyperexpl.HyperSliceExplorer(chemct, np.arange(0,chemct.shape[2]), 'Channels')
 hs.explore()
+
+#%%
+
+s = Signal1D(chemct+0.01)
+
+# s.decomposition(algorithm="SVD")
+# s.decomposition(algorithm="NMF", output_dimension=5)
+s.decomposition(algorithm="MLPCA", output_dimension=5)
+
+factors = s.get_decomposition_factors()
+
+print(factors.data.shape, len(factors))
+
+# s.decomposition(algorithm="NMF")
+
+s.plot_decomposition_results()
+
 
 #%% PCA: Spectra
 
