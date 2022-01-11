@@ -363,7 +363,169 @@ for ii in range(5):
 
 plt.show()
 
+#%% Clustimage
 
+'''
+Class initialisation:
+    
+    Parameters
+    ----------
+    method : str, (default: 'pca')
+        Method to be usd to extract features from images.
+            * None : No feature extraction
+            * 'pca' : PCA feature extraction
+            * 'hog' : hog features extraced
+            * 'pca-hog' : PCA extracted features from the HOG desriptor
+            hashmethod : str (default: 'ahash')
+            * 'ahash': Average hash
+            * 'phash': Perceptual hash
+            * 'dhash': Difference hash
+            * 'whash-haar': Haar wavelet hash
+            * 'whash-db4': Daubechies wavelet hash
+            * 'colorhash': HSV color hash
+            * 'crop-resistant': Crop-resistant hash
+    embedding : str, (default: 'tsne')
+        Perform embedding on the extracted features. The xycoordinates are used for plotting purposes.
+            * 'tsne' or  None
+    grayscale : Bool, (default: False)
+        Colorscaling the image to gray. This can be usefull when clustering e.g., faces.
+    dim : tuple, (default: (128,128))
+        Rescale images. This is required because the feature-space need to be the same across samples.
+    dirpath : str, (default: None)
+        Directory to write images.
+    ext : list, (default: ['png','tiff','jpg'])
+        Images with the file extentions are used.
+    params_pca : dict, default: {'n_components':50, 'detect_outliers':None}
+        Parameters to initialize the pca model.
+    params_hog : dict, default: {'orientations':9, 'pixels_per_cell':(16,16), 'cells_per_block':(1,1)}
+        Parameters to extract hog features.
+    verbose : int, (default: 20)
+        Print progress to screen. The default is 20.
+        60: None, 40: Error, 30: Warn, 20: Info, 10: Debug
+
+fit_transform method:
+    
+    Parameters
+    ----------
+    X : [str of list] or [np.array].
+        The input can be:
+            * "c://temp//" : Path to directory with images
+            * ['c://temp//image1.png', 'c://image2.png', ...] : List of exact pathnames.
+            * [[.., ..], [.., ..], ...] : np.array matrix in the form of [sampels x features]
+    cluster : str, (default: 'agglomerative')
+        Type of clustering.
+            * 'agglomerative'
+            * 'kmeans'
+            * 'dbscan'
+            * 'hdbscan'
+    evaluate : str, (default: 'silhouette')
+        Cluster evaluation method.
+            * 'silhouette'
+            * 'dbindex'
+            * 'derivative'
+    metric : str, (default: 'euclidean').
+        Distance measures. All metrics from sklearn can be used such as:
+            * 'euclidean'
+            * 'hamming'
+            * 'cityblock'
+            * 'correlation'
+            * 'cosine'
+            * 'jaccard'
+            * 'mahalanobis'
+            * 'seuclidean'
+            * 'sqeuclidean'
+    linkage : str, (default: 'ward')
+        Linkage type for the clustering.
+            * 'ward'
+            * 'single'
+            * 'complete'
+            * 'average'
+            * 'weighted'
+            * 'centroid'
+            * 'median'
+    min_clust : int, (default: 3)
+        Number of clusters that is evaluated greater or equals to min_clust.
+    max_clust : int, (default: 25)
+        Number of clusters that is evaluated smaller or equals to max_clust.
+    cluster_space: str, (default: 'high')
+        Selection of the features that are used for clustering. This can either be on high or low feature space.
+            * 'high' : Original feature space.
+            * 'low' : Input are the xycoordinates that are determined by "embedding". Thus either tSNE coordinates or the first two PCs or HOGH features.
+    black_list : list, (default: None)
+        Exclude directory with all subdirectories from processing.
+        * example: ['undouble']
+'''
+
+data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2])).transpose()
+
+# init
+cl = Clustimage()
+
+results = cl.fit_transform(data)
+
+print(results.keys())
+
+cl.cluster(min_clust=4, max_clust=15)
+
+# Get the unique images
+unique_samples = cl.unique()
+# 
+print(unique_samples.keys())
+
+data[unique_samples['idx'],:]
+
+
+cl.plot_unique()
+
+#%% Parameter search
+
+methods = ['pca', 'hog', 'pca-hog']
+embedding = 'tsne'
+dim = (128,128)
+params_pca = {'n_components':50, 'detect_outliers':None}
+params_hog = {'orientations':9, 'pixels_per_cell':(16,16), 'cells_per_block':(1,1)}
+
+clusters = ['agglomerative', 'kmeans', 'dbscan', 'hdbscan']
+evaluations = ['silhouette', 'dbindex','derivative']
+metrics = ['euclidean','hamming','cityblock','correlation','cosine','jaccard',
+          'mahalanobis','seuclidean','sqeuclidean']
+link = ['ward','single','complete','average','weighted','centroid','median']  
+min_clust = 3
+max_clust = 25
+cluster_spaces = ['high', 'low']
+        
+for method in methods:
+    
+    for cluster in clusters:
+        
+        for evaluation in evaluations:
+            
+            for metric in metrics:
+                
+                for linkage in link:
+                    
+                    for cluster_space in cluster_spaces:
+
+                        # init
+                        cl = Clustimage(method=method, embedding='tsne', dim=dim, 
+                                        params_pca=params_pca, params_hog=params_hog)
+                        
+                        results = cl.fit_transform(X=data, cluster=cluster, evaluate=evaluation,
+                                                   metric=metric, linkage=linkage,
+                                                   min_clust=min_clust, max_clust=max_clust,
+                                                   cluster_space = cluster_space)
+                        
+                        print(results.keys())
+                        
+                        
+                        # Get the unique images
+                        unique_samples = cl.unique()
+                        # 
+                        print(unique_samples.keys())
+                        
+                        data[unique_samples['idx'],:]
+                        
+                        
 
 
 
