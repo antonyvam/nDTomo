@@ -77,9 +77,12 @@ for method in methods:
         
         for evaluation in evaluations:
             
-            for metric in metrics:
+            for linkage in link:
                 
-                for linkage in link:
+                for metric in metrics:
+                    
+                    if linkage == 'ward' or linkage == 'centroid' or linkage == 'median':
+                        metric = 'euclidean'
                     
                     for cluster_space in cluster_spaces:
 
