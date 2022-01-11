@@ -9,15 +9,16 @@ Dimensionality reduction/ cluster analysis using a phantom xrd-ct dataset
 
 from nDTomo.sim.shapes.phantoms import phantom5c_xanesct, phantom5c_xrdct, load_example_patterns, phantom5c, phantom5c_xrdct_images
 from nDTomo.utils import hyperexpl
-from nDTomo.utils.misc import addpnoise2D, addpnoise3D, interpvol
+from nDTomo.utils.misc import addpnoise2D, addpnoise3D, interpvol, showplot, normvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
 import numpy as np
 import matplotlib.pyplot as plt
 import time, h5py
 
+### Packages for clustering and dimensionality reduction
+
 from sklearn.decomposition import PCA, NMF, FastICA, LatentDirichletAllocation
 from sklearn.cluster import KMeans, SpectralClustering, DBSCAN, AgglomerativeClustering
 from clustimage import Clustimage
-
 from hyperspy.signals import Signal1D, Signal2D
 
 #%% Ground truth
@@ -64,6 +65,9 @@ plt.figure(6);plt.clf()
 plt.imshow(imZn)
 plt.show()
 
+#%%
+
+plt.close('all')
 
 #%% Create the chemical tomography dataset
 
@@ -82,7 +86,7 @@ chemct = phantom5c_xrdct_images(npix, imAl, imCu, imFe, imPt, imZn)
 print(chemct.shape)
 
 
-#%% Interpolate in the spectral dimension
+#%% Interpolate in the spectral dimension - useful to test the timings of various methods as a function of spectral size
 
 nchan = 1000
 chemcti = interpvol(chemct, xold=np.linspace(0, chemct.shape[2], chemct.shape[2]), xnew=np.linspace(0, chemct.shape[2], nchan))
@@ -434,11 +438,18 @@ datasets = ['Mn_catalyst_ch4149_rt', 'BCFZ_Mn_catalyst_ch4149_rt_abscor',
             'SOFC2_fresh_z-4.000', 'NMC532_pristine',
             'POXhr']
 
+datasets = ['Mn_catalyst_ch4149_rt', 'BCFZ_Mn_catalyst_ch4149_rt',
+            'SOFC2_fresh_z-4.000', 'NMC532_pristine',
+            'POXhr']
+
 p = 'Y:\\Development\\'
 
-dd = 4
+dd = 1
 
 fn = '%s%s_rec.h5' %(p, datasets[dd])
+fn = '%s%s_sinograms.h5' %(p, datasets[dd])
+
+# fn = 'D:\\Dropbox (Finden)\\Finden_Research\\Legacy_Projects\\Beamtime_Names\\IHMA120\\reconstructions\\xrdct_2_denoised.h5'
 
 with h5py.File(fn, 'r') as f:
     vol = np.array(f['data'][:])
@@ -449,25 +460,80 @@ print(vol.shape)
 
 vol = np.where(vol<0, 0, vol)
 
-#%%
+showplot(np.sum(np.sum(vol,axis=0), axis = 0), 1)
 
-s = Signal1D(vol+0.0001)
+
+#%% Volume pre-processing
+
+# We can crop a bit the chemical volume
+roi = np.arange(100, 350)
+roi = np.arange(100, 510)
+# roi = np.arange(300, 550)
+vol = vol[:,:,roi]
+
+# Normalise the volume with respect to the max value
+vol = 100*vol/np.max(vol)
+
+# We can normalise all images
+# vol = normvol(vol)
+
+#%% NMF: Images/Sinograms
+
+data = np.reshape(vol, (vol.shape[0]*vol.shape[1],vol.shape[2])).transpose()
+
+print(data.shape)
 
 start = time.time()
-s.decomposition(algorithm="NMF", output_dimension=10)
+nmf = NMF(n_components=10).fit(data+0.001)
 print('NMF analysis took %s seconds' %(time.time() - start))
 
-factors = s.get_decomposition_factors()
+print(nmf.components_.shape)
 
-print(factors.data.shape, len(factors))
-
-s.plot_decomposition_results()
+#%%
 
 
+imagelist, legendlist = create_complist_imgs(nmf.components_, vol.shape[0], vol.shape[1])
+
+plotfigs_imgs(imagelist, legendlist, rows=2, cols=5, figsize=(20,6), cl=True)
 
 
+#%% NMF: Spectra
+
+data = np.reshape(vol, (vol.shape[0]*vol.shape[1],vol.shape[2]))
+
+print(data.shape)
+
+nmf = NMF(n_components=10).fit(data+0.001)
+print(nmf.components_.shape)
+
+#%%
+
+spectralist, legendlist = create_complist_spectra(nmf.components_)
+
+plotfigs_spectra(spectralist, legendlist, xaxis=np.arange(0,spectralist[0].shape[0]), rows=2, cols=5, figsize=(20,6))
+
+#%% Cluster image analysis
+
+data = np.reshape(vol, (vol.shape[0]*vol.shape[1],vol.shape[2])).transpose()
+
+# init
+cl = Clustimage()
+
+results = cl.fit_transform(data)
+
+print(results.keys())
+
+cl.cluster(min_clust=5, max_clust=15)
+
+# Get the unique images
+unique_samples = cl.unique()
+# 
+print(unique_samples.keys())
+
+data[unique_samples['idx'],:]
 
 
+cl.plot_unique()
 
 
 

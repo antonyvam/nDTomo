@@ -24,7 +24,7 @@ def showim(im, fignum = 1):
     plt.colorbar()
     plt.show()
     
-def plotfigs(imagelist, legendlist, rows=1, cols=5, figsize=(20,3), cl=True):
+def plotfigs_imgs(imagelist, legendlist, rows=1, cols=5, figsize=(20,3), cl=True):
     
     '''
     Create a collage of images without xticks/yticks
@@ -33,15 +33,84 @@ def plotfigs(imagelist, legendlist, rows=1, cols=5, figsize=(20,3), cl=True):
     '''
     fig, axes = plt.subplots(rows, cols, figsize=figsize)
     
-    for ii in range(len(imagelist)):
-        
-        i = axes[ii].imshow(imagelist[ii])
-        axes[ii].set_axis_off()
-        axes[ii].set_title(legendlist[ii])
+    if len(axes.shape)<2:
+        for ii in range(len(imagelist)):
+            
+            i = axes[ii].imshow(imagelist[ii])
+            axes[ii].set_axis_off()
+            axes[ii].set_title(legendlist[ii])
+    
+            if cl==True:
+                fig.colorbar(i, ax=axes[ii])
 
-        if cl==True:
-            fig.colorbar(i, ax=axes[ii])
+    elif len(axes.shape)==2:
         
+        kk = 0
+        for ii in range(axes.shape[0]):
+            for jj in range(axes.shape[1]):
+            
+                print(kk)
+                
+                if kk < len(imagelist):
+            
+                    i = axes[ii,jj].imshow(imagelist[kk])
+                    axes[ii,jj].set_axis_off()
+                    axes[ii,jj].set_title(legendlist[kk])
+            
+                    if cl==True:
+                        fig.colorbar(i, ax=axes[ii,jj])        
+                    
+                    kk = kk + 1
+
+def create_complist_imgs(components, xpix, ypix):     
+
+    imagelist = []; legendlist = []
+    for ii in range(components.shape[0]):
+        im = components[ii,:]
+        imagelist.append(np.reshape(im, (xpix, ypix)))
+        legendlist.append('Component %d' %ii)
+        
+    return(imagelist, legendlist)
+
+def plotfigs_spectra(spectralist, legendlist, xaxis, rows=1, cols=5, figsize=(20,3)):
+    
+    '''
+    Create a collage of images without xticks/yticks
+    
+    @author: Antony Vamvakeros and Thanasis Giokaris
+    '''
+    fig, axes = plt.subplots(rows, cols, figsize=figsize)
+    
+    if len(axes.shape)<2:
+        for ii in range(len(spectralist)):
+            
+            axes[ii].plot(xaxis, spectralist[ii])
+            axes[ii].set_title(legendlist[ii])
+
+    elif len(axes.shape)==2:
+        
+        kk = 0
+        for ii in range(axes.shape[0]):
+            for jj in range(axes.shape[1]):
+            
+                print(kk)
+                
+                if kk < len(spectralist):
+            
+                    axes[ii,jj].plot(xaxis, spectralist[kk])
+                    axes[ii,jj].set_title(legendlist[kk])
+   
+                    kk = kk + 1
+                    
+def create_complist_spectra(components):     
+
+    splist = []; legendlist = []
+    for ii in range(components.shape[0]):
+        splist.append(components[ii,:])
+        legendlist.append('Component %d' %ii)
+        
+    return(splist, legendlist)
+    
 def ndtomopath():
     
     '''
@@ -227,6 +296,25 @@ def interpvol(vol, xold, xnew, progress=False):
             
             f = interp1d(xold, vol[ii,jj,:], kind='linear', bounds_error=False, fill_value=0)
             voln[ii,jj,:] = f(xnew)    
+    
+        if progress == True:
+            print('Interpolating line %s' %ii)
+            
+    return(voln)
+
+
+def normvol(vol, progress=False):
+    
+    '''
+    Normalise a 3D matrix
+    It assumes that the spectral/heigh dimension is the 3rd dimension   
+    '''
+        
+    voln = np.zeros_like(vol)
+    
+    for ii in range(voln.shape[2]):
+
+        voln[:,:,ii] = vol[:,:,ii]/np.max(vol[:,:,ii])   
     
         if progress == True:
             print('Interpolating line %s' %ii)
