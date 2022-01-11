@@ -491,7 +491,7 @@ plotfigs_imgs(imlist, legendlist, rows=2, cols=5, figsize=(20,9), cl=True)
 
 methods = ['pca', 'hog', 'pca-hog']
 embedding = 'tsne'
-dim = (128,128)
+dim = (200,200)
 params_pca = {'n_components':50, 'detect_outliers':None}
 params_hog = {'orientations':9, 'pixels_per_cell':(16,16), 'cells_per_block':(1,1)}
 
@@ -529,13 +529,9 @@ for method in methods:
                                                    min_clust=min_clust, max_clust=max_clust,
                                                    cluster_space = cluster_space)
                         
-                        print(results.keys())
-                        
                         # Get the unique images
                         unique_samples = cl.unique()
-                        # 
-                        print(unique_samples.keys())
-                        
+                        #                         
                         data[unique_samples['idx'],:]
                         
                         imlist = []; legendlist = []
@@ -547,6 +543,7 @@ for method in methods:
                         # Save the results
                         
                         fn = 'phantom_noiseless_%d.h5' %kk
+                        print(fn)
                         
                         with h5py.File(fn, 'w') as f:
                             
