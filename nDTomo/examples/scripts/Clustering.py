@@ -9,7 +9,7 @@ Dimensionality reduction/ cluster analysis using a phantom xrd-ct dataset
 
 from nDTomo.sim.shapes.phantoms import phantom5c_xanesct, phantom5c_xrdct, load_example_patterns, phantom5c, phantom5c_xrdct_images
 from nDTomo.utils import hyperexpl
-from nDTomo.utils.misc import addpnoise2D, addpnoise3D, interpvol, showplot, normvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
+from nDTomo.utils.misc import addpnoise2D, addpnoise3D, interpvol, showplot, showim, normvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
 import numpy as np
 import matplotlib.pyplot as plt
 import time, h5py
@@ -474,8 +474,18 @@ print(unique_samples.keys())
 
 data[unique_samples['idx'],:]
 
-
 cl.plot_unique()
+
+#%%
+imlist = []; legendlist = []
+for ii in range(len(unique_samples['labels'])):
+    
+    imlist.append(np.mean(unique_samples['img_mean'][ii].reshape(chemct.shape[0],chemct.shape[1],3), axis = 2)/255)
+    legendlist.append('Component %d' %(ii + 1))
+
+plotfigs_imgs(imlist, legendlist, rows=2, cols=5, figsize=(20,9), cl=True)
+
+
 
 #%% Parameter search
 
@@ -494,6 +504,8 @@ min_clust = 3
 max_clust = 25
 cluster_spaces = ['high', 'low']
         
+kk = 0
+
 for method in methods:
     
     for cluster in clusters:
@@ -517,7 +529,6 @@ for method in methods:
                         
                         print(results.keys())
                         
-                        
                         # Get the unique images
                         unique_samples = cl.unique()
                         # 
@@ -525,9 +536,25 @@ for method in methods:
                         
                         data[unique_samples['idx'],:]
                         
+                        imlist = []; legendlist = []
+                        for ii in range(len(unique_samples['labels'])):
+                            
+                            imlist.append(np.mean(unique_samples['img_mean'][ii].reshape(chemct.shape[0],chemct.shape[1],3), axis = 2)/255)
+                            legendlist.append('Component %d' %(ii + 1))
+
+                        # Save the results
                         
+                        fn = 'phantom_noiseless_%d.h5' %kk
+                        
+                        with h5py.File(fn, 'w') as f:
+                            
+                            f.create_dataset('results', data = data[unique_samples['idx'],:].reshape(len(unique_samples['labels']), chemct.shape[0], chemct.shape[1]))
+                            f.create_dataset('unique_samples', data = unique_samples)
+                            f.create_dataset('components', data = imlist)
 
+                        f.close()
 
+                        kk = kk + 1
 
 
 
