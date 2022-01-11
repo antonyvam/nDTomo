@@ -97,6 +97,12 @@ print(chemcti.shape)
 hs = hyperexpl.HyperSliceExplorer(chemct, np.arange(0,chemct.shape[2]), 'Channels')
 hs.explore()
 
+#%% Ground truth data
+
+gtimlist = [imAl, imCu, imFe, imPt, imZn]
+gtsplist = [dpAl, dpCu, dpFe, dpPt, dpZn]
+gtldlist = ['Al', 'Cu', 'Fe', 'Pt', 'Zn']
+
 #%%
 
 s = Signal1D(chemct+0.01)
@@ -120,15 +126,16 @@ data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2]))
 
 print(data.shape)
 
+start = time.time()
 pca = PCA(n_components=5).fit(data)
+print('PCA analysis took %s seconds' %(time.time() - start))
+
 print(pca.components_.shape)
 
-ii = 1
-dp = pca.components_[ii,:]
+spectralist, legendlist = create_complist_spectra(pca.components_)
 
-plt.figure(1);plt.clf()
-plt.plot(dp)
-plt.show()
+plotfigs_spectra(spectralist, legendlist, xaxis=np.arange(0,spectralist[0].shape[0]), rows=1, cols=5, figsize=(20,3))
+
 
 #%% PCA: Images
 
@@ -136,18 +143,24 @@ data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2])).tra
 
 print(data.shape)
 
+start = time.time()
 pca = PCA(n_components=5).fit(data)
+print('PCA analysis took %s seconds' %(time.time() - start))
+
 print(pca.components_.shape)
 
+imagelist, legendlist = create_complist_imgs(pca.components_, chemct.shape[0], chemct.shape[1])
 
-ii = 1
-im = pca.components_[ii,:]
-im = np.reshape(im, (chemct.shape[0],chemct.shape[1]))
+clist = []; llist = []
+for ii in range(len(gtimlist)):
+    clist.append(gtimlist[ii])
+    llist.append(gtldlist[ii])
+for ii in range(len(imagelist)):
+    clist.append(imagelist[ii])
+    llist.append(legendlist[ii])
 
-plt.figure(1);plt.clf()
-plt.imshow(im)
-plt.colorbar()
-plt.show()
+
+plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
 
 
 #%% K means: images
@@ -391,6 +404,9 @@ nmf = NMF(n_components=6).fit(data+0.01)
 print('NMF analysis took %s seconds' %(time.time() - start))
 
 print(nmf.components_.shape)
+
+
+
 
 #%%
 ii = 2

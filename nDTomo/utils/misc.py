@@ -68,7 +68,7 @@ def create_complist_imgs(components, xpix, ypix):
     for ii in range(components.shape[0]):
         im = components[ii,:]
         imagelist.append(np.reshape(im, (xpix, ypix)))
-        legendlist.append('Component %d' %ii)
+        legendlist.append('Component %d' %(ii+1))
         
     return(imagelist, legendlist)
 
@@ -107,7 +107,7 @@ def create_complist_spectra(components):
     splist = []; legendlist = []
     for ii in range(components.shape[0]):
         splist.append(components[ii,:])
-        legendlist.append('Component %d' %ii)
+        legendlist.append('Component %d' %(ii+1))
         
     return(splist, legendlist)
     
