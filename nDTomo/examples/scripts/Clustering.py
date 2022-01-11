@@ -151,6 +151,8 @@ print(pca.components_.shape)
 
 imagelist, legendlist = create_complist_imgs(pca.components_, chemct.shape[0], chemct.shape[1])
 
+imagelist = [imagelist[1], imagelist[4], imagelist[2], imagelist[3], imagelist[0]]
+
 clist = []; llist = []
 for ii in range(len(gtimlist)):
     clist.append(gtimlist[ii])
