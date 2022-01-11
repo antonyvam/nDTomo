@@ -432,7 +432,7 @@ cl.scatter(zoom=None)
 
 
 
-#%% Experimental data
+#%% Experimental data - locally stored
 
 datasets = ['Mn_catalyst_ch4149_rt', 'BCFZ_Mn_catalyst_ch4149_rt_abscor',
             'SOFC2_fresh_z-4.000', 'NMC532_pristine',
@@ -448,8 +448,6 @@ dd = 0
 
 fn = '%s%s_rec.h5' %(p, datasets[dd])
 fn = '%s%s_sinograms.h5' %(p, datasets[dd])
-
-# fn = 'D:\\Dropbox (Finden)\\Finden_Research\\Legacy_Projects\\Beamtime_Names\\IHMA120\\reconstructions\\xrdct_2_denoised.h5'
 
 with h5py.File(fn, 'r') as f:
     print(f.keys())
