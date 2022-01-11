@@ -432,36 +432,9 @@ cl.scatter(zoom=None)
 
 
 
-#%% Experimental data - locally stored
 
-datasets = ['Mn_catalyst_ch4149_rt', 'BCFZ_Mn_catalyst_ch4149_rt_abscor',
-            'SOFC2_fresh_z-4.000', 'NMC532_pristine',
-            'POXhr']
 
-datasets = ['Mn_catalyst_ch4149_rt', 'BCFZ_Mn_catalyst_ch4149_rt',
-            'SOFC2_fresh_z-4.000', 'NMC532_pristine',
-            'POXhr']
-
-p = 'Y:\\Development\\'
-
-dd = 0
-
-fn = '%s%s_rec.h5' %(p, datasets[dd])
-fn = '%s%s_sinograms.h5' %(p, datasets[dd])
-
-with h5py.File(fn, 'r') as f:
-    print(f.keys())
-    vol = np.array(f['data'][:])
-
-vol = np.transpose(vol, (2,1,0))
-
-print(vol.shape)
-
-vol = np.where(vol<0, 0, vol)
-
-showplot(np.sum(np.sum(vol,axis=0), axis = 0), 1)
-
-#%% POX data
+#%% Experimental data - POX catalyst data
 
 '''
 Download the POX experimental data from zenodo: https://zenodo.org/record/4664597
@@ -489,8 +462,6 @@ showplot(np.sum(np.sum(vol,axis=0), axis = 0), 1)
 
 #### We can crop a bit the chemical volume
 # roi = np.arange(100, 350)
-# roi = np.arange(100, 510)
-# roi = np.arange(300, 550)
 # vol = vol[:,:,roi]
 
 #### Normalise the volume with respect to the max value
