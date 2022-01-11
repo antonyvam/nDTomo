@@ -506,6 +506,8 @@ cluster_spaces = ['high', 'low']
         
 kk = 0
 
+data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2])).transpose()
+
 for method in methods:
     
     for cluster in clusters:
@@ -549,8 +551,13 @@ for method in methods:
                         with h5py.File(fn, 'w') as f:
                             
                             f.create_dataset('results', data = data[unique_samples['idx'],:].reshape(len(unique_samples['labels']), chemct.shape[0], chemct.shape[1]))
-                            f.create_dataset('unique_samples', data = unique_samples)
                             f.create_dataset('components', data = imlist)
+                            f.create_dataset('cluster', data = cluster)
+                            f.create_dataset('method', data = method)
+                            f.create_dataset('evaluate', data = evaluation)
+                            f.create_dataset('metric', data = metric)
+                            f.create_dataset('linkage', data = linkage)
+                            f.create_dataset('cluster_space', data = cluster_space)
 
                         f.close()
 
