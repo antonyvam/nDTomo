@@ -24,7 +24,7 @@ def showim(im, fignum = 1):
     plt.colorbar()
     plt.show()
     
-def plotfigs_imgs(imagelist, legendlist, rows=1, cols=5, figsize=(20,3), cl=True):
+def plotfigs_imgs(imagelist, legendlist, rows=1, cols=5, figsize=(20,3), cl=True, cmap = 'jet'):
     
     '''
     Create a collage of images without xticks/yticks
@@ -36,7 +36,7 @@ def plotfigs_imgs(imagelist, legendlist, rows=1, cols=5, figsize=(20,3), cl=True
     if len(axes.shape)<2:
         for ii in range(len(imagelist)):
             
-            i = axes[ii].imshow(imagelist[ii])
+            i = axes[ii].imshow(imagelist[ii], cmap=cmap)
             axes[ii].set_axis_off()
             axes[ii].set_title(legendlist[ii])
     
@@ -53,7 +53,7 @@ def plotfigs_imgs(imagelist, legendlist, rows=1, cols=5, figsize=(20,3), cl=True
                 
                 if kk < len(imagelist):
             
-                    i = axes[ii,jj].imshow(imagelist[kk])
+                    i = axes[ii,jj].imshow(imagelist[kk], cmap=cmap)
                     axes[ii,jj].set_axis_off()
                     axes[ii,jj].set_title(legendlist[kk])
             

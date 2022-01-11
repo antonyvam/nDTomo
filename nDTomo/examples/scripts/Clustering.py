@@ -444,7 +444,7 @@ datasets = ['Mn_catalyst_ch4149_rt', 'BCFZ_Mn_catalyst_ch4149_rt',
 
 p = 'Y:\\Development\\'
 
-dd = 1
+dd = 0
 
 fn = '%s%s_rec.h5' %(p, datasets[dd])
 fn = '%s%s_sinograms.h5' %(p, datasets[dd])
@@ -452,6 +452,7 @@ fn = '%s%s_sinograms.h5' %(p, datasets[dd])
 # fn = 'D:\\Dropbox (Finden)\\Finden_Research\\Legacy_Projects\\Beamtime_Names\\IHMA120\\reconstructions\\xrdct_2_denoised.h5'
 
 with h5py.File(fn, 'r') as f:
+    print(f.keys())
     vol = np.array(f['data'][:])
 
 vol = np.transpose(vol, (2,1,0))
@@ -462,19 +463,42 @@ vol = np.where(vol<0, 0, vol)
 
 showplot(np.sum(np.sum(vol,axis=0), axis = 0), 1)
 
+#%% POX data
+
+'''
+Download the POX experimental data from zenodo: https://zenodo.org/record/4664597
+'''
+
+import urllib
+urllib.urlretrieve('https://zenodo.org/record/4664597/files/Multiphase_experimental_test_data.h5', 'Multiphase_experimental_test_data.h5')
+
+#%% Load the data and prepare them from statistical analysis
+
+fn = 'C:\\Users\\Admin\\Downloads\\Multiphase_experimental_test_data.h5'
+
+with h5py.File(fn, 'r') as f:
+    print(f.keys())
+    vol = np.array(f['Patterns'][:])
+
+vol = np.transpose(vol, (2,1,0))
+
+print(vol.shape)
+vol = np.where(vol<0, 0, vol)
+
+showplot(np.sum(np.sum(vol,axis=0), axis = 0), 1)
 
 #%% Volume pre-processing
 
-# We can crop a bit the chemical volume
-roi = np.arange(100, 350)
-roi = np.arange(100, 510)
+#### We can crop a bit the chemical volume
+# roi = np.arange(100, 350)
+# roi = np.arange(100, 510)
 # roi = np.arange(300, 550)
-vol = vol[:,:,roi]
+# vol = vol[:,:,roi]
 
-# Normalise the volume with respect to the max value
+#### Normalise the volume with respect to the max value
 vol = 100*vol/np.max(vol)
 
-# We can normalise all images
+#### We can normalise all images
 # vol = normvol(vol)
 
 #%% NMF: Images/Sinograms
@@ -484,18 +508,14 @@ data = np.reshape(vol, (vol.shape[0]*vol.shape[1],vol.shape[2])).transpose()
 print(data.shape)
 
 start = time.time()
-nmf = NMF(n_components=10).fit(data+0.001)
+nmf = NMF(n_components=15).fit(data+0.001)
 print('NMF analysis took %s seconds' %(time.time() - start))
 
 print(nmf.components_.shape)
 
-#%%
-
-
 imagelist, legendlist = create_complist_imgs(nmf.components_, vol.shape[0], vol.shape[1])
 
-plotfigs_imgs(imagelist, legendlist, rows=2, cols=5, figsize=(20,6), cl=True)
-
+plotfigs_imgs(imagelist, legendlist, rows=3, cols=5, figsize=(20,9), cl=True)
 
 #%% NMF: Spectra
 
@@ -503,14 +523,12 @@ data = np.reshape(vol, (vol.shape[0]*vol.shape[1],vol.shape[2]))
 
 print(data.shape)
 
-nmf = NMF(n_components=10).fit(data+0.001)
+nmf = NMF(n_components=15).fit(data+0.001)
 print(nmf.components_.shape)
-
-#%%
 
 spectralist, legendlist = create_complist_spectra(nmf.components_)
 
-plotfigs_spectra(spectralist, legendlist, xaxis=np.arange(0,spectralist[0].shape[0]), rows=2, cols=5, figsize=(20,6))
+plotfigs_spectra(spectralist, legendlist, xaxis=np.arange(0,spectralist[0].shape[0]), rows=3, cols=5, figsize=(20,6))
 
 #%% Cluster image analysis
 
