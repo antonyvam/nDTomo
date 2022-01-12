@@ -381,6 +381,8 @@ print(nmf.components_.shape)
 
 spectralist, legendlist = create_complist_spectra(nmf.components_)
 
+spectralist = [spectralist[1], spectralist[4], spectralist[2], spectralist[3], spectralist[0]]
+
 slist = []; llist = []
 for ii in range(len(gtimlist)):
     slist.append(gtsplist[ii])
