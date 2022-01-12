@@ -231,7 +231,7 @@ for ii in range(np.max(labels)):
 
     print(ii)
     
-# imagelist = [imagelist[3], imagelist[0], imagelist[1], imagelist[4], imagelist[2]]
+imagelist = [imagelist[4], imagelist[1], imagelist[2], imagelist[3], imagelist[0]]
 
 clist = []; llist = []
 for ii in range(len(gtimlist)):
@@ -287,15 +287,22 @@ print('NMF analysis took %s seconds' %(time.time() - start))
 
 print(nmf.components_.shape)
 
-#%%
-ii = 4
-im = nmf.components_[ii,:]
-im = np.reshape(im, (chemct.shape[0],chemct.shape[1]))
+imagelist, legendlist = create_complist_imgs(nmf.components_, chemct.shape[0], chemct.shape[1])
 
-plt.figure(1);plt.clf()
-plt.imshow(im)
-plt.colorbar()
-plt.show()
+imagelist = [imagelist[1], imagelist[4], imagelist[2], imagelist[3], imagelist[0]]
+
+clist = []; llist = []
+for ii in range(len(gtimlist)):
+    clist.append(gtimlist[ii])
+    llist.append(gtldlist[ii])
+    
+for ii in range(len(imagelist)):
+    clist.append(imagelist[ii])
+    llist.append('Component %d' %(ii + 1))
+
+
+plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
+
 
 
 #%% FastICA: Images
