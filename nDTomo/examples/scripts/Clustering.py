@@ -214,8 +214,7 @@ ac = AgglomerativeClustering(distance_threshold=75, linkage="complete", n_cluste
 
 labels = ac.labels_[:]
 
-ims = np.zeros((chemct.shape[0], chemct.shape[1], np.max(labels)))
-inds = []
+imagelist = []; inds = []
 for ii in range(np.max(labels)):
 
     inds.append(np.where(ac.labels_==ii))
@@ -224,22 +223,29 @@ for ii in range(np.max(labels)):
     
     if len(tmp.shape)>2:
     
-        ims[:,:,ii] = np.mean(tmp, axis = 2)
+        imagelist.append(np.mean(tmp, axis = 2))
         
     else:
         
-        ims[:,:,ii] = tmp
+        imagelist.append(tmp)
 
     print(ii)
     
-#%%
-ii = 5
-im = ims[:,:,ii]
+# imagelist = [imagelist[3], imagelist[0], imagelist[1], imagelist[4], imagelist[2]]
 
-plt.figure(1);plt.clf()
-plt.imshow(im)
-plt.colorbar()
-plt.show()
+clist = []; llist = []
+for ii in range(len(gtimlist)):
+    clist.append(gtimlist[ii])
+    llist.append(gtldlist[ii])
+    
+for ii in range(len(imagelist)):
+    clist.append(imagelist[ii])
+    llist.append('Cluster %d' %(ii + 1))
+
+
+plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
+
+
 
 #%% Spectral clustering: images
 
