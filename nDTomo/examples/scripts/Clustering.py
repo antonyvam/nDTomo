@@ -311,22 +311,24 @@ data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2])).tra
 
 print(data.shape)
 
-fica = FastICA(n_components=6).fit(data+0.0001)
-print(nmf.components_.shape)
+fica = FastICA(n_components=5).fit(data+0.0001)
+print(fica.components_.shape)
 
-# ica = FastICA()
-# S_ = ica.fit_transform(data)
-# A_ = ica.mixing_.T
+imagelist, legendlist = create_complist_imgs(fica.components_, chemct.shape[0], chemct.shape[1])
 
-#%%
-ii = 2
-im = fica.components_[ii,:]
-im = np.reshape(im, (chemct.shape[0],chemct.shape[1]))
+# imagelist = [imagelist[1], imagelist[4], imagelist[2], imagelist[3], imagelist[0]]
 
-plt.figure(1);plt.clf()
-plt.imshow(im)
-plt.colorbar()
-plt.show()
+clist = []; llist = []
+for ii in range(len(gtimlist)):
+    clist.append(gtimlist[ii])
+    llist.append(gtldlist[ii])
+    
+for ii in range(len(imagelist)):
+    clist.append(imagelist[ii])
+    llist.append('Component %d' %(ii + 1))
+
+
+plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
 
 
 
