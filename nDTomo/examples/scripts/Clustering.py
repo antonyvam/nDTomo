@@ -377,6 +377,37 @@ for ii in range(len(spectralist)):
 plotfigs_spectra(slist, llist, xaxis=np.arange(0,slist[0].shape[0]), rows=2, cols=5, figsize=(20,7))
 
 
+#%% AgglomerativeClustering: Spectra
+
+data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2]))
+
+print(data.shape)
+
+clusters = 5
+
+ac = AgglomerativeClustering(n_clusters=clusters).fit(data)
+
+labels = ac.labels_[:]
+
+spectralist = []; inds = []
+for ii in range(clusters):
+
+    inds.append(np.where(ac.labels_==ii))
+    
+    spectralist.append(np.mean(data[np.squeeze(inds[ii]),:], axis = 0))
+
+slist = []; llist = []
+for ii in range(len(gtimlist)):
+    slist.append(gtsplist[ii])
+    llist.append(gtldlist[ii])
+    
+for ii in range(len(spectralist)):
+    slist.append(spectralist[ii])
+    llist.append('Cluster %d' %(ii + 1))
+    
+plotfigs_spectra(slist, llist, xaxis=np.arange(0,slist[0].shape[0]), rows=2, cols=5, figsize=(20,7))
+
+
 #%% FastICA: Spectra
 
 data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2]))
