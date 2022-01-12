@@ -103,7 +103,7 @@ gtimlist = [imAl, imCu, imFe, imPt, imZn]
 gtsplist = [dpAl, dpCu, dpFe, dpPt, dpZn]
 gtldlist = ['Al', 'Cu', 'Fe', 'Pt', 'Zn']
 
-#%%
+#%% Hyperspy tests
 
 s = Signal1D(chemct+0.01)
 
@@ -120,21 +120,6 @@ print(factors.data.shape, len(factors))
 s.plot_decomposition_results()
 
 
-#%% PCA: Spectra
-
-data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2]))
-
-print(data.shape)
-
-start = time.time()
-pca = PCA(n_components=5).fit(data)
-print('PCA analysis took %s seconds' %(time.time() - start))
-
-print(pca.components_.shape)
-
-spectralist, legendlist = create_complist_spectra(pca.components_)
-
-plotfigs_spectra(spectralist, legendlist, xaxis=np.arange(0,spectralist[0].shape[0]), rows=1, cols=5, figsize=(20,3))
 
 
 #%% PCA: Images
@@ -316,7 +301,7 @@ print(fica.components_.shape)
 
 imagelist, legendlist = create_complist_imgs(fica.components_, chemct.shape[0], chemct.shape[1])
 
-# imagelist = [imagelist[1], imagelist[4], imagelist[2], imagelist[3], imagelist[0]]
+# imagelist = [imagelist[0], imagelist[4], imagelist[1], imagelist[2], imagelist[3]]
 
 clist = []; llist = []
 for ii in range(len(gtimlist)):
@@ -329,6 +314,32 @@ for ii in range(len(imagelist)):
 
 
 plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
+
+
+#%% PCA: Spectra
+
+data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2]))
+
+print(data.shape)
+
+start = time.time()
+pca = PCA(n_components=5).fit(data)
+print('PCA analysis took %s seconds' %(time.time() - start))
+
+print(pca.components_.shape)
+
+spectralist, legendlist = create_complist_spectra(pca.components_)
+
+slist = []; llist = []
+for ii in range(len(gtimlist)):
+    slist.append(gtsplist[ii])
+    llist.append(gtldlist[ii])
+    
+for ii in range(len(spectralist)):
+    slist.append(spectralist[ii])
+    llist.append('Component %d' %(ii + 1))
+    
+plotfigs_spectra(slist, llist, xaxis=np.arange(0,slist[0].shape[0]), rows=2, cols=5, figsize=(20,7))
 
 
 
