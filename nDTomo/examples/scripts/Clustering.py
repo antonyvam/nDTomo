@@ -178,22 +178,28 @@ kmeans = KMeans(init="k-means++", n_clusters=clusters, n_init=4, random_state=0)
 
 labels = kmeans.labels_[:]
 
-ims = np.zeros((chemct.shape[0], chemct.shape[1], clusters))
-inds = []
+imagelist = []; inds = []
 for ii in range(clusters):
 
     inds.append(np.where(kmeans.labels_==ii))
     
-    ims[:,:,ii] = np.mean(chemct[:,:,np.squeeze(inds[ii])], axis = 2)
+    imagelist.append(np.mean(chemct[:,:,np.squeeze(inds[ii])], axis = 2))
 
 
-ii = 3
-im = ims[:,:,ii]
+imagelist = [imagelist[2], imagelist[4], imagelist[3], imagelist[0], imagelist[1]]
 
-plt.figure(1);plt.clf()
-plt.imshow(im)
-plt.colorbar()
-plt.show()
+clist = []; llist = []
+for ii in range(len(gtimlist)):
+    clist.append(gtimlist[ii])
+    llist.append(gtldlist[ii])
+    
+for ii in range(len(imagelist)):
+    clist.append(imagelist[ii])
+    llist.append('Cluster %d' %(ii + 1))
+
+
+
+plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
 
 #%% AgglomerativeClustering: images
 
