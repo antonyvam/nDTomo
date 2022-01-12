@@ -82,8 +82,48 @@ for cluster_space in cluster_spaces:
                     
                     if linkage == 'ward' or linkage == 'centroid' or linkage == 'median':
                         metric = 'euclidean'
+
+                        # init
+                        cl = Clustimage(method=method, embedding='tsne', dim=dim, 
+                                        params_pca=params_pca, params_hog=params_hog)
+                        
+                        results = cl.fit_transform(X=data, cluster=cluster, evaluate=evaluation,
+                                                   metric=metric, linkage=linkage,
+                                                   min_clust=min_clust, max_clust=max_clust,
+                                                   cluster_space = cluster_space)
+                        
+                        # Get the unique images
+                        unique_samples = cl.unique()
+                        #                         
+                        data[unique_samples['idx'],:]
+                        
+                        imlist = []; legendlist = []
+                        for ii in range(len(unique_samples['labels'])):
                             
+                            imlist.append(np.mean(unique_samples['img_mean'][ii].reshape(chemct.shape[0],chemct.shape[1],3), axis = 2)/255)
+                            legendlist.append('Component %d' %(ii + 1))
+
+                        # Save the results
+                        
+                        fn = 'phantom_noiseless_%s_%s_%s_%s_%s_%s.h5' %(method, cluster, evaluation, linkage, metric, cluster_space)
+                        print(fn)
+                        
+                        with h5py.File(fn, 'w') as f:
+                            
+                            f.create_dataset('results', data = data[unique_samples['idx'],:].reshape(len(unique_samples['labels']), chemct.shape[0], chemct.shape[1]))
+                            f.create_dataset('components', data = imlist)
+                            f.create_dataset('cluster', data = cluster)
+                            f.create_dataset('method', data = method)
+                            f.create_dataset('evaluate', data = evaluation)
+                            f.create_dataset('metric', data = metric)
+                            f.create_dataset('linkage', data = linkage)
+                            f.create_dataset('cluster_space', data = cluster_space)
+
+                        f.close()
+
+                        kk = kk + 1                            
                     else:
+                        
                         for metric in metrics:
                     
                             # init
