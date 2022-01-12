@@ -316,6 +316,9 @@ for ii in range(len(imagelist)):
 plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
 
 
+
+
+
 #%% PCA: Spectra
 
 data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2]))
@@ -343,24 +346,6 @@ plotfigs_spectra(slist, llist, xaxis=np.arange(0,slist[0].shape[0]), rows=2, col
 
 
 
-#%% LatentDirichletAllocation: Spectra
-
-data = np.reshape(chemct, (chemct.shape[0]*chemct.shape[1],chemct.shape[2]))
-
-print(data.shape)
-
-lda = LatentDirichletAllocation(n_components=6, max_iter=5, learning_method="online", learning_offset=50.0, random_state=0).fit(data + 0.01)
-print(lda.components_.shape)
-
-#%%
-
-plt.figure(2);plt.clf()
-for ii in range(5):
-    
-    plt.plot(lda.components_[ii,:]/np.max(lda.components_[ii,:]) + 0.05*ii)
-
-plt.show()
-
 
 #%% FastICA: Spectra
 
@@ -371,14 +356,19 @@ print(data.shape)
 fica = FastICA(n_components=6, random_state=0).fit(data)
 print(fica.components_.shape)
 
-#%%
+spectralist, legendlist = create_complist_spectra(fica.components_)
 
-plt.figure(2);plt.clf()
-for ii in range(5):
+slist = []; llist = []
+for ii in range(len(gtimlist)):
+    slist.append(gtsplist[ii])
+    llist.append(gtldlist[ii])
     
-    plt.plot(fica.components_[ii,:]/np.max(fica.components_[ii,:]) + 0.05*ii)
+for ii in range(len(spectralist)):
+    slist.append(spectralist[ii])
+    llist.append('Component %d' %(ii + 1))
+    
+plotfigs_spectra(slist, llist, xaxis=np.arange(0,slist[0].shape[0]), rows=2, cols=5, figsize=(20,7))
 
-plt.show()
 
 #%% NMF: Spectra
 
@@ -389,14 +379,20 @@ print(data.shape)
 nmf = NMF(n_components=6).fit(data+0.01)
 print(nmf.components_.shape)
 
-#%%
+spectralist, legendlist = create_complist_spectra(nmf.components_)
 
-plt.figure(2);plt.clf()
-for ii in range(5):
+slist = []; llist = []
+for ii in range(len(gtimlist)):
+    slist.append(gtsplist[ii])
+    llist.append(gtldlist[ii])
     
-    plt.plot( nmf.components_[ii,:]/np.max(nmf.components_[ii,:]) + 0.05*ii)
+for ii in range(len(spectralist)):
+    slist.append(spectralist[ii])
+    llist.append('Component %d' %(ii + 1))
+    
+plotfigs_spectra(slist, llist, xaxis=np.arange(0,slist[0].shape[0]), rows=2, cols=5, figsize=(20,7))
 
-plt.show()
+
 
 #%% Clustimage
 
