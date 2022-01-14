@@ -243,6 +243,29 @@ def ramp(detector_width):
             filter_array[i] = 0.5 - (((i - filter_array.shape[0] / 2.0)) * frequency_spacing)
     return filter_array.astype(np.float32)
 
+
+
+def scalesinos(sinograms):
+    
+    """
+    Method for normalising a sinogram volume (translations x projections x nz/spectral).
+    It assumes that the total intensity per projection is constant.
+    """  
+    
+    ss = np.sum(sinograms,axis = 2)
+    scint = np.zeros((sinograms.shape[1]))
+    # Summed scattering intensity per linescan
+    for ii in range(0,sinograms.shape[1]):
+        scint[ii] = np.sum(ss[:,ii])
+    # Scale factors
+    sf = scint/np.max(scint)
+    
+    # Normalise the sinogram data    
+    for jj in range(0,sinograms.shape[1]):
+        sinograms[:,jj,:] = sinograms[:,jj,:]/sf[jj] 
+    
+    return(sinograms)
+
 def paralleltomo(N, theta, p, w):
     
     '''
