@@ -5,10 +5,10 @@ Tomography tools for nDTomo
 @author: Antony Vamvakeros
 """
 
-
 import numpy as np
 from skimage.transform import iradon, radon
 from scipy import sparse, ndimage
+import astra, time
 
 
 def radonvol(vol, nproj, scan = 180):
@@ -32,7 +32,6 @@ def radonvol(vol, nproj, scan = 180):
         
     return(s)
         
-
 def fbpvol(svol, scan = 180):
     
     '''

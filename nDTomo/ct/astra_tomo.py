@@ -5,7 +5,9 @@ Tensorflow functions for tomography
 @author: Antony Vamvakeros
 """
 
-import scipy, astra
+
+import scipy, astra, time
+from numpy import deg2rad, arange
 
 def Amatrix_astra(ntr, ang):
 
@@ -30,3 +32,50 @@ def Amatrix_astra(ntr, ang):
     astra.data2d.delete(matrix_id)
 
     return(A)
+
+def astra_rec_single(sino, theta=None):
+    
+    '''
+    2D ct reconstruction using the astra-toolbox
+    1st dim in sinogram is translation steps, 2nd is projections
+    '''
+    
+    npr = sino.shape[1] # Number of projections
+    
+    if theta is None:
+        theta = deg2rad(arange(0, 180, 180/npr))
+    # Create a basic square volume geometry
+    vol_geom = astra.create_vol_geom(sino.shape[0], sino.shape[0])
+    # Create a parallel beam geometry with 180 angles between 0 and pi, and image.shape[0] detector pixels of width 1.
+    proj_geom = astra.create_proj_geom('parallel', 1.0, int(1.0*sino.shape[0]), theta)
+    # Create a sinogram using the GPU.
+    proj_id = astra.create_projector('strip',proj_geom,vol_geom)
+    sinogram_id = astra.data2d.create('-sino', proj_geom, sino.transpose())
+    
+    # Create a data object for the reconstruction
+    rec_id = astra.data2d.create('-vol', vol_geom)
+    
+    cfg = astra.astra_dict('FBP')
+    cfg['ReconstructionDataId'] = rec_id
+    cfg['ProjectionDataId'] = sinogram_id
+    cfg['ProjectorId'] = proj_id
+    cfg['option'] = { 'FilterType': 'Ram-Lak' }
+    
+    # Available algorithms:
+    # ART, SART, SIRT, CGLS, FBP
+    
+    # Create the algorithm object from the configuration structure
+    alg_id = astra.algorithm.create(cfg)
+    astra.algorithm.run(alg_id)
+    
+    # Get the result
+    start=time.time()
+    rec = astra.data2d.get(rec_id)
+    print((time.time()-start))
+        
+    astra.data2d.delete(sinogram_id)
+    astra.projector.delete(proj_id)
+    astra.algorithm.delete(alg_id)
+    astra.data2d.delete(rec_id)
+    
+    return(rec)

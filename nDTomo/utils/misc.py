@@ -17,11 +17,16 @@ def showplot(spectrum, fignum = 1):
     plt.plot(spectrum)
     plt.show()
     
-def showim(im, fignum = 1):
+def showim(im, fignum = 1, clim=None):
     
     plt.figure(fignum);plt.clf()
     plt.imshow(im, cmap = 'jet')
     plt.colorbar()
+    plt.axis('tight')
+    if clim is None:
+        plt.clim(np.min(im), np.max(im))
+    else:
+        plt.clim(clim)
     plt.show()
     
 def plotfigs_imgs(imagelist, legendlist, rows=1, cols=5, figsize=(20,3), cl=True, cmap = 'jet'):
