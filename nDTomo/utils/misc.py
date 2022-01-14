@@ -370,7 +370,23 @@ def q2tth(q, E):
     return(tth)
 
 
+def h5write_dataset(p, fn, data):
 
+    '''
+    Write a dataset to an h5 file.
+    Inputs:
+        p: path to dataset, e.g. 'C:\\path_to_data\\'
+        fn: filename, e.g. 'file'
+        data: dataset e.g. numpy array
+    '''
+    
+    f = "%s\\%s.h5" %(p,fn)
+    
+    h5f = h5py.File(f, "w")
+    
+    h5f.create_dataset('data', data = data)
+    
+    h5f.close()
 
 
 
