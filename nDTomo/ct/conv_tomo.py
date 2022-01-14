@@ -32,7 +32,7 @@ def radonvol(vol, nproj, scan = 180):
         
     return(s)
         
-def fbpvol(svol, scan = 180):
+def fbpvol(svol, scan = 180, theta=None):
     
     '''
     Calculates the reconstructed images of a stack of sinograms using the filtered backprojection algorithm, 3rd dimension is z/spectral
@@ -41,7 +41,8 @@ def fbpvol(svol, scan = 180):
     nt = svol.shape[0]
     nproj = svol.shape[1]
     
-    theta = np.arange(0, scan, scan/nproj)
+    if theta == None:
+        theta = np.arange(0, scan, scan/nproj)
     
     vol = np.zeros((nt, nt, svol.shape[2]))
     
@@ -243,7 +244,25 @@ def ramp(detector_width):
             filter_array[i] = 0.5 - (((i - filter_array.shape[0] / 2.0)) * frequency_spacing)
     return filter_array.astype(np.float32)
 
+def airrem(sinograms, ofs = 1):
+    
+    """
+    Method for subtracting the backgroung signal from the sinograms
+    Dimensions: translation steps (detector elements), projections, z (spectral)
+    """           
+    
+    di = sinograms.shape
+    if len(di)>2:
+        for ii in range(0,sinograms.shape[1]):
+            air = (np.mean(sinograms[0:ofs,ii,:],axis = 0) + np.mean(sinograms[sinograms.shape[0]-ofs:sinograms.shape[0],ii,:],axis = 0))/2
+            sinograms[:,ii,:] = sinograms[:,ii,:] - air
 
+    elif len(di)==2:
+        for ii in range(0,sinograms.shape[1]):
+            air = (np.mean(sinograms[0:ofs,:],axis = 0) + np.mean(sinograms[sinograms.shape[0]-ofs:sinograms.shape[0],ii],axis = 0))/2
+            sinograms[:,ii] = sinograms[:,ii] - air
+        
+    return(sinograms)
 
 def scalesinos(sinograms):
     
@@ -321,11 +340,10 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180):
             for ii in range(sinograms.shape[1]):
                 
                 if interp==True:
-                    sn[:,ii,ll] = interp(xnew, xold, sinograms[:,ii,ll])    
+                    sn[:,ii,ll] = np.interp(xnew, xold, sinograms[:,ii,ll])    
                 else:
                     sn[:,ii,ll] = np.interp(xnew, xold, sinograms[:,ii,ll], left=0 , right=0) 
-                
-                                    
+            
     elif len(di)==2:
         
         sn = np.zeros((len(xnew),sinograms.shape[1]))    

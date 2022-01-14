@@ -282,7 +282,6 @@ def phantom_random_shapes(sz=368, min_shapes=3, max_shapes=10, min_size=5, max_s
     Create an image with random shapes
     '''    
 
-
     im, _ = random_shapes((sz, sz), min_shapes=min_shapes, max_shapes=max_shapes, multichannel=False,
                              min_size=min_size, max_size=max_size, allow_overlap=True)
 
