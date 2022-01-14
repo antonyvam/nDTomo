@@ -142,18 +142,24 @@ def astra_create_geo(sino, theta=None):
     return(proj_geom, rec_id, proj_id)
              
              
-def astre_rec_alg(sino, proj_geom, rec_id, proj_id):
+def astre_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP'):
+
+    '''
+    Reconstruct with astra toolbox
+    '''    
 
     sinogram_id = astra.data2d.create('-sino', proj_geom, sino.transpose())
     
     # Available algorithms:
     # ART, SART, SIRT, CGLS, FBP
     
-    cfg = astra.astra_dict('FBP')
+    cfg = astra.astra_dict(method)
     cfg['ReconstructionDataId'] = rec_id
     cfg['ProjectionDataId'] = sinogram_id
     cfg['ProjectorId'] = proj_id
-    cfg['option'] = { 'FilterType': 'Ram-Lak' }
+    
+    if method == 'FBP':
+        cfg['option'] = { 'FilterType': 'Ram-Lak' }
     
     # Create the algorithm object from the configuration structure
     alg_id = astra.algorithm.create(cfg)
