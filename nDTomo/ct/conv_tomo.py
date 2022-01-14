@@ -8,7 +8,6 @@ Tomography tools for nDTomo
 import numpy as np
 from skimage.transform import iradon, radon
 from scipy import sparse, ndimage
-import astra, time
 from tqdm import tqdm
 
 def radonvol(vol, nproj, scan = 180):
@@ -41,12 +40,12 @@ def fbpvol(svol, scan = 180, theta=None):
     nt = svol.shape[0]
     nproj = svol.shape[1]
     
-    if theta == None:
+    if theta is None:
         theta = np.arange(0, scan, scan/nproj)
     
     vol = np.zeros((nt, nt, svol.shape[2]))
     
-    for ii in range(svol.shape[2]):
+    for ii in tqdm(range(svol.shape[2])):
         
         vol[:,:,ii] = iradon(svol[:,:,ii], theta, nt, circle = True)
     

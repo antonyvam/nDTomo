@@ -7,8 +7,8 @@ Tensorflow functions for tomography
 
 
 import scipy, astra, time
-from numpy import deg2rad, arange
-from numpy import linspace, pi, zeros, mod
+from numpy import deg2rad, arange, linspace, pi, zeros, mod
+from tqdm import tqdm
 
 def astra_Amatrix(ntr, ang):
 
@@ -174,7 +174,37 @@ def astre_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP'):
              
              
              
+def astre_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP'):
+
+    '''
+    Reconstruct with astra toolbox
+    '''    
+
+    # Available algorithms:
+    # ART, SART, SIRT, CGLS, FBP
+    
+    cfg = astra.astra_dict(method)
+    cfg['ReconstructionDataId'] = rec_id
+    cfg['ProjectorId'] = proj_id
+    if method == 'FBP':
+        cfg['option'] = { 'FilterType': 'Ram-Lak' }    
+    
+    rec = zeros((sinos.shape[0], sinos.shape[0], sinos.shape[2]))
+    for ii in tqdm(range(sinos.shape[2])):
+
+        sinogram_id = astra.data2d.create('-sino', proj_geom, sinos[:,:,ii].transpose())
+        
+        cfg['ProjectionDataId'] = sinogram_id
+        
+        # Create the algorithm object from the configuration structure
+        alg_id = astra.algorithm.create(cfg)
+        astra.algorithm.run(alg_id)
+        
+        # Get the result
+        rec[:,:,ii] = astra.data2d.get(rec_id)
              
+    return(rec)
+                      
              
              
              
