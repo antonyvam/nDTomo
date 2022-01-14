@@ -9,7 +9,7 @@ import numpy as np
 from skimage.transform import iradon, radon
 from scipy import sparse, ndimage
 import astra, time
-
+from tqdm import tqdm
 
 def radonvol(vol, nproj, scan = 180):
     
@@ -265,6 +265,80 @@ def scalesinos(sinograms):
         sinograms[:,jj,:] = sinograms[:,jj,:]/sf[jj] 
     
     return(sinograms)
+
+
+def sinocentering(sinograms, crsr=5, interp=True, scan=180):
+            
+    """
+    Method for centering sinograms by flipping the projection at 180 deg and comparing it with the one at 0 deg
+    Sinogram can be a 2D or 3D matrix (stack of sinograms)
+    Dimensions: translation steps (detector elements), projections, z (spectral)
+    """   
+    
+    di = sinograms.shape
+    if len(di)>2:
+        s = np.sum(sinograms, axis = 2)
+    else:
+        s = np.copy(sinograms)
+        
+    if scan==360:
+        
+        s = s[:,0:int(np.round(s.shape[1]/2))]
+    
+    cr =  np.arange(s.shape[0]/2 - crsr, s.shape[0]/2 + crsr, 0.1)
+    
+    xold = np.arange(0,s.shape[0])
+    
+    st = []; ind = [];
+    
+    
+    for kk in range(0,len(cr)):
+        
+        xnew = cr[kk] + np.arange(-np.ceil(s.shape[0]/2), np.ceil(s.shape[0]/2)-1)
+        sn = np.zeros((len(xnew),s.shape[1]))
+        
+        
+        for ii in range(0,s.shape[1]):
+            
+            if interp==True:
+                
+                sn[:,ii] = np.interp(xnew, xold, s[:,ii])
+            else:
+                
+                sn[:,ii] = np.interp(xnew, xold, s[:,ii], left=0 , right=0)
+
+        re = sn[::-1,-1]
+        st.append((np.std((sn[:,0]-re)))); ind.append(kk)
+
+    m = np.argmin(st)
+    print(cr[m])
+    
+    xnew = cr[m] + np.arange(-np.ceil(s.shape[0]/2), np.ceil(s.shape[0]/2)-1)
+    
+    if len(di)>2:
+        sn = np.zeros((len(xnew), sinograms.shape[1], sinograms.shape[2]))  
+        for ll in tqdm(range(sinograms.shape[2])):
+            for ii in range(sinograms.shape[1]):
+                
+                if interp==True:
+                    sn[:,ii,ll] = interp(xnew, xold, sinograms[:,ii,ll])    
+                else:
+                    sn[:,ii,ll] = np.interp(xnew, xold, sinograms[:,ii,ll], left=0 , right=0) 
+                
+                                    
+    elif len(di)==2:
+        
+        sn = np.zeros((len(xnew),sinograms.shape[1]))    
+        for ii in range(sinograms.shape[1]):
+            sn[:,ii] = np.interp(xnew, xold, sinograms[:,ii], left=0 , right=0)
+        
+    return(sn)
+
+def zigzag_flip(im):
+    
+    im = im[:,0:im.shape[1]-1]
+    
+    return(im)
 
 def paralleltomo(N, theta, p, w):
     
