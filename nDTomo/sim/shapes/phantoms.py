@@ -11,6 +11,7 @@ import numpy as np
 import h5py
 from skimage.data import shepp_logan_phantom
 from skimage.transform import rescale
+from skimage.draw import random_shapes
 
 # Might need to convert the functions to class methods
 
@@ -275,8 +276,22 @@ def phantom5c_xanesct(npix):
 
 
 
+def phantom_random_shapes(sz=368, min_shapes=3, max_shapes=10, min_size=5, max_size=50, norm=False):
+
+    '''
+    Create an image with random shapes
+    '''    
 
 
+    im, _ = random_shapes((sz, sz), min_shapes=min_shapes, max_shapes=max_shapes, multichannel=False,
+                             min_size=min_size, max_size=max_size, allow_overlap=True)
+
+    im = np.where(im==255, 1, im)
+    
+    if norm == True:
+        im = im/np.max(im)
+    
+    return(im)
 
 
 

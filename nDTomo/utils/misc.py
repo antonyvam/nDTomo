@@ -353,8 +353,6 @@ def tth2q(tth, E):
 
     return(q)
 
-
-
 def q2tth(q, E):
 
     """
@@ -368,7 +366,6 @@ def q2tth(q, E):
     tth = np.rad2deg(2*np.arcsin(wavel/(4*np.pi/q)))
 
     return(tth)
-
 
 def h5write_dataset(p, fn, data):
 
