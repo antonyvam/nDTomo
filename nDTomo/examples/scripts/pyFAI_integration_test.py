@@ -109,21 +109,19 @@ print("+"+"-"*72+"+"+"-"*10+"+"+"-"*9+"+")
 
 kk = 0
 for method in pyFAI.method_registry.IntegrationMethod.select_method(dim=1):
-    
-    if kk not in [10, 11]:
-        
-        kwargs["method"] = method
-        res_flat = ai.integrate1d(im, **kwargs)
-        #print(f"timeit for {method} max error: {abs(res_flat.intensity-1).max()}")
-        m = str(method).replace(")","")[26:96]
-        err = abs(res_flat.intensity-1).max()
-    
-        tm = %timeit -o -r1 -q ai.integrate1d(im, **kwargs)
-        tm_best = tm.best
-        print(f"| {m:70s} | {err:6.2e} | {tm_best*1000:7.3f} |")
-        if tm_best<fastest:
-            fastest = tm_best
-            best = method
+            
+    kwargs["method"] = method
+    res_flat = ai.integrate1d(im, **kwargs)
+    #print(f"timeit for {method} max error: {abs(res_flat.intensity-1).max()}")
+    m = str(method).replace(")","")[26:96]
+    err = abs(res_flat.intensity-1).max()
+
+    tm = %timeit -o -r1 -q ai.integrate1d(im, **kwargs)
+    tm_best = tm.best
+    print(f"| {m:70s} | {err:6.2e} | {tm_best*1000:7.3f} |")
+    if tm_best<fastest:
+        fastest = tm_best
+        best = method
         
     kk = kk + 1
 print("+"+"-"*72+"+"+"-"*10+"+"+"-"*9+"+")
