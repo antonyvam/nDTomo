@@ -10,7 +10,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy import sparse
-import nDTomo.ct.paralleltomo as paralleltomo
+import nDTomo.ct.conv_tomo.paralleltomo as paralleltomo
 
 
 #%%
