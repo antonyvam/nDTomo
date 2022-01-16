@@ -34,12 +34,22 @@ def astra_Amatrix(ntr, ang):
 
     return(A)
 
-def astra_rec_single(sino, theta=None):
+def astra_rec_single(sino, theta=None, method='FBP', filt='Ram-Lak'):
     
     '''
     2D ct reconstruction using the astra-toolbox
     1st dim in sinogram is translation steps, 2nd is projections
+
+    Available astra-toolbox reconstruction algorithms:
+    ART, SART, SIRT, CGLS, FBP
+    SIRT_CUDA, SART_CUDA, EM_CUDA, FBP_CUDA
+    
+    possible values for FilterType:
+    none, ram-lak, shepp-logan, cosine, hamming, hann, tukey, lanczos,
+    triangular, gaussian, barlett-hann, blackman, nuttall, blackman-harris,
+    blackman-nuttall, flat-top, kaiser, parzen    
     '''
+    
     
     npr = sino.shape[1] # Number of projections
     
@@ -60,10 +70,8 @@ def astra_rec_single(sino, theta=None):
     cfg['ReconstructionDataId'] = rec_id
     cfg['ProjectionDataId'] = sinogram_id
     cfg['ProjectorId'] = proj_id
-    cfg['option'] = { 'FilterType': 'Ram-Lak' }
-    
-    # Available algorithms:
-    # ART, SART, SIRT, CGLS, FBP
+    if method == 'FBP':
+        cfg['option'] = { 'FilterType': filt }        
     
     # Create the algorithm object from the configuration structure
     alg_id = astra.algorithm.create(cfg)
@@ -142,24 +150,30 @@ def astra_create_geo(sino, theta=None):
     return(proj_geom, rec_id, proj_id)
              
              
-def astre_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP'):
+def astre_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'):
 
     '''
-    Reconstruct with astra toolbox
+    Reconstruct a single sinogram with astra toolbox
+    
+    Available astra-toolbox reconstruction algorithms:
+    ART, SART, SIRT, CGLS, FBP
+    SIRT_CUDA, SART_CUDA, EM_CUDA, FBP_CUDA
+    
+    possible values for FilterType:
+    none, ram-lak, shepp-logan, cosine, hamming, hann, tukey, lanczos,
+    triangular, gaussian, barlett-hann, blackman, nuttall, blackman-harris,
+    blackman-nuttall, flat-top, kaiser, parzen        
     '''    
 
     sinogram_id = astra.data2d.create('-sino', proj_geom, sino.transpose())
-    
-    # Available algorithms:
-    # ART, SART, SIRT, CGLS, FBP
-    
+        
     cfg = astra.astra_dict(method)
     cfg['ReconstructionDataId'] = rec_id
     cfg['ProjectionDataId'] = sinogram_id
     cfg['ProjectorId'] = proj_id
     
     if method == 'FBP':
-        cfg['option'] = { 'FilterType': 'Ram-Lak' }
+        cfg['option'] = { 'FilterType': filt }
     
     # Create the algorithm object from the configuration structure
     alg_id = astra.algorithm.create(cfg)
@@ -174,20 +188,26 @@ def astre_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP'):
              
              
              
-def astre_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP'):
+def astre_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'):
 
     '''
-    Reconstruct with astra toolbox
+    Reconstruct a sinogram volume with astra toolbox
+    
+    Available astra-toolbox reconstruction algorithms:
+    ART, SART, SIRT, CGLS, FBP
+    SIRT_CUDA, SART_CUDA, EM_CUDA, FBP_CUDA
+    
+    possible values for FilterType:
+    none, ram-lak, shepp-logan, cosine, hamming, hann, tukey, lanczos,
+    triangular, gaussian, barlett-hann, blackman, nuttall, blackman-harris,
+    blackman-nuttall, flat-top, kaiser, parzen    
     '''    
-
-    # Available algorithms:
-    # ART, SART, SIRT, CGLS, FBP
     
     cfg = astra.astra_dict(method)
     cfg['ReconstructionDataId'] = rec_id
     cfg['ProjectorId'] = proj_id
     if method == 'FBP':
-        cfg['option'] = { 'FilterType': 'Ram-Lak' }    
+        cfg['option'] = { 'FilterType': filt }    
     
     rec = zeros((sinos.shape[0], sinos.shape[0], sinos.shape[2]))
     for ii in tqdm(range(sinos.shape[2])):
