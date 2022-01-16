@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-EasyVis GUI for chemical imaging data visualization
+nDVis GUI for chemical imaging data visualization
 
 @author: A. Vamvakeros
 
@@ -31,7 +31,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     
     """
     
-    EasyVis GUI
+    nDVis GUI
     
     """
     
