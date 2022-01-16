@@ -24,13 +24,19 @@ devices = [plat.get_devices(cl.device_type.ALL) for plat in platforms]
 devices = [dev for devices in devices for dev in devices]
 print(devices)
 
+
 #%%
 
-poni = "C:\\Users\\Admin\\Documents\\GitHub\\nDTomo\\nDTomo\\examples\\xrd2D\\CeO2.poni"
+from nDTomo.utils.misc import ndtomopath
+
+p = ndtomopath()
+
+
+poni = "%sexamples\\xrd2D\\CeO2.poni" %p
 ai = pyFAI.load(poni)
 
 
-fn = 'C:\\Users\\Admin\\Documents\\GitHub\\nDTomo\\nDTomo\\examples\\xrd2D\\CeO2.cbf'
+fn = '%sexamples\\xrd2D\\CeO2.cbf' %p
 
 im = fabio.open(fn)
 im = np.array(im.data)
@@ -43,7 +49,7 @@ plt.show()
 
 #%% Mask
 
-msk = fabio.open("C:\\Users\\Admin\\Documents\\GitHub\\nDTomo\\nDTomo\\examples\\xrd2D\\mask.edf")
+msk = fabio.open('%sexamples\\xrd2D\\mask.edf' %p)
 msk = np.array(msk.data)
 
 plt.figure(1);plt.clf();
@@ -74,6 +80,16 @@ tth, I = ai.integrate1d(data = im, **kwargs)
 plt.figure(2);plt.clf();
 plt.plot(tth,I)
 plt.show();
+
+#%%
+
+imc = ai.calcfrom1d(tth, I, shape=(1679, 1475), mask=msk)
+
+plt.figure(1);plt.clf();
+plt.imshow(np.concatenate((im,imc), axis =1), cmap ='jet')
+plt.colorbar()
+plt.clim(0, 3*np.std(im))
+plt.show()
 
 #%% Equivalence of different rebinning engines ... looking for the fastest:
 
