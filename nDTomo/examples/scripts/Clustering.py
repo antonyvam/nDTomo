@@ -42,7 +42,7 @@ plt.show()
 These are the five ground truth componet images
 '''
 
-npix = 200
+npix = 150
 imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
 
 plt.figure(2);plt.clf()
@@ -96,6 +96,12 @@ print(chemcti.shape)
 
 hs = hyperexpl.HyperSliceExplorer(chemct, np.arange(0,chemct.shape[2]), 'Channels')
 hs.explore()
+
+#%% Visualise multiple hyperspectral volumes
+
+hs = hyperexpl.HyperSliceExplorer(np.concatenate((chemct,chemct), axis=1), np.arange(0,chemct.shape[2]), 'Channels')
+hs.explore()
+
 
 #%% Ground truth data
 
