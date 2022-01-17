@@ -83,7 +83,7 @@ plt.show();
 
 #%%
 
-imc = ai.calcfrom1d(tth, I, shape=(1679, 1475), mask=msk)
+imc = ai.calcfrom1d(tth, I, mask=msk)
 
 plt.figure(1);plt.clf();
 plt.imshow(np.concatenate((im,imc), axis =1), cmap ='jet')
