@@ -46,6 +46,7 @@ setup(
 	extras_require={
 		"tensorflow": ["tensorflow-gpu==2.7"],
         "tensorflow-addons": ["tensorflow-addons==0.15"],
+		"mayavi": ["mayavi"],
 	},
     package_data={
         '': ['*.txt', '*.rst'],

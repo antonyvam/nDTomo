@@ -153,14 +153,54 @@ def load_example_patterns():
 
     return(dpAl, dpCu, dpFe, dpPt, dpZn, tth, q)
 
-def phantom5c_microct(npix):
+def phantom_microct(npix, nz = 100, imgs = None):
+    
+    '''
+    micro-CT phantom using component images
+    User can provide a list of the images
+    '''    
+    
+    if imgs is None:
+        im1, im2, im3, im4, im5 = phantom5c(npix)
+        imgs = [im1, im2, im3, im4, im5]
+
+    microct =  np.zeros((npix, npix, nz))
+    
+    inds_in = np.zeros((len(imgs)))
+    inds_fi = np.zeros((len(imgs)))
+    
+    for ii in range(len(imgs)):
+        
+        inds_in[ii] = np.random.randint(0, nz-2)
+        inds_fi[ii] = np.random.randint(inds_in[ii]+1, nz)
+   
+    
+    for ii in range(len(imgs)):
+        
+        microct[:,:,int(inds_in[ii]):int(inds_fi[ii])] = (microct[:,:,int(inds_in[ii]):int(inds_fi[ii])] + 
+                                                          np.transpose(np.tile(imgs[ii], (len(np.arange(inds_in[ii],inds_fi[ii])), 1, 1)), (2,1,0)))
+        
+
+    return(microct)
+    
+
+    
+def phantom5c_microct(npix, imgs = None, dps = None):
     
     '''
     micro-CT phantom using 5 components
+    User can provide a list of 5 images and a list of 5 spectra
     '''
     
-    imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
-    dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
+    if imgs is None:
+        imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
+    else:
+        imAl, imCu, imFe, imPt, imZn = imgs
+    
+    if dps is None:
+        dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
+    else:
+        dpAl, dpCu, dpFe, dpPt, dpZn = dps
     
     vol_Al = np.tile(dpAl, (npix, npix, 1))
     vol_Cu = np.tile(dpCu, (npix, npix, 1))
@@ -179,14 +219,22 @@ def phantom5c_microct(npix):
 
     return(microct)
 
-def phantom5c_xrdct(npix):
+def phantom5c_xrdct(npix, imgs = None, dps = None):
     
     '''
     XRD-CT phantom using 5 components
+    User can provide a list of images and a list of diffraction patterns
     '''
     
-    imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
-    dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
+    if imgs is None:
+        imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
+    else:
+        imAl, imCu, imFe, imPt, imZn = imgs
+    
+    if dps is None:
+        dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
+    else:
+        dpAl, dpCu, dpFe, dpPt, dpZn = dps
     
     vol_Al = np.tile(dpAl, (npix, npix, 1))
     vol_Cu = np.tile(dpCu, (npix, npix, 1))
@@ -203,14 +251,22 @@ def phantom5c_xrdct(npix):
         
     return(xrdct)
 
-
-def phantom5c_xrdct_images(npix, imAl, imCu, imFe, imPt, imZn):
+def phantom5c_3Dxrdct(npix, nz = 5, imgs = None, dps = None):
     
     '''
-    XRD-CT phantom using 5 components
+    3D-XRD-CT phantom using 5 components
+    User can provide a list of images and a list of diffraction patterns
     '''
-
-    dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
+    
+    if imgs is None:
+        imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
+    else:
+        imAl, imCu, imFe, imPt, imZn = imgs
+    
+    if dps is None:
+        dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
+    else:
+        dpAl, dpCu, dpFe, dpPt, dpZn = dps
     
     vol_Al = np.tile(dpAl, (npix, npix, 1))
     vol_Cu = np.tile(dpCu, (npix, npix, 1))
@@ -218,14 +274,25 @@ def phantom5c_xrdct_images(npix, imAl, imCu, imFe, imPt, imZn):
     vol_Pt = np.tile(dpPt, (npix, npix, 1))
     vol_Zn = np.tile(dpZn, (npix, npix, 1))
     
-    xrdct =  np.zeros_like(vol_Al)
+    xrdct =  np.zeros((npix, npix, len(dpAl)))
     
     for ii in range(xrdct.shape[2]):
         
         xrdct[:,:,ii] = (vol_Al[:,:,ii]*imAl +  vol_Cu[:,:,ii]*imCu + vol_Fe[:,:,ii]*imFe
               + vol_Pt[:,:,ii]*imPt + vol_Zn[:,:,ii]*imZn)
+    
+    xrdct = np.reshape(xrdct, (npix, npix, 1, xrdct.shape[2]))
+    
+    xrdct3d = np.zeros_like(xrdct)
+    
+    for ii in range(nz):
         
-    return(xrdct)
+        xrdct3d = np.concatenate((xrdct3d, xrdct), axis = 2)
+    
+    xrdct3d = xrdct3d[:,:,1:,:]
+    
+    return(xrdct3d)
+
 
 def load_example_xanes():
     
@@ -249,15 +316,23 @@ def load_example_xanes():
 
     return(sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E)
 
-def phantom5c_xanesct(npix):
+def phantom5c_xanesct(npix, imgs = None, spectra = None):
     
     '''
     XANES-CT phantom using 5 components
+    User can provide a list of images and a list of spectra
     '''
     
-    imNMC, imNi2O3, imNiOH2, imNiS, imNifoil = phantom5c(npix)
-    sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E = load_example_xanes()
+    if imgs is None:
+        imNMC, imNi2O3, imNiOH2, imNiS, imNifoil = phantom5c(npix)
+    else:
+        imNMC, imNi2O3, imNiOH2, imNiS, imNifoil = imgs
     
+    if spectra is None:
+        sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E = load_example_xanes()
+    else:
+        sNMC, sNi2O3, sNiOH2, sNiS, sNifoil = spectra    
+        
     vol_NMC = np.tile(sNMC, (npix, npix, 1))
     vol_Ni2O3 = np.tile(sNi2O3, (npix, npix, 1))
     vol_NiOH2 = np.tile(sNiOH2, (npix, npix, 1))
@@ -272,7 +347,6 @@ def phantom5c_xanesct(npix):
               + vol_NiS[:,:,ii]*imNiS + vol_Nifoil[:,:,ii]*imNifoil)
         
     return(xanesct)
-
 
 
 

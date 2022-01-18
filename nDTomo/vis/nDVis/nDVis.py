@@ -555,7 +555,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.fileQuit()
 
     def about(self):
-        message = '<b>EasyVis<p>'
+        message = '<b>nDVis<p>'
         message += '<p><i>Created by Antony Vamvakeros. Running under license under GPLv3'
         message += '\t '
         d = QtWidgets.QMessageBox()

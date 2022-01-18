@@ -82,7 +82,7 @@ or in the spectral domain (200 x 200 spectra with 250 points in each spectrum)
 '''
 
 
-chemct = phantom5c_xrdct_images(npix, imAl, imCu, imFe, imPt, imZn)
+chemct = phantom5c_xrdct(npix, imgs = [imAl, imCu, imFe, imPt, imZn], dps = [dpAl, dpCu, dpFe, dpPt, dpZn])
 print(chemct.shape)
 
 
