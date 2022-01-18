@@ -180,11 +180,9 @@ def phantom_microct(npix, nz = 100, imgs = None):
         microct[:,:,int(inds_in[ii]):int(inds_fi[ii])] = (microct[:,:,int(inds_in[ii]):int(inds_fi[ii])] + 
                                                           np.transpose(np.tile(imgs[ii], (len(np.arange(inds_in[ii],inds_fi[ii])), 1, 1)), (2,1,0)))
         
-
     return(microct)
     
 
-    
 def phantom5c_microct(npix, imgs = None, dps = None):
     
     '''
@@ -250,6 +248,66 @@ def phantom5c_xrdct(npix, imgs = None, dps = None):
               + vol_Pt[:,:,ii]*imPt + vol_Zn[:,:,ii]*imZn)
         
     return(xrdct)
+
+def phantom_3Dxrdct(npix, nz = 100, imgs = None, dps = None):
+    
+    '''
+    micro-CT phantom using component images
+    User can provide a list of the images
+    '''    
+    
+    if imgs is None:
+        im1, im2, im3, im4, im5 = phantom5c(npix)
+        imgs = [im1, im2, im3, im4, im5]
+
+    if dps is None:
+        dp1, dp2, dp3, dp4, dp5, tth, q = load_example_patterns()
+        dps = dp1, dp2, dp3, dp4, dp5
+               
+    nch = len(dp1)
+    inds_in = np.zeros((len(imgs)))
+    inds_fi = np.zeros((len(imgs)))
+    
+    for ii in range(len(imgs)):
+        
+        inds_in[ii] = np.random.randint(0, nz-2)
+        inds_fi[ii] = np.random.randint(inds_in[ii]+1, nz)
+   
+    xrdct3d = np.zeros((npix, npix, nz, nch))
+    
+    vols = []
+    for ii in range(len(imgs)):
+        vols.append(np.tile(dps[ii], (len(np.arange(inds_in[ii],inds_fi[ii])), npix, npix, 1)).transpose(1,2,0,3))
+        
+    for ii in range(len(vols)):
+                
+        for jj in range(vols[ii].shape[2]):
+            
+            for kk in range(nch):
+        
+                vols[ii][:,:,jj,kk] = vols[ii][:,:,jj,kk] * imgs[ii]
+        
+    for ii in range(len(imgs)):
+        
+        xrdct3d_tmp = np.zeros((npix, npix, nz, nch))
+        
+        xrdct3d_tmp[:,:,int(inds_in[ii]):int(inds_fi[ii]),:] = vols[ii]
+        
+        xrdct3d = xrdct3d + xrdct3d_tmp
+        
+    return(xrdct3d)
+
+def xrdmap(npix, nz=10, imgs = None, dps = None):
+    
+    '''
+    Calculate an XRD map from a simulated 3D-XRD-CT dataset
+    '''
+    
+    xrdct3d = phantom_3Dxrdct(npix, nz, imgs, dps)
+    
+    xrdmap = np.squeeze(np.sum(xrdct3d, axis=1))
+    
+    return(xrdmap)
 
 def phantom5c_3Dxrdct(npix, nz = 5, imgs = None, dps = None):
     
