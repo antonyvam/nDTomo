@@ -377,7 +377,7 @@ def h5write_dataset(p, fn, data):
         data: dataset e.g. numpy array
     '''
     
-    f = "%s\\%s.h5" %(p,fn)
+    f = "%s%s.h5" %(p,fn)
     
     h5f = h5py.File(f, "w")
     
