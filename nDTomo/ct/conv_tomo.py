@@ -351,6 +351,36 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180):
         
     return(sn)
 
+def rot_center(thetasum):
+
+    '''
+    Code taken from: https://github.com/everettvacek/PhaseSymmetry
+    If used, please cite: J. Synchrotron Rad. (2022). 29, https://doi.org/10.1107/S160057752101277
+    
+    The method requires that the object is within the field of view at all projection angles so that the reflection pair arcsine distribution is not obscured, 
+    and it also assumes that the rotation axis is aligned to the axis of the 2D detector used to acquire projection images
+    
+    Calculates the center of rotation of a sinogram.
+    Parameters
+    ----------
+    thetasum : array like
+        The 2-D thetasum array (z,theta).
+    Returns
+    -------
+    COR : float
+        The center of rotation.    
+    '''
+    
+    T = rfft(thetasum.ravel())
+    # Get components of the AC spatial frequency for axis perpendicular to rotation axis.
+    imag = T[thetasum.shape[0]].imag
+    real = T[thetasum.shape[0]].real
+    # Get phase of thetasum and return center of rotation.
+    phase = np.arctan2(imag*np.sign(real), real*np.sign(real)) 
+    COR = thetasum.shape[-1]/2-phase*thetasum.shape[-1]/(2*np.pi)
+
+    return COR    
+
 def zigzag_flip(im):
     
     im = im[:,0:im.shape[1]-1]
