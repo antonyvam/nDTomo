@@ -8,7 +8,7 @@ Installation instructions
 -------------------------
 The nDTomo is currently being developed using python v3.8
 
-In order to use all features, one has to use anaconda (e.g. for astra-toolbox).
+In order to use all features, one has to use anaconda (e.g. for astra-toolbox). I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator).
 
 To install from git:
 
@@ -21,7 +21,19 @@ git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
 pip install -e .
 ```
 
-For a user at the Diamond Light Source:
+For local installation, using the flag --user:
+
+```
+pip install --user -e .
+```
+
+or:
+
+```
+python3 setup.py install --user
+```
+
+For example, as a user at the Diamond Light Source:
 
 ```
 git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
