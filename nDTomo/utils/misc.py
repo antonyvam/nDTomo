@@ -17,10 +17,10 @@ def showplot(spectrum, fignum = 1):
     plt.plot(spectrum)
     plt.show()
     
-def showim(im, fignum = 1, clim=None):
+def showim(im, fignum = 1, clim=None, cmap='jet'):
     
     plt.figure(fignum);plt.clf()
-    plt.imshow(im, cmap = 'jet')
+    plt.imshow(im, cmap = cmap)
     plt.colorbar()
     plt.axis('tight')
     if clim is None:
