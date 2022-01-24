@@ -185,8 +185,7 @@ def astre_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'
     print((time.time()-start))             
              
     return(rec)
-             
-             
+                   
              
 def astre_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'):
 
