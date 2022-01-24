@@ -40,13 +40,14 @@ setup(
 		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy",
 		"pyqtgraph", "scikit-image",  "xdesign", "cached_property",
 		"hyperspy", "hyperspy_gui_ipywidgets", "hyperspy_gui_traitsui",
-		"periodictable", "ase", "scikit-learn", "pystackreg", "clustimage",
+		"periodictable", "ase", "scikit-learn", "pystackreg",
 	],
 	packages=find_packages(),
 	extras_require={
 		"tensorflow": ["tensorflow-gpu==2.7"],
         "tensorflow-addons": ["tensorflow-addons==0.15"],
 		"mayavi": ["mayavi"],
+		"clustimage": ["clustimage"],
 	},
     package_data={
         '': ['*.txt', '*.rst'],
