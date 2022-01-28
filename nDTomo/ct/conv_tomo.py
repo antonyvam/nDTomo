@@ -10,14 +10,16 @@ from skimage.transform import iradon, radon
 from scipy import sparse, ndimage
 from tqdm import tqdm
 
-def radonvol(vol, nproj, scan = 180):
+def radonvol(vol, scan = 180, theta=None):
     
     '''
     Calculates the radon transform of a stack of images, 3rd dimension is z/spectral
     '''
     
-    theta = np.arange(0, scan, scan/nproj)
-    
+    if theta is None:
+        theta = np.arange(0, scan, scan/vol.shape[0])    
+        
+    nproj = len(theta)
     s = np.zeros((vol.shape[0], nproj, vol.shape[2]))
     
     for ii in range(s.shape[2]):
