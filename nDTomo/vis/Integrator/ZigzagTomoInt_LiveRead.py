@@ -8,7 +8,7 @@ Class to read live XRD-CT integrated data collected with the zigzag method
 from PyQt5.QtCore import pyqtSignal, QThread
 import os, fabio, h5py
 from numpy import zeros, array, arange, mod, ceil, deg2rad, sin, pi
-from PThread import Periodic
+from nDTomo.vis.Integrator.PThread import Periodic
 
 class XRDCT_LiveRead(QThread): 
 

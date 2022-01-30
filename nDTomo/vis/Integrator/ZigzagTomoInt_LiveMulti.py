@@ -10,7 +10,7 @@ This type of integration process is intended to be couple with live visualizatio
 from PyQt5.QtCore import pyqtSignal, QThread
 import os, fabio, h5py, time, json
 from numpy import zeros, array, arange, mod, ceil, deg2rad, sin, pi
-from PThread import Periodic
+from nDTomo.vis.Integrator.PThread import Periodic
 
 class XRDCT_ID15ASqueeze(QThread): 
     

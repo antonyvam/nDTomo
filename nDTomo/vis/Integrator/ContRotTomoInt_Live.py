@@ -7,7 +7,7 @@ The type of integration process is intended to be couple with live visualization
 @author: A. Vamvakeros
 """
 
-from PThread import Periodic
+from nDTomo.vis.Integrator.PThread import Periodic
 from PyQt5.QtCore import pyqtSignal, QThread
 import os, fabio, h5py, pyFAI, time, json
 from numpy import zeros, array, arange, mod, ceil, deg2rad, sin, pi, round
