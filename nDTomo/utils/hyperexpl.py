@@ -16,11 +16,15 @@ class HyperSliceExplorer():
     HyperSliceExplorer is used to visualise hyperspectral imaging data
     '''
     
-    def __init__(self, data, xaxis, xaxislabel):
+    def __init__(self, data, xaxis=None, xaxislabel='Channels'):
 
 
         self.data = data
-        self.xaxis = xaxis
+        if xaxis is None:
+            self.xaxis = np.arange(0,data.shape[2])
+        else:
+            self.xaxis = xaxis
+            
         self.xaxislabel = xaxislabel
         
         self.mapper = []

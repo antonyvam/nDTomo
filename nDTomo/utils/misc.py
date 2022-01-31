@@ -226,7 +226,7 @@ def h5read(filename):
 def regimage(ref, mov):
 
     '''
-    Register an image using a transformation matrix
+    Register an image using a reference image
     Uses rigid body transformation (i.e. translation/rotation only)
     '''
     
@@ -272,6 +272,19 @@ def regvol(vol, tmat):
         print(ii)
 
     return(vol)
+
+def regimtmat(im, tmat):
+
+    '''
+    Register an image using a transformation matrix
+    Uses rigid body transformation (i.e. translation/rotation only)
+    '''
+    
+    sr = StackReg(StackReg.RIGID_BODY)
+    
+    reg = sr.transform(im, tmat)
+    
+    return(reg)
 
 def maskvolume(vol, msk):
     

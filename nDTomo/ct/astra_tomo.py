@@ -98,7 +98,7 @@ def astra_create_sino_geo(im, theta=None):
     # im.shape[0] detector pixels of width 1.
     # For more details on available geometries, see the online help of the
     # function astra_create_proj_geom .
-    if theta == None:
+    if theta is None:
         theta = linspace(0,pi,im.shape[0])
     proj_geom = astra.create_proj_geom('parallel', 1.0, im.shape[0], theta, False)
     # Create a sinogram using the GPU.

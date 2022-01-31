@@ -20,13 +20,20 @@ def radonvol(vol, scan = 180, theta=None):
         theta = np.arange(0, scan, scan/vol.shape[0])    
         
     nproj = len(theta)
-    s = np.zeros((vol.shape[0], nproj, vol.shape[2]))
     
-    for ii in range(s.shape[2]):
+    if len(vol.shape)>2:
+    
+        s = np.zeros((vol.shape[0], nproj, vol.shape[2]))    
+    
+        for ii in range(s.shape[2]):
+            
+            s[:,:,ii] = radon(vol[:,:,ii], theta)
         
-        s[:,:,ii] = radon(vol[:,:,ii], theta)
-    
-        print(ii)           
+            print(ii)       
+            
+    elif len(vol.shape)==2:
+        
+        s = radon(vol, theta)
         
     
     print('The dimensions of the sinogram volume are ', s.shape)
@@ -45,14 +52,19 @@ def fbpvol(svol, scan = 180, theta=None):
     if theta is None:
         theta = np.arange(0, scan, scan/nproj)
     
-    vol = np.zeros((nt, nt, svol.shape[2]))
+    if len(svol.shape)>2:
     
-    for ii in tqdm(range(svol.shape[2])):
+        vol = np.zeros((nt, nt, svol.shape[2]))
         
-        vol[:,:,ii] = iradon(svol[:,:,ii], theta, nt, circle = True)
-    
-        print(ii)           
+        for ii in tqdm(range(svol.shape[2])):
+            
+            vol[:,:,ii] = iradon(svol[:,:,ii], theta, nt, circle = True)
         
+            print(ii)           
+        
+    elif len(svol.shape)==2:
+        
+        vol = iradon(svol, theta, nt, circle = True)
     
     print('The dimensions of the reconstructed volume are ', vol.shape)
         
