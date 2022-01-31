@@ -153,107 +153,87 @@ def nDphantom_2D(npix, nim = 'One'):
         
     return(im)
 
-def nDphantom_microct(npix, nz = 100, imgs = None):
+def nDphantom_3D(npix, nz = 100, imgs = None, indices = 'Random', use_spectra = 'No' ,spectra = None, norm = 'Yes'):
     
     '''
-    Create a 3D phantom using a list of component images
+    Create a 3D phantom dataset using a list of component images
     The user can provide a list of the images
     Inputs:
-        npix: number of pixels for the generated image(s) comprising the volume stack; it generates squared image(s)
-        nz: number of images comprising the volume stack
+        npix: number of pixels for the generated image(s) comprising the volume dataset; it generates squared image(s)
+        nz: number of images comprising the volume dataset
         imgs: list of images; if None (default), it will use the nDphantom_2D to create 5 component images
+        indices: string (options are 'Random', 'All'); specifies if the component images will be used in all z positions in the volume dataset ('All') or not ('Random')
+        use_spectra: string ('Yes'/'No') for using a list of spectra to create the volume dataset
+        spectra: list of component spectra; if not provided, it will use 5 example patterns provide at nDTomo
+        norm: string (options are 'Volume', 'Image') for normalising the data; 'Volume' normalises the whole 3D image stack with respect to the highest intensity, 
+            'Image' normalises each image in the volume dataset
     Output:
-        vol: volume with dimensions (npix, npix, nz)
+        vol: volume with dimensions (npix, npix, nz/nch)
+        
+    For example to create a 2D chemical dataset:
+        vol = (npix, nz = 100, imgs = None, indices = 'All', use_spectra = 'Yes', spectra = None, norm = 'No')
     '''    
     
     if imgs is None:
         im1, im2, im3, im4, im5 = nDphantom_2D(npix, 'Multiple')
         imgs = [im1, im2, im3, im4, im5]
 
-    microct =  np.zeros((npix, npix, nz))
+
+    vol =  np.zeros((npix, npix, nz))
     
-    inds_in = np.zeros((len(imgs)))
-    inds_fi = np.zeros((len(imgs)))
-    
-    for ii in range(len(imgs)):
+    if indices == 'Random':
         
-        inds_in[ii] = np.random.randint(0, nz-2)
-        inds_fi[ii] = np.random.randint(inds_in[ii]+1, nz)
+        inds_in = np.zeros((len(imgs)))
+        inds_fi = np.zeros((len(imgs)))
+    
+        for ii in range(len(imgs)):
+            
+            inds_in[ii] = np.random.randint(0, nz-2)
+            inds_fi[ii] = np.random.randint(inds_in[ii]+1, nz)
+            
+    elif indices == 'All':
+                
+        inds_in = np.zeros((len(imgs)))
+        inds_fi = np.ones((vol.shape[2]))        
    
+    if use_spectra == 'No':
     
-    for ii in range(len(imgs)):
+        for ii in range(len(imgs)):
+            
+            vol[:,:,int(inds_in[ii]):int(inds_fi[ii])] = (vol[:,:,int(inds_in[ii]):int(inds_fi[ii])] + 
+                                                              np.transpose(np.tile(imgs[ii], (len(np.arange(inds_in[ii],inds_fi[ii])), 1, 1)), (2,1,0)))
+    elif use_spectra == 'Yes':
         
-        microct[:,:,int(inds_in[ii]):int(inds_fi[ii])] = (microct[:,:,int(inds_in[ii]):int(inds_fi[ii])] + 
-                                                          np.transpose(np.tile(imgs[ii], (len(np.arange(inds_in[ii],inds_fi[ii])), 1, 1)), (2,1,0)))
+        if spectra is None:
+            sp1, sp2, sp3, sp4, sp5, tth, q = load_example_patterns()
+            spectra = [sp1, sp2, sp3, sp4, sp5]
+        else:
+            sp1, sp2, sp3, sp4, sp5 = spectra
+            
         
-    return(microct)
+        for ii in range(len(imgs)):
+            
+            vol_tmp = np.tile(spectra[ii], (npix, npix, 1))
+            
+            vol[:,:,int(inds_in[ii]):int(inds_fi[ii])] = vol[:,:,int(inds_in[ii]):int(inds_fi[ii])] + vol_tmp[:,:,int(inds_in[ii]):int(inds_fi[ii])]     
+            
+    if norm == 'Volume':
+        
+        vol = vol/np.max(vol)
+        
+    elif norm == 'Images':
+        
+        for ii in range(vol.shape[2:]):
+        
+            vol[:,:,ii] = vol[:,:,ii]/np.max(vol[:,:,ii])          
+        
+    return(vol)
     
 
-def phantom5c_microct(npix, imgs = None, dps = None):
-    
-    '''
-    micro-CT phantom using 5 components
-    User can provide a list of 5 images and a list of 5 spectra
-    '''
-    
-    if imgs is None:
-        imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
-    else:
-        imAl, imCu, imFe, imPt, imZn = imgs
-    
-    if dps is None:
-        dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
-    else:
-        dpAl, dpCu, dpFe, dpPt, dpZn = dps
-    
-    vol_Al = np.tile(dpAl, (npix, npix, 1))
-    vol_Cu = np.tile(dpCu, (npix, npix, 1))
-    vol_Fe = np.tile(dpFe, (npix, npix, 1))
-    vol_Pt = np.tile(dpPt, (npix, npix, 1))
-    vol_Zn = np.tile(dpZn, (npix, npix, 1))
-    
-    microct =  np.zeros_like(vol_Al)
-    
-    for ii in range(vol_Al.shape[2]):
-        
-        im = (vol_Al[:,:,ii]*imAl +  vol_Cu[:,:,ii]*imCu + vol_Fe[:,:,ii]*imFe
-              + vol_Pt[:,:,ii]*imPt + vol_Zn[:,:,ii]*imZn)
-        
-        microct[:,:,ii] = im/np.max(im)    
 
-    return(microct)
+##########################
 
-def phantom5c_xrdct(npix, imgs = None, dps = None):
-    
-    '''
-    XRD-CT phantom using 5 components
-    User can provide a list of images and a list of diffraction patterns
-    '''
-    
-    if imgs is None:
-        imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
-    else:
-        imAl, imCu, imFe, imPt, imZn = imgs
-    
-    if dps is None:
-        dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
-    else:
-        dpAl, dpCu, dpFe, dpPt, dpZn = dps
-    
-    vol_Al = np.tile(dpAl, (npix, npix, 1))
-    vol_Cu = np.tile(dpCu, (npix, npix, 1))
-    vol_Fe = np.tile(dpFe, (npix, npix, 1))
-    vol_Pt = np.tile(dpPt, (npix, npix, 1))
-    vol_Zn = np.tile(dpZn, (npix, npix, 1))
-    
-    xrdct =  np.zeros_like(vol_Al)
-    
-    for ii in range(xrdct.shape[2]):
-        
-        xrdct[:,:,ii] = (vol_Al[:,:,ii]*imAl +  vol_Cu[:,:,ii]*imCu + vol_Fe[:,:,ii]*imFe
-              + vol_Pt[:,:,ii]*imPt + vol_Zn[:,:,ii]*imZn)
-        
-    return(xrdct)
+
 
 def phantom_3Dxrdct(npix, nz = 100, imgs = None, dps = None):
     
