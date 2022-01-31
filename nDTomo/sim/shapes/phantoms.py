@@ -97,37 +97,6 @@ def face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], t
     
     return(im)
     
-def phantom1c(npix):
-        
-    '''
-    Phantom image using a combination of five images created with xdesign: SlantedSquares, SiemensStar, DogaCircles, Triangle and Face
-    '''    
-    
-    im1 = sstar(npix, nstars=32)
-    im2 = dcircles(npix, n_sizes=8, size_ratio=0.75, n_shuffles=2)
-    im3 = ssquares(npix, count=16, angle=15/360*2*np.pi, gap=0.05)
-    im4 = tri(npix, p1 = [-0.3, -0.2], p2 = [0.0, -0.3], p3 = [0.3, -0.2])
-    im5 = face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], tp3 = [0.3, -0.2],
-         e1p = [-0.2, 0.0], e1r=0.1, e2p = [0.2, 0.0], e2r=0.1 )
-    
-    im = im1 + im2 + im3 + im4 + im5
-    im = im/np.max(im)
-    return(im)
-
-def phantom5c(npix):
-        
-    '''
-    Five images created with xdesign: SlantedSquares, SiemensStar, DogaCircles, Triangle and Face
-    '''    
-
-    im1 = sstar(npix, nstars=32)
-    im2 = dcircles(npix, n_sizes=8, size_ratio=0.75, n_shuffles=2)
-    im3 = ssquares(npix, count=16, angle=15/360*2*np.pi, gap=0.05)
-    im4 = tri(npix, p1 = [-0.3, -0.2], p2 = [0.0, -0.3], p3 = [0.3, -0.2])
-    im5 = face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], tp3 = [0.3, -0.2],
-         e1p = [-0.2, 0.0], e1r=0.1, e2p = [0.2, 0.0], e2r=0.1 )
-    
-    return(im1, im2, im3, im4, im5)
 
 def load_example_patterns():
     
@@ -153,15 +122,52 @@ def load_example_patterns():
 
     return(dpAl, dpCu, dpFe, dpPt, dpZn, tth, q)
 
-def phantom_microct(npix, nz = 100, imgs = None):
+def nDphantom_2D(npix, nim = 'One'):
+        
+    '''
+    Create phantom image(s) using a combination of five images created with xdesign: SlantedSquares, SiemensStar, DogaCircles, Triangle and Face
+    Inputs:
+        npix: number of pixels for the generated image(s); it generates squared image(s)
+        nim: string corresponding to number of images, can be 'One' or 'Multiple'
+    '''    
+    
+    im1 = sstar(npix, nstars=32)
+    im2 = dcircles(npix, n_sizes=8, size_ratio=0.75, n_shuffles=2)
+    im3 = ssquares(npix, count=16, angle=15/360*2*np.pi, gap=0.05)
+    im4 = tri(npix, p1 = [-0.3, -0.2], p2 = [0.0, -0.3], p3 = [0.3, -0.2])
+    im5 = face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], tp3 = [0.3, -0.2],
+         e1p = [-0.2, 0.0], e1r=0.1, e2p = [0.2, 0.0], e2r=0.1 )
+    
+    if nim == 'One':
+    
+        im = im1 + im2 + im3 + im4 + im5
+        im = im/np.max(im)
+    
+    elif nim == 'Multiple':
+        
+        im = [im1, im2, im3, im4, im5]
+        
+    else:
+        
+        print('Wrong input for nim')
+        
+    return(im)
+
+def nDphantom_microct(npix, nz = 100, imgs = None):
     
     '''
-    micro-CT phantom using component images
-    User can provide a list of the images
+    Create a 3D phantom using a list of component images
+    The user can provide a list of the images
+    Inputs:
+        npix: number of pixels for the generated image(s) comprising the volume stack; it generates squared image(s)
+        nz: number of images comprising the volume stack
+        imgs: list of images; if None (default), it will use the nDphantom_2D to create 5 component images
+    Output:
+        vol: volume with dimensions (npix, npix, nz)
     '''    
     
     if imgs is None:
-        im1, im2, im3, im4, im5 = phantom5c(npix)
+        im1, im2, im3, im4, im5 = nDphantom_2D(npix, 'Multiple')
         imgs = [im1, im2, im3, im4, im5]
 
     microct =  np.zeros((npix, npix, nz))
