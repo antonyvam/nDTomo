@@ -8,7 +8,6 @@ Dimensionality reduction/ cluster analysis using a phantom xrd-ct dataset
 #%%
 
 from nDTomo.sim.shapes.phantoms import nDphantom_2D, load_example_patterns, nDphantom_3D, nDphantom_4D, nDphantom_2Dmap
-from nDTomo.utils import hyperexpl
 from nDTomo.utils.misc import closefigs, showplot, showspectra, showim, showvol, normvol, addpnoise2D, addpnoise3D, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
 import numpy as np
 import matplotlib.pyplot as plt
