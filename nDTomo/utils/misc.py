@@ -406,15 +406,32 @@ def mask_thr(vol, roi, thr, fignum = 1):
 
     return(msk)
 
+def KeVtoAng(E):
+    
+    """
+	Convert photon energy in KeV to Angstrom
+	"""  
+    
+    h = 6.620700406E-34;c = 3E8
+    return(1E10*6.242E18*h*c/(E*1E3))
+
+def AngtoKeV(wavel):
+    
+    """
+	Convert photon energy in KeV to Angstrom
+	"""  
+    
+    h = 6.620700406E-34;c = 3E8
+    return(1E10*6.242E18*h*c/(wavel*1E3))
 
 def tth2q(tth, E):
 
     """
 	Convert 2theta to q
+    E is energy in KeV
 	"""  	
     
-    h = 6.620700406E-34;c = 3E8
-    wavel = 1E10*6.242E18*h*c/(E*1E3)
+    wavel = KeVtoAng(E)
     q = np.pi*2/(wavel/(2*np.sin(np.deg2rad(0.5*tth))))
 
     return(q)
