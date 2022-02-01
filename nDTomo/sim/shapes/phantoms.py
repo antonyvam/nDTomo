@@ -452,12 +452,28 @@ def nDphantom_5D(npix, nz, nt, imgs = None, indices = 'Random', spectra = None):
     
     vol5D = np.zeros((npix, npix, nz, nch, nt))    
 
+    # Now we have tp define the behaviour of each component (-1, 0, 1) which specifies the direction that the component is moving (0 means no movement)
+    xold = np.arange(0, nch)
+    tstep = np.ceil(nch*0.01*3)
+    compbeh = np.zeros((len(imgs)))
+    for ii in range(len(compbeh)):
+        compbeh[ii] = np.random.randint(-1,2)
+        
     for ii in range(vol5D.shape[4]):
         
-        vol5D[:,:,:,:,ii] = nDphantom_4D(npix=npix, nzt=nz, vtype = 'Spectral', imgs=imgs, indices = 'All',  spectra = spectra,  norm = 'No')
+        spnewlist = []
+        
+        for jj in range(len(spectra)):
+        
+            f = interp1d(xold, spectra[jj], kind='linear', bounds_error=False, fill_value=0)
+            
+            spnewlist.append(f(xold + compbeh[jj]*ii*tstep))        
+        
+        vol5D[:,:,:,:,ii] = nDphantom_4D(npix=npix, nzt=nz, vtype = 'Spectral', imgs=imgs, indices = 'All',  spectra = spnewlist,  norm = 'No')
 
 
     return(vol5D)
+
 
 def nDphantom_2Dmap(vol, dim = 0):
     

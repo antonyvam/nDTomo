@@ -10,12 +10,8 @@ Tests for the various nDTomo phantoms
 from nDTomo.utils.hyperexpl import HyperSliceExplorer
 from nDTomo.sim.shapes.phantoms import nDphantom_2D, nDphantom_3D, nDphantom_4D, nDphantom_5D, nDphantom_2Dmap
 from nDTomo.utils.misc import closefigs, addpnoise2D, addpnoise3D, interpvol, showplot, showspectra, showim, showvol, normvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
-
 import numpy as np
-import matplotlib.pyplot as plt
-import time, h5py
 
-from mayavi import mlab
 
 #%% Let's create a 2D image and get the components used to create it
 
