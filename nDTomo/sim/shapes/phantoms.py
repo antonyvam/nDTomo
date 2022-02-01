@@ -26,6 +26,23 @@ def SheppLogan(npix):
     im = rescale(im, scale=npix/im.shape[0], mode='reflect')
     return(im)
 
+def phantom_random_shapes(sz=368, min_shapes=3, max_shapes=10, min_size=5, max_size=50, norm=False):
+
+    '''
+    Create an image with random shapes
+    '''    
+
+    im, _ = random_shapes((sz, sz), min_shapes=min_shapes, max_shapes=max_shapes, multichannel=False,
+                             min_size=min_size, max_size=max_size, allow_overlap=True)
+
+    im = np.where(im==255, 1, im)
+    
+    if norm == True:
+        im = im/np.max(im)
+    
+    return(im)
+
+
 def sstar(npix, nstars=32):
     
     '''
@@ -98,6 +115,27 @@ def face(npix, cp = [0.0, 0.0], cr=0.5, tp1 = [-0.3, -0.2], tp2 = [0.0, -0.3], t
     
     return(im)
     
+def load_example_xanes():
+    
+    '''
+    Load a test dataset containing five XANES spectra
+    '''    
+
+    fn = '%s\examples\patterns\AllSpectra.h5' %(ndtomopath())
+
+    with h5py.File(fn, 'r') as f:
+        
+        print(f.keys())
+        
+        sNMC = np.array(f['NMC'][:])
+        sNi2O3 = np.array(f['Ni2O3'][:])
+        sNiOH2 = np.array(f['NiOH2'][:])
+        sNiS = np.array(f['NiS'][:])
+        sNifoil = np.array(f['Nifoil'][:])
+    
+        E = np.array(f['energy'][:])
+
+    return(sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E)
 
 def load_example_patterns():
     
@@ -433,81 +471,6 @@ def nDphantom_2Dmap(vol, dim = 0):
     map2D = np.squeeze(np.sum(vol, axis=dim))
 
     return(map2D)
-
-
-def load_example_xanes():
-    
-    '''
-    Load a test dataset containing five XANES spectra
-    '''    
-
-    fn = '%s\examples\patterns\AllSpectra.h5' %(ndtomopath())
-
-    with h5py.File(fn, 'r') as f:
-        
-        print(f.keys())
-        
-        sNMC = np.array(f['NMC'][:])
-        sNi2O3 = np.array(f['Ni2O3'][:])
-        sNiOH2 = np.array(f['NiOH2'][:])
-        sNiS = np.array(f['NiS'][:])
-        sNifoil = np.array(f['Nifoil'][:])
-    
-        E = np.array(f['energy'][:])
-
-    return(sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E)
-
-# def phantom5c_xanesct(npix, imgs = None, spectra = None):
-    
-#     '''
-#     XANES-CT phantom using 5 components
-#     User can provide a list of images and a list of spectra
-#     '''
-    
-#     if imgs is None:
-#         imNMC, imNi2O3, imNiOH2, imNiS, imNifoil = phantom5c(npix)
-#     else:
-#         imNMC, imNi2O3, imNiOH2, imNiS, imNifoil = imgs
-    
-#     if spectra is None:
-#         sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E = load_example_xanes()
-#     else:
-#         sNMC, sNi2O3, sNiOH2, sNiS, sNifoil = spectra    
-        
-#     vol_NMC = np.tile(sNMC, (npix, npix, 1))
-#     vol_Ni2O3 = np.tile(sNi2O3, (npix, npix, 1))
-#     vol_NiOH2 = np.tile(sNiOH2, (npix, npix, 1))
-#     vol_NiS = np.tile(sNiS, (npix, npix, 1))
-#     vol_Nifoil = np.tile(sNifoil, (npix, npix, 1))
-    
-#     xanesct =  np.zeros_like(vol_NMC)
-    
-#     for ii in range(xanesct.shape[2]):
-        
-#         xanesct[:,:,ii] = (vol_NMC[:,:,ii]*imNMC +  vol_Ni2O3[:,:,ii]*imNi2O3 + vol_NiOH2[:,:,ii]*imNiOH2
-#               + vol_NiS[:,:,ii]*imNiS + vol_Nifoil[:,:,ii]*imNifoil)
-        
-#     return(xanesct)
-
-
-
-def phantom_random_shapes(sz=368, min_shapes=3, max_shapes=10, min_size=5, max_size=50, norm=False):
-
-    '''
-    Create an image with random shapes
-    '''    
-
-    im, _ = random_shapes((sz, sz), min_shapes=min_shapes, max_shapes=max_shapes, multichannel=False,
-                             min_size=min_size, max_size=max_size, allow_overlap=True)
-
-    im = np.where(im==255, 1, im)
-    
-    if norm == True:
-        im = im/np.max(im)
-    
-    return(im)
-
-
 
 
 
