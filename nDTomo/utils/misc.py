@@ -470,11 +470,52 @@ def h5read_dataset(p, fn, data = 'data'):
 
     return(data)
 
+def h5write_data(p, fn, dlist, data):
+
+    '''
+    Write a dataset to an h5 file.
+    Inputs:
+        p: path to dataset, e.g. 'C:\\path_to_data\\'
+        fn: filename, e.g. 'file'
+        dlist: list containing the names for the various datasets
+        data:list containing the various dataset e.g. list of numpy arrays
+    '''
+        
+    f = "%s%s.h5" %(p,fn)
+    
+    h5f = h5py.File(f, "w")
+    
+    for ii in range(len(dlist)):
+    
+        h5f.create_dataset(dlist[ii], data = data[ii])
+    
+    h5f.close()
 
 
 
+def h5read_data(p, fn, dlist):
 
+    '''
+    Reads a dataset from an h5 file.
+    Inputs:
+        p: path to dataset, e.g. 'C:\\path_to_data\\'
+        fn: filename, e.g. 'file'
+        dlist: list containing the names for the various datasets
+    Outputs:
+        data: dictionary containing the various datasets
+    '''
+    
+    f = "%s%s.h5" %(p,fn)
+    
+    with h5py.File(f, "r") as h5f:
+    
+        data = {}
+        
+        for ii in range(len(dlist)):
 
+            data[dlist[ii]] = h5f[dlist[ii]][:]
+
+    return(data)
 
 
 

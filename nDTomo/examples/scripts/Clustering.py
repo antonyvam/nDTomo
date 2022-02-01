@@ -8,18 +8,27 @@ Dimensionality reduction/ cluster analysis using a phantom xrd-ct dataset
 #%%
 
 from nDTomo.sim.shapes.phantoms import nDphantom_2D, load_example_patterns, nDphantom_3D, nDphantom_4D, nDphantom_2Dmap
-from nDTomo.utils.misc import closefigs, showplot, showspectra, showim, showvol, normvol, addpnoise2D, addpnoise3D, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
+from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, showvol, normvol, addpnoise2D, addpnoise3D, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
+from nDTomo.utils.hyperexpl import HyperSliceExplorer
+from nDTomo.ct.astra_tomo import astra_create_geo, astre_rec_vol, astre_rec_alg, astra_create_sino_geo, astra_create_sino
+
+from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 import time, h5py
-from nDTomo.utils.hyperexpl import HyperSliceExplorer
 
 ### Packages for clustering and dimensionality reduction
 
 from sklearn.decomposition import PCA, NMF, FastICA, LatentDirichletAllocation
 from sklearn.cluster import KMeans, SpectralClustering, DBSCAN, AgglomerativeClustering
 from clustimage import Clustimage
-from hyperspy.signals import Signal1D, Signal2D
+
+
+#%%
+
+'''
+Part 1: Data generation
+'''
 
 #%% Ground truth
 
@@ -35,7 +44,7 @@ showspectra([dpAl, dpCu + 0.1, dpFe + 0.2, dpPt + 0.3, dpZn + 0.4], 1)
 These are the five ground truth componet images
 '''
 
-npix = 150
+npix = 200
 # This creates a list containing five images, all with the same dimensions
 iml = nDphantom_2D(npix, nim = 'Multiple')
 print(len(iml))
@@ -49,30 +58,18 @@ showim(imFe, 4)
 showim(imPt, 5)
 showim(imZn, 6)
 
+#%% Ground truth data
+
+gtimlist = [imAl, imCu, imFe, imPt, imZn]
+gtsplist = [dpAl, dpCu, dpFe, dpPt, dpZn]
+gtldlist = ['Al', 'Cu', 'Fe', 'Pt', 'Zn']
+
 
 #%% Close the various figures
 
 closefigs()
 
 #%% Let's create a 3D (chemical-CT) dataset with two spatial and one spectral dimensions (x,y,spectral)
-
-# This will create a volume dataset with dimension sizes: (256, 256, 250)
-
-vol = nDphantom_3D(npix=npix, use_spectra = 'Yes', spectra = spectra, imgs = iml, indices = 'All',  norm = 'No')
-
-print('The volume dimensions are %d, %d, %d' %(vol.shape[0], vol.shape[1], vol.shape[2]))
-
-#%% Let's explore the local patterns and chemical images
-
-hs = HyperSliceExplorer(vol)
-hs.explore()
-
-#%% Let's perform a volume rendering
-
-showvol(vol)
-
-
-#%% Create the chemical tomography dataset
 
 '''
 We will create a chemical tomography phantom using nDTomo
@@ -84,52 +81,84 @@ The various methods can be applied either to the image domain by treating the vo
 or in the spectral domain (200 x 200 spectra with 250 points in each spectrum)
 '''
 
+chemct = nDphantom_3D(npix, use_spectra = 'Yes', spectra = spectra, imgs = iml, indices = 'All',  norm = 'No')
 
-chemct = phantom5c_xrdct(npix, imgs = [imAl, imCu, imFe, imPt, imZn], dps = [dpAl, dpCu, dpFe, dpPt, dpZn])
-print(chemct.shape)
+print('The volume dimensions are %d, %d, %d' %(chemct.shape[0], chemct.shape[1], chemct.shape[2]))
 
+#%% Let's explore the local patterns and chemical images
 
-#%% Interpolate in the spectral dimension - useful to test the timings of various methods as a function of spectral size
-
-nchan = 1000
-chemcti = interpvol(chemct, xold=np.linspace(0, chemct.shape[2], chemct.shape[2]), xnew=np.linspace(0, chemct.shape[2], nchan))
-print(chemcti.shape)
-
-#%% Visualise the hyperspectral volume
-
-hs = hyperexpl.HyperSliceExplorer(chemct, np.arange(0,chemct.shape[2]), 'Channels')
+hs = HyperSliceExplorer(chemct)
 hs.explore()
 
-#%% Visualise multiple hyperspectral volumes
+#%% Let's perform a volume rendering
 
-hs = hyperexpl.HyperSliceExplorer(np.concatenate((chemct,chemct), axis=1), np.arange(0,chemct.shape[2]), 'Channels')
+showvol(chemct)
+
+#%% Now we will create a chemical-CT sinogram dataset
+
+nproj = 220
+
+chemsinos = np.zeros((chemct.shape[0], nproj, chemct.shape[2]))
+
+for ii in tqdm(range(chemct.shape[2])):
+    
+    proj_id = astra_create_sino_geo(chemct[:,:,ii], theta=np.deg2rad(np.arange(0, 180, 180/nproj)))
+    chemsinos[:,:,ii] = astra_create_sino(chemct[:,:,ii], proj_id).transpose()
+
+#%% Let's explore the local patterns and chemical images
+
+hs = HyperSliceExplorer(chemsinos)
 hs.explore()
 
+#%% Finally let's create a 2D chemical map after taking a projection from a 3D chemical-CT dataset
 
-#%% Ground truth data
+vol4d = nDphantom_4D(npix = 150, nzt = 100, vtype = 'Spectral', indices = 'Random', spectra=spectra, imgs=iml, norm = 'Volume')
 
-gtimlist = [imAl, imCu, imFe, imPt, imZn]
-gtsplist = [dpAl, dpCu, dpFe, dpPt, dpZn]
-gtldlist = ['Al', 'Cu', 'Fe', 'Pt', 'Zn']
+print('The volume dimensions are %d, %d, %d, %d' %(vol4d.shape[0], vol4d.shape[1], vol4d.shape[2], vol4d.shape[3]))
 
-#%% Hyperspy tests
+#%% Now create a projection dataset from the 3D chemical-ct dataset
 
-s = Signal1D(chemct+0.01)
+map2D = nDphantom_2Dmap(vol4d, dim = 0)
 
-# s.decomposition(algorithm="SVD")
-s.decomposition(algorithm="NMF", output_dimension=10)
-# s.decomposition(algorithm="MLPCA", output_dimension=10)
+print('The map dimensions are %d, %d, %d' %(map2D.shape[0], map2D.shape[1], map2D.shape[2]))
 
-factors = s.get_decomposition_factors()
+#%%
 
-print(factors.data.shape, len(factors))
+hs = HyperSliceExplorer(map2D.transpose(1,0,2))
+hs.explore()
 
-# s.decomposition(algorithm="NMF")
+#%% Export the simulated data
 
-s.plot_decomposition_results()
+p = 'data\\'
+fn = 'phantom_data'
+
+h5write_data(p, fn, ['ground_truth_images', 'ground_truth_spectra', 'tomo', 'sinograms', 'map'], [gtimlist, gtsplist, chemct, chemsinos, map2D])
 
 
 
+
+
+#%%
+
+'''
+Part 2: Data analysis
+'''
+
+#%% Let's load the data
+
+p = 'data\\'
+fn = 'phantom_data'
+
+data = h5read_data(p, fn,  ['ground_truth_images', 'ground_truth_spectra', 'tomo', 'sinograms', 'map'])
+print(data.keys())
+
+#%%
+
+gtimlist = data['ground_truth_images']
+gtsplist = data['ground_truth_spectra']
+chemct = data['tomo']
+chemsinos = data['sinograms']
+map2D = data['map']
 
 #%% PCA: Images
 
