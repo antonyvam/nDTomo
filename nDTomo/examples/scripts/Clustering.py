@@ -146,6 +146,7 @@ Part 2: Data analysis
 
 #%% Let's load the data
 
+# Specify the path to the data
 p = 'data\\'
 fn = 'phantom_data'
 
@@ -176,10 +177,10 @@ imagelist, legendlist = create_complist_imgs(pca.components_, chemct.shape[0], c
 
 imagelist = [imagelist[1], imagelist[4], imagelist[2], imagelist[3], imagelist[0]]
 
-clist = []; llist = []
+clist = []; llist = []; gtldlist = []
 for ii in range(len(gtimlist)):
-    clist.append(gtimlist[ii])
-    llist.append(gtldlist[ii])
+    clist.append(gtimlist[ii].transpose())
+    llist.append(legendlist[ii])
 for ii in range(len(imagelist)):
     clist.append(imagelist[ii])
     llist.append(legendlist[ii])
@@ -213,8 +214,8 @@ imagelist = [imagelist[2], imagelist[4], imagelist[3], imagelist[0], imagelist[1
 
 clist = []; llist = []
 for ii in range(len(gtimlist)):
-    clist.append(gtimlist[ii])
-    llist.append(gtldlist[ii])
+    clist.append(gtimlist[ii].transpose())
+    llist.append(legendlist[ii])
     
 for ii in range(len(imagelist)):
     clist.append(imagelist[ii])
@@ -223,6 +224,11 @@ for ii in range(len(imagelist)):
 
 
 plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
+
+
+
+################################# Code tested up to here #################################
+
 
 
 #%% AgglomerativeClustering: images
@@ -673,7 +679,7 @@ print(chemct_noisy.shape)
 
 #%% Visualise the hyperspectral volume
 
-hs = hyperexpl.HyperSliceExplorer(chemct_noisy, np.arange(0,chemct_noisy.shape[2]), 'Channels')
+hs = HyperSliceExplorer(chemct_noisy)
 hs.explore()
 
 #%% NMF: Images
