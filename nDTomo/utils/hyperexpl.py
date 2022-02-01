@@ -223,7 +223,10 @@ class HyperSliceExplorer():
         self.mapper.draw_all() 
 
 
-
+def nDvis(data, xaxis=None, xaxislabel='Channels'):
+    
+    hs = HyperSliceExplorer(data, xaxis, xaxislabel)
+    hs.explore()
 
 
 
