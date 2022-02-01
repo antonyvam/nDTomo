@@ -7,12 +7,13 @@ Dimensionality reduction/ cluster analysis using a phantom xrd-ct dataset
 
 #%%
 
-from nDTomo.sim.shapes.phantoms import phantom5c_xanesct, phantom5c_xrdct, load_example_patterns, phantom5c, phantom5c_xrdct_images
+from nDTomo.sim.shapes.phantoms import nDphantom_2D, load_example_patterns, nDphantom_3D, nDphantom_4D, nDphantom_2Dmap
 from nDTomo.utils import hyperexpl
-from nDTomo.utils.misc import addpnoise2D, addpnoise3D, interpvol, showplot, showim, normvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
+from nDTomo.utils.misc import closefigs, showplot, showspectra, showim, showvol, normvol, addpnoise2D, addpnoise3D, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
 import numpy as np
 import matplotlib.pyplot as plt
 import time, h5py
+from nDTomo.utils.hyperexpl import HyperSliceExplorer
 
 ### Packages for clustering and dimensionality reduction
 
@@ -28,46 +29,49 @@ These are the five ground truth componet spectra
 '''
 
 dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
-
-plt.figure(1);plt.clf()
-plt.plot(dpAl)
-plt.plot(dpCu + 0.1)
-plt.plot(dpFe + 0.2)
-plt.plot(dpPt + 0.3)
-plt.plot(dpZn + 0.4)
-plt.show()
-
+spectra = [dpAl, dpCu, dpFe, dpPt, dpZn]
+showspectra([dpAl, dpCu + 0.1, dpFe + 0.2, dpPt + 0.3, dpZn + 0.4], 1)
 
 '''
 These are the five ground truth componet images
 '''
 
 npix = 150
-imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
+# This creates a list containing five images, all with the same dimensions
+iml = nDphantom_2D(npix, nim = 'Multiple')
+print(len(iml))
 
-plt.figure(2);plt.clf()
-plt.imshow(imAl)
-plt.show()
 
-plt.figure(3);plt.clf()
-plt.imshow(imCu)
-plt.show()
+imAl, imCu, imFe, imPt, imZn = iml
 
-plt.figure(4);plt.clf()
-plt.imshow(imFe)
-plt.show()
+showim(imAl, 2)
+showim(imCu, 3)
+showim(imFe, 4)
+showim(imPt, 5)
+showim(imZn, 6)
 
-plt.figure(5);plt.clf()
-plt.imshow(imPt)
-plt.show()
 
-plt.figure(6);plt.clf()
-plt.imshow(imZn)
-plt.show()
+#%% Close the various figures
 
-#%%
+closefigs()
 
-plt.close('all')
+#%% Let's create a 3D (chemical-CT) dataset with two spatial and one spectral dimensions (x,y,spectral)
+
+# This will create a volume dataset with dimension sizes: (256, 256, 250)
+
+vol = nDphantom_3D(npix=npix, use_spectra = 'Yes', spectra = spectra, imgs = iml, indices = 'All',  norm = 'No')
+
+print('The volume dimensions are %d, %d, %d' %(vol.shape[0], vol.shape[1], vol.shape[2]))
+
+#%% Let's explore the local patterns and chemical images
+
+hs = HyperSliceExplorer(vol)
+hs.explore()
+
+#%% Let's perform a volume rendering
+
+showvol(vol)
+
 
 #%% Create the chemical tomography dataset
 
