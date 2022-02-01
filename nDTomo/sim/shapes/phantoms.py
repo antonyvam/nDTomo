@@ -344,20 +344,20 @@ def nDphantom_4D(npix, nzt, vtype = 'Spectral', imgs = None, indices = 'Random',
         
             for ii in range(len(imgs)):
                 
-                inds_in[ii] = np.random.randint(0, nzt-2)
-                inds_fi[ii] = np.random.randint(inds_in[ii]+1, nzt)
+                inds_in[ii] = np.random.randint(0, nch-2)
+                inds_fi[ii] = np.random.randint(inds_in[ii]+1, nch)
                 
         elif indices == 'All':
                     
             inds_in = np.zeros((len(imgs)))
-            inds_fi = np.ones((len(imgs)))*nzt       
+            inds_fi = np.ones((len(imgs)))*nch       
             
         elif indices == 'Custom':
             
             inds_in, inds_fi = inds           
         
         xold = np.arange(0, nch)
-        tstep = np.ceil(nch*0.01)
+        tstep = np.ceil(nch*0.01*3)
         
         # Now we have tp define the behaviour of each component (-1, 0, 1) which specifies the direction that the component is moving (0 means no movement)
         
@@ -373,10 +373,10 @@ def nDphantom_4D(npix, nzt, vtype = 'Spectral', imgs = None, indices = 'Random',
             
                 f = interp1d(xold, spectra[jj], kind='linear', bounds_error=False, fill_value=0)
                 
-                spnewlist.append(f(xold + compbeh[jj]*jj*tstep))
+                spnewlist.append(f(xold + compbeh[jj]*ii*tstep))
         
-            vol4D[:,:,:,nzt] = nDphantom_3D(npix, nch, imgs, indices = 'Custom', use_spectra = 'Yes', spectra = spnewlist, norm = 'No')
-    
+            vol4D[:,:,:,ii] = nDphantom_3D(npix=npix, use_spectra = 'Yes', spectra = spnewlist, nz=nch, imgs=imgs, indices = 'Custom', inds = [inds_in, inds_fi], norm = 'No')
+
     elif vtype == 'Spectral':
         
         vol4D = np.zeros((npix, npix, nzt, nch))
