@@ -185,6 +185,8 @@ def nDphantom_3D(npix, use_spectra = 'No', spectra = None, nz = 100, imgs = None
     
     if use_spectra == 'No':
 
+        # Create a volume with 3 spatial dimensions        
+
         vol =  np.zeros((npix, npix, nz))
         
         if indices == 'Random':
@@ -212,6 +214,8 @@ def nDphantom_3D(npix, use_spectra = 'No', spectra = None, nz = 100, imgs = None
                                                               np.transpose(np.tile(imgs[ii], (len(np.arange(inds_in[ii],inds_fi[ii])), 1, 1)), (2,1,0)))
     elif use_spectra == 'Yes':
                 
+        # Create a volume with 2 spatial dimensions and 1 spectral dimension
+
         if spectra is None:
             sp1, sp2, sp3, sp4, sp5, tth, q = load_example_patterns()
             spectra = [sp1, sp2, sp3, sp4, sp5]
@@ -259,20 +263,23 @@ def nDphantom_3D(npix, use_spectra = 'No', spectra = None, nz = 100, imgs = None
     return(vol)
     
 
-def nDphantom_4D(npix, nz, imgs = None, indices = 'Random', vtype = 'Spectral', spectra = None):
+def nDphantom_4D(npix, nzt, vtype = 'Spectral', imgs = None, indices = 'Random', inds = None, spectra = None,  norm = 'Volume'):
     
     '''
     Create a 4D phantom dataset using a list of component images
     The user can provide a list of the images
     Inputs:    
         npix: number of pixels for the generated image(s) comprising the volume dataset; it generates squared image(s)
-        nz: number of images comprising the volume dataset
-        imgs: list of images; if None (default), it will use the nDphantom_2D to create 5 component images
-        indices: string (options are 'Random', 'All'); specifies if the component images will be used in all z positions in the volume dataset ('All') or not ('Random')        
+        nz: number of images comprising the volume dataset if vtype is 'Spectral'; if vtype is 'Temporal', then nzt is used for the number of temporal points and the output volume will be (npix, npix, nch, nz)
         vtype: string ('Spectral'/'Temporal') for the type of the 4D matrix; 'Spectral' correponds to 3D spatial + 1D spectral, 'Temporal' correponds to 3D spatial + 1D temporal
+        imgs: list of images; if None (default), it will use the nDphantom_2D to create 5 component images
+        indices: string (options are 'Random', 'All' and 'Custom'); specifies if the component images will be used in all z positions in the volume dataset ('All') or not ('Random'/ 'Custom')
+        inds: a list containing the indices for the z positions where each component will appear, the list contains two sublists: inds = [inds_in, inds_fi]
         spectra: list of component spectra; if not provided, it will use 5 example patterns provide at nDTomo
+        norm: 'Volume' string for normalising the data; it normalises the whole 4D image stack with respect to the highest intensity
     Output:
-        vol4D: volume with dimensions (npix, npix, nz, nch)    
+        vol4D: volume with dimensions (npix, npix, nzt, nch) if 'Spectral' volume with dimensions (x, y, z, spectral)
+        vol4D: volume with dimensions (npix, npix, nch, nzt) if 'Temporal' volume with dimensions (x, y, z, temporal)
     '''
 
     if imgs is None:
@@ -288,27 +295,9 @@ def nDphantom_4D(npix, nz, imgs = None, indices = 'Random', vtype = 'Spectral', 
         nch = len(sp1)
         
     
-    vol4D = np.zeros((npix, npix, nz, nch))
-    
-    
     if vtype == 'Temporal':
         
-        xold = np.arange(0, nch)
-        tstep = np.ceil(nch*0.01)
-        
-        for ii in range(nch):
-            
-            spnewlist = []
-            
-            for jj in range(len(spectra)):
-            
-                f = interp1d(xold, spectra[jj], kind='linear', bounds_error=False, fill_value=0)
-                
-                spnewlist.append(f(xold + jj*tstep))
-        
-            vol4D[:,:,:,ii] = nDphantom_3D(npix, nch, imgs, indices = 'All', use_spectra = 'Yes', spectra = spnewlist, norm = 'No')
-    
-    elif vtype == 'Spectral':
+        vol4D = np.zeros((npix, npix, nch, nzt))
         
         if indices == 'Random':
             
@@ -317,17 +306,65 @@ def nDphantom_4D(npix, nz, imgs = None, indices = 'Random', vtype = 'Spectral', 
         
             for ii in range(len(imgs)):
                 
-                inds_in[ii] = np.random.randint(0, nz-2)
-                inds_fi[ii] = np.random.randint(inds_in[ii]+1, nz)
+                inds_in[ii] = np.random.randint(0, nzt-2)
+                inds_fi[ii] = np.random.randint(inds_in[ii]+1, nzt)
                 
         elif indices == 'All':
                     
             inds_in = np.zeros((len(imgs)))
-            inds_fi = np.ones((len(imgs)))*nz       
+            inds_fi = np.ones((len(imgs)))*nzt       
+            
+        elif indices == 'Custom':
+            
+            inds_in, inds_fi = inds           
+        
+        xold = np.arange(0, nch)
+        tstep = np.ceil(nch*0.01)
+        
+        # Now we have tp define the behaviour of each component (-1, 0, 1) which specifies the direction that the component is moving (0 means no movement)
+        
+        compbeh = np.zeros((len(imgs)))
+        for ii in range(len(compbeh)):
+            compbeh[ii] = np.random.randint(-1,2)
+        
+        for ii in range(nzt):
+            
+            spnewlist = []
+            
+            for jj in range(len(spectra)):
+            
+                f = interp1d(xold, spectra[jj], kind='linear', bounds_error=False, fill_value=0)
+                
+                spnewlist.append(f(xold + compbeh[jj]*jj*tstep))
+        
+            vol4D[:,:,:,nzt] = nDphantom_3D(npix, nch, imgs, indices = 'Custom', use_spectra = 'Yes', spectra = spnewlist, norm = 'No')
+    
+    elif vtype == 'Spectral':
+        
+        vol4D = np.zeros((npix, npix, nzt, nch))
+        
+        if indices == 'Random':
+            
+            inds_in = np.zeros((len(imgs)))
+            inds_fi = np.zeros((len(imgs)))
+        
+            for ii in range(len(imgs)):
+                
+                inds_in[ii] = np.random.randint(0, nzt-2)
+                inds_fi[ii] = np.random.randint(inds_in[ii]+1, nzt)
+                
+        elif indices == 'All':
+                    
+            inds_in = np.zeros((len(imgs)))
+            inds_fi = np.ones((len(imgs)))*nzt       
+            
+        elif indices == 'Custom':
+            
+            inds_in, inds_fi = inds            
             
         # In order to avoid storing in memory multiple 4D matrices, we go per z position and create a 3D dataset (i.e. 2D spatial, 1D spectral) for each component        
         
-        for ii in range(nz):
+        for ii in range(nzt):
             
             vol3D_tmp = np.zeros((npix, npix, nch))
             
@@ -335,90 +372,90 @@ def nDphantom_4D(npix, nz, imgs = None, indices = 'Random', vtype = 'Spectral', 
             
                 if inds_in[jj]<=ii<=inds_fi[jj]:
                     
-                    vol3D_tmp = vol3D_tmp + np.tile(spectra[jj], (npix, npix, 1))*np.transpose(np.tile(imgs[jj], (nz, 1, 1)), (2,1,0))
+                    vol3D_tmp = vol3D_tmp + np.tile(spectra[jj], (npix, npix, 1))*np.transpose(np.tile(imgs[jj], (nch, 1, 1)), (2,1,0))
             
             vol4D[:,:,ii,:] = vol4D[:,:,ii,:] + vol3D_tmp
     
-    vol4D = vol4D/np.max(vol4D)
+    if norm == 'Volume':
+        
+        vol4D = vol4D/np.max(vol4D)
+        
     
     return(vol4D)
 
-# def xrdmap(npix, nz=10, imgs = None, dps = None):
-    
-#     '''
-#     Calculate an XRD map from a simulated 3D-XRD-CT dataset
-#     '''
-    
-#     xrdct3d = phantom_3Dxrdct(npix, nz, imgs, dps)
-    
-#     xrdmap = np.squeeze(np.sum(xrdct3d, axis=1))
-    
-#     return(xrdmap)
+def nDphantom_5D(npix, nz, nt, imgs = None, indices = 'Random', spectra = None):
 
-# def phantom5c_3Dxrdct(npix, nz = 5, imgs = None, dps = None):
+    '''
+    Create a 5D phantom dataset using a list of component images
+    The user can provide a list of the images
+    Inputs:    
+        npix: number of pixels for the generated image(s) comprising the volume dataset; it generates squared image(s)
+        nz: number of images comprising the volume dataset
+        nt: number of temporal points
+        imgs: list of images; if None (default), it will use the nDphantom_2D to create 5 component images
+        indices: string (options are 'Random', 'All'); specifies if the component images will be used in all z positions in the volume dataset ('All') or not ('Random')        
+        spectra: list of component spectra; if not provided, it will use 5 example patterns provide at nDTomo
+    Output:
+        vol4D: volume with dimensions (npix, npix, nz, nch)    
+    '''
     
-#     '''
-#     3D-XRD-CT phantom using 5 components
-#     User can provide a list of images and a list of diffraction patterns
-#     '''
+    if imgs is None:
+        im1, im2, im3, im4, im5 = nDphantom_2D(npix, 'Multiple')
+        imgs = [im1, im2, im3, im4, im5]
     
-#     if imgs is None:
-#         imAl, imCu, imFe, imPt, imZn = phantom5c(npix)
-#     else:
-#         imAl, imCu, imFe, imPt, imZn = imgs
-    
-#     if dps is None:
-#         dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
-#     else:
-#         dpAl, dpCu, dpFe, dpPt, dpZn = dps
-    
-#     vol_Al = np.tile(dpAl, (npix, npix, 1))
-#     vol_Cu = np.tile(dpCu, (npix, npix, 1))
-#     vol_Fe = np.tile(dpFe, (npix, npix, 1))
-#     vol_Pt = np.tile(dpPt, (npix, npix, 1))
-#     vol_Zn = np.tile(dpZn, (npix, npix, 1))
-    
-#     xrdct =  np.zeros((npix, npix, len(dpAl)))
-    
-#     for ii in range(xrdct.shape[2]):
+    if spectra is None:
+        sp1, sp2, sp3, sp4, sp5, tth, q = load_example_patterns()
+        spectra = [sp1, sp2, sp3, sp4, sp5]
+        nch = len(sp1)
+    else:
+        sp1, sp2, sp3, sp4, sp5 = spectra    
+        nch = len(sp1)
         
-#         xrdct[:,:,ii] = (vol_Al[:,:,ii]*imAl +  vol_Cu[:,:,ii]*imCu + vol_Fe[:,:,ii]*imFe
-#               + vol_Pt[:,:,ii]*imPt + vol_Zn[:,:,ii]*imZn)
     
-#     xrdct = np.reshape(xrdct, (npix, npix, 1, xrdct.shape[2]))
-    
-#     xrdct3d = np.zeros_like(xrdct)
-    
-#     for ii in range(nz):
+    vol5D = np.zeros((npix, npix, nz, nch, nt))    
+
+    for ii in range(vol5D.shape[4]):
         
-#         xrdct3d = np.concatenate((xrdct3d, xrdct), axis = 2)
+        vol5D[:,:,:,:,ii] = nDphantom_4D(npix=npix, nzt=nz, vtype = 'Spectral', imgs=imgs, indices = 'All',  spectra = spectra,  norm = 'No')
+
+
+    return(vol5D)
+
+def nDphantom_2Dmap(vol, dim = 0):
     
-#     xrdct3d = xrdct3d[:,:,1:,:]
+    '''
+    Create a projection map from a 3D volume dataset:
+    Inputs:
+        vol: for a 3D array it will yield a 2D image, for a 3D array it will yield a 3D volume
+        dim: the dimension along which the projection is going to be calculated
+    '''
+
+    map2D = np.squeeze(np.sum(vol, axis=dim))
+
+    return(map2D)
+
+
+def load_example_xanes():
     
-#     return(xrdct3d)
+    '''
+    Load a test dataset containing five XANES spectra
+    '''    
 
+    fn = '%s\examples\patterns\AllSpectra.h5' %(ndtomopath())
 
-# def load_example_xanes():
-    
-#     '''
-#     Load a test dataset containing five XANES spectra
-#     '''    
-
-#     fn = '%s\examples\patterns\AllSpectra.h5' %(ndtomopath())
-
-#     with h5py.File(fn, 'r') as f:
+    with h5py.File(fn, 'r') as f:
         
-#         print(f.keys())
+        print(f.keys())
         
-#         sNMC = np.array(f['NMC'][:])
-#         sNi2O3 = np.array(f['Ni2O3'][:])
-#         sNiOH2 = np.array(f['NiOH2'][:])
-#         sNiS = np.array(f['NiS'][:])
-#         sNifoil = np.array(f['Nifoil'][:])
+        sNMC = np.array(f['NMC'][:])
+        sNi2O3 = np.array(f['Ni2O3'][:])
+        sNiOH2 = np.array(f['NiOH2'][:])
+        sNiS = np.array(f['NiS'][:])
+        sNifoil = np.array(f['Nifoil'][:])
     
-#         E = np.array(f['energy'][:])
+        E = np.array(f['energy'][:])
 
-#     return(sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E)
+    return(sNMC, sNi2O3, sNiOH2, sNiS, sNifoil, E)
 
 # def phantom5c_xanesct(npix, imgs = None, spectra = None):
     
