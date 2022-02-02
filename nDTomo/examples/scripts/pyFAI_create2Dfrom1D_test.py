@@ -37,7 +37,7 @@ ai = AzimuthalIntegrator(dist=dist, poni1=poni1, poni2=poni2, rot1=0, rot2=0, ro
 # dp = addpnoise1D(dpAl, 100)
 
 start = time.time()
-img_theo = ai.calcfrom1d(q, dpAl, dim1_unit="q_A^-1",
+img_theo = ai.calcfrom1d(q, dpAl, mask=None, dim1_unit="q_A^-1",
                          correctSolidAngle=False,
                          polarization_factor=0.95)
 print(time.time() -  start)
