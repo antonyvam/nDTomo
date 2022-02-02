@@ -39,7 +39,6 @@ setup(
 	install_requires=[
 		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy",
 		"pyqtgraph", "scikit-image",  "xdesign", "cached_property",
-		"hyperspy", "hyperspy_gui_ipywidgets", "hyperspy_gui_traitsui",
 		"periodictable", "ase", "scikit-learn", "pystackreg","clustimage",
 		"mayavi",
 	],
