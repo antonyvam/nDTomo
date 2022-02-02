@@ -11,6 +11,7 @@ from nDTomo.sim.shapes.phantoms import nDphantom_2D, load_example_patterns, nDph
 from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, showvol, normvol, addpnoise2D, addpnoise3D, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
 from nDTomo.utils.hyperexpl import HyperSliceExplorer
 from nDTomo.ct.astra_tomo import astra_create_geo, astre_rec_vol, astre_rec_alg, astra_create_sino_geo, astra_create_sino
+from nDTomo.ct.conv_tomo import radonvol
 
 from tqdm import tqdm
 import numpy as np
@@ -94,7 +95,7 @@ hs.explore()
 
 showvol(chemct)
 
-#%% Now we will create a chemical-CT sinogram dataset
+#%% Now we will create a chemical-CT sinogram dataset using the astra tool box using GPU
 
 nproj = 220
 
@@ -104,6 +105,12 @@ for ii in tqdm(range(chemct.shape[2])):
     
     proj_id = astra_create_sino_geo(chemct[:,:,ii], theta=np.deg2rad(np.arange(0, 180, 180/nproj)))
     chemsinos[:,:,ii] = astra_create_sino(chemct[:,:,ii], proj_id).transpose()
+
+#%% We can also try with skimage and CPU which is very slow
+
+nproj = 220 # Number of projections for the sinogram data
+
+chemsinos = radonvol(chemct, scan=180, theta = np.arange(0, 180, 180/nproj))
 
 #%% Let's explore the local patterns and chemical images
 
