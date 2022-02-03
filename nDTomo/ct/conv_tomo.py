@@ -25,7 +25,7 @@ def radonvol(vol, scan = 180, theta=None):
     
         s = np.zeros((vol.shape[0], nproj, vol.shape[2]))    
     
-        for ii in range(s.shape[2]):
+        for ii in tqdm(range(s.shape[2])):
             
             s[:,:,ii] = radon(vol[:,:,ii], theta)
         
