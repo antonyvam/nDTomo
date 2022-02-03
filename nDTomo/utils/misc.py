@@ -70,7 +70,7 @@ def plotfigs_imgs(imagelist, legendlist=None, rows=1, cols=5, figsize=(20,3), cl
         
         legendlist = []
         
-        for ii in range(len(legendlist)):
+        for ii in range(len(imagelist)):
 
             legendlist.append('Component %d' %(ii+1))        
         
