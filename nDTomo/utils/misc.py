@@ -11,6 +11,17 @@ import pkgutil, h5py
 from pystackreg import StackReg
 from scipy.interpolate import interp1d
 from mayavi import mlab
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
+
+
+def nDTomo_colormap():
+    jet = cm.get_cmap('jet', 256)
+    newcolors = jet(np.linspace(0, 1, 256))
+    black = np.array([0, 0, 0, 1])
+    newcolors[0, :] = black
+    newcmp = ListedColormap(newcolors)
+    return(newcmp)
 
 def showplot(spectrum, fignum = 1):
     
