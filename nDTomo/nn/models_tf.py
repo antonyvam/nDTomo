@@ -7,16 +7,67 @@ Neural networks models
 
 #%%
 
-import numpy as np
 import tensorflow as tf
-from tensorflow.python.ops.gen_math_ops import sin
-import tensorflow_addons as tfa
-from tensorflow_addons.layers import WeightNormalization
-from tensorflow.keras.models import Sequential, Model
-from tensorflow.keras.optimizers import SGD, Adam
+from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Conv1D, UpSampling1D, Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
-from tensorflow.keras import backend as K
-from tensorflow.keras.callbacks import EarlyStopping
+
+
+def DnCNN(nt):
+    
+    inpt = Input(shape=(nt,nt,1))
+    # 1st layer, Conv+relu
+    x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='valid')(inpt)
+    x = Activation('relu')(x)
+    # 15 layers, Conv+BN+relu
+    for i in range(15):
+        x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='valid')(x)
+        x = BatchNormalization(axis=-1, epsilon=1e-3)(x)
+        x = Activation('relu')(x)   
+    # last layer, Conv
+    x = Conv2D(filters=1, kernel_size=(3,3), strides=(1,1), padding='valid')(x)
+    # x = Subtract()([inpt, x])   # input - noise
+    
+    # added = Add()([inpt, x])
+    
+    model = Model(inpt, x)
+    
+    return model
+
+def recnet(nx, ny):
+
+    xi = Input(shape=( nx, ny, 1))
+
+    x = Flatten()(xi)
+
+    x = Dense(500, kernel_initializer='random_normal', activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.1)(x)
+    x = Dense(500, kernel_initializer='random_normal', activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.1)(x)
+    x = Dense(500, kernel_initializer='random_normal', activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.1)(x)
+    x = Dense(ny * ny * 1, kernel_initializer='random_normal', activation='linear')(x)
+    x = BatchNormalization()(x)
+
+    x = Reshape((ny, ny, 1))(x)
+
+    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+
+    x = Conv2D(filters = 1, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
+
+    model = Model(xi, x)
+
+    return(model)
 
 
 def padcalc(npix, nlayers = 4):
@@ -141,63 +192,6 @@ def DCNN1D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconv
         model = Model(spectrum_in, convl)
 
     return model
-
-def DnCNN(nt):
-    
-    inpt = Input(shape=(nt,nt,1))
-    # 1st layer, Conv+relu
-    x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='valid')(inpt)
-    x = Activation('relu')(x)
-    # 15 layers, Conv+BN+relu
-    for i in range(15):
-        x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='valid')(x)
-        x = BatchNormalization(axis=-1, epsilon=1e-3)(x)
-        x = Activation('relu')(x)   
-    # last layer, Conv
-    x = Conv2D(filters=1, kernel_size=(3,3), strides=(1,1), padding='valid')(x)
-    # x = Subtract()([inpt, x])   # input - noise
-    
-    # added = Add()([inpt, x])
-    
-    model = Model(inpt, x)
-    
-    return model
-
-def recnet(nx, ny):
-
-    xi = Input(shape=( nx, ny, 1))
-
-    x = Flatten()(xi)
-
-    x = Dense(500, kernel_initializer='random_normal', activation='relu')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.1)(x)
-    x = Dense(500, kernel_initializer='random_normal', activation='relu')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.1)(x)
-    x = Dense(500, kernel_initializer='random_normal', activation='relu')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.1)(x)
-    x = Dense(ny * ny * 1, kernel_initializer='random_normal', activation='linear')(x)
-    x = BatchNormalization()(x)
-
-    x = Reshape((ny, ny, 1))(x)
-
-    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
-    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
-    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
-    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
-
-    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
-    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
-    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
-    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
-
-    x = Conv2D(filters = 1, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
-
-    model = Model(xi, x)
-
-    return(model)
 
 def convblock2D(convl, nconvs = 3, filtnums= 64, kersz = 3, pad='same', dropout = 'Yes', batchnorm = 'No'):
         
