@@ -12,29 +12,47 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Conv1D, UpSampling1D, Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
 
 
-def DnCNN(nt):
+def DnCNN(npix, nlayers = 15, skip='Yes', filts = 64):
     
-    inpt = Input(shape=(nt,nt,1))
-    # 1st layer, Conv+relu
-    x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='valid')(inpt)
-    x = Activation('relu')(x)
-    # 15 layers, Conv+BN+relu
-    for i in range(15):
-        x = Conv2D(filters=64, kernel_size=(3,3), strides=(1,1), padding='valid')(x)
-        x = BatchNormalization(axis=-1, epsilon=1e-3)(x)
-        x = Activation('relu')(x)   
-    # last layer, Conv
-    x = Conv2D(filters=1, kernel_size=(3,3), strides=(1,1), padding='valid')(x)
-    # x = Subtract()([inpt, x])   # input - noise
+    '''
+    A simple 2D deep convolutional neural network having muptiple conv2D layers in series
+    Inputs:
+        npix: number of pixels in the image per each dimension; it is a list [npixs_x, npixs_y]
+        nlayers: number of conv2D layers
+        skip: residual learning or not i.e. if the network uses a skip connection
+        filts: number of filters in the conv2D layers
+    '''
     
-    # added = Add()([inpt, x])
+    im = Input(shape=(npix[0],npix[1],1))
+
+    x = Conv2D(filters=filts, kernel_size=3, padding='same', activation='relu')(im)
+
+    for i in range(nlayers):
+        x = Conv2D(filters=filts, kernel_size=3, padding='same', activation='relu')(x)
+        x = BatchNormalization()(x)
+
+    x = Conv2D(filters=1, kernel_size=3, padding='same')(x)
     
-    model = Model(inpt, x)
+    if skip == 'Yes':
+        added = Add()([im, x])
+        model = Model(im, added)
+    else:
+        model = Model(im, x)
     
     return model
 
-def recnet(nx, ny):
+def recnet(npix):
 
+    '''
+    Image reconstruction network
+    
+    Inputs:
+        npix: number of pixels in the image per each dimension; it is a list [npixs_x, npixs_y]
+    
+    '''
+    
+    nx, ny = npix
+    
     xi = Input(shape=( nx, ny, 1))
 
     x = Flatten()(xi)
