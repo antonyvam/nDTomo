@@ -12,7 +12,7 @@ from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, sh
 from nDTomo.utils.hyperexpl import HyperSliceExplorer
 from nDTomo.ct.astra_tomo import astra_create_geo, astre_rec_vol, astre_rec_alg, astra_create_sino_geo, astra_create_sino
 from nDTomo.ct.conv_tomo import radonvol, fbpvol
-from nDTomo.nn.models_tf import DCNN2D
+from nDTomo.nn.models_tf import DCNN2D, DnCNN
 from nDTomo.nn.losses_tf import ssim_mae_loss, ssim_loss
 
 from tqdm import tqdm
@@ -125,7 +125,8 @@ print(train.shape)
 
 npix = chemct.shape[0]
 
-model = DCNN2D(npix, nlayers=3, net='autoencoder', dropout='No', batchnorm = 'No', filtnums=128, nconvs=4)
+model = DCNN2D(npix, nlayers=2, net='autoencoder', dropout='No', batchnorm = 'No', filtnums=128, nconvs=4, actlayerfi = 'relu')
+
 model.summary()
 
 
@@ -172,9 +173,9 @@ model.summary()
 
 
 #%%
-model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.0001), loss=ssim_mae_loss)
+model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.0001), loss=ssim_loss)
 
-my_callbacks = [tf.keras.callbacks.ReduceLROnPlateau(monitor='val_loss', factor=0.5,
+my_callbacks = [tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5,
                               patience=5, min_lr=1E-5)]
 
 model.fit(train, train,
