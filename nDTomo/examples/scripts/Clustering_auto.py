@@ -121,7 +121,7 @@ train = tf.transpose(train, (2,0,1,3))
 
 print(train.shape)
 
-#%%
+#%% nDTomo DCNN2D
 
 npix = chemct.shape[0]
 
@@ -129,8 +129,8 @@ model = DCNN2D(npix, nlayers=3, net='autoencoder', dropout='No', batchnorm = 'No
 model.summary()
 
 
+#%% Dense Fully Connected Network
 
-#%%
 full_dim = chemct.shape[0]
 # these are the downsampling/upsampling dimensions
 encoding_dim1 = 100
@@ -170,7 +170,6 @@ decoded_layer1 = tf.keras.layers.Reshape((full_dim, full_dim, 1))(decoded_layer1
 model = tf.keras.Model(encoder_input_data, outputs=decoded_layer1, name="Encoder")
 model.summary()
 
-model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.0001), loss='mean_squared_error')
 
 #%%
 model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.0001), loss=ssim_mae_loss)
