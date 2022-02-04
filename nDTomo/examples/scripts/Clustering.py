@@ -119,7 +119,7 @@ hs.explore()
 
 #%% Finally let's create a 2D chemical map after taking a projection from a 3D chemical-CT dataset
 
-vol4d = nDphantom_4D(npix = 150, nzt = 100, vtype = 'Spectral', indices = 'Random', spectra=spectra, imgs=iml, norm = 'Volume')
+vol4d = nDphantom_4D(npix = 200, nzt = 100, vtype = 'Spectral', indices = 'Random', spectra=spectra, imgs=iml, norm = 'Volume')
 
 print('The volume dimensions are %d, %d, %d, %d' %(vol4d.shape[0], vol4d.shape[1], vol4d.shape[2], vol4d.shape[3]))
 

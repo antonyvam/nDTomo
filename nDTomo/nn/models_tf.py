@@ -327,755 +327,123 @@ def recnet(np, nt):
 
     return(model)
 
-def unet2D_small(ntr, skip = False, pad='same'):
 
-    up_9_pad = ntr
-
-    up_8_pad = np.ceil(up_9_pad / 2)
-    up_7_pad = np.ceil(up_8_pad / 2)
-    up_6_pad = np.ceil(up_7_pad / 2)
-    print(up_9_pad, up_8_pad, up_7_pad, up_6_pad)
-
-    lowres_in = Input(shape=(ntr, ntr, 1))
+def padcalc(npix, nlayers = 4):
+        
+    pads = [tf.convert_to_tensor(npix, dtype='float64')]
     
-    conv1 = Conv2D(64, 3, activation = 'relu', padding = pad,
-            kernel_initializer = 'he_normal')(lowres_in)
-    conv1 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv1 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv1 = BatchNormalization()(conv1)
-    conv1 = SpatialDropout2D(0.1)(conv1)
-
-    conv2 = Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv2 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv2 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv2 = BatchNormalization()(conv2)
-    conv2 = SpatialDropout2D(0.1)(conv2)
-
-    conv3 = Conv2D(64, 3, strides = 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv3 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv3 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv3 = BatchNormalization()(conv3)
-    conv3 = SpatialDropout2D(0.1)(conv3)
-
-    conv4 = Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv4 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv4 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv4 = BatchNormalization()(conv4)
-    conv4 = SpatialDropout2D(0.1)(conv4)
-
-    conv5 = Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv5 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv5)
-    conv5 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv5)
-    conv5 = BatchNormalization()(conv5)
-    conv5 = SpatialDropout2D(0.1)(conv5)
-
-    up6 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv5))
-
-    if up_6_pad % 2 != 0:
-        up6 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up6)
-
-    merge6 = concatenate([conv4,up6], axis = 3)
-    conv6 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge6)
-    conv6 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv6)
-    conv6 = BatchNormalization()(conv6)
-    conv6 = SpatialDropout2D(0.1)(conv6)
-
-    up7 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv6))
-
-    if up_7_pad % 2 != 0:
-        up7 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up7)
-
-    merge7 = concatenate([conv3,up7], axis = 3)
-    conv7 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge7)
-    conv7 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv7)
-    conv7 = BatchNormalization()(conv7)
-    conv7 = SpatialDropout2D(0.1)(conv7)
-
-    up8 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv7))
-
-    if up_8_pad % 2 != 0:
-        up8 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up8)
-
-    merge8 = concatenate([conv2,up8], axis = 3)
-    conv8 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge8)
-    conv8 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv8)
-    conv8 = BatchNormalization()(conv8)
-    conv8 = SpatialDropout2D(0.1)(conv8)
-
-    up9 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-        kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv8))
-
-    if up_9_pad % 2 != 0:
-        up9 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up9)
-
-    merge9 = concatenate([conv1,up9], axis = 3)
-    conv9 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge9)
-    conv9 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv9)
-    conv9 = Conv2D(32, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv9)
-    conv9 = BatchNormalization()(conv9)
-    conv9 = SpatialDropout2D(0.1)(conv9)
-
-    conv10 = Conv2D(1, 1, activation = 'linear')(conv9)
-
-    if skip:
+    for ii in range(1,nlayers):
+    
+        pads.append(tf.math.ceil(pads[ii-1]/2))
         
-        added = Add()([lowres_in, conv10])
-        model = Model(lowres_in, added)        
+    pads = pads[::-1]
+    
+    return(pads)
+
+def convblock(convl, nconvs = 3, filtnums= 64, kersz = 3, pad='same', dropout = 'Yes', batchnorm = 'No'):
         
+    for ii in range(nconvs):
+    
+        convl = Conv2D(filters=filtnums, kernel_size=kersz, activation = 'relu', padding = pad,
+                    kernel_initializer = 'he_normal')(convl)
+
+    if batchnorm == 'Yes':
+        convl = BatchNormalization()(convl)
+
+    if dropout == 'Yes':
+        convl = SpatialDropout2D(0.1)(convl)    
+    
+    return(convl)
+
+def downblock(convl, nconvs = 3, filtnums= 64, kersz = 3, pad='same', dropout = 'Yes', batchnorm = 'No'):
+    
+    convl = Conv2D(filters=filtnums, kernel_size=kersz, strides=2, activation = 'relu', padding = pad, 
+            kernel_initializer = 'he_normal')(convl)
+    convl = convblock(convl, nconvs = nconvs - 1, filtnums= filtnums, kersz = kersz, pad=pad, dropout = dropout, batchnorm = batchnorm)
+
+    return(convl)    
+    
+def upblock(convl, padsize, filtnums= 64, pad='same'):
+    
+    convl = UpSampling2D(size = (2,2))(convl)
+
+    convl = Conv2D(filters=filtnums, kernel_size=2, activation = 'relu', padding = pad, 
+            kernel_initializer = 'he_normal')(convl)
+
+    if padsize % 2 != 0:
+        convl = tf.keras.layers.Cropping2D(
+                cropping=((1, 0), (1, 0)), data_format=None)(convl)
+    
+    return(convl)
+
+def DCNN2D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconvs =3, filtnums= 64, kersz = 3, dropout = 'Yes', batchnorm = 'No', 
+                  actlayermid = 'relu', actlayerfi = 'linear', pad='same'):
+
+    '''
+    
+    Inputs:
+        npix: number of pixels in the input image (assumes square image)
+        nlayers: the depth of the CNN
+        net: type of network, options are 'unet', 'autoencoder'
+        dlayer: 'Yes/No' string; if a series of dense layers will be used after the most downscaled layer
+        filtnums: number of filters to be used in the conv layers
+        kersz: kernel size to be used in the conv layers
+        dropout: 'Yes/No' string; if dropout (10%) will be used
+        batchnorm: 'Yes/No' string; if batch normalisation will be used
+        nconvs: number of convolutional layers per conv block
+        actlayermid: the activation function used in all layers apart from the final layer
+        actlayerfi: the activation function used in the final layer
+        pad: padding type, default is 'same'
+            
+    '''
+    pads = padcalc(npix, nlayers)
+    
+    image_in = Input(shape=(npix, npix,  1))
+    convl = convblock(image_in, nconvs = 3, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
+
+    dconvs = [convl]
+    
+    for ii in range(nlayers):
+        
+        convl = downblock(convl, nconvs = 3, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
+        dconvs.append(convl)
+    
+    if dlayer == 'Yes':
+        
+        convl = Flatten()(convl)
+        
+        for ii in range(3):
+    
+            convl = Dense(100, kernel_initializer='he_normal', activation = 'relu')(convl)
+            convl = Dropout(0.1)(convl)
+        
+        convl = Dense(int(tf.math.ceil(pads[0] / 2)) * int(tf.math.ceil(pads[0] / 2)) * 8, kernel_initializer='he_normal', activation='relu')(convl)
+        convl = Dropout(0.1)(convl)
+        convl = Reshape((int(tf.math.ceil(pads[0] / 2)), int(tf.math.ceil(pads[0] / 2)), 8))(convl)    
+        
+    for ii in range(nlayers-1):
+
+        up = upblock(convl, pads[ii], filtnums= filtnums, pad=pad)
+        if net == 'unet':
+            up = concatenate([dconvs[-(ii+2)],up], axis = 3)
+        convl = convblock(convl=up, nconvs = 2, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
+    
+    up = upblock(convl, pads[-1], filtnums= filtnums, pad=pad)
+    if net == 'unet':
+        up = concatenate([dconvs[0],up], axis = 3)
+    convl = convblock(convl=up, nconvs = 2, dropout = 'No', batchnorm= 'No')
+
+    convl = convblock(convl, nconvs = 1, filtnums= 32, kersz = 2, pad=pad, dropout=dropout, batchnorm=batchnorm)
+
+    convl = Conv2D(1, 1, activation = actlayerfi)(convl)
+
+    if skipcon == 'Yes':
+        
+        added = Add()([image_in, convl])
+        model = Model(image_in, added)
+
     else:
-        
-        model = Model(lowres_in, conv10)
+    
+        model = Model(image_in, convl)
 
     return model
-    
-
-def autoencoder2D_5L(ntr, pad='same'):
-
-    up_9_pad = ntr
-    up_8_pad = np.ceil(up_9_pad / 2)
-    up_7_pad = np.ceil(up_8_pad / 2)
-    up_6_pad = np.ceil(up_7_pad / 2)
-
-    image_in = Input(shape=(ntr, ntr,  1))
-
-    conv1 = Conv2D(64, 3, activation = 'relu', padding = pad,
-            kernel_initializer = 'he_normal')(image_in)
-    conv1 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv1 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv1 = SpatialDropout2D(0.1)(conv1)
-
-    conv2 = Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv2 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv2 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv2 = SpatialDropout2D(0.1)(conv2)
-
-    conv3 = Conv2D(64, 3, strides = 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv3 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv3 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv3 = SpatialDropout2D(0.1)(conv3)
-
-    conv4 = Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv4 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv4 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv4 = SpatialDropout2D(0.1)(conv4)
-
-    conv5 = Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv5 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv5)
-    conv5 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv5)
-    conv5 = SpatialDropout2D(0.1)(conv5)
-
-    up6 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv5))
-
-    if up_6_pad % 2 != 0:
-        up6 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up6)
-
-    conv6 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(up6)
-    conv6 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv6)
-    conv6 = SpatialDropout2D(0.1)(conv6)
-
-    up7 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv6))
-
-    if up_7_pad % 2 != 0:
-        up7 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up7)
-
-    conv7 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(up7)
-    conv7 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv7)
-    conv7 = SpatialDropout2D(0.1)(conv7)
-
-    up8 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv7))
-
-    if up_8_pad % 2 != 0:
-        up8 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up8)
-
-    conv8 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(up8)
-    conv8 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv8)
-    conv8 = SpatialDropout2D(0.1)(conv8)
-
-    up9 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-        kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv8))
-
-    if up_9_pad % 2 != 0:
-        up9 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up9)
-
-    conv9 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(up9)
-    conv9 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv9)
-    conv9 = Conv2D(32, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv9)
-    conv9 = SpatialDropout2D(0.1)(conv9)
-
-    conv10 = Conv2D(1, 1, activation = 'linear')(conv9)
-
-    model = Model(image_in, conv10)
-
-    return model
-
-
-def autoencoder2D_DL(npr, ntr, pad='same'):
-
-    sinogram_in = Input(shape=(npr, ntr,  1))
-
-    up_9_pad_sino = ntr
-    up_8_pad_sino = np.ceil(up_9_pad_sino / 2)
-    up_7_pad_sino = np.ceil(up_8_pad_sino / 2)
-    up_6_pad_sino = np.ceil(up_7_pad_sino / 2)
-    
-    conv1_1_sino = Conv2D(64, 3, padding = pad,
-            kernel_initializer = 'he_normal')(sinogram_in)
-    conv1_1l_sino = LeakyReLU(alpha=0.2)(conv1_1_sino)
-    conv1_2_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv1_1l_sino)
-    conv1_2l_sino = LeakyReLU(alpha=0.2)(conv1_2_sino)            
-    conv1_3_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv1_2l_sino)
-    conv1_3l_sino = LeakyReLU(alpha=0.2)(conv1_3_sino)  
-    conv1_dr_sino = SpatialDropout2D(0.1)(conv1_3l_sino)
-
-    conv2_1_sino = Conv2D(64, 3, strides=2, padding = pad,
-            kernel_initializer = 'he_normal')(conv1_dr_sino)
-    conv2_1l_sino = LeakyReLU(alpha=0.2)(conv2_1_sino)
-    conv2_2_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv2_1l_sino)
-    conv2_2l_sino = LeakyReLU(alpha=0.2)(conv2_2_sino)            
-    conv2_3_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv2_2l_sino)
-    conv2_3l_sino = LeakyReLU(alpha=0.2)(conv2_3_sino)  
-    conv2_dr_sino = SpatialDropout2D(0.1)(conv2_3l_sino)
-
-    conv3_1_sino = Conv2D(64, 3, strides=2, padding = pad,
-            kernel_initializer = 'he_normal')(conv2_dr_sino)
-    conv3_1l_sino = LeakyReLU(alpha=0.2)(conv3_1_sino)
-    conv3_2_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv3_1l_sino)
-    conv3_2l_sino = LeakyReLU(alpha=0.2)(conv3_2_sino)            
-    conv3_3_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv3_2l_sino)
-    conv3_3l_sino = LeakyReLU(alpha=0.2)(conv3_3_sino)  
-    conv3_dr_sino = SpatialDropout2D(0.1)(conv3_3l_sino)
-
-    conv4_1_sino = Conv2D(64, 3, strides=2, padding = pad,
-            kernel_initializer = 'he_normal')(conv3_dr_sino)
-    conv4_1l_sino = LeakyReLU(alpha=0.2)(conv4_1_sino)
-    conv4_2_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv4_1l_sino)
-    conv4_2l_sino = LeakyReLU(alpha=0.2)(conv4_2_sino)            
-    conv4_3_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv4_2l_sino)
-    conv4_3l_sino = LeakyReLU(alpha=0.2)(conv4_3_sino)  
-    conv4_dr_sino = SpatialDropout2D(0.1)(conv4_3l_sino)
-
-    conv5_1_sino = Conv2D(64, 3, strides=2, padding = pad,
-            kernel_initializer = 'he_normal')(conv4_dr_sino)
-    conv5_1l_sino = LeakyReLU(alpha=0.2)(conv5_1_sino)
-    conv5_2_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv5_1l_sino)
-    conv5_2l_sino = LeakyReLU(alpha=0.2)(conv5_2_sino)            
-    conv5_3_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv5_2l_sino)
-    conv5_3l_sino = LeakyReLU(alpha=0.2)(conv5_3_sino)  
-    conv5_dr_sino = SpatialDropout2D(0.1)(conv5_3l_sino)
-
-    flat_sino = Flatten()(conv5_dr_sino)
-
-    den1_sino = Dense(500, kernel_initializer='random_normal')(flat_sino)
-    den1_l_sino = LeakyReLU(alpha=0.2)(den1_sino)
-    den1_dr_sino = Dropout(0.1)(den1_l_sino)
-    
-    den2_sino = Dense(500, kernel_initializer='random_normal')(den1_dr_sino)
-    den2_l_sino = LeakyReLU(alpha=0.2)(den2_sino)
-    den2_dr_sino = Dropout(0.1)(den2_l_sino)
-
-    den3_sino = Dense(500, kernel_initializer='random_normal')(den2_dr_sino)
-    den3_l_sino = LeakyReLU(alpha=0.2)(den3_sino)
-    den3_dr_sino = Dropout(0.1)(den3_l_sino)
-
-    den_sino = Dense(int(np.ceil(up_6_pad_sino / 2)) * int(np.ceil(up_6_pad_sino / 2)) * 8, kernel_initializer='random_normal', activation='linear')(den3_dr_sino)
-    den_dr_sino = Dropout(0.1)(den_sino)
-
-    resh_sino = Reshape((int(np.ceil(up_6_pad_sino / 2)), int(np.ceil(up_6_pad_sino / 2)), 8))(den_dr_sino)
-
-    conv6_1_sino = Conv2D(64, 3, padding = pad,
-            kernel_initializer = 'he_normal')(resh_sino)
-    conv6_1l_sino = LeakyReLU(alpha=0.2)(conv6_1_sino)
-    conv6_2_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv6_1l_sino)
-    conv6_2l_sino = LeakyReLU(alpha=0.2)(conv6_2_sino)            
-    conv6_3_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv6_2l_sino)
-    conv6_3l_sino = LeakyReLU(alpha=0.2)(conv6_3_sino)  
-    conv6_dr_sino = SpatialDropout2D(0.1)(conv6_3l_sino)
-
-    up6_sino = Conv2D(64, 2, padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv6_dr_sino))
-    up6_l_sino = LeakyReLU(alpha=0.2)(up6_sino) 
-
-    if up_6_pad_sino % 2 != 0:
-        up6_l_sino = Cropping2D(cropping=((1, 0), (1, 0)), data_format=None)(up6_l_sino)
-
-    conv7_2_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(up6_l_sino)
-    conv7_2l_sino = LeakyReLU(alpha=0.2)(conv7_2_sino)            
-    conv7_3_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv7_2l_sino)
-    conv7_3l_sino = LeakyReLU(alpha=0.2)(conv7_3_sino)  
-    conv7_dr_sino = SpatialDropout2D(0.1)(conv7_3l_sino)
-
-    up7_sino = Conv2D(64, 2, padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv7_dr_sino))
-    up7_l_sino = LeakyReLU(alpha=0.2)(up7_sino) 
-
-    if up_7_pad_sino % 2 != 0:
-        up7_l_sino = Cropping2D(cropping=((1, 0), (1, 0)), data_format=None)(up7_l_sino)
-
-    conv8_2_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(up7_l_sino)
-    conv8_2l_sino = LeakyReLU(alpha=0.2)(conv8_2_sino)            
-    conv8_3_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv8_2l_sino)
-    conv8_3l_sino = LeakyReLU(alpha=0.2)(conv8_3_sino)  
-    conv8_dr_sino = SpatialDropout2D(0.1)(conv8_3l_sino)
-
-    up8_sino = Conv2D(64, 2, padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv8_dr_sino))
-    up8_l_sino = LeakyReLU(alpha=0.2)(up8_sino) 
-
-    if up_8_pad_sino % 2 != 0:
-        up8_l_sino = Cropping2D(cropping=((1, 0), (1, 0)), data_format=None)(up8_l_sino)
-
-    conv9_2_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(up8_l_sino)
-    conv9_2l_sino = LeakyReLU(alpha=0.2)(conv9_2_sino)            
-    conv9_3_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv9_2l_sino)
-    conv9_3l_sino = LeakyReLU(alpha=0.2)(conv9_3_sino)  
-    conv9_dr_sino = SpatialDropout2D(0.1)(conv9_3l_sino)
-
-    up9_sino = Conv2D(64, 2, padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv9_dr_sino))
-    up9_l_sino = LeakyReLU(alpha=0.2)(up9_sino) 
-
-    if up_9_pad_sino % 2 != 0:
-        up9_l_sino = Cropping2D(cropping=((1, 0), (1, 0)), data_format=None)(up9_l_sino)
-
-    conv10_2_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(up9_l_sino)
-    conv10_2l_sino = LeakyReLU(alpha=0.2)(conv10_2_sino)            
-    conv10_3_sino = Conv2D(64, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv10_2l_sino)
-    conv10_3l_sino = LeakyReLU(alpha=0.2)(conv10_3_sino)  
-    conv10_4_sino = Conv2D(32, 3, padding = pad, 
-            kernel_initializer = 'he_normal')(conv10_3l_sino)
-    conv10_4l_sino = LeakyReLU(alpha=0.2)(conv10_4_sino)      
-    conv10_dr_sino = SpatialDropout2D(0.1)(conv10_4l_sino)
-
-    conv11_sino = Conv2D(1, 1, activation = 'linear')(conv10_dr_sino)
-
-    model = Model(sinogram_in, conv11_sino)
-
-    return model
-
-
-def unet2D_large(ntr, pad='same'):
-
-    up_9_pad = ntr
-
-    up_8_pad = np.ceil(up_9_pad / 2)
-    up_7_pad = np.ceil(up_8_pad / 2)
-    up_6_pad = np.ceil(up_7_pad / 2)
-    print(up_9_pad, up_8_pad, up_7_pad, up_6_pad)
-
-    lowres_in = Input(shape=(ntr, ntr, 1))
-    
-    conv1 = Conv2D(64, 3, activation = 'relu', padding = pad,
-            kernel_initializer = 'he_normal')(lowres_in)
-    conv1 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv1 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv1 = SpatialDropout2D(0.1)(conv1)
-
-    conv2 = Conv2D(128, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv2 = Conv2D(128, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv2 = Conv2D(128, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv2 = SpatialDropout2D(0.1)(conv2)
-
-    conv3 = Conv2D(256, 3, strides = 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv3 = Conv2D(256, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv3 = Conv2D(256, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv3 = SpatialDropout2D(0.1)(conv3)
-
-    conv4 = Conv2D(512, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv4 = Conv2D(512, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv4 = Conv2D(512, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv4 = SpatialDropout2D(0.1)(conv4)
-
-    conv5 = Conv2D(512, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv5 = Conv2D(512, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv5)
-    conv5 = Conv2D(512, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv5)
-    conv5 = SpatialDropout2D(0.1)(conv5)
-
-    up6 = Conv2D(256, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv5))
-
-    if up_6_pad % 2 != 0:
-        up6 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up6)
-
-    merge6 = concatenate([conv4,up6], axis = 3)
-    conv6 = Conv2D(256, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge6)
-    conv6 = Conv2D(256, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv6)
-    conv6 = SpatialDropout2D(0.1)(conv6)
-
-    up7 = Conv2D(128, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv6))
-
-    if up_7_pad % 2 != 0:
-        up7 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up7)
-
-    merge7 = concatenate([conv3,up7], axis = 3)
-    conv7 = Conv2D(128, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge7)
-    conv7 = Conv2D(128, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv7)
-    conv7 = SpatialDropout2D(0.1)(conv7)
-
-    up8 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv7))
-
-    if up_8_pad % 2 != 0:
-        up8 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up8)
-
-    merge8 = concatenate([conv2,up8], axis = 3)
-    conv8 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge8)
-    conv8 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv8)
-    conv8 = SpatialDropout2D(0.1)(conv8)
-
-    up9 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-        kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv8))
-
-    if up_9_pad % 2 != 0:
-        up9 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up9)
-
-    merge9 = concatenate([conv1,up9], axis = 3)
-    conv9 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge9)
-    conv9 = Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv9)
-    conv9 = Conv2D(32, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv9)
-    conv9 = SpatialDropout2D(0.1)(conv9)
-
-    conv10 = Conv2D(1, 1, activation = 'linear')(conv9)
-
-    model = Model(lowres_in, conv10)
-
-    return model
-
-
-def unet2D_small_largekernel(ntr, pad='same'):
-
-    up_9_pad = ntr
-
-    up_8_pad = np.ceil(up_9_pad / 2)
-    up_7_pad = np.ceil(up_8_pad / 2)
-    up_6_pad = np.ceil(up_7_pad / 2)
-    print(up_9_pad, up_8_pad, up_7_pad, up_6_pad)
-
-    lowres_in = Input(shape=(ntr, ntr, 1))
-    
-    conv1 = Conv2D(64, 5, activation = 'relu', padding = pad,
-            kernel_initializer = 'he_normal')(lowres_in)
-    conv1 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv1 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv1 = SpatialDropout2D(0.1)(conv1)
-
-    conv2 = Conv2D(64, 5, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv1)
-    conv2 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv2 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv2 = SpatialDropout2D(0.1)(conv2)
-
-    conv3 = Conv2D(64, 5, strides = 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv2)
-    conv3 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv3 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv3 = SpatialDropout2D(0.1)(conv3)
-
-    conv4 = Conv2D(64, 5, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv3)
-    conv4 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv4 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv4 = SpatialDropout2D(0.1)(conv4)
-
-    conv5 = Conv2D(64, 5, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv4)
-    conv5 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv5)
-    conv5 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv5)
-    conv5 = SpatialDropout2D(0.1)(conv5)
-
-    up6 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv5))
-
-    if up_6_pad % 2 != 0:
-        up6 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up6)
-
-    merge6 = concatenate([conv4,up6], axis = 3)
-    conv6 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge6)
-    conv6 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv6)
-    conv6 = SpatialDropout2D(0.1)(conv6)
-
-    up7 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv6))
-
-    if up_7_pad % 2 != 0:
-        up7 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up7)
-
-    merge7 = concatenate([conv3,up7], axis = 3)
-    conv7 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge7)
-    conv7 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv7)
-    conv7 = SpatialDropout2D(0.1)(conv7)
-
-    up8 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv7))
-
-    if up_8_pad % 2 != 0:
-        up8 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up8)
-
-    merge8 = concatenate([conv2,up8], axis = 3)
-    conv8 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge8)
-    conv8 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv8)
-    conv8 = SpatialDropout2D(0.1)(conv8)
-
-    up9 = Conv2D(64, 2, activation = 'relu', padding = pad, 
-        kernel_initializer = 'he_normal')(UpSampling2D(size = (2,2))(conv8))
-
-    if up_9_pad % 2 != 0:
-        up9 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up9)
-
-    merge9 = concatenate([conv1,up9], axis = 3)
-    conv9 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(merge9)
-    conv9 = Conv2D(64, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv9)
-    conv9 = Conv2D(32, 5, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(conv9)
-    conv9 = SpatialDropout2D(0.1)(conv9)
-
-    conv10 = Conv2D(1, 1, activation = 'linear')(conv9)
-
-    model = Model(lowres_in, conv10)
-
-    return model
-
-def unet2D_small_weightnorm(ntr, pad='same'):
-
-    up_9_pad = ntr
-
-    up_8_pad = np.ceil(up_9_pad / 2)
-    up_7_pad = np.ceil(up_8_pad / 2)
-    up_6_pad = np.ceil(up_7_pad / 2)
-    print(up_9_pad, up_8_pad, up_7_pad, up_6_pad)
-
-    lowres_in = Input(shape=(ntr, ntr, 1))
-    
-    conv1 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad,
-            kernel_initializer = 'he_normal'))(lowres_in)
-    conv1 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv1)
-    conv1 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv1)
-    conv1 = SpatialDropout2D(0.1)(conv1)
-
-    conv2 = WeightNormalization(Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv1)
-    conv2 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv2)
-    conv2 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv2)
-    conv2 = SpatialDropout2D(0.1)(conv2)
-
-    conv3 = WeightNormalization(Conv2D(64, 3, strides = 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv2)
-    conv3 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv3)
-    conv3 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv3)
-    conv3 = SpatialDropout2D(0.1)(conv3)
-
-    conv4 = WeightNormalization(Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv3)
-    conv4 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv4)
-    conv4 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv4)
-    conv4 = SpatialDropout2D(0.1)(conv4)
-
-    conv5 = WeightNormalization(Conv2D(64, 3, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv4)
-    conv5 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv5)
-    conv5 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv5)
-    conv5 = SpatialDropout2D(0.1)(conv5)
-
-    up6 = WeightNormalization(Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(UpSampling2D(size = (2,2))(conv5))
-
-    if up_6_pad % 2 != 0:
-        up6 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up6)
-
-    merge6 = concatenate([conv4,up6], axis = 3)
-    conv6 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(merge6)
-    conv6 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv6)
-    conv6 = SpatialDropout2D(0.1)(conv6)
-
-    up7 = WeightNormalization(Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(UpSampling2D(size = (2,2))(conv6))
-
-    if up_7_pad % 2 != 0:
-        up7 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up7)
-
-    merge7 = concatenate([conv3,up7], axis = 3)
-    conv7 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(merge7)
-    conv7 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv7)
-    conv7 = SpatialDropout2D(0.1)(conv7)
-
-    up8 = WeightNormalization(Conv2D(64, 2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(UpSampling2D(size = (2,2))(conv7))
-
-    if up_8_pad % 2 != 0:
-        up8 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up8)
-
-    merge8 = concatenate([conv2,up8], axis = 3)
-    conv8 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(merge8)
-    conv8 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv8)
-    conv8 = SpatialDropout2D(0.1)(conv8)
-
-    up9 = WeightNormalization(Conv2D(64, 2, activation = 'relu', padding = pad, 
-        kernel_initializer = 'he_normal'))(UpSampling2D(size = (2,2))(conv8))
-
-    if up_9_pad % 2 != 0:
-        up9 = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(up9)
-
-    merge9 = concatenate([conv1,up9], axis = 3)
-    conv9 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(merge9)
-    conv9 = WeightNormalization(Conv2D(64, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv9)
-    conv9 = WeightNormalization(Conv2D(32, 3, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal'))(conv9)
-    conv9 = SpatialDropout2D(0.1)(conv9)
-
-    conv10 = WeightNormalization(Conv2D(1, 1, activation = 'linear'))(conv9)
-
-    model = Model(lowres_in, conv10)
-
-    return model
-
