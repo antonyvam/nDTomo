@@ -123,9 +123,10 @@ def DCNN1D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconv
                   actlayermid = 'relu', actlayerfi = 'linear', pad='same'):
 
     '''
+    1D Deep Convolutional Neural Network
     
     Inputs:
-        npix: number of pixels in the input image (assumes square image)
+        npix: number of pixels in the input 2D spectrum
         nlayers: the depth of the CNN
         net: type of network, options are 'unet', 'autoencoder'
         dlayer: 'Yes/No' string; if a series of dense layers will be used after the most downscaled layer
@@ -233,6 +234,7 @@ def DCNN2D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconv
                   actlayermid = 'relu', actlayerfi = 'linear', pad='same'):
 
     '''
+    2D Deep Convolutional Neural Network
     
     Inputs:
         npix: number of pixels in the input image (assumes square image)
