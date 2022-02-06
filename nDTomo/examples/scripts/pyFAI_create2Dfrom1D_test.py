@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Feb  1 19:56:42 2022
+Perform a 1D to 2D diffraction pattern conversion
 
 @author: Antony Vamvakeros
 """
