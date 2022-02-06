@@ -5,8 +5,7 @@ Perform a 1D to 2D diffraction pattern conversion
 @author: Antony Vamvakeros
 """
 
-from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, addpnoise1D, addpnoise2D
-from nDTomo.utils.misc import KeVtoAng
+from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, addpnoise1D, addpnoise2D, KeVtoAng
 from nDTomo.sim.shapes.phantoms import load_example_patterns
 
 import time
@@ -34,7 +33,6 @@ poni2 = beam_centre_y * detpixsz
 detector = pyFAI.detectors.Detector(pixel1=detpixsz, pixel2=detpixsz, max_shape=(2000,2000))
 ai = AzimuthalIntegrator(dist=dist, poni1=poni1, poni2=poni2, rot1=0, rot2=0, rot3=0, detector=detector, wavelength=wavelength)
 
-# dp = addpnoise1D(dpAl, 100)
 
 start = time.time()
 img_theo = ai.calcfrom1d(q, dpAl, mask=None, dim1_unit="q_A^-1",
