@@ -27,11 +27,13 @@ class nDAacq():
     nDAacq simulates the acquisition of XRD-CT data using sinogram data
     '''
     
-    def __init__(self, mask = None, file_format ='cbf'):
+    def __init__(self, mask = None, file_format ='cbf', scantype = 'Zig', fastaxis = 'Translation', slowaxis = 'Rotation', units = "q_A^-1"):
                         
-        self.mask = mask; self.file_format = file_format
+        self.mask = mask; self.file_format = file_format; self.units = units;
+        self.scantype = scantype
+        self.fastaxis = fastaxis; self.slowaxis = slowaxis
         
-    def setdata(self, data, xaxis, units = "q_A^-1", scantype = 'Zig', fastaxis = 'Translation', slowaxis = 'Rotation'):
+    def setdata(self, data, xaxis):
         
         '''
         Data contains the 3D array corresponding to the sinogram data (ntrans, nproj, nch)
@@ -39,8 +41,7 @@ class nDAacq():
         '''        
         self.data = data; self.xaxis = xaxis
         self.ntrans = self.data.shape[0]; self.nproj = self.data.shape[1]; 
-        self.units = units; self.scantype = scantype
-        self.fastaxis = fastaxis; self.slowaxis = slowaxis
+        
         
     def setdirs(self, savedir, dname):
         
@@ -175,6 +176,10 @@ class nDAacq():
         
         return(img_theo)
 
+    def saveprms(self):
+        
+        pass
+
     def create_nDTomo_phantom(self, npix = 100, nproj = 110):
     
         dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
@@ -195,6 +200,8 @@ class nDAacq():
             proj_id = astra_create_sino_geo(chemct[:,:,ii], theta=np.deg2rad(np.arange(0, 180, 180/nproj)))
             self.data[:,:,ii] = astra_create_sino(chemct[:,:,ii], proj_id).transpose()
                 
+        self.ntrans = self.data.shape[0]; self.nproj = self.data.shape[1]; 
+        
 #%% Perform a test
 
 p = ndtomopath()
