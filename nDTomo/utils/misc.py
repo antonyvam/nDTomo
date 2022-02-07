@@ -13,6 +13,7 @@ from scipy.interpolate import interp1d
 from mayavi import mlab
 from matplotlib import cm
 from matplotlib.colors import ListedColormap
+from tqdm import tqdm
 
 
 def nDTomo_colormap():
@@ -244,7 +245,7 @@ def addpnoise3D(vol, ct):
         vol = vol + np.finfo(np.float32).eps
         
     
-    for ii in range(vol.shape[2]):
+    for ii in tqdm(range(vol.shape[2])):
         
         vol[:,:,ii] = np.random.poisson(vol[:,:,ii] * ct)/ ct
     
@@ -336,7 +337,7 @@ def regvol(vol, tmat):
     
     sr = StackReg(StackReg.RIGID_BODY)
     
-    for ii in range(vol.shape[2]):
+    for ii in tqdm(range(vol.shape[2])):
         
         vol[:,:,ii] = sr.transform(vol[:,:,ii], tmat)
         
@@ -365,7 +366,7 @@ def maskvolume(vol, msk):
     '''
     voln = np.zeros_like(vol)
     
-    for ii in range(vol.shape[2]):
+    for ii in tqdm(range(vol.shape[2])):
         
         voln[:,:,ii] = vol[:,:,ii]*msk
         
@@ -380,7 +381,7 @@ def interpvol(vol, xold, xnew, progress=False):
         
     voln = np.zeros((vol.shape[0], vol.shape[1], len(xnew)))
     
-    for ii in range(voln.shape[0]):
+    for ii in tqdm(range(voln.shape[0])):
         for jj in range(voln.shape[1]):
             
             f = interp1d(xold, vol[ii,jj,:], kind='linear', bounds_error=False, fill_value=0)
@@ -401,13 +402,10 @@ def normvol(vol, progress=False):
         
     voln = np.zeros_like(vol)
     
-    for ii in range(voln.shape[2]):
+    for ii in tqdm(range(voln.shape[2])):
 
         voln[:,:,ii] = vol[:,:,ii]/np.max(vol[:,:,ii])   
-    
-        if progress == True:
-            print('Interpolating line %s' %ii)
-            
+                
     return(voln)
 
 def mask_thr(vol, roi, thr, fignum = 1):
