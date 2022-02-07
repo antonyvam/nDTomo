@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Feb  4 17:16:43 2022
+Clustering chemical imaging data using CNNs
 
 @author: Antony Vamvakeros
 """
