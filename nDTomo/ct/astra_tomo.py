@@ -118,13 +118,10 @@ def astra_create_sinostack(vol, sz, theta, nim, proj_id):
 
     sinograms = zeros((sz, len(theta), nim))
     
-    for ii in range(nim):
+    for ii in tqdm(range(nim)):
         
          sinogram_id, sinograms[:,:,ii] = astra.create_sino(vol[:,:,ii], proj_id)
-         
-         if mod(ii, 1000) == 0:
-             print('Sinogram %d out of %d' %(ii, nim))
-             
+                      
 
 def astra_create_geo(sino, theta=None):
     
@@ -225,8 +222,35 @@ def astre_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak
     return(rec)
                       
              
+def nDphantom_3D_sinograms(chemct, nproj=None, scanrange = '180'):
              
-             
-             
-             
-             
+    ''' 
+    Create sinogram volume from a chemical CT dataset
+    Inputs:
+        chemct: 3D array with 2 spatial and 1 spectral dimensions as (x,y,spectral)
+        nproj: number of projections for the CT scan
+    '''
+            
+    if nproj is None:       
+        nproj = chemct.shape[1]
+
+    if scanrange == '180':
+        omega = deg2rad(arange(0, 180, 180/nproj))
+    elif scanrange == '360':
+        omega = deg2rad(arange(0, 360, 360/nproj))
+        
+    chemsinos = zeros((chemct.shape[0], nproj, chemct.shape[2]))
+    
+    for ii in tqdm(range(chemct.shape[2])):
+        
+        proj_id = astra_create_sino_geo(chemct[:,:,ii], theta=omega)
+        chemsinos[:,:,ii] = astra_create_sino(chemct[:,:,ii], proj_id).transpose()
+        
+    return(chemsinos)
+
+
+
+
+
+
+
