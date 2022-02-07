@@ -249,8 +249,51 @@ def nDphantom_3D_sinograms(chemct, nproj=None, scanrange = '180'):
     return(chemsinos)
 
 
+def nDphantom_3D_FBP(chemsinos, theta=None, scanrange = '180', method='FBP', filt='Ram-Lak'):
+    
+    '''
+    '''
+    
+    npr = chemsinos.shape[1] # Number of projections
+    
+    if theta is None:
+        if scanrange == '180':
+            theta = deg2rad(arange(0, 180, 180/npr))
+        elif scanrange == '360':
+            theta = deg2rad(arange(0, 360, 360/npr))
+        
+    # Create a basic square volume geometry
+    vol_geom = astra.create_vol_geom(chemsinos.shape[0], chemsinos.shape[0])
+    # Create a parallel beam geometry with 180 angles between 0 and pi, and image.shape[0] detector pixels of width 1.
+    proj_geom = astra.create_proj_geom('parallel', 1.0, int(1.0*chemsinos.shape[0]), theta)
+    # Create a sinogram using the GPU.
+    proj_id = astra.create_projector('strip',proj_geom,vol_geom)
+    
+    # Create a data object for the reconstruction
+    rec_id = astra.data2d.create('-vol', vol_geom)
 
+    cfg = astra.astra_dict(method)
+    cfg['ReconstructionDataId'] = rec_id
+    cfg['ProjectorId'] = proj_id
+    if method == 'FBP':
+        cfg['option'] = { 'FilterType': filt }    
+    
+    rec = zeros((chemsinos.shape[0], chemsinos.shape[0], chemsinos.shape[2]))
+    for ii in tqdm(range(chemsinos.shape[2])):
 
-
-
+        sinogram_id = astra.data2d.create('-sino', proj_geom, chemsinos[:,:,ii].transpose())
+        
+        cfg['ProjectionDataId'] = sinogram_id
+        
+        # Create the algorithm object from the configuration structure
+        alg_id = astra.algorithm.create(cfg)
+        astra.algorithm.run(alg_id)
+        
+        # Get the result
+        rec[:,:,ii] = astra.data2d.get(rec_id)
+             
+    astra.projector.delete(proj_id)
+    astra.data2d.delete(rec_id)
+        
+    return(rec)
 

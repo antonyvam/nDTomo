@@ -17,6 +17,11 @@ from tqdm import tqdm
 
 
 def nDTomo_colormap():
+    
+    '''
+    Custom colormap: It is the jet colormap but 0 correponds to black
+    '''
+    
     jet = cm.get_cmap('jet', 256)
     newcolors = jet(np.linspace(0, 1, 256))
     black = np.array([0, 0, 0, 1])
@@ -275,7 +280,7 @@ def cirmask(im, npx=0):
     if len(dim)==2:
         im = np.where(r>np.floor(sz/2) - npx,0,im)
     elif len(dim)==3:
-        for ii in range(0,dim[2]):
+        for ii in tqdm(range(0,dim[2])):
             im[:,:,ii] = np.where(r>np.floor(sz/2),0,im[:,:,ii])
     return(im)
 
@@ -393,7 +398,7 @@ def interpvol(vol, xold, xnew, progress=False):
     return(voln)
 
 
-def normvol(vol, progress=False):
+def normvol(vol):
     
     '''
     Normalise a 3D matrix
