@@ -194,6 +194,9 @@ def ndtomopath():
 
 def addpnoise1D(sp, ct):
     
+    '''
+    Adds poisson noise to a spectrum
+    '''    
     mi = np.min(sp)
     
     if mi < 0:
@@ -207,6 +210,10 @@ def addpnoise1D(sp, ct):
     return(np.random.poisson(sp * ct)/ ct)
 
 def addpnoise2D(im, ct):
+    
+    '''
+    Adds poisson noise to an image
+    '''
     
     mi = np.min(im)
     
@@ -223,7 +230,7 @@ def addpnoise2D(im, ct):
 def addpnoise3D(vol, ct):
     
     '''
-    Adds poisspn noise to a stack of images, 3rd dimension is z/spectral
+    Adds poisson noise to a stack of images, 3rd dimension is z/spectral
     '''
     
     mi = np.min(vol)
