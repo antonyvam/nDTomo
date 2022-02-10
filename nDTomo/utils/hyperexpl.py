@@ -48,8 +48,10 @@ class HyperSliceExplorer():
         self.sdp = np.sum(np.sum(self.data,axis=1),axis=0)
         self.dproi = self.mdp
 
-    def explore(self):
+    def explore(self, cmap = 'jet'):
                 
+        self.cmap = cmap
+        
         self.mapper = plt;
         self.map_fig = self.mapper.figure()
         self.map_axes = self.map_fig.add_subplot(111)        
@@ -172,7 +174,7 @@ class HyperSliceExplorer():
             self.selectedChannels = nx
             self.map_axes.clear() # not fast
             self.imoi = self.data[:,:,nx]
-            self.map_data = self.map_axes.imshow(self.imoi, cmap = 'jet')
+            self.map_data = self.map_axes.imshow(self.imoi, cmap = self.cmap)
             title = "Channel = %d; %s = %.3f" % (nx, self.xaxislabel, self.xaxis[nx])
 
 
