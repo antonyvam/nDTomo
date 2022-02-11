@@ -281,7 +281,7 @@ def cirmask(im, npx=0):
         im = np.where(r>np.floor(sz/2) - npx,0,im)
     elif len(dim)==3:
         for ii in tqdm(range(0,dim[2])):
-            im[:,:,ii] = np.where(r>np.floor(sz/2),0,im[:,:,ii])
+            im[:,:,ii] = np.where(r>np.floor(sz/2) - npx,0,im[:,:,ii])
     return(im)
 
 
