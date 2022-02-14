@@ -70,7 +70,7 @@ def astra_rec_single(sino, theta=None, method='FBP', filt='Ram-Lak'):
     cfg['ReconstructionDataId'] = rec_id
     cfg['ProjectionDataId'] = sinogram_id
     cfg['ProjectorId'] = proj_id
-    if method == 'FBP':
+    if method == 'FBP' or method == 'FBP_CUDA':
         cfg['option'] = { 'FilterType': filt }        
     
     # Create the algorithm object from the configuration structure
