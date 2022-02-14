@@ -249,7 +249,7 @@ def nDphantom_3D_sinograms(chemct, nproj=None, scanrange = '180'):
     return(chemsinos)
 
 
-def nDphantom_3D_FBP(chemsinos, theta=None, scanrange = '180', method='FBP', filt='Ram-Lak'):
+def nDphantom_3D_FBP(chemsinos, theta=None, scanrange = '180', method='FBP_CUDA', filt='Ram-Lak'):
     
     '''
     '''
@@ -292,8 +292,12 @@ def nDphantom_3D_FBP(chemsinos, theta=None, scanrange = '180', method='FBP', fil
         # Get the result
         rec[:,:,ii] = astra.data2d.get(rec_id)
              
+        astra.algorithm.delete(alg_id)
+        
     astra.projector.delete(proj_id)
     astra.data2d.delete(rec_id)
-        
+    astra.data2d.delete(sinogram_id)
+    astra.projector.delete(proj_id)    
+    
     return(rec)
 

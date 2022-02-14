@@ -377,7 +377,7 @@ def maskvolume(vol, msk):
         
     return(voln)
 
-def interpvol(vol, xold, xnew, progress=False):
+def interpvol(vol, xold, xnew):
     
     '''
     Linear interpolation of a 3D matrix
@@ -392,9 +392,6 @@ def interpvol(vol, xold, xnew, progress=False):
             f = interp1d(xold, vol[ii,jj,:], kind='linear', bounds_error=False, fill_value=0)
             voln[ii,jj,:] = f(xnew)    
     
-        if progress == True:
-            print('Interpolating line %s' %ii)
-            
     return(voln)
 
 

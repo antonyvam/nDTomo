@@ -83,14 +83,14 @@ showvol(chemct)
 
 #%% Create the sinograms
 
-nproj = int(npix*np.pi/2)
+nproj = int(npix*np.pi/2/4)
 chemsinos = nDphantom_3D_sinograms(chemct, nproj)
 
 print('The sinogram dimensions are %d, %d, %d' %(chemsinos.shape[0], chemsinos.shape[1], chemsinos.shape[2]))
 
 #%% Add noise to the sinograms
 
-chemsinos = addpnoise3D(chemsinos, 10)
+chemsinos = addpnoise3D(chemsinos, 50)
 
 #%% Let's explore the local patterns and chemical images
 

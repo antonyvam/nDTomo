@@ -13,6 +13,7 @@ from skimage.data import shepp_logan_phantom
 from skimage.transform import rescale
 from skimage.draw import random_shapes
 from scipy.interpolate import interp1d
+from tqdm import tqdm
 
 # Might need to convert the functions to class methods
 
@@ -205,8 +206,8 @@ def nDphantom_3D(npix, use_spectra = 'No', spectra = None, nz = 100, imgs = None
         imgs: list of images; if None (default), it will use the nDphantom_2D to create 5 component images
         indices: string (options are 'Random', 'All' and 'Custom'); specifies if the component images will be used in all z positions in the volume dataset ('All') or not ('Random'/ 'Custom')
         inds: a list containing the indices for the z positions where each component will appear, the list contains two sublists: inds = [inds_in, inds_fi]
-        norm: string (options are 'Volume', 'Image') for normalising the data; 'Volume' normalises the whole 3D image stack with respect to the highest intensity, 
-            'Image' normalises each image in the volume dataset
+        norm: string (options are 'Volume', 'Images') for normalising the data; 'Volume' normalises the whole 3D image stack with respect to the highest intensity, 
+            'Images' normalises each image in the volume dataset
     Output:
         vol: volume with dimensions (npix, npix, nz/nch)
         
@@ -246,7 +247,7 @@ def nDphantom_3D(npix, use_spectra = 'No', spectra = None, nz = 100, imgs = None
             
             inds_in, inds_fi = inds
             
-        for ii in range(len(imgs)):
+        for ii in tqdm(range(len(imgs))):
             
             vol[:,:,int(inds_in[ii]):int(inds_fi[ii])] = (vol[:,:,int(inds_in[ii]):int(inds_fi[ii])] + 
                                                               np.transpose(np.tile(imgs[ii], (len(np.arange(inds_in[ii],inds_fi[ii])), 1, 1)), (2,1,0)))
@@ -282,7 +283,7 @@ def nDphantom_3D(npix, use_spectra = 'No', spectra = None, nz = 100, imgs = None
             
             inds_in, inds_fi = inds
         
-        for ii in range(len(imgs)):
+        for ii in tqdm(range(len(imgs))):
             
             vol_tmp = np.tile(spectra[ii], (npix, npix, 1))*np.transpose(np.tile(imgs[ii], (nch, 1, 1)), (2,1,0))
             
@@ -294,7 +295,7 @@ def nDphantom_3D(npix, use_spectra = 'No', spectra = None, nz = 100, imgs = None
         
     elif norm == 'Images':
         
-        for ii in range(vol.shape[2:]):
+        for ii in tqdm(range(vol.shape[2])):
         
             vol[:,:,ii] = vol[:,:,ii]/np.max(vol[:,:,ii])          
         
@@ -365,7 +366,7 @@ def nDphantom_4D(npix, nzt, vtype = 'Spectral', imgs = None, indices = 'Random',
         for ii in range(len(compbeh)):
             compbeh[ii] = np.random.randint(-1,2)
         
-        for ii in range(nzt):
+        for ii in tqdm(range(nzt)):
             
             spnewlist = []
             
@@ -402,7 +403,7 @@ def nDphantom_4D(npix, nzt, vtype = 'Spectral', imgs = None, indices = 'Random',
             
         # In order to avoid storing in memory multiple 4D matrices, we go per z position and create a 3D dataset (i.e. 2D spatial, 1D spectral) for each component        
         
-        for ii in range(nzt):
+        for ii in tqdm(range(nzt)):
             
             vol3D_tmp = np.zeros((npix, npix, nch))
             
@@ -459,7 +460,7 @@ def nDphantom_5D(npix, nz, nt, imgs = None, indices = 'Random', spectra = None):
     for ii in range(len(compbeh)):
         compbeh[ii] = np.random.randint(-1,2)
         
-    for ii in range(vol5D.shape[4]):
+    for ii in tqdm(range(vol5D.shape[4])):
         
         spnewlist = []
         
