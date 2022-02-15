@@ -7,7 +7,7 @@ Tensorflow functions for tomography
 
 
 import scipy, astra, time
-from numpy import deg2rad, arange, linspace, pi, zeros, mod
+from numpy import deg2rad, arange, linspace, pi, zeros, mod, mean, where
 from tqdm import tqdm
 
 def astra_Amatrix(ntr, ang):
@@ -147,7 +147,7 @@ def astra_create_geo(sino, theta=None):
     return(proj_geom, rec_id, proj_id)
              
              
-def astre_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'):
+def astra_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'):
 
     '''
     Reconstruct a single sinogram with astra toolbox
@@ -184,7 +184,7 @@ def astre_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'
     return(rec)
                    
              
-def astre_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'):
+def astra_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'):
 
     '''
     Reconstruct a sinogram volume with astra toolbox
@@ -229,7 +229,71 @@ def astre_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak
     
     return(rec)
                       
-             
+def astra_rec_2vols(sinos, method='FBP_CUDA', filt='Ram-Lak'):
+     
+    '''
+    Inputs:
+        s: (z, proj, x) 
+    '''
+    npr = sinos.shape[1] # Number of projections
+    
+    theta = deg2rad(arange(0, 180, 180/npr))
+    # Create a basic square volume geometry
+    vol_geom = astra.create_vol_geom(sinos.shape[2], sinos.shape[2])
+    # Create a parallel beam geometry with 180 angles between 0 and pi, and image.shape[0] detector pixels of width 1.
+    proj_geom1 = astra.create_proj_geom('parallel', 1.0, int(1.0*sinos.shape[2]), theta[0::2])
+    proj_geom2 = astra.create_proj_geom('parallel', 1.0, int(1.0*sinos.shape[2]), theta[1::2])
+    # Create a sinogram using the GPU. 
+    proj_id1 = astra.create_projector('strip',proj_geom1,vol_geom)
+    proj_id2 = astra.create_projector('strip',proj_geom2,vol_geom)
+    
+    # Create a data object for the reconstruction
+    rec_id = astra.data2d.create('-vol', vol_geom)
+    
+    cfg = astra.astra_dict('FBP_CUDA')
+    cfg['ReconstructionDataId'] = rec_id
+    
+    cfg['option'] = { 'FilterType': 'Ram-Lak' }  
+    
+    vol1 = zeros((sinos.shape[2], sinos.shape[2], sinos.shape[0]))
+    vol2 = zeros((sinos.shape[2], sinos.shape[2], sinos.shape[0]))
+    
+    for ii in tqdm(range(sinos.shape[0])):
+    
+        s = sinos[ii,:,:].transpose()
+        s = s - mean(s[0,:])
+        s = where(s<0, 0, s)
+        s = s[:-13,:]
+        # s = s.astype('float32')
+    
+        sinogram_id = astra.data2d.create('-sino', proj_geom1, s[:,0::2].transpose())
+        cfg['ProjectionDataId'] = sinogram_id
+        cfg['ProjectorId'] = proj_id1
+        # Create the algorithm object from the configuration structure
+        alg_id = astra.algorithm.create(cfg)
+        astra.algorithm.run(alg_id)
+        # Get the result
+        vol1[:,:,ii] = astra.data2d.get(rec_id)
+        astra.algorithm.delete(alg_id)
+        
+        sinogram_id = astra.data2d.create('-sino', proj_geom2, s[:,1::2].transpose())
+        cfg['ProjectionDataId'] = sinogram_id
+        cfg['ProjectorId'] = proj_id2
+        # Create the algorithm object from the configuration structure
+        alg_id = astra.algorithm.create(cfg)
+        astra.algorithm.run(alg_id)
+        # Get the result
+        vol2[:,:,ii] = astra.data2d.get(rec_id)
+        astra.algorithm.delete(alg_id)
+    
+    astra.projector.delete(proj_id1)
+    astra.projector.delete(proj_id2)
+    astra.data2d.delete(rec_id)
+    astra.data2d.delete(sinogram_id)
+    
+    return(vol1, vol2)
+
+               
 def nDphantom_3D_sinograms(chemct, nproj=None, scanrange = '180'):
              
     ''' 
