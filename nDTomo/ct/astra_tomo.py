@@ -66,7 +66,7 @@ def astra_rec_single(sino, theta=None, method='FBP', filt='Ram-Lak'):
     # Create a data object for the reconstruction
     rec_id = astra.data2d.create('-vol', vol_geom)
     
-    cfg = astra.astra_dict('FBP')
+    cfg = astra.astra_dict(method)
     cfg['ReconstructionDataId'] = rec_id
     cfg['ProjectionDataId'] = sinogram_id
     cfg['ProjectorId'] = proj_id
@@ -219,6 +219,14 @@ def astre_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak
         # Get the result
         rec[:,:,ii] = astra.data2d.get(rec_id)
              
+        astra.algorithm.delete(alg_id)
+        
+        
+    astra.projector.delete(proj_id)
+    astra.data2d.delete(rec_id)
+    astra.data2d.delete(sinogram_id)
+    astra.projector.delete(proj_id)    
+    
     return(rec)
                       
              
