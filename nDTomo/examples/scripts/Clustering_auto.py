@@ -125,8 +125,10 @@ print(train.shape)
 
 npix = chemct.shape[0]
 
-model = DCNN2D(npix, nlayers=4, net='autoencoder', dropout='No', batchnorm = 'No', filtnums=64, nconvs=3, actlayerfi = 'linear')
-# model = Dense2D(npix, nlayers = 4, nodes = [200, 100, 50, 10], dropout='No', batchnorm = 'No', actlayerfi = 'linear')
+model = DCNN2D(npix, nlayers=4, net='autoencoder', dropout='No', batchnorm = 'No', 
+               filtnums=64, nconvs=3, actlayerfi = 'linear',
+               dlayer = 'Yes', dense_layers = 'Custom', dlayers = [100,100,10])
+
 model.summary()
 
 #%%
@@ -162,14 +164,16 @@ showim(imc, 1)
 
 #%%
 
-encoder = tf.keras.models.Model(model.input, model.layers[-5].output)
+encoder = tf.keras.models.Model(model.input, model.layers[-15].output)
 encoder.summary()
 
 #%%
 
-start = time.time()
-features = encoder.predict(train, batch_size = 1)
-print(time.time() - start)
+features = np.zeros((train.shape[0], 64, 64, 64))
+
+for ii in tqdm(range(train.shape[0])):
+
+    features = encoder.predict(train, batch_size = 1)
 
 #%% use features for clustering
 
