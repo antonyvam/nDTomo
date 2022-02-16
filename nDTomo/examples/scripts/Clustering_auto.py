@@ -129,49 +129,6 @@ model = DCNN2D(npix, nlayers=4, net='autoencoder', dropout='No', batchnorm = 'No
 # model = Dense2D(npix, nlayers = 4, nodes = [200, 100, 50, 10], dropout='No', batchnorm = 'No', actlayerfi = 'linear')
 model.summary()
 
-
-#%% Dense Fully Connected Network
-
-full_dim = chemct.shape[0]
-# these are the downsampling/upsampling dimensions
-encoding_dim1 = 100
-encoding_dim2 = 100
-encoding_dim3 = 100 # we will use these 3 dimensions for clustering
-
-# This is our encoder input 
-encoder_input_data = tf.keras.Input(shape=(full_dim,full_dim,1))
-encoder_input_data_flat = tf.keras.layers.Flatten()(encoder_input_data)
-# the encoded representation of the input
-encoded_layer1 = tf.keras.layers.Dense(encoding_dim1, activation='relu')(encoder_input_data_flat)
-# encoded_layer1 = tf.keras.layers.Dropout(0.05)(encoded_layer1)
-# encoded_layer1 = tf.keras.layers.BatchNormalization()(encoded_layer1)
-encoded_layer2 = tf.keras.layers.Dense(encoding_dim2, activation='relu')(encoded_layer1)
-# encoded_layer2 = tf.keras.layers.Dropout(0.05)(encoded_layer2)
-# encoded_layer2 = tf.keras.layers.BatchNormalization()(encoded_layer2)
-# Note that encoded_layer3 is our 3 dimensional "clustered" layer, which we will later use for clustering
-encoded_layer3 = tf.keras.layers.Dense(encoding_dim3, activation='relu', name="ClusteringLayer")(encoded_layer2)
-# encoded_layer3 = tf.keras.layers.Dropout(0.05)(encoded_layer3)
-# encoded_layer1 = tf.keras.layers.BatchNormalization()(encoded_layer1)
-
-# encoder_model = tf.keras.Model(encoder_input_data, encoded_layer3)
-
-# the reconstruction of the input
-decoded_layer3 = tf.keras.layers.Dense(encoding_dim2, activation='relu')(encoded_layer3)
-# decoded_layer3 = tf.keras.layers.Dropout(0.05)(decoded_layer3)
-# decoded_layer3 = tf.keras.layers.BatchNormalization()(decoded_layer3)
-decoded_layer2 = tf.keras.layers.Dense(encoding_dim1, activation='relu')(decoded_layer3)
-# decoded_layer2 = tf.keras.layers.Dropout(0.05)(decoded_layer2)
-# decoded_layer2 = tf.keras.layers.BatchNormalization()(decoded_layer2)
-decoded_layer1 = tf.keras.layers.Dense(full_dim * full_dim, activation='relu')(decoded_layer2)
-# decoded_layer1 = tf.keras.layers.Dropout(0.05)(decoded_layer1)
-# decoded_layer1 = tf.keras.layers.BatchNormalization()(decoded_layer1)
-decoded_layer1 = tf.keras.layers.Reshape((full_dim, full_dim, 1))(decoded_layer1)  
-
-# This model maps an input to its autoencoder reconstruction
-model = tf.keras.Model(encoder_input_data, outputs=decoded_layer1, name="Encoder")
-model.summary()
-
-
 #%%
 model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.0001), loss=ssim_loss)
 
@@ -205,10 +162,24 @@ showim(imc, 1)
 
 #%%
 
-encoder = tf.keras.models.Model(model.input, model.layers[-19].output)
+encoder = tf.keras.models.Model(model.input, model.layers[-5].output)
 encoder.summary()
 
+#%%
 
+start = time.time()
+features = encoder.predict(train, batch_size = 1)
+print(time.time() - start)
+
+#%% use features for clustering
+
+from sklearn.cluster import KMeans
+km = KMeans(n_clusters=10)
+
+
+
+# features = np.reshape(features, newshape=(features.shape[0], -1))
+# pred = km.fit_predict(features)
 
 
 

@@ -302,7 +302,7 @@ def upblock2D(convl, padsize, filtnums= 64, pad='same'):
     return(convl)
 
 def DCNN2D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconvs =3, filtnums= 64, kersz = 3, dropout = 'Yes', batchnorm = 'No', 
-                  actlayermid = 'relu', actlayerfi = 'linear', pad='same'):
+                  actlayermid = 'relu', actlayerfi = 'linear', pad='same', dense_layers = 'Default', dlayers = None):
 
     '''
     2D Deep Convolutional Neural Network
@@ -320,7 +320,7 @@ def DCNN2D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconv
         actlayermid: the activation function used in all layers apart from the final layer
         actlayerfi: the activation function used in the final layer
         pad: padding type, default is 'same'
-            
+        dense_layers: 'Default/Custom' string; if 'Custom', then the use has to pass a list containing the number of nodes per dense layer
     '''
     pads = padcalc(npix, nlayers)
     
@@ -334,19 +334,50 @@ def DCNN2D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconv
         convl = downblock2D(convl, nconvs = 3, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
         dconvs.append(convl)
     
-    if dlayer == 'Yes':
+    if dlayer == 'Yes' and dense_layers == 'Default':
         
         convl = Flatten()(convl)
         
         for ii in range(3):
     
-            convl = Dense(100, kernel_initializer='he_normal', activation = 'relu')(convl)
-            convl = Dropout(0.1)(convl)
+            convl = Dense(100, kernel_initializer='he_normal', activation = actlayermid)(convl)
+
+            if batchnorm == 'Yes':
+                convl = BatchNormalization()(convl)
         
-        convl = Dense(int(tf.math.ceil(pads[0] / 2)) * int(tf.math.ceil(pads[0] / 2)) * 8, kernel_initializer='he_normal', activation='relu')(convl)
-        convl = Dropout(0.1)(convl)
+            if dropout == 'Yes':
+                convl = Dropout(0.1)(convl)                 
+        
+        convl = Dense(int(tf.math.ceil(pads[0] / 2)) * int(tf.math.ceil(pads[0] / 2)) * 8, kernel_initializer='he_normal', activation=actlayermid)(convl)
+        if batchnorm == 'Yes':
+            convl = BatchNormalization()(convl)
+    
+        if dropout == 'Yes':
+            convl = Dropout(0.1)(convl)     
         convl = Reshape((int(tf.math.ceil(pads[0] / 2)), int(tf.math.ceil(pads[0] / 2)), 8))(convl)    
+    
+    elif dlayer == 'Yes' and dense_layers == 'Custom':
         
+        convl = Flatten()(convl)
+        
+        for ii in range(len(dlayers)):
+    
+            convl = Dense(dlayers[ii], kernel_initializer='he_normal', activation = actlayermid)(convl)
+
+            if batchnorm == 'Yes':
+                convl = BatchNormalization()(convl)
+        
+            if dropout == 'Yes':
+                convl = Dropout(0.1)(convl)                 
+        
+        convl = Dense(int(tf.math.ceil(pads[0] / 2)) * int(tf.math.ceil(pads[0] / 2)) * 8, kernel_initializer='he_normal', activation=actlayermid)(convl)
+        if batchnorm == 'Yes':
+            convl = BatchNormalization()(convl)
+    
+        if dropout == 'Yes':
+            convl = Dropout(0.1)(convl)     
+        convl = Reshape((int(tf.math.ceil(pads[0] / 2)), int(tf.math.ceil(pads[0] / 2)), 8))(convl)           
+    
     for ii in range(nlayers-1):
 
         up = upblock2D(convl, pads[ii], filtnums= filtnums, pad=pad)
