@@ -125,7 +125,7 @@ print(train.shape)
 
 npix = chemct.shape[0]
 
-model = DCNN2D(npix, nlayers=3, net='autoencoder', dropout='YEs', batchnorm = 'Yes', 
+model = DCNN2D(npix, nlayers=3, net='autoencoder', dropout='Yes', batchnorm = 'Yes', 
                filtnums=64, nconvs=3, actlayerfi = 'linear')
 
 model.summary()
@@ -158,7 +158,9 @@ plt.plot(history['val_loss'][1:])
 
 ind = np.random.randint(0, 250)
 print(ind)
-imc = np.concatenate((model.predict(train[ind:ind+1,:,:,:])[0,:,:,0], train[ind,:,:,0]), axis = 1)
+imp = model.predict(train[ind:ind+1,:,:,:])[0,:,:,0]
+imp = np.where(imp<0, 0, imp)
+imc = np.concatenate((imp, train[ind,:,:,0]), axis = 1)
 
 showim(imc, 1)
 
@@ -180,7 +182,7 @@ for ii in tqdm(range(train.shape[0])):
 
 from sklearn.manifold import TSNE
 
-tsne = TSNE(n_components=2)
+tsne = TSNE(n_components=2, random_state=64)
 digit_features_tsne = tsne.fit_transform(features)
 
 plt.scatter(digit_features_tsne[:,0], digit_features_tsne[:,1])
