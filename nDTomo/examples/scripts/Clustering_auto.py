@@ -10,9 +10,9 @@ Clustering chemical imaging data using CNNs
 from nDTomo.sim.shapes.phantoms import nDphantom_2D, load_example_patterns, nDphantom_3D, nDphantom_4D, nDphantom_2Dmap
 from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, showvol, normvol, addpnoise2D, addpnoise3D, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
 from nDTomo.utils.hyperexpl import HyperSliceExplorer
-from nDTomo.ct.astra_tomo import astra_create_geo, astre_rec_vol, astre_rec_alg, astra_create_sino_geo, astra_create_sino
+from nDTomo.ct.astra_tomo import astra_create_geo, astra_rec_vol, astra_rec_alg, astra_create_sino_geo, astra_create_sino
 from nDTomo.ct.conv_tomo import radonvol, fbpvol
-from nDTomo.nn.models_tf import DCNN2D, DnCNN
+from nDTomo.nn.models_tf import DCNN2D, DnCNN, Dense1D, Dense2D
 from nDTomo.nn.losses_tf import ssim_mae_loss, ssim_loss
 
 from tqdm import tqdm
@@ -43,7 +43,7 @@ showspectra([dpAl, dpCu + 0.1, dpFe + 0.2, dpPt + 0.3, dpZn + 0.4], 1)
 These are the five ground truth componet images
 '''
 
-npix = 200
+npix = 512
 # This creates a list containing five images, all with the same dimensions
 iml = nDphantom_2D(npix, nim = 'Multiple')
 print(len(iml))
@@ -125,8 +125,8 @@ print(train.shape)
 
 npix = chemct.shape[0]
 
-model = DCNN2D(npix, nlayers=2, net='autoencoder', dropout='No', batchnorm = 'No', filtnums=128, nconvs=4, actlayerfi = 'relu')
-
+model = DCNN2D(npix, nlayers=4, net='autoencoder', dropout='No', batchnorm = 'No', filtnums=64, nconvs=3, actlayerfi = 'linear')
+# model = Dense2D(npix, nlayers = 4, nodes = [200, 100, 50, 10], dropout='No', batchnorm = 'No', actlayerfi = 'linear')
 model.summary()
 
 
@@ -143,27 +143,27 @@ encoder_input_data = tf.keras.Input(shape=(full_dim,full_dim,1))
 encoder_input_data_flat = tf.keras.layers.Flatten()(encoder_input_data)
 # the encoded representation of the input
 encoded_layer1 = tf.keras.layers.Dense(encoding_dim1, activation='relu')(encoder_input_data_flat)
-encoded_layer1 = tf.keras.layers.Dropout(0.05)(encoded_layer1)
+# encoded_layer1 = tf.keras.layers.Dropout(0.05)(encoded_layer1)
 # encoded_layer1 = tf.keras.layers.BatchNormalization()(encoded_layer1)
 encoded_layer2 = tf.keras.layers.Dense(encoding_dim2, activation='relu')(encoded_layer1)
-encoded_layer2 = tf.keras.layers.Dropout(0.05)(encoded_layer2)
+# encoded_layer2 = tf.keras.layers.Dropout(0.05)(encoded_layer2)
 # encoded_layer2 = tf.keras.layers.BatchNormalization()(encoded_layer2)
 # Note that encoded_layer3 is our 3 dimensional "clustered" layer, which we will later use for clustering
 encoded_layer3 = tf.keras.layers.Dense(encoding_dim3, activation='relu', name="ClusteringLayer")(encoded_layer2)
-encoded_layer3 = tf.keras.layers.Dropout(0.05)(encoded_layer3)
+# encoded_layer3 = tf.keras.layers.Dropout(0.05)(encoded_layer3)
 # encoded_layer1 = tf.keras.layers.BatchNormalization()(encoded_layer1)
 
 # encoder_model = tf.keras.Model(encoder_input_data, encoded_layer3)
 
 # the reconstruction of the input
 decoded_layer3 = tf.keras.layers.Dense(encoding_dim2, activation='relu')(encoded_layer3)
-decoded_layer3 = tf.keras.layers.Dropout(0.05)(decoded_layer3)
+# decoded_layer3 = tf.keras.layers.Dropout(0.05)(decoded_layer3)
 # decoded_layer3 = tf.keras.layers.BatchNormalization()(decoded_layer3)
 decoded_layer2 = tf.keras.layers.Dense(encoding_dim1, activation='relu')(decoded_layer3)
-decoded_layer2 = tf.keras.layers.Dropout(0.05)(decoded_layer2)
+# decoded_layer2 = tf.keras.layers.Dropout(0.05)(decoded_layer2)
 # decoded_layer2 = tf.keras.layers.BatchNormalization()(decoded_layer2)
 decoded_layer1 = tf.keras.layers.Dense(full_dim * full_dim, activation='relu')(decoded_layer2)
-decoded_layer1 = tf.keras.layers.Dropout(0.05)(decoded_layer1)
+# decoded_layer1 = tf.keras.layers.Dropout(0.05)(decoded_layer1)
 # decoded_layer1 = tf.keras.layers.BatchNormalization()(decoded_layer1)
 decoded_layer1 = tf.keras.layers.Reshape((full_dim, full_dim, 1))(decoded_layer1)  
 
@@ -182,7 +182,7 @@ model.fit(train, train,
     epochs = 500,
     validation_split=0.1,
     verbose = True,
-    batch_size = 10,
+    batch_size = 1,
     callbacks = my_callbacks)
 
 #%%
@@ -199,10 +199,17 @@ plt.plot(history['val_loss'][1:])
 
 ind = np.random.randint(0, 250)
 
-im = model.predict(train[ind:ind+1,:,:,:])[0,:,:,0]
+imc = np.concatenate((model.predict(train[ind:ind+1,:,:,:])[0,:,:,0], train[ind,:,:,0]), axis = 1)
 
-showim(train[ind,:,:,0], 1)
-showim(im, 2)
+showim(imc, 1)
+
+#%%
+
+encoder = tf.keras.models.Model(model.input, model.layers[-19].output)
+encoder.summary()
+
+
+
 
 
 

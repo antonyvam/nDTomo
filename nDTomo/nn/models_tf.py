@@ -212,6 +212,59 @@ def DCNN1D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconv
 
     return model
 
+def Dense1D(npix, nlayers = 4, nodes = [100, 75, 50, 25], dropout = 'No', batchnorm = 'No', 
+                  actlayermid = 'relu', actlayerfi = 'linear'):
+
+    '''
+    1D Deep Convolutional Neural Network
+    
+    Inputs:
+        npix: number of pixels in the input 2D spectrum
+        dropout: 'Yes/No' string; if dropout (10%) will be used
+        batchnorm: 'Yes/No' string; if batch normalisation will be used
+        actlayermid: the activation function used in all layers apart from the final layer
+        actlayerfi: the activation function used in the final layer
+            
+    '''
+    
+    spectrum_in = Input(shape=(npix, 1))
+    
+    dlayer = Flatten()(spectrum_in)
+    
+    # Downscaling
+    for ii in range(nlayers):
+
+        dlayer = Dense(nodes[ii], kernel_initializer='he_normal', activation = actlayermid)(dlayer)
+        
+        if batchnorm == 'Yes':
+            dlayer = BatchNormalization()(dlayer)
+    
+        if dropout == 'Yes':
+            dlayer = Dropout(0.1)(dlayer)   
+    
+    # Upscaling
+    for ii in range(1,nlayers-1):
+
+        dlayer = Dense(nodes[-ii-1], kernel_initializer='he_normal', activation = actlayermid)(dlayer)
+        
+        if batchnorm == 'Yes':
+            dlayer = BatchNormalization()(dlayer)
+    
+        if dropout == 'Yes':
+            dlayer = Dropout(0.1)(dlayer)       
+    
+    dlayer = Dense(nodes[0], kernel_initializer='he_normal', activation = actlayerfi)(dlayer)
+    
+    if batchnorm == 'Yes':
+        dlayer = BatchNormalization()(dlayer)
+
+    if dropout == 'Yes':
+        dlayer = Dropout(0.1)(dlayer)           
+
+    model = Model(spectrum_in, dlayer)
+
+    return model
+
 def convblock2D(convl, nconvs = 3, filtnums= 64, kersz = 3, pad='same', dropout = 'Yes', batchnorm = 'No'):
         
     for ii in range(nconvs):
@@ -318,5 +371,61 @@ def DCNN2D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconv
     else:
     
         model = Model(image_in, convl)
+
+    return model
+
+
+def Dense2D(npix, nlayers = 4, nodes = [100, 75, 50, 25], dropout = 'No', batchnorm = 'No', 
+                  actlayermid = 'relu', actlayerfi = 'linear',):
+
+    '''
+    2D Deep Convolutional Neural Network
+    
+    Inputs:
+        npix: number of pixels in the input 2D spectrum
+        dropout: 'Yes/No' string; if dropout (10%) will be used
+        batchnorm: 'Yes/No' string; if batch normalisation will be used
+        actlayermid: the activation function used in all layers apart from the final layer
+        actlayerfi: the activation function used in the final layer
+            
+    '''
+    
+    image_in = Input(shape=(npix, npix,  1))
+    
+    dlayer = Flatten()(image_in)
+    
+    # Downscaling
+    for ii in range(nlayers):
+
+        dlayer = Dense(nodes[ii], kernel_initializer='he_normal', activation = actlayermid)(dlayer)
+        
+        if batchnorm == 'Yes':
+            dlayer = BatchNormalization()(dlayer)
+    
+        if dropout == 'Yes':
+            dlayer = Dropout(0.1)(dlayer)   
+    
+    # Upscaling
+    for ii in range(1,nlayers):
+
+        dlayer = Dense(nodes[-ii-1], kernel_initializer='he_normal', activation = actlayermid)(dlayer)
+        
+        if batchnorm == 'Yes':
+            dlayer = BatchNormalization()(dlayer)
+    
+        if dropout == 'Yes':
+            dlayer = Dropout(0.1)(dlayer)       
+    
+    dlayer = Dense(npix*npix, kernel_initializer='he_normal', activation = actlayerfi)(dlayer)
+    
+    if batchnorm == 'Yes':
+        dlayer = BatchNormalization()(dlayer)
+
+    if dropout == 'Yes':
+        dlayer = Dropout(0.1)(dlayer)           
+        
+    dlayer = Reshape((npix, npix, 1))(dlayer)  
+
+    model = Model(image_in, dlayer)
 
     return model
