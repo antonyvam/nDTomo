@@ -99,7 +99,7 @@ for ii in tqdm(range(chemct.shape[2])):
     
     chemct[:,:,ii]  = chemct[:,:,ii]/np.max(chemct[:,:,ii])
 
-#%% Random rotation
+#%% Random rotation - this is bad for clustering
 
 for ii in tqdm(range(chemct.shape[2])):
 
@@ -157,7 +157,7 @@ plt.plot(history['val_loss'][1:])
 #%%
 
 ind = np.random.randint(0, 250)
-
+print(ind)
 imc = np.concatenate((model.predict(train[ind:ind+1,:,:,:])[0,:,:,0], train[ind,:,:,0]), axis = 1)
 
 showim(imc, 1)
@@ -188,8 +188,8 @@ plt.scatter(digit_features_tsne[:,0], digit_features_tsne[:,1])
 #%% use features for clustering
 
 from sklearn.cluster import KMeans
-clusters = 10 
-kmeans = KMeans(n_clusters=clusters)
+clusters = 10
+kmeans = KMeans(n_clusters=clusters, n_init=20)
 
 pred = kmeans.fit_predict(features)
 
