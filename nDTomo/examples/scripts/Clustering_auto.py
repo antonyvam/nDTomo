@@ -125,9 +125,8 @@ print(train.shape)
 
 npix = chemct.shape[0]
 
-model = DCNN2D(npix, nlayers=4, net='autoencoder', dropout='No', batchnorm = 'No', 
-               filtnums=64, nconvs=3, actlayerfi = 'linear',
-               dlayer = 'Yes', dense_layers = 'Custom', dlayers = [100,100,10])
+model = DCNN2D(npix, nlayers=3, net='autoencoder', dropout='YEs', batchnorm = 'Yes', 
+               filtnums=64, nconvs=3, actlayerfi = 'linear')
 
 model.summary()
 
@@ -136,10 +135,10 @@ model.summary()
 model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.0001), loss='mse')
 
 my_callbacks = [tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5,
-                              patience=10, min_lr=1E-5)]
+                              patience=15, min_lr=1E-5)]
 
 model.fit(train, train,
-    epochs = 500,
+    epochs = 100,
     validation_split=0.1,
     verbose = True,
     batch_size = 1,
@@ -165,17 +164,16 @@ showim(imc, 1)
 
 #%%
 
-encoder = tf.keras.models.Model(model.input, model.layers[-21].output)
+encoder = tf.keras.models.Model(model.input, model.layers[-18].output)
 encoder.summary()
 
 #%%
-features = encoder.predict(train, batch_size = 1)
 
-# features = np.zeros((train.shape[0], 10))
+features = np.zeros((train.shape[0], 64))
 
-# for ii in tqdm(range(train.shape[0])):
+for ii in tqdm(range(train.shape[0])):
 
-#     features = encoder.predict(train, batch_size = 1)
+    features[ii,:] = np.sum(np.sum(encoder.predict(train[ii:ii+1,:,:,:]),axis=3),axis=2)[0,:]
 
 
 #%%
@@ -190,14 +188,12 @@ plt.scatter(digit_features_tsne[:,0], digit_features_tsne[:,1])
 #%% use features for clustering
 
 from sklearn.cluster import KMeans
-clusters =5 
+clusters = 10 
 kmeans = KMeans(n_clusters=clusters)
 
-# features = np.reshape(features, newshape=(features.shape[0], -1))
 pred = kmeans.fit_predict(features)
 
-
-plt.figure(1);plt.clf();
+plt.figure(2);plt.clf();
 plt.scatter(digit_features_tsne[:,0], digit_features_tsne[:,1], c=pred)
 
 #%%
@@ -210,20 +206,7 @@ for ii in range(clusters):
     imagelist.append(np.mean(chemct[:,:,np.squeeze(inds[ii])], axis = 2))
 
 
-imagelist = [imagelist[2], imagelist[4], imagelist[3], imagelist[0], imagelist[1]]
-
-clist = []; llist = []
-for ii in range(len(gtimlist)):
-    clist.append(gtimlist[ii].transpose())
-    llist.append('Cluster %d' %(ii + 1))
-    
-for ii in range(len(imagelist)):
-    clist.append(imagelist[ii])
-    llist.append('Cluster %d' %(ii + 1))
-
-
-
-plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
+plotfigs_imgs(imagelist, rows=2, cols=5, figsize=(20,6), cl=True)
 
 
 
