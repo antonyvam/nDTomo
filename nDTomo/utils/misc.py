@@ -435,7 +435,7 @@ def matsum(mat, axes = [0,1], method = 'sum'):
     '''
     
     naxes = len(axes)
-    squeezed = np.zeros_like(mat)
+    squeezed = np.copy(mat)
     
     for ii in range(naxes):
         
