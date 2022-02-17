@@ -71,15 +71,15 @@ class HyperSliceExplorer():
         self.plot_fig = self.plotter.figure()
         self.plot_axes = self.plot_fig.add_subplot(111)        
         self.plotter.legend()
-        self.plotter.title("Mean diffraction pattern", fontstyle='italic')
+        self.plotter.title("Mean spectrum", fontstyle='italic')
         
         self.plot_fig.canvas.mpl_connect('motion_notify_event', self.onPlotClick)       
         self.plot_cid = self.plot_fig.canvas.mpl_connect('motion_notify_event', self.onPlotMoveEvent)   
         self.plotter.show()        
         self.plotter.draw()        
 
-        self.histogramCurve = self.plotter.plot(self.xaxis, self.mdp, label='Mean diffraction pattern', color="b")
-        self.activeCurve = self.plotter.plot(self.xaxis, self.mdp, label='Mean diffraction pattern', color="r")
+        self.histogramCurve = self.plotter.plot(self.xaxis, self.mdp, label='Mean spectrum', color="b")
+        self.activeCurve = self.plotter.plot(self.xaxis, self.mdp, label='Mean spectrum', color="r")
         
         ########
         self.vCurve = self.plotter.axvline(x=0, color="k")
@@ -117,7 +117,7 @@ class HyperSliceExplorer():
 #                self.selectedDataSetList.clear()
 #                self.currentCurve = 0
                 self.plot_axes.clear() # not fast
-                self.plotter.plot(self.xaxis, self.mdp, label='Mean diffraction pattern')
+                self.plotter.plot(self.xaxis, self.mdp, label='Mean spectrum')
 #                self.selectedDataSetList.addItem('mean')
                 self.plotter.legend()                
                 self.plotter.draw() 
