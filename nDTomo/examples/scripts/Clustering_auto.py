@@ -135,7 +135,7 @@ model.summary()
 model.compile(optimizer=tf.keras.optimizers.Adam(lr=0.0001), loss='mse')
 
 my_callbacks = [tf.keras.callbacks.ReduceLROnPlateau(monitor='loss', factor=0.5,
-                              patience=15, min_lr=1E-5)]
+                              patience=5, min_lr=1E-5)]
 
 model.fit(train, train,
     epochs = 100,
@@ -166,7 +166,7 @@ showim(imc, 1)
 
 #%%
 
-encoder = tf.keras.models.Model(model.input, model.layers[-18].output)
+encoder = tf.keras.models.Model(model.input, model.layers[-21].output)
 encoder.summary()
 
 #%%
@@ -182,7 +182,7 @@ for ii in tqdm(range(train.shape[0])):
 
 from sklearn.manifold import TSNE
 
-tsne = TSNE(n_components=2, random_state=64)
+tsne = TSNE(n_components=2)
 digit_features_tsne = tsne.fit_transform(features)
 
 plt.scatter(digit_features_tsne[:,0], digit_features_tsne[:,1])
@@ -190,8 +190,8 @@ plt.scatter(digit_features_tsne[:,0], digit_features_tsne[:,1])
 #%% use features for clustering
 
 from sklearn.cluster import KMeans
-clusters = 10
-kmeans = KMeans(n_clusters=clusters, n_init=20)
+clusters = 20
+kmeans = KMeans(n_clusters=clusters, n_init=50)
 
 pred = kmeans.fit_predict(features)
 
@@ -208,7 +208,7 @@ for ii in range(clusters):
     imagelist.append(np.mean(chemct[:,:,np.squeeze(inds[ii])], axis = 2))
 
 
-plotfigs_imgs(imagelist, rows=2, cols=5, figsize=(20,6), cl=True)
+plotfigs_imgs(imagelist, rows=4, cols=5, figsize=(20,6), cl=True)
 
 
 
