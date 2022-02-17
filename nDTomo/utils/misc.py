@@ -424,6 +424,31 @@ def mask_thr(vol, roi, thr, fignum = 1):
 
     return(msk)
 
+def matsum(mat, axes = [0,1], method = 'sum'):
+
+    '''
+    Dimensionality redunction of a multidimensional array
+    Inputs:
+        mat: the nD array
+        axes: a list containing the axes along which the operation will take place
+        method: the type of operation, options are 'sum' and 'mean'
+    '''
+    
+    naxes = len(axes)
+    squeezed = np.zeros_like(mat)
+    
+    for ii in range(naxes):
+        
+        if method == 'sum':
+        
+            squeezed = np.sum(squeezed, axis = axes[ii])
+            
+        elif method == 'mean':
+            
+            squeezed = np.mean(squeezed, axis = axes[ii])            
+    
+    return(squeezed)
+
 def KeVtoAng(E):
     
     """
