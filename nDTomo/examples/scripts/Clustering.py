@@ -240,26 +240,32 @@ plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
 mcrar = pymcr.mcr.McrAR(max_iter=50, st_regr='OLS', c_regr='OLS', 
                 st_constraints=[pymcr.constraints.ConstraintNonneg()])
 
-initial_spectra = addpnoise1D(np.copy(spa)+1E-10, 50)
+initial_spectra = addpnoise1D(np.copy(spa)+1E-10, 10)
 
 mcrar.fit(chemct.reshape((chemct.shape[0]*chemct.shape[1], chemct.shape[2]))+1E-10, ST=initial_spectra, verbose=True)
 print('\nFinal MSE: {:.7e}'.format(mcrar.err[-1]))
 
 
-
-#%% ################################# Code tested up to here #################################
+#%%
 
 plt.figure(1);plt.clf()
-plt.plot(mcrar.ST_opt_.T);
+plt.plot(spa.transpose());
+plt.title('Ground truth')
 plt.show()
 
 plt.figure(2);plt.clf()
-plt.plot(spa.transpose());
+plt.plot(initial_spectra.transpose());
+plt.title('Initial guess')
 plt.show()
 
 plt.figure(3);plt.clf()
-plt.plot(initial_spectra.transpose());
+plt.plot(mcrar.ST_opt_.T);
+plt.title('MCA retrieved')
 plt.show()
+
+
+#%% ################################# Code tested up to here #################################
+
 
 #%% AgglomerativeClustering: images
 
