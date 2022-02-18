@@ -8,7 +8,7 @@ Dimensionality reduction/ cluster analysis using a phantom xrd-ct dataset
 #%%
 
 from nDTomo.sim.shapes.phantoms import nDphantom_2D, load_example_patterns, nDphantom_3D, nDphantom_4D, nDphantom_2Dmap
-from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, showvol, normvol, addpnoise2D, addpnoise3D, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
+from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, showvol, normvol, addpnoise1D,  addpnoise2D, addpnoise3D, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
 from nDTomo.utils.hyperexpl import HyperSliceExplorer
 from nDTomo.ct.astra_tomo import astra_create_geo, astra_rec_vol, astra_rec_alg, astra_create_sino_geo, astra_create_sino
 from nDTomo.ct.conv_tomo import radonvol, fbpvol
@@ -23,7 +23,7 @@ import time, h5py
 from sklearn.decomposition import PCA, NMF, FastICA, LatentDirichletAllocation
 from sklearn.cluster import KMeans, SpectralClustering, DBSCAN, AgglomerativeClustering
 from clustimage import Clustimage
-
+import pymcr
 
 #%%
 
@@ -40,6 +40,7 @@ These are the five ground truth componet spectra
 dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
 spectra = [dpAl, dpCu, dpFe, dpPt, dpZn]
 showspectra([dpAl, dpCu + 0.1, dpFe + 0.2, dpPt + 0.3, dpZn + 0.4], 1)
+spa = np.array(spectra)
 
 '''
 These are the five ground truth componet images
@@ -233,10 +234,32 @@ for ii in range(len(imagelist)):
 plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
 
 
+#%%
 
-################################# Code tested up to here #################################
+
+mcrar = pymcr.mcr.McrAR(max_iter=50, st_regr='OLS', c_regr='OLS', 
+                st_constraints=[pymcr.constraints.ConstraintNonneg()])
+
+initial_spectra = addpnoise1D(np.copy(spa)+1E-10, 50)
+
+mcrar.fit(chemct.reshape((chemct.shape[0]*chemct.shape[1], chemct.shape[2]))+1E-10, ST=initial_spectra, verbose=True)
+print('\nFinal MSE: {:.7e}'.format(mcrar.err[-1]))
 
 
+
+#%% ################################# Code tested up to here #################################
+
+plt.figure(1);plt.clf()
+plt.plot(mcrar.ST_opt_.T);
+plt.show()
+
+plt.figure(2);plt.clf()
+plt.plot(spa.transpose());
+plt.show()
+
+plt.figure(3);plt.clf()
+plt.plot(initial_spectra.transpose());
+plt.show()
 
 #%% AgglomerativeClustering: images
 
@@ -340,7 +363,33 @@ for ii in range(len(imagelist)):
 
 plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
 
+#%%
 
+
+start = time.time()
+nmf = NMF(n_components=10).fit_transform(data.transpose()+0.01, W=None, H=None)
+print('NMF analysis took %s seconds' %(time.time() - start))
+print(nmf.shape)
+
+#%%
+ii = 0
+im = nmf[:,ii]
+im = im.reshape(chemct.shape[0],chemct.shape[1])
+
+showim(im, 1)
+
+#%%
+
+start = time.time()
+nmf2 = NMF(n_components=10, init='custom').fit_transform(data.transpose()+0.01, W=np.copy(nmf), H=np.ones((10, 250)))
+print('NMF analysis took %s seconds' %(time.time() - start))
+print(nmf.shape)
+
+#%%
+ii = 3
+im = nmf2[:,ii].reshape(chemct.shape[0],chemct.shape[1])
+
+showim(im, 1)
 
 #%% FastICA: Images
 
