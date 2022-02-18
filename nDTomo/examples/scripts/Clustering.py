@@ -234,13 +234,12 @@ for ii in range(len(imagelist)):
 plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
 
 
-#%%
-
+#%% Do an MCR analysis using noiseless data and bad initial guesses
 
 mcrar = pymcr.mcr.McrAR(max_iter=50, st_regr='OLS', c_regr='OLS', 
                 st_constraints=[pymcr.constraints.ConstraintNonneg()])
 
-initial_spectra = addpnoise1D(np.copy(spa)+1E-10, 10)
+initial_spectra = addpnoise1D(np.copy(spa)+1E-10, 250)
 
 mcrar.fit(chemct.reshape((chemct.shape[0]*chemct.shape[1], chemct.shape[2]))+1E-10, ST=initial_spectra, verbose=True)
 print('\nFinal MSE: {:.7e}'.format(mcrar.err[-1]))
@@ -261,6 +260,72 @@ plt.show()
 plt.figure(3);plt.clf()
 plt.plot(mcrar.ST_opt_.T);
 plt.title('MCA retrieved')
+plt.show()
+
+plt.figure(4);plt.clf()
+plt.plot(mcrar.ST_opt_.T - spa.transpose());
+plt.title('Difference')
+plt.show()
+
+#%% Do an MCR analysis using noisy data and bad initial guesses
+
+mcrar = pymcr.mcr.McrAR(max_iter=50, st_regr='OLS', c_regr='OLS', 
+                st_constraints=[pymcr.constraints.ConstraintNonneg()])
+
+initial_spectra = addpnoise1D(np.copy(spa)+1E-10, 1E4)
+
+# Add different noise per spectrum
+for ii in range(initial_spectra.shape[0]):
+    ct = np.random.randint(0,1990)
+    print(ct)
+    initial_spectra[ii,:] = addpnoise1D(initial_spectra[ii,:], 10 + ct)
+
+chemctn = np.copy(chemct)+1E-10
+chemctn = addpnoise3D(chemctn, 50)
+
+#%% Let's explore the local patterns and chemical images
+
+hs = HyperSliceExplorer(chemctn)
+hs.explore()
+
+#%%
+
+chemctn = chemctn.reshape((chemctn.shape[0]*chemctn.shape[1], chemctn.shape[2]))
+
+mcrar.fit(chemctn, ST=initial_spectra, verbose=True)
+print('\nFinal MSE: {:.7e}'.format(mcrar.err[-1]))
+
+
+#%%
+
+plt.figure(1);plt.clf()
+plt.plot(spa.transpose());
+plt.title('Ground truth')
+plt.show()
+
+plt.figure(2);plt.clf()
+plt.plot(initial_spectra.transpose());
+plt.title('Initial guess')
+plt.show()
+
+plt.figure(3);plt.clf()
+plt.plot(mcrar.ST_opt_.T);
+plt.title('MCA retrieved')
+plt.show()
+
+plt.figure(4);plt.clf()
+plt.plot(mcrar.ST_opt_.T - spa.transpose());
+plt.title('Difference')
+plt.show()
+
+#%%
+
+mcrims = mcrar.C_opt_.reshape((chemct.shape[0], chemct.shape[1], initial_spectra.shape[0]))
+
+ii = 4
+
+plt.figure(1);plt.clf()
+plt.imshow(mcrims[:,:,ii]);
 plt.show()
 
 
