@@ -37,10 +37,10 @@ setup(
 	author="A. Vamvakeros",
 	author_email="antonyvam@gmail.com",
 	install_requires=[
-		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy",
+		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy>1.5.2",
 		"pyqtgraph", "scikit-image",  "xdesign", "cached_property",
-		"periodictable", "ase", "scikit-learn", "pystackreg","clustimage",
-		"mayavi",
+		"periodictable", "ase", "scikit-learn", "pystackreg", "clustimage",
+		"mayavi", "pyMCR",
 	],
 	packages=find_packages(),
 	extras_require={
