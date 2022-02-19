@@ -236,7 +236,7 @@ plotfigs_imgs(clist, llist, rows=2, cols=5, figsize=(20,6), cl=True)
 
 #%% Do an MCR analysis using noiseless data and bad initial guesses
 
-mcrar = pymcr.mcr.McrAR(max_iter=50, st_regr='OLS', c_regr='OLS', 
+mcrar = pymcr.mcr.McrAR(max_iter=50, st_regr='NNLS', 
                 st_constraints=[pymcr.constraints.ConstraintNonneg()])
 
 initial_spectra = addpnoise1D(np.copy(spa)+1E-10, 250)
