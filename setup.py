@@ -38,7 +38,7 @@ setup(
 	author_email="antonyvam@gmail.com",
 	install_requires=[
 		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy>1.5.2",
-		"pyqtgraph", "scikit-image",  "xdesign", "cached_property",
+		"pyqtgraph", "scikit-image",  "xdesign", "cached_property", "tqdm",
 		"periodictable", "ase", "scikit-learn", "pystackreg", "clustimage",
 		"mayavi", "pyMCR",
 	],
