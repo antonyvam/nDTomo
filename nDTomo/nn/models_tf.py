@@ -87,6 +87,50 @@ def recnet(npix):
 
     return(model)
 
+def recnet_single(npix):
+
+    '''
+    Image reconstruction network
+    
+    Inputs:
+        npix: number of pixels in the image per each dimension; it is a list [npixs_x, npixs_y]
+    
+    '''
+    
+    nx, ny = npix
+    
+    xi = Input(shape=(1,1))
+    x = Flatten()(xi)
+    
+    x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.1)(x)
+    x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.1)(x)
+    x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.1)(x)
+    x = Dense(nx * ny * 1, kernel_initializer='random_normal', activation='linear')(x)
+    x = BatchNormalization()(x)
+
+    x = Reshape((nx, ny, 1))(x)
+
+    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+
+    x = Conv2D(filters = 1, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
+
+    model = Model(xi, x)
+
+    return(model)
 
 def padcalc(npix, nlayers = 4):
         
@@ -405,7 +449,55 @@ def DCNN2D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconv
 
     return model
 
+def recnet_single_conv(npix, pad='same', actlayerfi='linear'):
 
+    '''
+    Image reconstruction network
+    
+    Inputs:
+        npix: number of pixels in the image per each dimension; it is a list [npixs_x, npixs_y]
+    
+    '''
+        
+    nx, ny = npix
+    
+    xi = Input(shape=(1,))
+    x = Flatten()(xi)
+    
+    x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.1)(x)
+    x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.1)(x)
+    x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
+    x = BatchNormalization()(x)
+    x = Dropout(0.1)(x)
+    x = Dense(int(nx / 4) * int(ny / 4) * 8, kernel_initializer='he_normal', activation='linear')(x)
+    x = BatchNormalization()(x)
+    
+    x = Reshape((int(nx / 4), int(ny / 4), 8))(x)   
+    
+    x = UpSampling2D(size = (2,2))(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = BatchNormalization()(x)
+    x = SpatialDropout2D(0.1)(x)    
+    
+    x = UpSampling2D(size = (2,2))(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = BatchNormalization()(x)
+    x = SpatialDropout2D(0.1)(x)    
+
+    x = Conv2D(filters = 1, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
+    
+    model = Model(xi, x)
+
+    return(model)
+    
 def Dense2D(npix, nlayers = 4, nodes = [100, 75, 50, 25], dropout = 'No', batchnorm = 'No', 
                   actlayermid = 'relu', actlayerfi = 'linear',):
 
