@@ -29,7 +29,7 @@ def tf_create_angles(nproj, scan = '180'):
     
     return(theta_tf)
 
-def tf_tomo_radon(rec, ang, norm = False):
+def tf_tomo_radon(rec, ang, norm = False, interp_method = 'bilinear'):
     
     '''
     Create the radon transform of an image
@@ -41,7 +41,7 @@ def tf_tomo_radon(rec, ang, norm = False):
     nang = ang.shape[0]
     img = tf.transpose(rec, [3, 1, 2, 0])
     img = tf.tile(img, [nang, 1, 1, 1])
-    img = tfa.image.rotate(img, -ang, interpolation = 'bilinear')
+    img = tfa.image.rotate(img, -ang, interpolation = interp_method)
     sino = tf.reduce_sum(img, 1, name=None)
     if norm == True:
         sino = tf.image.per_image_standardization(sino)
@@ -49,7 +49,7 @@ def tf_tomo_radon(rec, ang, norm = False):
     sino = tf.reshape(sino, [sino.shape[0], sino.shape[1], sino.shape[2], 1])
     return sino
 
-def tf_tomo_bp(sino, ang, projmean = False, norm = False):
+def tf_tomo_bp(sino, ang, projmean = False, norm = False, interp_method = 'bilinear'):
     
     '''
     Create the CT back projected image
@@ -61,7 +61,7 @@ def tf_tomo_bp(sino, ang, projmean = False, norm = False):
     prj = tf.reshape(sino, [1, d_tmp[1], d_tmp[2], 1])
     prj = tf.tile(prj, [d_tmp[2], 1, 1, 1])
     prj = tf.transpose(prj, [1, 0, 2, 3])
-    prj = tfa.image.rotate(prj, ang, interpolation = 'bilinear')
+    prj = tfa.image.rotate(prj, ang, interpolation = interp_method)
     
     if projmean == True:
         bp = tf.reduce_mean(prj, 0)
@@ -104,7 +104,7 @@ def tf_filt2D(d_sino):
     
     return(ft)
     
-def tf_tomo_fbp(sinogram, ang, ft=None):
+def tf_tomo_fbp(sinogram, ang, ft=None, interp_method = 'bilinear'):
     
     d_tmp = sinogram.shape
     soi = tf.reshape(sinogram, [d_tmp[1], d_tmp[2]])
@@ -117,7 +117,7 @@ def tf_tomo_fbp(sinogram, ang, ft=None):
     filtered_sinogram = tf.math.real(tf.signal.ifft(filtered_sinogram_frequency))   
     filtered_sinogram = tf.reshape(filtered_sinogram, [1, d_tmp[1], d_tmp[2], 1])
 
-    rec = tf_tomo_bp(filtered_sinogram, ang)
+    rec = tf_tomo_bp(filtered_sinogram, ang, interp_method)
 
     return(rec)
 

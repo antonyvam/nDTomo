@@ -57,13 +57,13 @@ def recnet(npix):
 
     x = Flatten()(xi)
 
-    x = Dense(500, kernel_initializer='random_normal', activation='relu')(x)
+    x = Dense(128, kernel_initializer='random_normal', activation='relu')(x)
     x = BatchNormalization()(x)
     x = Dropout(0.1)(x)
-    x = Dense(500, kernel_initializer='random_normal', activation='relu')(x)
+    x = Dense(128, kernel_initializer='random_normal', activation='relu')(x)
     x = BatchNormalization()(x)
     x = Dropout(0.1)(x)
-    x = Dense(500, kernel_initializer='random_normal', activation='relu')(x)
+    x = Dense(128, kernel_initializer='random_normal', activation='relu')(x)
     x = BatchNormalization()(x)
     x = Dropout(0.1)(x)
     x = Dense(ny * ny * 1, kernel_initializer='random_normal', activation='linear')(x)
