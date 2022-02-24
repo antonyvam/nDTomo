@@ -79,17 +79,5 @@ def penalty(img):
  
     mean_list = tf.gather(mean_list, index_list)
     mean_contrib = tf.reduce_sum(mean_list * contribution, axis = 0)
-    # mean_contrib += mean
-    # mean_contrib /= 2
-    # for i in range(5):
-    #     for j in range(5):
-    #         mean += image_pad2[i:i+ind0, j:j+ind1]/5
-    # mean = mean/15
-    # mean =  0
-    # for i in range(image.shape[0]):
-    #     for j in range(image.shape[1]):
-    #         mean += tf.math.reduce_mean(image[i-1:i+2, j-1:j+2]) - image[i,j]
 
-    # return mean_contrib
-    # return mean_contrib
     return tf.reduce_mean(tf.abs(mean_contrib - image)**2)
