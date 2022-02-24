@@ -45,7 +45,6 @@ def penalty(img):
     mean_list = []
     for i in range(3):
         for j in range(3):
-            # if i != 1 and j != 1:
             mean += image_pad1[i:i+ind0, j:j+ind1]
             mean_list.append(image_pad1[i:i+ind0, j:j+ind1])
     mean_list = tf.stack(mean_list)
@@ -57,7 +56,6 @@ def penalty(img):
     individual = []
     for i in range(3):
         for j in range(3):
-            # if i != 1 and j != 1:
             individual.append(mean_pad[i:i+ind0, j:j+ind1])
     individual = tf.stack(individual)
     individual_min = tf.math.reduce_min(individual, axis=0, keepdims=False, name=None)
