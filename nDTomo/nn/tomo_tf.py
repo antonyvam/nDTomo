@@ -29,7 +29,7 @@ def tf_create_angles(nproj, scan = '180'):
     
     return(theta_tf)
 
-def tf_tomo_radon(rec, ang, norm = False, interp_method = 'bilinear'):
+def tf_tomo_radon(rec, ang, tile = True, norm = False, interp_method = 'bilinear'):
     
     '''
     Create the radon transform of an image
@@ -40,13 +40,21 @@ def tf_tomo_radon(rec, ang, norm = False, interp_method = 'bilinear'):
     
     nang = ang.shape[0]
     img = tf.transpose(rec, [3, 1, 2, 0])
-    img = tf.tile(img, [nang, 1, 1, 1])
-    img = tfa.image.rotate(img, -ang, interpolation = interp_method)
-    sino = tf.reduce_sum(img, 1, name=None)
+    
+    if tile == True:
+        img = tf.tile(img, [nang, 1, 1, 1])
+        img = tfa.image.rotate(img, -ang, interpolation = interp_method)
+        sino = tf.reduce_sum(img, 1, name=None)
+        sino = tf.transpose(sino, [2, 0, 1])
+        sino = tf.reshape(sino, [sino.shape[0], sino.shape[1], sino.shape[2], 1])
+    else:
+        sino = tf.zeros((0, img.shape[1], 1))
+        for ii in range(nang):
+            sino = tf.concat([sino,tf.reduce_sum(tfa.image.rotate(img, -ang[ii], interpolation = interp_method), 1)], 0)
+        sino = tf.reshape(sino, [1, sino.shape[0], sino.shape[1], sino.shape[2]])
+        
     if norm == True:
         sino = tf.image.per_image_standardization(sino)
-    sino = tf.transpose(sino, [2, 0, 1])
-    sino = tf.reshape(sino, [sino.shape[0], sino.shape[1], sino.shape[2], 1])
     return sino
 
 def tf_tomo_bp(sino, ang, projmean = False, norm = False, interp_method = 'bilinear'):
