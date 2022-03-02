@@ -34,7 +34,7 @@ def astra_Amatrix(ntr, ang):
 
     return(A)
 
-def astra_rec_single(sino, theta=None, method='FBP', filt='Ram-Lak'):
+def astra_rec_single(sino, theta=None, method='FBP_CUDA', filt='Ram-Lak'):
     
     '''
     2D ct reconstruction using the astra-toolbox
@@ -324,6 +324,7 @@ def nDphantom_3D_sinograms(chemct, nproj=None, scanrange = '180'):
 def nDphantom_3D_FBP(chemsinos, theta=None, scanrange = '180', method='FBP_CUDA', filt='Ram-Lak'):
     
     '''
+    Reconstructs a sinogram volume
     '''
     
     npr = chemsinos.shape[1] # Number of projections
@@ -347,7 +348,7 @@ def nDphantom_3D_FBP(chemsinos, theta=None, scanrange = '180', method='FBP_CUDA'
     cfg = astra.astra_dict(method)
     cfg['ReconstructionDataId'] = rec_id
     cfg['ProjectorId'] = proj_id
-    if method == 'FBP':
+    if method == 'FBP' or method == 'FBP_CUDA':
         cfg['option'] = { 'FilterType': filt }    
     
     rec = zeros((chemsinos.shape[0], chemsinos.shape[0], chemsinos.shape[2]))

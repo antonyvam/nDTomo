@@ -577,7 +577,25 @@ def h5read_data(p, fn, dlist):
 
     return(data)
 
+def cart2pol(x, y):
+    
+    '''
+    Convert cartesian (x,y) coordinates to polar coordinates (rho, phi)
+    '''
+    
+    rho = np.sqrt(x**2 + y**2)
+    phi = np.arctan2(y, x)
+    return(rho, phi)
 
+def pol2cart(rho, phi):
+
+    '''
+    Convert polar (rho, phi) coordinates to cartesian coordinates (x,y)
+    '''
+
+    x = rho * np.cos(phi)
+    y = rho * np.sin(phi)
+    return(x, y)
 
 
 
