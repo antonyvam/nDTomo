@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Create phantoms (2D/3D) for image processing and analysis experiments
+Create phantoms (2D-4D) for image processing and analysis experiments
 
 @author: Antony Vamvakeros
 """
