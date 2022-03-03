@@ -188,7 +188,7 @@ def astra_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'
     return(rec)
                    
              
-def astra_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'):
+def astra_rec_vol(sinos, scanrange = '180', theta=None,  proj_geom=None, proj_id=None, rec_id=None, method='FBP_CUDA', filt='Ram-Lak'):
 
     '''
     Reconstruct a sinogram volume with astra toolbox
@@ -202,11 +202,31 @@ def astra_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak
     triangular, gaussian, barlett-hann, blackman, nuttall, blackman-harris,
     blackman-nuttall, flat-top, kaiser, parzen    
     '''    
+        
+    npr = sinos.shape[1] # Number of projections
+    
+    if theta is None:
+        if scanrange == '180':
+            theta = deg2rad(arange(0, 180, 180/npr))
+        elif scanrange == '360':
+            theta = deg2rad(arange(0, 360, 360/npr))
+    
+    if proj_geom is None:
+        # Create a basic square volume geometry
+        vol_geom = astra.create_vol_geom(sinos.shape[2], sinos.shape[2])
+        # Create a parallel beam geometry with 180 angles between 0 and pi, and image.shape[0] detector pixels of width 1.
+        proj_geom = astra.create_proj_geom('parallel', 1.0, int(1.0*sinos.shape[2]), theta[0::2])
+    if proj_geom is None:
+        # Create a sinogram using the GPU. 
+        proj_id = astra.create_projector('strip',proj_geom,vol_geom)
+    if rec_id is None:
+        # Create a data object for the reconstruction
+        rec_id = astra.data2d.create('-vol', vol_geom)    
     
     cfg = astra.astra_dict(method)
     cfg['ReconstructionDataId'] = rec_id
     cfg['ProjectorId'] = proj_id
-    if method == 'FBP':
+    if method == 'FBP' or method == 'FBP_CUDA':
         cfg['option'] = { 'FilterType': filt }    
     
     rec = zeros((sinos.shape[0], sinos.shape[0], sinos.shape[2]))
@@ -224,7 +244,6 @@ def astra_rec_vol(sinos, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak
         rec[:,:,ii] = astra.data2d.get(rec_id)
              
         astra.algorithm.delete(alg_id)
-        
         
     astra.projector.delete(proj_id)
     astra.data2d.delete(rec_id)
