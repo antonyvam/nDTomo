@@ -16,8 +16,18 @@ def tf_gpu_devices():
     else:
        print("Please install GPU version of TF")
 
+def tf_gpu_allocateRAM():
+    
+    physical_devices = tf.config.list_physical_devices('GPU') 
+    for device in physical_devices:
+        tf.config.experimental.set_memory_growth(device, True)
+
 class ReduceLROnPlateau_custom(Callback):
 
+    '''
+    Custom reduce learning rate on plateau callback, it can be used in custom training loops
+    '''
+    
     def __init__(self,
                   ## Custom modification:  Deprecated due to focusing on validation loss
                   # monitor='val_loss',
