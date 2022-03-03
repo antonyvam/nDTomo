@@ -14,7 +14,7 @@ from mayavi import mlab
 from matplotlib import cm
 from matplotlib.colors import ListedColormap
 from tqdm import tqdm
-
+from scipy.interpolate import griddata
 
 def nDTomo_colormap():
     
@@ -586,9 +586,9 @@ def cart2pol(x, y):
     rho = np.sqrt(x**2 + y**2)
     phi = np.arctan2(y, x)
     
-    return(rho, phi)
+    return(phi, rho)
 
-def pol2cart(rho, phi):
+def pol2cart(phi, rho):
 
     '''
     Convert polar (rho, phi) coordinates to cartesian coordinates (x,y)
@@ -600,9 +600,32 @@ def pol2cart(rho, phi):
     return(x, y)
 
 
+def polarim(im, thpix=1024, rpix=1024):
+    
+    '''
+    Converts an image from cartestian to polar coordinates
+    Inputs:
+        im: 2D array corresponding to the image
+        thpix: number of bins for the azimuthal range, defaulr=1024
+        rpix: number of bins for the r distance range, defaulr=1024
+    '''
+    
+    x = np.arange(0, im.shape[0]) - im.shape[0]/2
+    y = np.arange(0, im.shape[1]) - im.shape[1]/2
+    xo, yo = np.meshgrid(x,y)
+    xo = np.reshape(xo, (xo.shape[0]*xo.shape[1]))
+    yo = np.reshape(yo, (yo.shape[0]*yo.shape[1]))
+    imo = np.reshape(im, (im.shape[0]*im.shape[1]))
+    
+    ofs = 0
+    xi = np.linspace((-1+ofs)*np.pi, (1+ofs)*np.pi, thpix)
+    yi = np.linspace(0, int(np.floor(im.shape[0]/2)), rpix)
+    xp, yp = np.meshgrid(xi,yi)
+    xx, yy = pol2cart(xp,yp)
+    
+    imp = griddata((xo, yo), imo, (xx, yy), method='nearest')
 
-
-
+    return(imp)
 
 
 

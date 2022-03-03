@@ -34,7 +34,7 @@ def astra_Amatrix(ntr, ang):
 
     return(A)
 
-def astra_rec_single(sino, theta=None, method='FBP_CUDA', filt='Ram-Lak'):
+def astra_rec_single(sino, theta=None, scanrange = '180', method='FBP_CUDA', filt='Ram-Lak'):
     
     '''
     2D ct reconstruction using the astra-toolbox
@@ -54,7 +54,11 @@ def astra_rec_single(sino, theta=None, method='FBP_CUDA', filt='Ram-Lak'):
     npr = sino.shape[1] # Number of projections
     
     if theta is None:
-        theta = deg2rad(arange(0, 180, 180/npr))
+        if scanrange == '180':
+            theta = deg2rad(arange(0, 180, 180/npr))
+        elif scanrange == '360':
+            theta = deg2rad(arange(0, 360, 360/npr))
+            
     # Create a basic square volume geometry
     vol_geom = astra.create_vol_geom(sino.shape[0], sino.shape[0])
     # Create a parallel beam geometry with 180 angles between 0 and pi, and image.shape[0] detector pixels of width 1.
