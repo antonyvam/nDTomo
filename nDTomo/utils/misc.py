@@ -600,14 +600,15 @@ def pol2cart(phi, rho):
     return(x, y)
 
 
-def polarim(im, thpix=1024, rpix=1024):
+def cart2polim(im, thpix=1024, rpix=1024, ofs=0):
     
     '''
     Converts an image from cartestian to polar coordinates
     Inputs:
         im: 2D array corresponding to the image
-        thpix: number of bins for the azimuthal range, defaulr=1024
-        rpix: number of bins for the r distance range, defaulr=1024
+        thpix: number of bins for the azimuthal range, default=1024
+        rpix: number of bins for the r distance range, default=1024
+        ofs: angular offset, default=0
     '''
     
     x = np.arange(0, im.shape[0]) - im.shape[0]/2
@@ -617,7 +618,7 @@ def polarim(im, thpix=1024, rpix=1024):
     yo = np.reshape(yo, (yo.shape[0]*yo.shape[1]))
     imo = np.reshape(im, (im.shape[0]*im.shape[1]))
     
-    ofs = 0
+    
     xi = np.linspace((-1+ofs)*np.pi, (1+ofs)*np.pi, thpix)
     yi = np.linspace(0, int(np.floor(im.shape[0]/2)), rpix)
     xp, yp = np.meshgrid(xi,yi)
@@ -627,7 +628,32 @@ def polarim(im, thpix=1024, rpix=1024):
 
     return(imp)
 
+def pol2cartim(imp, im_size=None, thpix=1024, rpix=1024, ofs=0):
+    
+    '''
+    Converts an image from polar to cartestian coordinates
+    Inputs:
+        imp: 2D array corresponding to the polar transformed image
+        im_size: list containing the two dimensions of the image with cartesian coordinates
+        thpix: number of bins for the azimuthal range, default=1024
+        rpix: number of bins for the r distance range, default=1024
+        ofs: angular offset, default=0
+    '''
+    if im_size is None:
+        im_size = [imp.shape[0], imp.shape[1]]
 
+    r = np.linspace((-1+ofs)*np.pi, (1+ofs)*np.pi, thpix)
+    t = np.linspace(0, int(np.floor(im_size[0]/2)), rpix)
+    rr, tt = np.meshgrid(r,t)
+    ro = np.reshape(rr, (rr.shape[0]*rr.shape[1]))
+    to = np.reshape(tt, (tt.shape[0]*tt.shape[1]))
+    imo = np.reshape(imp, (imp.shape[0]*imp.shape[1]))
+    
+    x = np.arange(0, im_size[0]) - im_size[0]/2
+    y = np.arange(0, im_size[1]) - im_size[1]/2    
+    xc, yc = np.meshgrid(x,y)
+    xx, yy = cart2pol(xc,yc)
+    
+    imn = griddata((ro, to), imo, (xx, yy), method='nearest')
 
-
-
+    return(imn)
