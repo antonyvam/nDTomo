@@ -269,10 +269,16 @@ plt.show()
 
 #%% Do an MCR analysis using noisy data and bad initial guesses
 
-mcrar = pymcr.mcr.McrAR(max_iter=50, st_regr='OLS', c_regr='OLS', 
+mcrar = pymcr.mcr.McrAR(max_iter=50, st_regr='NNLS', 
                 st_constraints=[pymcr.constraints.ConstraintNonneg()])
 
-initial_spectra = addpnoise1D(np.copy(spa)+1E-10, 1E4)
+
+sp = np.sum(np.sum(chemct, axis =0), axis=0)
+sp = sp/np.max(sp)
+initial_spectra = np.tile(sp, (5,1))
+# initial_spectra = addpnoise1D(np.copy(spa)+1E-10, 1E4)
+
+initial_spectra[0:3,:] = addpnoise1D(np.copy(spa[0:3,:])+1E-10, 1E4)
 
 # Add different noise per spectrum
 for ii in range(initial_spectra.shape[0]):
@@ -324,8 +330,9 @@ mcrims = mcrar.C_opt_.reshape((chemct.shape[0], chemct.shape[1], initial_spectra
 
 ii = 4
 
-plt.figure(1);plt.clf()
+plt.figure(5);plt.clf()
 plt.imshow(mcrims[:,:,ii]);
+plt.colorbar()
 plt.show()
 
 
