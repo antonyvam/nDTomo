@@ -94,5 +94,5 @@ Citation
 --------
 Please cite using the following:
 
-Vamvakeros, Antonios et al. (2022). antonyvam/nDTomo: v2022.03 (v2022.03). Zenodo. https://doi.org/10.5281/zenodo.6344270
+Vamvakeros, Antonios et al., nDTomo Software Suite, antonyvam/nDTomo: v2022.03 (v2022.03). DOI: https://doi.org/10.5281/zenodo.6344270
 
