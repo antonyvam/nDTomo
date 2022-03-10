@@ -7,8 +7,11 @@ Documentation for the GUIs is provided at: https://ndtomo.readthedocs.io
 Current status
 --------------
 Simulation code for creating phantoms (2D-4D)
+
 Scripts for handling tomography data
+
 Tensorflow neural network models and related functions
+
 nDVis GUI for visualising chemical imaging and tomography data
 
 To do
