@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Dec  3 10:55:36 2019
+Models for peak fitting
 
 @author: Antony
 """
@@ -23,11 +23,12 @@ def Gaussian(x, amplitude=1.0, center=0.0, sigma=1.0):
 def Lorentzian(x, amplitude=1.0, center=0.0, sigma=1.0):
     return (2.0 / np.pi) * (amplitude / sigma) /  (1 + (4.0 / sigma**2) * (x - center**2))
 
-
 def G(x, center=0.0, sigma=1.0):
     return (2.0*np.sqrt(np.log(2.0)/np.pi))*(1/sigma ) * np.exp(-(4.0*np.log(2.0)/sigma**2) * (x - center)**2)    
+
 def L(x, center=0.0, sigma=1.0):
     return (2.0 / np.pi) * (1 / sigma) /  (1 + (4.0 / sigma**2) * (x - center**2))
+
 def PVoigt(x, amplitude=1.0, center=0.0, sigma=1.0, fraction=0.5):
     return amplitude * ((1-fraction) * G(x, center, sigma) + fraction * L(x, center, sigma))
 
@@ -56,7 +57,6 @@ def Cagliotti(twotheta, U, V, W):
 
 def CagliottiLS(pars, tantth, y):
     return y - (Cagliotti(tantth[:,0], pars[0], pars[1], pars[2]))
-
 
 
 def savepeakfits(fn, Areas, Pos, Sigma):

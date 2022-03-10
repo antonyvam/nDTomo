@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Tensorflow functions for tomography
+Functions for tomography using astra-toolbox library
 
 @author: Antony Vamvakeros
 """

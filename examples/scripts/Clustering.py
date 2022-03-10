@@ -336,9 +336,6 @@ plt.colorbar()
 plt.show()
 
 
-#%% ################################# Code tested up to here #################################
-
-
 #%% AgglomerativeClustering: images
 
 
