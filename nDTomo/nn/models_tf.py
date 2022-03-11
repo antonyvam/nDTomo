@@ -594,12 +594,12 @@ def Dense2D(npix, nlayers = 4, nodes = [100, 75, 50, 25], dropout = 'No', batchn
 
 def edsr_block(x, scale, num_filters=64, num_res_blocks=8, res_block_scaling=None):
 
-	'''
-	An EDSR model block that can be used as part of a larger architecture
-	Original EDSR model taken from https://github.com/krasserm/super-resolution/
-	Inputs:
-		x: the previous layer
-	'''
+    '''
+    An EDSR model block that can be used as part of a larger architecture
+    Original EDSR model taken from https://github.com/krasserm/super-resolution/
+    Inputs:
+        x: the previous layer
+    '''
 
     x = b = Conv2D(num_filters, 3, padding='same')(x)
     for i in range(num_res_blocks):
@@ -612,25 +612,30 @@ def edsr_block(x, scale, num_filters=64, num_res_blocks=8, res_block_scaling=Non
     return(x)
 
 
-def res_block(x_in, filters, scaling):
+def res_block(x_in, filters, scaling, batchnorm = 'No', dropout = 'No'):
 
-	'''
-	Residual block taken from https://github.com/krasserm/super-resolution/
-	'''
+    '''
+    Residual block taken from https://github.com/krasserm/super-resolution/
+    '''
 	
     x = Conv2D(filters, 3, padding='same', activation='relu')(x_in)
     x = Conv2D(filters, 3, padding='same')(x)
     if scaling:
         x = Lambda(lambda t: t * scaling)(x)
     x = Add()([x_in, x])
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+
+    if dropout == 'Yes':
+        x = Dropout(0.1)(x)         
     return x
 
 
 def upsample(x, scale, num_filters):
 
-	'''
-	Upsample layer taken from https://github.com/krasserm/super-resolution/
-	'''
+    '''
+    Upsample layer taken from https://github.com/krasserm/super-resolution/
+    '''
 	
     def upsample_1(x, factor, **kwargs):
         x = Conv2D(num_filters * (factor ** 2), 3, padding='same', **kwargs)(x)
@@ -648,8 +653,8 @@ def upsample(x, scale, num_filters):
 	
 def pixel_shuffle(scale):
 
-	'''
-	Pixel shuffle function taken from https://github.com/krasserm/super-resolution/
-	'''
+    '''
+    Pixel shuffle function taken from https://github.com/krasserm/super-resolution/
+    '''
 	
     return lambda x: tf.nn.depth_to_space(x, scale)
