@@ -210,8 +210,26 @@ def recnet_single_superres(npix, pad='same', actlayerfi='linear'):
     x = BatchNormalization()(x)
     
     x = Reshape((int(nx / 4), int(ny / 4), 8))(x)   
-    x = edsr_block(x, 4, num_filters=64, num_res_blocks=8, res_block_scaling=None)
+    # x = edsr_block(x, 4, num_filters=64, num_res_blocks=8, res_block_scaling=None)
 	
+    x = b = Conv2D(64, 3, padding='same')(x)
+    for i in range(4):
+        b = res_block(b, 64)
+    b = Conv2D(64, 3, padding='same')(b)
+    x = Add()([x, b])
+
+    x = upsample(x, 2, 64)
+    x = Conv2D(3, 3, padding='same')(x)    
+    
+    x = b = Conv2D(64, 3, padding='same')(x)
+    for i in range(4):
+        b = res_block(b, 64)
+    b = Conv2D(64, 3, padding='same')(b)
+    x = Add()([x, b])
+
+    x = upsample(x, 2, 64)
+    x = Conv2D(3, 3, padding='same')(x)  
+    
     x = Conv2D(filters = 1, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
     
     model = Model(xi, x)
@@ -623,6 +641,7 @@ def res_block(x_in, filters, scaling, batchnorm = 'No', dropout = 'No'):
     if scaling:
         x = Lambda(lambda t: t * scaling)(x)
     x = Add()([x_in, x])
+    
     if batchnorm == 'Yes':
         x = BatchNormalization()(x)
 
