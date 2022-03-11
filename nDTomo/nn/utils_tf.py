@@ -22,6 +22,9 @@ def tf_gpu_allocateRAM():
     for device in physical_devices:
         tf.config.experimental.set_memory_growth(device, True)
 
+def pixel_shuffle(scale):
+    return lambda x: tf.nn.depth_to_space(x, scale)
+	
 class ReduceLROnPlateau_custom(Callback):
 
     '''
