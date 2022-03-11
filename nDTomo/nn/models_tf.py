@@ -182,43 +182,6 @@ def recnet_single_conv(npix, pad='same', actlayerfi='linear'):
     return(model)
 
 
-def recnet_single_superres(npix, pad='same', actlayerfi='linear'):
-
-    '''
-    Image reconstruction network
-    
-    Inputs:
-        npix: number of pixels in the image per each dimension; it is a list [npixs_x, npixs_y]
-    
-    '''
-        
-    nx, ny = npix
-    
-    xi = Input(shape=(1,))
-    x = Flatten()(xi)
-    
-    x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.1)(x)
-    x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.1)(x)
-    x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.1)(x)
-    x = Dense(int(nx / 4) * int(ny / 4) * 8, kernel_initializer='he_normal', activation='linear')(x)
-    x = BatchNormalization()(x)
-    
-    x = Reshape((int(nx / 4), int(ny / 4), 8))(x)   
-    x = edsr_block(x, 2, num_filters=64, num_res_blocks=4, res_block_scaling=None)
-    x = edsr_block(x, 2, num_filters=64, num_res_blocks=4, res_block_scaling=None)
-    
-    x = Conv2D(filters = 1, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
-    
-    model = Model(xi, x)
-
-    return(model)
-
 def padcalc(npix, nlayers = 4):
         
     pads = [tf.convert_to_tensor(npix, dtype='float64')]
