@@ -7,7 +7,7 @@ Functions for tomography using astra-toolbox library
 
 
 import scipy, astra, time
-from numpy import deg2rad, arange, linspace, pi, zeros, mod, mean, where
+from numpy import deg2rad, arange, linspace, pi, zeros, mod, mean, where, floor, log, inf, exp
 from tqdm import tqdm
 
 def astra_Amatrix(ntr, ang):
@@ -400,3 +400,180 @@ def nDphantom_3D_FBP(chemsinos, theta=None, scanrange = '180', method='FBP_CUDA'
     
     return(rec)
 
+def ConeBeamCTGeometry(downSizeFactor=4, distance_source_detector=926.79, distance_source_origin=349.565,
+                  detector_pixel_size = 0.1, mag_factor = 2.65, horizontalOffset=0, verticalOffset=0):
+   
+    geo = {}
+    geo['distance_source_detector'] =  distance_source_detector
+    geo['distance_source_origin'] =  distance_source_origin
+    geo['downSizeFactor'] = downSizeFactor
+    geo['detector_pixel_size'] = detector_pixel_size*downSizeFactor
+    geo['rec_pixelSize'] = detector_pixel_size/mag_factor/10*downSizeFactor # in cm
+    geo['horizontalOffset'] = 0 # in pixels
+    geo['verticalOffset'] = 0 # in pixels
+    return(geo)
+
+def ConeBeamCTbeam(sf = 15, whiteCounts = 4500, countsToCut = 1):
+    
+    beam = {}
+    beam['sf'] = 15
+    beam['whiteCounts'] = 4500
+    beam['countsToCut'] = 1
+    return(beam)
+
+def coneBeamFP(vol, nproj, geo, v_cut = 0):    
+        
+    v_cut_local = int(v_cut * 8 / geo['downSizeFactor'])
+    v_window = range(v_cut_local,  vol.shape[0])    
+    
+    v_corr = v_window[0] / 2
+
+    # Configuration. - need to read this from a configuration file
+    distance_origin_detector =geo['distance_source_detector'] - geo['distance_source_origin']  # [mm]
+    detector_cols = vol.shape[2]  # Horizontal size of detector [pixels].
+    detector_rows = vol.shape[0]  # Vertical size of detector [pixels].
+    angles = linspace(0, 2 * pi, num=nproj, endpoint=False)
+ 
+    # Set up multi-GPU usage.
+    # This only works for 3D GPU forward projection and back projection.
+    astra.astra.set_gpu_index([0, 1])
+    
+    # Create geometry
+    proj_geom = \
+        astra.create_proj_geom('cone', 1, 1, detector_rows, detector_cols, angles,
+                               (geo['distance_source_origin'] + distance_origin_detector) /
+                               geo['detector_pixel_size'], 0)
+
+    # Center-of-rotation correction (by 0 pixels horizontally)
+    proj_geom_cor = astra.geom_postalignment(proj_geom, \
+        [geo['horizontalOffset'], v_corr+geo['verticalOffset']])
+
+
+    vol_geom = astra.creators.create_vol_geom(detector_cols, detector_cols,
+                                              detector_rows)
+
+    proj_id, proj_data =  astra.create_sino3d_gpu(vol, proj_geom_cor, vol_geom)
+        
+    astra.astra.delete(proj_id)
+    
+    return(proj_data)
+    
+    
+def radiographs_mu(projections, geo, beam):
+    
+    I = beam['whiteCounts'] * exp(-projections*beam['sf']*geo['rec_pixelSize'])
+    I =  where(I > beam['countsToCut'], I, 0)
+    I = floor(I)
+    P = -log(I*1/beam['whiteCounts'])*1/geo['rec_pixelSize']
+    P =  where(P == inf, 0, P)
+    return(P)
+
+def coneBeamFDK(projections, geo, v_cut = 0):    
+   
+    v_cut_local = int(v_cut * 8 / geo['downSizeFactor'])
+    v_window = range(v_cut_local,  projections.shape[0])    
+    v_corr = v_window[0] / 2
+
+    # Configuration. - need to read this from a configuration file
+    distance_origin_detector =geo['distance_source_detector'] - geo['distance_source_origin']  # [mm]
+    detector_cols = projections.shape[2]  # Horizontal size of detector [pixels].
+    detector_rows = projections.shape[0]  # Vertical size of detector [pixels].
+    num_of_projections= projections.shape[1]
+    angles = linspace(0, 2 * pi, num=num_of_projections, endpoint=False)
+ 
+    # Set up multi-GPU usage.
+    # This only works for 3D GPU forward projection and back projection.
+    astra.astra.set_gpu_index([0, 1])
+    
+    # Create geometry
+    proj_geom = \
+        astra.create_proj_geom('cone', 1, 1, detector_rows, detector_cols, angles,
+                               ( geo['distance_source_origin'] + distance_origin_detector) /
+                               geo['detector_pixel_size'], 0)
+
+    # Center-of-rotation correction (by 0 pixels horizontally)
+    proj_geom_cor = astra.geom_postalignment(proj_geom, \
+        [geo['horizontalOffset'], v_corr+geo['verticalOffset']])
+
+    # Create astra projection set
+    projections_id = astra.data3d.create('-sino', proj_geom_cor, projections)
+
+    # Create reconstruction.
+    vol_geom = astra.creators.create_vol_geom(detector_cols, detector_cols,
+                                              detector_rows)
+    reconstruction_id = astra.data3d.create('-vol', vol_geom, data=0)
+
+    recon_method = 'FDK_CUDA'
+    alg_cfg = astra.astra_dict(recon_method)
+    alg_cfg['ProjectionDataId'] = projections_id
+    alg_cfg['ReconstructionDataId'] = reconstruction_id
+    algorithm_id = astra.algorithm.create(alg_cfg)
+
+    astra.algorithm.run(algorithm_id)
+    reconstruction = astra.data3d.get(reconstruction_id)
+
+    astra.astra.delete(projections_id)
+    astra.astra.delete(reconstruction_id)
+
+    return(reconstruction)
+
+def coneBeamFP_FDK(vol, nproj, geo, beam, v_cut = 0):    
+        
+    v_cut_local = int(v_cut * 8 / geo['downSizeFactor'])
+    v_window = range(v_cut_local,  vol.shape[0])    
+    
+    v_corr = v_window[0] / 2
+
+    # Configuration. - need to read this from a configuration file
+    distance_origin_detector =geo['distance_source_detector'] - geo['distance_source_origin']  # [mm]
+    detector_cols = vol.shape[2]  # Horizontal size of detector [pixels].
+    detector_rows = vol.shape[0]  # Vertical size of detector [pixels].
+    angles = linspace(0, 2 * pi, num=nproj, endpoint=False)
+ 
+    # Set up multi-GPU usage.
+    # This only works for 3D GPU forward projection and back projection.
+    astra.astra.set_gpu_index([0, 1])
+    
+    # Create geometry
+    proj_geom = \
+        astra.create_proj_geom('cone', 1, 1, detector_rows, detector_cols, angles,
+                               (geo['distance_source_origin'] + distance_origin_detector) /
+                               geo['detector_pixel_size'], 0)
+
+    # Center-of-rotation correction (by 0 pixels horizontally)
+    proj_geom_cor = astra.geom_postalignment(proj_geom, \
+        [geo['horizontalOffset'], v_corr+geo['verticalOffset']])
+
+
+    vol_geom = astra.creators.create_vol_geom(detector_cols, detector_cols,
+                                              detector_rows)
+
+    proj_id, proj_data =  astra.create_sino3d_gpu(vol, proj_geom_cor, vol_geom)
+        
+
+    proj_data = radiographs_mu(proj_data, geo, beam)
+     
+    # Set up multi-GPU usage.
+    # This only works for 3D GPU forward projection and back projection.
+    astra.astra.set_gpu_index([0, 1])
+    
+    # Create astra projection set
+    projections_id = astra.data3d.create('-sino', proj_geom_cor, proj_data)
+
+    reconstruction_id = astra.data3d.create('-vol', vol_geom, data=0)
+
+    recon_method = 'FDK_CUDA'
+    alg_cfg = astra.astra_dict(recon_method)
+    alg_cfg['ProjectionDataId'] = projections_id
+    alg_cfg['ReconstructionDataId'] = reconstruction_id
+    algorithm_id = astra.algorithm.create(alg_cfg)
+
+    astra.algorithm.run(algorithm_id)
+    reconstruction = astra.data3d.get(reconstruction_id)
+
+    astra.astra.delete(algorithm_id)
+    astra.astra.delete(proj_id)
+    astra.astra.delete(projections_id)
+    astra.astra.delete(reconstruction_id)
+    
+    return(reconstruction)
