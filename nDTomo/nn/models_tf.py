@@ -359,41 +359,7 @@ def Dense1D(npix, nlayers = 4, nodes = [100, 75, 50, 25], dropout = 'No', batchn
 
     return model
 
-def convblock2D(convl, nconvs = 3, filtnums= 64, kersz = 3, pad='same', dropout = 'Yes', batchnorm = 'No'):
-        
-    for ii in range(nconvs):
-    
-        convl = Conv2D(filters=filtnums, kernel_size=kersz, activation = 'relu', padding = pad,
-                    kernel_initializer = 'he_normal')(convl)
 
-    if batchnorm == 'Yes':
-        convl = BatchNormalization()(convl)
-
-    if dropout == 'Yes':
-        convl = SpatialDropout2D(0.1)(convl)    
-    
-    return(convl)
-
-def downblock2D(convl, nconvs = 3, filtnums= 64, kersz = 3, pad='same', dropout = 'Yes', batchnorm = 'No'):
-    
-    convl = Conv2D(filters=filtnums, kernel_size=kersz, strides=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(convl)
-    convl = convblock2D(convl, nconvs = nconvs - 1, filtnums= filtnums, kersz = kersz, pad=pad, dropout = dropout, batchnorm = batchnorm)
-
-    return(convl)    
-    
-def upblock2D(convl, padsize, filtnums= 64, pad='same'):
-    
-    convl = UpSampling2D(size = (2,2))(convl)
-
-    convl = Conv2D(filters=filtnums, kernel_size=2, activation = 'relu', padding = pad, 
-            kernel_initializer = 'he_normal')(convl)
-
-    if padsize % 2 != 0:
-        convl = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(convl)
-    
-    return(convl)
 
 def DCNN2D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconvs =3, filtnums= 64, kersz = 3, dropout = 'Yes', batchnorm = 'No', 
                   actlayermid = 'relu', actlayerfi = 'linear', pad='same', dense_layers = 'Default', dlayers = None):
@@ -499,6 +465,41 @@ def DCNN2D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconv
 
     return model
 
+def convblock2D(convl, nconvs = 3, filtnums= 64, kersz = 3, pad='same', dropout = 'Yes', batchnorm = 'No'):
+        
+    for ii in range(nconvs):
+    
+        convl = Conv2D(filters=filtnums, kernel_size=kersz, activation = 'relu', padding = pad,
+                    kernel_initializer = 'he_normal')(convl)
+
+    if batchnorm == 'Yes':
+        convl = BatchNormalization()(convl)
+
+    if dropout == 'Yes':
+        convl = SpatialDropout2D(0.1)(convl)    
+    
+    return(convl)
+
+def downblock2D(convl, nconvs = 3, filtnums= 64, kersz = 3, pad='same', dropout = 'Yes', batchnorm = 'No'):
+    
+    convl = Conv2D(filters=filtnums, kernel_size=kersz, strides=2, activation = 'relu', padding = pad, 
+            kernel_initializer = 'he_normal')(convl)
+    convl = convblock2D(convl, nconvs = nconvs - 1, filtnums= filtnums, kersz = kersz, pad=pad, dropout = dropout, batchnorm = batchnorm)
+
+    return(convl)    
+    
+def upblock2D(convl, padsize, filtnums= 64, pad='same'):
+    
+    convl = UpSampling2D(size = (2,2))(convl)
+
+    convl = Conv2D(filters=filtnums, kernel_size=2, activation = 'relu', padding = pad, 
+            kernel_initializer = 'he_normal')(convl)
+
+    if padsize % 2 != 0:
+        convl = tf.keras.layers.Cropping2D(
+                cropping=((1, 0), (1, 0)), data_format=None)(convl)
+    
+    return(convl)
     
 def Dense2D(npix, nlayers = 4, nodes = [100, 75, 50, 25], dropout = 'No', batchnorm = 'No', 
                   actlayermid = 'relu', actlayerfi = 'linear',):
