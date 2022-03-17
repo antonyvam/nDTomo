@@ -7,7 +7,9 @@ Various tensorflow functions
 
 import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
-from numpy import less, greater, Inf
+from numpy import less, greater, Inf, zeros_like
+from tqdm import tqdm
+from tensorflow_addons.image import rotate
 
 def tf_gpu_devices():
         
@@ -22,6 +24,39 @@ def tf_gpu_allocateRAM():
     for device in physical_devices:
         tf.config.experimental.set_memory_growth(device, True)
 
+def rotate_xz(vol, ang):
+    
+    
+    dims = vol.shape
+    voln = zeros_like(vol)
+    
+    for ii in tqdm(range(voln.shape[1])):    
+    
+        voln[:,ii,:] = rotate(vol[:,ii,:].reshape(dims[0], dims[2], 1), ang, interpolation = 'bilinear')[:,:,0]
+    
+    return(voln)
+
+def rotate_xy(vol, ang):
+    
+    dims = vol.shape
+    voln = zeros_like(vol)
+    
+    for ii in tqdm(range(voln.shape[2])):    
+    
+        voln[:,:,ii] = rotate(vol[:,:,ii].reshape(dims[0], dims[1], 1), ang, interpolation = 'bilinear')[:,:,0]
+    
+    return(voln)
+
+def rotate_yz(vol, ang):
+    
+    dims = vol.shape
+    voln = zeros_like(vol)
+    
+    for ii in tqdm(range(voln.shape[0])):    
+    
+        voln[ii,:,:] = rotate(vol[ii,:,:].reshape(dims[1], dims[2], 1), ang, interpolation = 'bilinear')[:,:,0]
+    
+    return(voln)
 	
 class ReduceLROnPlateau_custom(Callback):
 
