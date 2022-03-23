@@ -132,7 +132,7 @@ def recnet_single(npix):
 
     return(model)
 
-def recnet_single_conv(npix, pad='same', dropout = 'No', batchnorm = 'No', actlayerfi='linear'):
+def recnet_single_conv(npix, factor = 1, dropout = 'No', batchnorm = 'No', actlayerfi='linear', pad='same'):
 
     '''
     Image reconstruction network
@@ -162,11 +162,11 @@ def recnet_single_conv(npix, pad='same', dropout = 'No', batchnorm = 'No', actla
         x = BatchNormalization()(x)
     if dropout == 'Yes':
         x = Dropout(0.1)(x)
-    x = Dense(int(nx / 4) * int(ny / 4) * 8, kernel_initializer='he_normal', activation='linear')(x)
+    x = Dense(int(nx / 4) * int(ny / 4) * factor, kernel_initializer='he_normal', activation='linear')(x)
     if batchnorm == 'Yes':
         x = BatchNormalization()(x)
     
-    x = Reshape((int(nx / 4), int(ny / 4), 8))(x)   
+    x = Reshape((int(nx / 4), int(ny / 4), factor))(x)   
     
     x = UpSampling2D(size = (2,2))(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
