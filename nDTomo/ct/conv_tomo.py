@@ -40,13 +40,13 @@ def radonvol(vol, scan = 180, theta=None):
         
     return(s)
         
-def fbpvol(svol, scan = 180, theta=None):
+def fbpvol(svol, scan = 180, theta=None, nt = None):
     
     '''
     Calculates the reconstructed images of a stack of sinograms using the filtered backprojection algorithm, 3rd dimension is z/spectral
     '''
-    
-    nt = svol.shape[0]
+    if nt is None:
+        nt = svol.shape[0]
     nproj = svol.shape[1]
     
     if theta is None:
