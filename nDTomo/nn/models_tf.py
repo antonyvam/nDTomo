@@ -132,7 +132,7 @@ def recnet_single(npix):
 
     return(model)
 
-def recnet_single_conv(npix, pad='same', actlayerfi='linear'):
+def recnet_single_conv(npix, pad='same', dropout = 'No', batchnorm = 'No', actlayerfi='linear'):
 
     '''
     Image reconstruction network
@@ -148,16 +148,23 @@ def recnet_single_conv(npix, pad='same', actlayerfi='linear'):
     x = Flatten()(xi)
     
     x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.1)(x)
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+    if dropout == 'Yes':
+        x = Dropout(0.1)(x)
     x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.1)(x)
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+    if dropout == 'Yes':
+        x = Dropout(0.1)(x)
     x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
-    x = BatchNormalization()(x)
-    x = Dropout(0.1)(x)
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+    if dropout == 'Yes':
+        x = Dropout(0.1)(x)
     x = Dense(int(nx / 4) * int(ny / 4) * 8, kernel_initializer='he_normal', activation='linear')(x)
-    x = BatchNormalization()(x)
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
     
     x = Reshape((int(nx / 4), int(ny / 4), 8))(x)   
     
@@ -165,22 +172,25 @@ def recnet_single_conv(npix, pad='same', actlayerfi='linear'):
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
-    x = BatchNormalization()(x)
-    x = SpatialDropout2D(0.1)(x)    
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+    if dropout == 'Yes':
+        x = SpatialDropout2D(0.1)(x)    
     
     x = UpSampling2D(size = (2,2))(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
-    x = BatchNormalization()(x)
-    x = SpatialDropout2D(0.1)(x)    
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+    if dropout == 'Yes':
+        x = SpatialDropout2D(0.1)(x)         
 
     x = Conv2D(filters = 1, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
     
     model = Model(xi, x)
 
     return(model)
-
 
 def padcalc(npix, nlayers = 4):
         
