@@ -707,7 +707,7 @@ def DCNN2D_block(npix, image_in, pads, nlayers = 4, net = 'unet', dlayer = 'No',
 
     return convl
 
-def DCNN2D_dual(npix=410, nlayers=4, net = 'unet', dropout = 'No', batchnorm = 'No', 
+def DCNN2D_dual(npix, nlayers=4, net = 'unet', dropout = 'No', batchnorm = 'No', 
                 nconvs =3, filtnums= 64,
                 actlayerfi = 'linear', skipcon = 'No', actlayermid = 'relu'):
     
