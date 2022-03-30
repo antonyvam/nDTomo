@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 import pkgutil, h5py
 from pystackreg import StackReg
 from scipy.interpolate import interp1d
-from mayavi import mlab
 from matplotlib import cm
 from matplotlib.colors import ListedColormap
 from tqdm import tqdm
@@ -53,24 +52,7 @@ def showspectra(spectra, fignum = 1):
     for ii in range(len(spectra)):
         plt.plot(spectra[ii])
     plt.show()
-    
-def showvol(vol, vlim = None):
-    
-    '''
-    Volume rendering using mayavi mlab
-    '''    
-    
-    if vlim is None:
-        
-        vmin = 0
-        vmax = np.max(vol)
-    
-    else:
-        
-        vmin, vmax = vlim
-    
-    mlab.pipeline.volume(mlab.pipeline.scalar_field(vol), vmin=vmin, vmax=vmax)
-    
+       
 def closefigs():
     
     plt.close('all')

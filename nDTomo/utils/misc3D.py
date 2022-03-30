@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Misc tools for nDTomo
+Misc3D  tools for nDTomo
 
 @author: Antony Vamvakeros
 """
@@ -8,7 +8,6 @@ Misc tools for nDTomo
 from numpy import max
 from mayavi import mlab
 
-    
 def showvol(vol, vlim = None):
     
     '''
@@ -25,4 +24,3 @@ def showvol(vol, vlim = None):
         vmin, vmax = vlim
     
     mlab.pipeline.volume(mlab.pipeline.scalar_field(vol), vmin=vmin, vmax=vmax)
-    
