@@ -20,7 +20,7 @@ Modernise the GUIs and update the documentation
 
 Installation instructions
 -------------------------
-The nDTomo is currently being developed using python v3.8
+The nDTomo is currently being developed using python v3.7
 
 In order to use all features, one has to use anaconda (e.g. for astra-toolbox). I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator).
 
