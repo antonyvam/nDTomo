@@ -178,6 +178,7 @@ def recnet_single_conv(npix, factor = 1, dropout = 'No', batchnorm = 'No', actla
         x = SpatialDropout2D(0.1)(x)    
     
     x = UpSampling2D(size = (2,2))(x)
+    x = Cropping2D(cropping=((1, 0), (1, 0)))(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
