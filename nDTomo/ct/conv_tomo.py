@@ -381,6 +381,12 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180):
         
     return(sn)
 
+def zigzag(s):
+    
+    s[0::2,:,:] = s[0::2,::-1,:]
+    
+    return(s)
+
 def rot_center(thetasum):
 
     '''
