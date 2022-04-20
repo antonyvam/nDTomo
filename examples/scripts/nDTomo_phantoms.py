@@ -9,7 +9,8 @@ Tests for the various nDTomo phantoms
 
 from nDTomo.utils.hyperexpl import HyperSliceExplorer
 from nDTomo.sim.shapes.phantoms import nDphantom_2D, nDphantom_3D, nDphantom_4D, nDphantom_5D, nDphantom_2Dmap
-from nDTomo.utils.misc import closefigs, addpnoise2D, addpnoise3D, interpvol, showplot, showspectra, showim, showvol, normvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
+from nDTomo.utils.misc import closefigs, addpnoise2D, addpnoise3D, interpvol, showplot, showspectra, showim, normvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
+from nDTomo.utils.misc3D import showvol
 import numpy as np
 
 
