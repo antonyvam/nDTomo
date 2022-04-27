@@ -137,32 +137,35 @@ class nDVAcq():
         
         with h5py.File(fn, 'r') as f:
     
-            self.ntrans = f['ntrans'][:]
-            self.nproj = f['nproj'][:]
-            self.fastaxis = f['fastaxis'][:]
-            self.slowaxis = f['slowaxis'][:]
-            self.scantype = f['scantype'][:]
-            self.poni1 = f['poni1'][:]
-            self.poni2 = f['poni2'][:]
-            self.rot1 = f['rot1'][:]
-            self.rot2 = f['rot2'][:]
-            self.rot3 = f['rot3'][:]
-            self.dist = f['dist'][:]
-            self.wvl = f['wvl'][:]
-            self.detpixsz1 = f['detpixsz1'][:]
-            self.detpixsz2 = f['detpixsz2'][:]
-            self.detshape = f['detshape'][:]
+            print(f.keys())        
+    
+            self.ntrans = np.array(f['ntrans'])
+            self.nproj = np.array(f['nproj'])
+            self.fastaxis = np.array(f['fastaxis'])
+            self.slowaxis = np.array(f['slowaxis'])
+            self.scantype = np.array(f['scantype'])
+            self.poni1 = np.array(f['poni1'])
+            self.poni2 = np.array(f['poni2'])
+            self.rot1 = np.array(f['rot1'])
+            self.rot2 = np.array(f['rot2'])
+            self.rot3 = np.array(f['rot3'])
+            self.dist = np.array(f['dist'])
+            self.wvl = np.array(f['wvl'])
+            self.detpixsz1 = np.array(f['detpixsz1'])
+            self.detpixsz2 = np.array(f['detpixsz2'])
+            self.detshape = np.array(f['detshape'])
             
-        print('Number of translations (detector elements for X-ray imaging) ', self.ntrans)
-        print('Number of projections ', self.nproj)
-        print('Fast axis ', self.fastaxis)
-        print('Slow axis ', self.slowaxis)
-        print('Data acquisition strategy ', self.scantype)
+        print('Number of translations (detector elements for X-ray imaging): ', self.ntrans)
+        print('Number of projections: ', self.nproj)
+        print('Fast axis: ', self.fastaxis)
+        print('Slow axis: ', self.slowaxis)
+        print('Data acquisition strategy: ', self.scantype)
         print('Sample-to-detector distance: ', self.dist)
         print('X-ray wavelength: ', self.wvl)
         print('Detector pixel size: ', self.detpixsz1, self.detpixsz2)
+        self.detshape = (self.detshape[0], self.detshape[1])
         print('Detector shape: ', self.detshape)
-        print('pyFAI detector calibration parameters: poni1 = %d, poni2 = %d, rot1 = %d, rot2 = %d, rot3 = %d' 
+        print('pyFAI detector calibration parameters: poni1 = %f, poni2 = %f, rot1 = %f, rot2 = %f, rot3 = %f' 
               %(self.poni1, self.poni2, self.rot1, self.rot2, self.rot3))
     
     def setscanprms(self, trans, nproj, scantype = 'Zig', fastaxis = 'Translation', slowaxis = 'Rotation'):
