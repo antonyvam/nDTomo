@@ -168,7 +168,7 @@ class nDVAcq():
         print('pyFAI detector calibration parameters: poni1 = %f, poni2 = %f, rot1 = %f, rot2 = %f, rot3 = %f' 
               %(self.poni1, self.poni2, self.rot1, self.rot2, self.rot3))
     
-    def setscanprms(self, trans, nproj, scantype = 'Zig', fastaxis = 'Translation', slowaxis = 'Rotation'):
+    def setscanprms(self, trans, nproj, scantype = 'Zigzig', fastaxis = 'Translation', slowaxis = 'Rotation'):
         
         '''
         Scan type: Zigzig, Zigzag, Interlaced, ContRot
