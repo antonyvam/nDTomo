@@ -129,7 +129,11 @@ class nDVAcq():
         
         pass
     
-    def readscanprms(self, fn):
+    def readscanprms(self, fn=None):
+        
+        if fn is None:
+            
+            fn = '%s\\%s_scan_prms.h5' %(self.savedir, self.dname)
         
         with h5py.File(fn, 'r') as f:
     
