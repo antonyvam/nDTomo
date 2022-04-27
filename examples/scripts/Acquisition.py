@@ -27,6 +27,13 @@ Acq.dname = 'xrdct_test'
 
 #%%
 
+Acq = nDVAcq(file_format ='cbf', scantype = 'Zigzig', fastaxis = 'Translation', slowaxis = 'Rotation', units = "q_A^-1")
+
+Acq.setwvl(wvl=0.)
+Acq.setxrdprms(dist=0.5, poni1=0, poni2=0, rot1=0, rot2=0, rot3=0)
+
+#%%
+
 im = Acq.conv1Dto2D( Acq.data[50,50,:])
 im = addpnoise2D(im, ct = 0.01)
 
