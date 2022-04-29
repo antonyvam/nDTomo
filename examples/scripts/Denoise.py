@@ -8,9 +8,10 @@ Denoising CT datasets
 #%%
 
 from nDTomo.sim.shapes.phantoms import nDphantom_2D, load_example_patterns, nDphantom_3D, nDphantom_4D, nDphantom_2Dmap
-from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, showvol, normvol, addpnoise2D, addpnoise3D, cirmask, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
+from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, normvol, addpnoise2D, addpnoise3D, cirmask, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
+from nDTomo.utils.misc3D import showvol
 from nDTomo.utils.hyperexpl import HyperSliceExplorer
-from nDTomo.ct.astra_tomo import astra_create_geo, astre_rec_vol, astre_rec_alg, astra_create_sino_geo, astra_create_sino, nDphantom_3D_sinograms, nDphantom_3D_FBP
+from nDTomo.ct.astra_tomo import astra_create_geo, astra_rec_vol, astra_rec_alg, astra_create_sino_geo, astra_create_sino, nDphantom_3D_sinograms, nDphantom_3D_FBP
 from nDTomo.ct.conv_tomo import radonvol, fbpvol
 from nDTomo.nn.models_tf import DCNN2D, DnCNN, DCNN1D
 from nDTomo.nn.losses_tf import ssim_mae_loss, ssim_loss

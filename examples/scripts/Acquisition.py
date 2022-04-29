@@ -27,13 +27,12 @@ Acq.dname = 'xrdct_test'
 
 #%%
 p = ndtomopath()
-poni = "%sexamples\\xrd2D\\CeO2.poni" %p
 savedir = 'Y:\\Antony\\nDTomo\\test2'
 
 
 Acq = nDVAcq(file_format ='cbf', scantype = 'Zigzig', fastaxis = 'Translation', slowaxis = 'Rotation', units = "q_A^-1")
 
-Acq.setwvl(wvl=1.5e-11)
+Acq.setwvl(wvl=1.24e-11)
 Acq.setxrdprms(dist=0.35, poni1=(500/2)*0.000172, poni2=(500/2)*0.000172, rot1=0, rot2=0, rot3=0)
 Acq.setdetector(shape=(500,500))
 Acq.azimint()
