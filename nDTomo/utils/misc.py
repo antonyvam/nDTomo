@@ -494,7 +494,7 @@ def h5write_dataset(p, fn, data):
     h5f.close()
 
 
-def h5read_dataset(p, fn, dataset = 'data'):
+def h5read_dataset(fn, dataset = 'data'):
 
     '''
     Reads a dataset from an h5 file.
@@ -503,10 +503,8 @@ def h5read_dataset(p, fn, dataset = 'data'):
         fn: filename, e.g. 'file'
         data: string corresponding to the h5 dataset
     '''
-    
-    f = "%s%s.h5" %(p,fn)
-    
-    with h5py.File(f, "r") as h5f:
+        
+    with h5py.File(fn, "r") as h5f:
     
         data = []    
     
