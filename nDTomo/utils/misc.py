@@ -494,7 +494,7 @@ def h5write_dataset(p, fn, data):
     h5f.close()
 
 
-def h5read_dataset(p, fn, data = 'data'):
+def h5read_dataset(p, fn, dataset = 'data'):
 
     '''
     Reads a dataset from an h5 file.
@@ -508,7 +508,15 @@ def h5read_dataset(p, fn, data = 'data'):
     
     with h5py.File(f, "r") as h5f:
     
-        data = h5f[data][:]
+        data = []    
+    
+        try:
+            
+            data = h5f[dataset][:]
+            
+        except:
+            
+            print('/%s is not available in the h5 file' %dataset)
 
     return(data)
 
@@ -555,7 +563,13 @@ def h5read_data(p, fn, dlist):
         
         for ii in range(len(dlist)):
 
-            data[dlist[ii]] = h5f[dlist[ii]][:]
+            try:
+                
+                data[dlist[ii]] = h5f[dlist[ii]][:]
+                
+            except:
+                
+                print('/%s is not available in the h5 file' %dlist[ii])
 
     return(data)
 
