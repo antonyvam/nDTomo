@@ -39,7 +39,8 @@ try:
 except:
     pass
     
-#% import nDTomo classes
+from nDTomo.utils.misc import h5read_dataset
+
     
 from .PeakFitting import FitData
 
@@ -2315,6 +2316,15 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def loadxrdct(self):
         
         if len(self.hdf_fileName)>0:
+            
+            
+            self.data = h5read_dataset(self.hdf_fileName, dataset = 'data')
+            self.data = h5read_dataset(self.hdf_fileName, dataset = 'I')
+            self.q = h5read_dataset(self.hdf_fileName, dataset = 'q')
+            self.sinos = h5read_dataset(self.hdf_fileName, dataset = 'Sinograms')
+            self.data = h5read_dataset(self.hdf_fileName, dataset = 'data')
+            self.data = h5read_dataset(self.hdf_fileName, dataset = 'data')
+            self.data = h5read_dataset(self.hdf_fileName, dataset = 'data')
             
             with h5py.File(self.hdf_fileName,'r') as f:
                 
