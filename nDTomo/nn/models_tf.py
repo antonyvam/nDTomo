@@ -739,3 +739,95 @@ def DCNN2D_dual(npix, nlayers=4, net = 'unet', dropout = 'No', batchnorm = 'No',
     
         
     return model    
+
+
+
+
+def Automap(npix, pad='same', actlayerfi='linear', batchnorm = 'No', dropout = 'No'):
+
+    '''
+    Image reconstruction network
+    
+    Inputs:
+        npix: number of pixels in the image per each dimension; it is a list [npixs_x, npixs_y]
+    
+    '''
+    
+    xi = Input(shape=(npix[0],npix[1],1))
+    x = Flatten()(xi)
+    
+    x = Dense(2*npix[0]*npix[1], kernel_initializer='random_normal', activation='relu')(x)
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+    if dropout == 'Yes':
+        x = Dropout(0.1)(x)       
+    x = Dense(npix[0]*npix[1], kernel_initializer='random_normal', activation='relu')(x)
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+    if dropout == 'Yes':
+        x = Dropout(0.1)(x)  
+    x = Dense(npix[0]*npix[1], kernel_initializer='random_normal', activation='relu')(x)
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+    if dropout == 'Yes':
+        x = Dropout(0.1)(x)  
+    
+    x = Reshape((int(npix[0] // 1), int(npix[1] // 1), 1))(x)   
+    
+    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 1, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
+    
+    model = Model(xi, x)
+
+    return(model)
+
+    
+def GANrec(npix, pad='same', actlayerfi='linear', batchnorm = 'No', dropout = 'No'):
+
+    '''
+    Image reconstruction network
+    
+    Inputs:
+        npix: number of pixels in the image per each dimension; it is a list [npixs_x, npixs_y]
+    
+    '''
+    
+    
+    xi = Input(shape=(npix[0],npix[1],1))
+    x = Flatten()(xi)
+    
+    x = Dense(256, kernel_initializer='random_normal', activation='relu')(x)
+    x = Dense(256, kernel_initializer='random_normal', activation='relu')(x)
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+    if dropout == 'Yes':
+        x = Dropout(0.1)(x) 
+    x = Dense(256, kernel_initializer='random_normal', activation='relu')(x)
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+    if dropout == 'Yes':
+        x = Dropout(0.1)(x) 
+    x = Dense(npix[0]*npix[1], kernel_initializer='random_normal', activation='relu')(x)
+    if batchnorm == 'Yes':
+        x = BatchNormalization()(x)
+    if dropout == 'Yes':
+        x = Dropout(0.1)(x) 
+
+    
+    x = Reshape((int(npix[0] // 1), int(npix[1] // 1), 1))(x)   
+    
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 1, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
+    
+    model = Model(xi, x)
+
+    return(model)
