@@ -475,6 +475,22 @@ def q2tth(q, E):
 
     return(tth)
 
+
+def h5read_keys(fn):
+
+    '''
+    Reads a dataset from an h5 file.
+    Inputs:
+        fn: full path to h5 file, e.g. 'C:\\path_to_data\\file.h5'
+    '''
+        
+    with h5py.File(fn, "r") as f:
+    
+        datasets = f.keys() 
+        print(datasets)
+
+    return(datasets)
+
 def h5write_dataset(p, fn, data):
 
     '''

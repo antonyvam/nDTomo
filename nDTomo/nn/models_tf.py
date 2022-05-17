@@ -10,7 +10,7 @@ Neural networks models
 import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Lambda, Conv1D, UpSampling1D, Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
-
+from numpy import mod
 	
 def DnCNN(npix, nlayers = 15, skip='Yes', filts = 64):
     
@@ -144,6 +144,8 @@ def recnet_single_conv(npix, factor = 1, dropout = 'No', batchnorm = 'No', actla
         
     nx, ny = npix
     
+    m = mod(nx,2)
+    
     xi = Input(shape=(1,))
     x = Flatten()(xi)
     
@@ -178,7 +180,9 @@ def recnet_single_conv(npix, factor = 1, dropout = 'No', batchnorm = 'No', actla
         x = SpatialDropout2D(0.1)(x)    
     
     x = UpSampling2D(size = (2,2))(x)
-    x = Cropping2D(cropping=((1, 0), (1, 0)))(x)
+    
+    if m>0:
+        x = Cropping2D(cropping=((1, 0), (1, 0)))(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
