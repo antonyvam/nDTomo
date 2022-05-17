@@ -1,5 +1,5 @@
 package:
-  name: ndoomo
+  name: ndtomo
 channels:
   - astra-toolbox/label/dev
   - conda-forge
@@ -368,3 +368,7 @@ requirements:
     - setuptools
   run:
     - python
+test:
+  # Python imports
+  imports:
+    - nDTomo
