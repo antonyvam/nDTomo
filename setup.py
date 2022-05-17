@@ -28,19 +28,15 @@ from setuptools import setup, find_packages
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-
 setup(
 	name="nDTomo",
-	version="2021.12",
+	version="2022.03",
 	description="nDTomo software suite",
 	url="http://github.com/antonyvam/nDTomo",
 	author="A. Vamvakeros",
 	author_email="antonyvam@gmail.com",
 	install_requires=[
-		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy>1.5.2",
-		"pyqtgraph", "scikit-image",  "xdesign", "cached_property", "tqdm",
-		"periodictable", "ase", "scikit-learn", "pystackreg", "clustimage",
-		"mayavi", "pyMCR",
+		"numpy",
 	],
 	packages=find_packages(),
 	extras_require={
