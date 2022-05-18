@@ -18,11 +18,19 @@ To do
 -----
 Modernise the GUIs and update the documentation
 
-Installation instructions
--------------------------
+Installation instructions using conda
+-------------------------------------
 The nDTomo is currently being developed using python v3.8
 
-In order to use all features, one has to use anaconda (e.g. for astra-toolbox). I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator). Make sure to install first Spyder/Jupyter lab etc before installing the nDTomo.
+I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and then simply run the following:
+
+```conda install -c antonyvam ndtomo```
+
+Tensorflow is not included in the conda package so one has to install it using pip (please see below for more information).
+
+Installation instructions from sources
+--------------------------------------
+An important part of the code is based on astra-toolbox (and tomopy) which is currently available through conda so to make your life easier please install anaconda. It is possible to install astra-toolbox/tomopy from sources (i.e. if one wants to avoid using conda) but it is not a trivial task. I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and make sure to install first the IDEs (Jupyter lab, Spyder etc) before installing the nDTomo.
 
 To install from git:
 
@@ -55,6 +63,14 @@ module load python/3
 python setup.py install --user
 ```
 
+To install astra-toolbox:
+
+```conda install -c astra-toolbox/label/dev astra-toolbox```
+
+To install tomopy:
+
+```conda install -c conda-forge tomopy```
+
 The GUIs require PyQt5 but I have removed it from the setup.py because it breaks the spyder IDE. If you don't use anaconda/spyder (PyQt5 is included in anaconda), then you can install it with pip: 
 
 ```
@@ -80,19 +96,14 @@ PyFAI installation instructions can be found here: http://www.silx.org/doc/pyFAI
 Extra packages to be installed (not essential)
 ----------------------------------------------
 
-Tomography:
-
-```conda install -c astra-toolbox/label/dev astra-toolbox```
-
-NeuralNets with Tensorflow (make sure to follow these instruction for GPU support: https://www.tensorflow.org/install/gpu):
+Neural networks were built/tested using Tensorflow; make sure to follow these instruction for GPU support: https://www.tensorflow.org/install/gpu. As an example:
 
 ```pip install tensorflow==2.7 tensorflow-addons==0.15```
-
 
 
 Citation
 --------
 Please cite using the following:
 
-Vamvakeros, A. et al., nDTomo software suite, 2019, DOI: https://doi.org/10.5281/zenodo.6344270
+Vamvakeros, A. et al., nDTomo software suite, 2019, DOI: https://doi.org/10.5281/zenodo.6560430
 
