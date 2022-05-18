@@ -31,7 +31,7 @@ with open("README.md", "r") as fh:
 
 setup(
 	name="nDTomo",
-	version="2021.12",
+	version="2022.05",
 	description="nDTomo software suite",
 	url="http://github.com/antonyvam/nDTomo",
 	author="A. Vamvakeros",
@@ -39,7 +39,7 @@ setup(
 	install_requires=[
 		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy>1.5.2",
 		"pyqtgraph", "scikit-image",  "xdesign", "cached_property", "tqdm",
-		"periodictable", "ase", "scikit-learn", "pystackreg", "clustimage",
+		"periodictable", "ase", "scikit-learn", "pystackreg", "ipython",
 		"mayavi", "pyMCR",
 	],
 	packages=find_packages(),
