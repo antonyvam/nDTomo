@@ -1,0 +1,49 @@
+package:
+  name: ndtomo
+  version: "2022.05"
+source:
+  path: .
+channels:
+  - conda-forge
+  - anaconda
+  - astra-toolbox/label/dev
+requirements:
+  build:
+    - python
+    - setuptools
+    - pip
+  run:
+    - python >3.7
+    - ase
+    - tifffile
+    - pyfai ==0.19
+    - silx
+    - tqdm 
+    - h5py
+    - pystackreg
+    - pyqtgraph
+    - fabio
+    - scikit-image 
+    - scikit-learn
+    - xdesign 
+    - cached_property 
+    - periodictable  
+    - pymcr 
+    - pyopencl 
+    - ipython
+    - matplotlib
+    - jupyterlab
+    - spyder    
+    - astra-toolbox
+    - tomopy 
+    - mayavi
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+about:
+  home: https://github.com/antonyvam/nDTomo
+  summary: "nDTomo software suite"
+  license: GNU
+  dev_url: https://github.com/antonyvam/nDTomo
+  doc_url: https://ndtomo.readthedocs.io
+extra:
+  maintainers:
+   - antonyvam
