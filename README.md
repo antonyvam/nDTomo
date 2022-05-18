@@ -30,7 +30,7 @@ Tensorflow is not included in the conda package so one has to install it using p
 
 Installation instructions from sources
 --------------------------------------
-An important part of the code is based on astra-toolbox (and tomopy) which is currently available through conda so to make your life easier please install anaconda. It is possible to install astra-toolbox/tomopy but I have not attempted it and not planning to anytime soon. I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and make sure to install first Spyder/Jupyter lab etc before installing the nDTomo.
+An important part of the code is based on astra-toolbox (and tomopy) which is currently available through conda so to make your life easier please install anaconda. It is possible to install astra-toolbox/tomopy from sources (i.e. if one wants to avoid using conda) but it is not a trivial task. I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and make sure to install first the IDEs (Jupyter lab, Spyder etc) before installing the nDTomo.
 
 To install from git:
 
@@ -96,7 +96,7 @@ PyFAI installation instructions can be found here: http://www.silx.org/doc/pyFAI
 Extra packages to be installed (not essential)
 ----------------------------------------------
 
-NeuralNets with Tensorflow (make sure to follow these instruction for GPU support: https://www.tensorflow.org/install/gpu):
+Neural networks were built/tested using Tensorflow; make sure to follow these instruction for GPU support: https://www.tensorflow.org/install/gpu. As an example:
 
 ```pip install tensorflow==2.7 tensorflow-addons==0.15```
 
