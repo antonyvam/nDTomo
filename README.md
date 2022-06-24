@@ -27,6 +27,7 @@ I suggest you create a new anaconda environment for nDTomo (e.g. using the anaco
 Make sure that you have added the following channels:
 
 ```conda config --add channels conda-forge```
+
 ```conda config --add channels astra-toolbox/label/dev```
 
 Next install nDTomo:
