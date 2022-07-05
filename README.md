@@ -18,8 +18,8 @@ To do
 -----
 Modernise the GUIs and update the documentation
 
-Installation instructions using conda
--------------------------------------
+Installation instructions using conda (Windows only)
+----------------------------------------------------
 The nDTomo is currently being developed using python v3.8
 
 I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and then simply run the following:
