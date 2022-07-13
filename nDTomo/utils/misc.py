@@ -663,3 +663,19 @@ def pol2cartim(imp, im_size=None, thpix=1024, rpix=1024, ofs=0):
     imn = griddata((ro, to), imo, (xx, yy), method='nearest')
 
     return(imn)
+
+
+def tv_image(im):
+    
+    '''
+    Calculate and return the anisotropic (2D) total variation of an image. The total variation is the sum of the absolute differences 
+    for neighboring pixel-values in the input images. This measures how much noise is in the images. 
+    This can be used as a loss-function during optimization so as to suppress noise in images.
+    '''
+    
+    pixel_dif1 = im[1:, :] - im[:-1, :]
+    pixel_dif2 = im[:, 1:] - im[:, :-1]
+    
+    tv = np.sum(pixel_dif1) + np.sum(pixel_dif2)
+    
+    return(tv)
