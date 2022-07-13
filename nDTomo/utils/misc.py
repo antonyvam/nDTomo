@@ -679,3 +679,17 @@ def tv_image(im):
     tv = np.sum(pixel_dif1) + np.sum(pixel_dif2)
     
     return(tv)
+
+def rgb2gray(im):
+    
+    '''
+    RBG image to grayscale using the luminosity method
+    '''
+    
+    im = im[:,:0]*0.3 + im[:,:1]*0.59 + im[:,:2]*0.11
+    
+    return(im)
+    
+    
+    
+    
