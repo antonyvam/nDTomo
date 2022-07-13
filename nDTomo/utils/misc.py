@@ -665,7 +665,7 @@ def pol2cartim(imp, im_size=None, thpix=1024, rpix=1024, ofs=0):
     return(imn)
 
 
-def tv_image(im):
+def tv_image(im, method = 'isotropic'):
     
     '''
     Calculate and return the anisotropic (2D) total variation of an image. The total variation is the sum of the absolute differences 
@@ -678,8 +678,15 @@ def tv_image(im):
     pixel_dif1 = im[1:, :] - im[:-1, :]
     pixel_dif2 = im[:, 1:] - im[:, :-1]
     
-    tv = np.sum(pixel_dif1) + np.sum(pixel_dif2)
+    if method == 'isotropic':
+        
+        tv = np.sum(pixel_dif1) + np.sum(pixel_dif2)
+   
     
+    elif method == 'anisotropic':
+        
+        tv = np.sum(np.square(pixel_dif1**2 + pixel_dif2**2))
+       
     return(tv)
 
 def rgb2gray(im):
