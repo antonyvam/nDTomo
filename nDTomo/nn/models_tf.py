@@ -376,14 +376,15 @@ def Dense1D(npix, nlayers = 4, nodes = [100, 75, 50, 25], dropout = 'No', batchn
 
 
 
-def DCNN2D_new(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconvs =3, filtnums= 64, kersz = 3, dropout = 'Yes', batchnorm = 'No', 
+def DCNN2D_new(npix, nomega, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconvs =3, filtnums= 64, kersz = 3, dropout = 'Yes', batchnorm = 'No', 
                   actlayermid = 'relu', actlayerfi = 'linear', pad='same', dense_layers = 'Default', dlayers = None):
 
     '''
     2D Deep Convolutional Neural Network
     
     Inputs:
-        npix: number of pixels in the input image (assumes square image)
+        npix: number of pixels in the input image
+        nomega: number of pixels in the second dimension (e.g. number of projections for sinograms in tomography)
         nlayers: the depth of the CNN
         net: type of network, options are 'unet', 'autoencoder'
         dlayer: 'Yes/No' string; if a series of dense layers will be used after the most downscaled layer
@@ -395,11 +396,11 @@ def DCNN2D_new(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', n
         actlayermid: the activation function used in all layers apart from the final layer
         actlayerfi: the activation function used in the final layer
         pad: padding type, default is 'same'
-        dense_layers: 'Default/Custom' string; if 'Custom', then the use has to pass a list containing the number of nodes per dense layer
+        dense_layers: 'Default/Custom' string; if 'Custom', then the use has to pass a list conpixaining the number of nodes per dense layer
     '''
     pads = padcalc(npix, nlayers)
     
-    image_in = Input(shape=(npix, npix,  1))
+    image_in = Input(shape=(npix, nomega,  1))
     convl = convblock2D(image_in, nconvs = 3, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
 
     dconvs = [convl]
