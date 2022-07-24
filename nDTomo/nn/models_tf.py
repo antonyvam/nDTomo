@@ -411,6 +411,8 @@ def DCNN2D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconv
     
     if dlayer == 'Yes' and dense_layers == 'Default':
         
+        convl = Conv2D(1, 1, activation = actlayermid)(convl)
+        
         convl = Flatten()(convl)
         
         for ii in range(3):
@@ -432,6 +434,8 @@ def DCNN2D(npix, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconv
         convl = Reshape((int(tf.math.ceil(pads[0] / 2)), int(tf.math.ceil(pads[0] / 2)), 8))(convl)    
     
     elif dlayer == 'Yes' and dense_layers == 'Custom':
+        
+        convl = Conv2D(1, 1, activation = actlayermid)(convl)
         
         convl = Flatten()(convl)
         
