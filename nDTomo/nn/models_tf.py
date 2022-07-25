@@ -376,7 +376,7 @@ def Dense1D(npix, nlayers = 4, nodes = [100, 75, 50, 25], dropout = 'No', batchn
 
 
 
-def DCNN2D_new(npix, nomega, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconvs =3, filtnums= 64, kersz = 3, dropout = 'Yes', batchnorm = 'No', 
+def DCNN2D(nx, ny, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconvs =3, filtnums= 64, kersz = 3, dropout = 'Yes', batchnorm = 'No', 
                   actlayermid = 'relu', actlayerfi = 'linear', pad='same', dense_layers = 'Default', dlayers = None):
 
     '''
@@ -398,9 +398,9 @@ def DCNN2D_new(npix, nomega, nlayers = 4, net = 'unet', dlayer = 'No', skipcon =
         pad: padding type, default is 'same'
         dense_layers: 'Default/Custom' string; if 'Custom', then the use has to pass a list conpixaining the number of nodes per dense layer
     '''
-    pads = padcalc(npix, nlayers)
+    pads = padcalc(nx, nlayers)
     
-    image_in = Input(shape=(npix, nomega,  1))
+    image_in = Input(shape=(nx, ny,  1))
     convl = convblock2D(image_in, nconvs = 3, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
 
     dconvs = [convl]
@@ -426,13 +426,13 @@ def DCNN2D_new(npix, nomega, nlayers = 4, net = 'unet', dlayer = 'No', skipcon =
             if dropout == 'Yes':
                 convl = Dropout(0.1)(convl)                 
         
-        convl = Dense(int(npix / 4) * int(npix / 4) * 1, kernel_initializer='he_normal', activation=actlayermid)(convl)
+        convl = Dense(int(nx / 4) * int(nx / 4) * 1, kernel_initializer='he_normal', activation=actlayermid)(convl)
         if batchnorm == 'Yes':
             convl = BatchNormalization()(convl)
     
         if dropout == 'Yes':
             convl = Dropout(0.1)(convl)     
-        convl = Reshape((int(npix / 4) , int(npix / 4), 1))(convl)    
+        convl = Reshape((int(nx / 4) , int(nx / 4), 1))(convl)    
 
         convl = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(convl)
         convl = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(convl)
@@ -465,13 +465,13 @@ def DCNN2D_new(npix, nomega, nlayers = 4, net = 'unet', dlayer = 'No', skipcon =
             if dropout == 'Yes':
                 convl = Dropout(0.1)(convl)                 
         
-        convl = Dense(int(npix / 4) * int(npix / 4) * 1, kernel_initializer='he_normal', activation=actlayermid)(convl)
+        convl = Dense(int(nx / 4) * int(nx / 4) * 1, kernel_initializer='he_normal', activation=actlayermid)(convl)
         if batchnorm == 'Yes':
             convl = BatchNormalization()(convl)
     
         if dropout == 'Yes':
             convl = Dropout(0.1)(convl)     
-        convl = Reshape((int(npix / 4) , int(npix / 4), 1))(convl)    
+        convl = Reshape((int(nx / 4) , int(nx / 4), 1))(convl)    
 
         convl = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(convl)
         convl = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(convl)
