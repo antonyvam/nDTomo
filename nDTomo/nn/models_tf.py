@@ -992,3 +992,23 @@ def GANrec(npix):
     model = Model(xi, x)
 
     return(model)
+
+
+class Discriminator(tf.keras.Model):
+    
+    def __init__(self, npix, npr):
+        super(Discriminator, self).__init__()
+
+        self.conv_1 = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')
+        self.conv_2 = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')
+        self.conv_3 = Conv2D(filters = 256, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')
+        self.conv_4 = Conv2D(filters = 512, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')
+        self.reshape = Reshape((npix * npr * 512, ))
+
+    def call(self, inputs):
+        tf.keras.backend.set_floatx('float32')
+        x = self.conv_1(inputs)
+        x = self.conv_2(x)
+        x = self.conv_3(x)
+        x = self.conv_4(x)
+        return self.reshape(x)
