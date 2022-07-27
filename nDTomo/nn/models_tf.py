@@ -11,7 +11,91 @@ import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Lambda, Conv1D, UpSampling1D, Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
 from numpy import mod
-	
+
+def SD2I(npix, factor=8, upsample = True):
+
+    '''
+    SD2I image reconstruction network with upsampling
+    
+    Inputs:
+        npix: number of pixels in the image per each dimension
+    
+    '''
+    
+    xi = Input(shape=(1,))
+    x = Flatten()(xi)
+    
+    if upsample:
+        x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
+        x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
+        x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
+        x = Dense(int(np.ceil(npix / 4)) * int(np.ceil(npix / 4)) * factor, kernel_initializer='random_normal', activation='linear')(x)
+        
+        x = Reshape((int(np.ceil(npix / 4)), int(np.ceil(npix / 4)), factor))(x)   
+        
+        x = UpSampling2D(size = (2,2))(x)
+        x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+        x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+        x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+        
+        x = UpSampling2D(size = (2,2))(x)
+
+        x = Cropping2D(cropping=((1, 0), (1, 0)))(x)
+
+        x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+        x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+        x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+
+        x = Conv2D(filters = 1, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
+    
+    else:
+        x = Dense(128, kernel_initializer='random_normal', activation='relu')(x)
+        x = Dense(128, kernel_initializer='random_normal', activation='relu')(x)
+        x = Dense(128, kernel_initializer='random_normal', activation='relu')(x)
+        x = Dense(npix * npix * factor, kernel_initializer='random_normal', activation='linear')(x)
+        
+        x = Reshape((npix, npix, factor))(x)
+        
+        x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+
+        x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+        x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+        x = Conv2D(filters = nim, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
+
+    model = Model(xi, x)
+
+    return(model)
+
+def Automap(npix, npr):
+
+    '''
+    Automap image reconstruction network
+    
+    Inputs:
+        npix: number of pixels in the reconstructed image per each dimension (number of detector elements in sinograms)
+        npr: number of tomographic angles (projections)
+    
+    '''
+    
+
+    xi = Input(shape=(npr,npix))
+    x = Flatten()(xi)
+    
+    x = Dense(2*npix*npix, kernel_initializer='random_normal', activation='relu')(x)
+    x = Dense(npix*npix, kernel_initializer='random_normal', activation='relu')(x)
+    x = Dense(npix*npix, kernel_initializer='random_normal', activation='relu')(x)
+    
+    x = Reshape((int(npix // 1), int(npix // 1), 1))(x)   
+    
+    x = Conv2D(filters = 128, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = nim, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
+    
+    
+    model = Model(xi, x)
+
+    return(model)
+
 def DnCNN(npix, nlayers = 15, skip='Yes', filts = 64):
     
     '''
@@ -825,7 +909,7 @@ def Automap(npix, pad='same', actlayerfi='linear', batchnorm = 'No', dropout = '
     return(model)
 
     
-def GANrec(npix, pad='same', actlayerfi='linear', batchnorm = 'No', dropout = 'No'):
+def GANrec_dropout(npix, pad='same', actlayerfi='linear', batchnorm = 'No', dropout = 'No'):
 
     '''
     Image reconstruction network
@@ -858,6 +942,42 @@ def GANrec(npix, pad='same', actlayerfi='linear', batchnorm = 'No', dropout = 'N
 
     
     x = Reshape((int(npix[0] // 1), int(npix[1] // 1), 1))(x)   
+    
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
+    x = Conv2D(filters = 1, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'linear')(x)
+    
+    model = Model(xi, x)
+
+    return(model)
+
+
+def GANrec(npix):
+
+    '''
+    GANrec image reconstruction network
+    
+    Inputs:
+        npix: number of pixels in the image per each dimension
+    
+    '''
+    
+    xi = Input(shape=(npix,npix,1))
+    x = Flatten()(xi)
+    
+    x = Dense(256, kernel_initializer='random_normal', activation='relu')(x)
+    x = Dense(256, kernel_initializer='random_normal', activation='relu')(x)
+    x = Dense(256, kernel_initializer='random_normal', activation='relu')(x)
+    x = Dense(npix*npix, kernel_initializer='random_normal', activation='relu')(x)
+
+    
+    x = Reshape((int(npix // 1), int(npix // 1), 1))(x)   
     
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
     x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
