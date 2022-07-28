@@ -76,8 +76,9 @@ def astra_rec_single(sino, theta=None, scanrange = '180', method='FBP_CUDA', fil
     if method == 'FBP' or method == 'FBP_CUDA':
         cfg['option'] = { 'FilterType': filt }
     else:
-        cfg['option']={}
-        cfg['option']['MinConstraint'] = 0
+        if method == 'SART' or method == 'SIRT' or method == 'SART_CUDA' or method == 'SIRT_CUDA' or method == 'ART':
+            cfg['option']={}
+            cfg['option']['MinConstraint'] = 0
         if nits is None:
             nits = 10 
     
