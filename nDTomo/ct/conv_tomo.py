@@ -28,9 +28,7 @@ def radonvol(vol, scan = 180, theta=None):
         for ii in tqdm(range(s.shape[2])):
             
             s[:,:,ii] = radon(vol[:,:,ii], theta)
-        
-            print(ii)       
-            
+                    
     elif len(vol.shape)==2:
         
         s = radon(vol, theta)
@@ -59,9 +57,7 @@ def fbpvol(svol, scan = 180, theta=None, nt = None):
         for ii in tqdm(range(svol.shape[2])):
             
             vol[:,:,ii] = iradon(svol[:,:,ii], theta, nt, circle = True)
-        
-            print(ii)           
-        
+                
     elif len(svol.shape)==2:
         
         vol = iradon(svol, theta, nt, circle = True)
@@ -87,7 +83,7 @@ def proj_com(projs):
     hor = np.zeros((projs.shape[2]))   
     
     
-    for aa in range(projs.shape[2]):
+    for aa in tqdm(range(projs.shape[2])):
     
         com = ndimage.measurements.center_of_mass(projs[:,:,aa])
     
@@ -119,7 +115,7 @@ def proj_align_vertical(projs, of_v):
     
     # First we align vertically 
     
-    for aa in range(0,projs.shape[2]):
+    for aa in tqdm(range(0,projs.shape[2])):
     
     
         xold = np.arange(0, projs.shape[0])
@@ -266,12 +262,12 @@ def airrem(sinograms, ofs = 1):
     
     di = sinograms.shape
     if len(di)>2:
-        for ii in range(0,sinograms.shape[1]):
+        for ii in tqdm(range(sinograms.shape[1])):
             air = (np.mean(sinograms[0:ofs,ii,:],axis = 0) + np.mean(sinograms[sinograms.shape[0]-ofs:sinograms.shape[0],ii,:],axis = 0))/2
             sinograms[:,ii,:] = sinograms[:,ii,:] - air
 
     elif len(di)==2:
-        for ii in range(0,sinograms.shape[1]):
+        for ii in range(sinograms.shape[1]):
             air = (np.mean(sinograms[0:ofs,:],axis = 0) + np.mean(sinograms[sinograms.shape[0]-ofs:sinograms.shape[0],ii],axis = 0))/2
             sinograms[:,ii] = sinograms[:,ii] - air
         
@@ -296,20 +292,20 @@ def scalesinos(sinograms):
         sf = scint/np.max(scint)
         
         # Normalise the sinogram data    
-        for jj in range(0,sinograms.shape[1]):
+        for jj in tqdm(range(sinograms.shape[1])):
             sinograms[:,jj,:] = sinograms[:,jj,:]/sf[jj] 
             
     elif len(di)==2:
 
         scint = np.zeros((sinograms.shape[1]))
         # Summed scattering intensity per linescan
-        for ii in range(0,sinograms.shape[1]):
+        for ii in range(sinograms.shape[1]):
             scint[ii] = np.sum(sinograms[:,ii])
         # Scale factors
         sf = scint/np.max(scint)        
         
         # Normalise the sinogram data    
-        for jj in range(0,sinograms.shape[1]):
+        for jj in tqdm(range(sinograms.shape[1])):
             sinograms[:,jj] = sinograms[:,jj]/sf[jj] 
             
     return(sinograms)
@@ -339,14 +335,15 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180):
     
     st = []; ind = [];
     
+    print('Calculating the COR')
     
-    for kk in range(0,len(cr)):
+    for kk in tqdm(range(len(cr))):
         
         xnew = cr[kk] + np.arange(-np.ceil(s.shape[0]/2), np.ceil(s.shape[0]/2)-1)
         sn = np.zeros((len(xnew),s.shape[1]))
         
         
-        for ii in range(0,s.shape[1]):
+        for ii in range(s.shape[1]):
             
             if interp==True:
                 
@@ -363,6 +360,8 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180):
     
     xnew = cr[m] + np.arange(-np.ceil(s.shape[0]/2), np.ceil(s.shape[0]/2)-1)
     
+    print('Applying the COR correction')
+
     if len(di)>2:
         sn = np.zeros((len(xnew), sinograms.shape[1], sinograms.shape[2]))  
         for ll in tqdm(range(sinograms.shape[2])):
@@ -386,6 +385,12 @@ def zigzag(s):
     s[0::2,:,:] = s[0::2,::-1,:]
     
     return(s)
+
+def zigzag_flip(im):
+    
+    im = im[:,0:im.shape[1]-1]
+    
+    return(im)
 
 def rot_center(thetasum):
 
@@ -416,12 +421,6 @@ def rot_center(thetasum):
     COR = thetasum.shape[-1]/2-phase*thetasum.shape[-1]/(2*np.pi)
 
     return COR    
-
-def zigzag_flip(im):
-    
-    im = im[:,0:im.shape[1]-1]
-    
-    return(im)
 
 def paralleltomo(N, theta, p, w):
     
