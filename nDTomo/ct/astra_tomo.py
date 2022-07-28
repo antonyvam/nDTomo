@@ -34,7 +34,7 @@ def astra_Amatrix(ntr, ang):
 
     return(A)
 
-def astra_rec_single(sino, theta=None, scanrange = '180', method='FBP_CUDA', filt='Ram-Lak'):
+def astra_rec_single(sino, theta=None, scanrange = '180', method='FBP_CUDA', filt='Ram-Lak', nits = None):
     
     '''
     2D ct reconstruction using the astra-toolbox
@@ -49,7 +49,6 @@ def astra_rec_single(sino, theta=None, scanrange = '180', method='FBP_CUDA', fil
     triangular, gaussian, barlett-hann, blackman, nuttall, blackman-harris,
     blackman-nuttall, flat-top, kaiser, parzen    
     '''
-    
     
     npr = sino.shape[1] # Number of projections
     
@@ -75,15 +74,27 @@ def astra_rec_single(sino, theta=None, scanrange = '180', method='FBP_CUDA', fil
     cfg['ProjectionDataId'] = sinogram_id
     cfg['ProjectorId'] = proj_id
     if method == 'FBP' or method == 'FBP_CUDA':
-        cfg['option'] = { 'FilterType': filt }        
+        cfg['option'] = { 'FilterType': filt }
+    else:
+        cfg['option']={}
+        cfg['option']['MinConstraint'] = 0
+        if nits is None:
+            nits = 10 
     
     # Create the algorithm object from the configuration structure
     alg_id = astra.algorithm.create(cfg)
-    astra.algorithm.run(alg_id)
+
+    start=time.time()
+
+    if method == 'FBP' or method == 'FBP_CUDA':
+        rec = astra.algorithm.run(alg_id)
+    else:
+        rec = astra.algorithm.run(alg_id, nits)
     
     # Get the result
-    start=time.time()
+    
     rec = astra.data2d.get(rec_id)
+    
     print((time.time()-start))
         
     astra.data2d.delete(sinogram_id)

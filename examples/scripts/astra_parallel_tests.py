@@ -67,3 +67,17 @@ showim(sino_noisy, 2, cmap='jet')
 rec = astra_rec_single(sino_noisy.transpose())
 
 showim(rec, 3, cmap='jet')
+
+
+#%% Let's try some other methods than FBP!
+
+
+# rec = astra_rec_single(sino_under.transpose(), method='SIRT_CUDA', nits=10)
+# rec = astra_rec_single(sino_under.transpose(), method='SART_CUDA', nits=200)
+# rec = astra_rec_single(sino_under.transpose(), method='CGLS', nits=10)
+rec = astra_rec_single(sino_under.transpose(), method='ART', nits=100000)
+
+showim(rec, 1, cmap='jet')
+
+
+
