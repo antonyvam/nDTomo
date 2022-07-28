@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-Reconstruction tests using the astra toolbox
+Reconstruction tests using the astra toolbox, tomopy and tigre
 
-@author: Kenan Gnonhoue and Antony Vamvakeros
+@authors: Kenan Gnonhoue and Antony Vamvakeros
 """
 
 #%% First let's import some necessary modules
@@ -184,24 +184,10 @@ rec = algs.fbp(s.reshape(s.shape[0], 1, s.shape[1]), geo, theta)[0,:,:].transpos
 showim(rec, 1, cmap='jet')
 
 
-#%% Calculate some metrics using tensorflow
-
-import tensorflow as tf
-
-im = np.array(im, dtype='float64')
-rec = np.array(rec, dtype='float64')
-
-mae = tf.reduce_mean(tf.keras.losses.MAE(im, rec)).numpy()
-mse = tf.reduce_mean(tf.keras.losses.MSE(im, rec)).numpy()
-psnr = tf.image.psnr(im.reshape(1, im.shape[0],im.shape[0],1), rec.reshape(1, im.shape[0],im.shape[0],1), 1).numpy()
-ssim = tf.image.ssim(im.reshape(1, im.shape[0],im.shape[0],1), rec.reshape(1, im.shape[0],im.shape[0],1), 1).numpy()
-
-print(mae, mse, psnr, ssim)
-
 #%% Plot and save an image
 
 plt.figure(1);plt.clf()
-plt.imshow(imgFBP, cmap='jet')
+plt.imshow(rec, cmap='jet')
 plt.colorbar()
 plt.show()
 fn = 'C:\\Dropbox (Finden)\\Finden_Research\\Active_Projects\\Fuse\\results\\sino_under_tigre_FBP.png'
@@ -219,6 +205,19 @@ with h5py.File(fn, 'w') as f:
     f.close()
 
 
+#%% Calculate some metrics using tensorflow
+
+import tensorflow as tf
+
+im = np.array(im, dtype='float64')
+rec = np.array(rec, dtype='float64')
+
+mae = tf.reduce_mean(tf.keras.losses.MAE(im, rec)).numpy()
+mse = tf.reduce_mean(tf.keras.losses.MSE(im, rec)).numpy()
+psnr = tf.image.psnr(im.reshape(1, im.shape[0],im.shape[0],1), rec.reshape(1, im.shape[0],im.shape[0],1), 1).numpy()
+ssim = tf.image.ssim(im.reshape(1, im.shape[0],im.shape[0],1), rec.reshape(1, im.shape[0],im.shape[0],1), 1).numpy()
+
+print(mae, mse, psnr, ssim)
 
 
 
