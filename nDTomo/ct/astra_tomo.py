@@ -128,24 +128,23 @@ def astra_create_sino_geo(im, theta=None):
             
 def astra_create_sinostack(vol, npr = None, scanrange = '180', theta=None, proj_id=None):
 
-    if proj_id is None:
-        proj_id = astra_create_sino_geo(im, theta)
-
-    sz = vol.shape[0]
-
     if npr is None:
-        npr = sinograms.shape[0]
-        
+        npr = vol.shape[0]
+
     if theta is None:
         if scanrange == '180':
             theta = deg2rad(arange(0, 180, 180/npr))
         elif scanrange == '360':
             theta = deg2rad(arange(0, 360, 360/npr))
 
-    sinograms = zeros((sz, len(theta), nim))
-    
-    nim = sinograms.shape[2]
+    if proj_id is None:
+        proj_id = astra_create_sino_geo(vol[:,:,0], theta)
 
+    sz = vol.shape[0]
+    nim = vol.shape[2]
+
+    sinograms = zeros((len(theta), sz, nim))
+    
     for ii in tqdm(range(nim)):
         
          sinogram_id, sinograms[:,:,ii] = astra.create_sino(vol[:,:,ii], proj_id)

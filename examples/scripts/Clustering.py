@@ -11,7 +11,7 @@ from nDTomo.sim.shapes.phantoms import nDphantom_2D, load_example_patterns, nDph
 from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, normvol, addpnoise1D,  addpnoise2D, addpnoise3D, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
 from nDTomo.utils.misc3D import showvol
 from nDTomo.utils.hyperexpl import HyperSliceExplorer
-from nDTomo.ct.astra_tomo import astra_create_geo, astra_rec_vol, astra_rec_alg, astra_create_sino_geo, astra_create_sino
+from nDTomo.ct.astra_tomo import astra_create_geo, astra_rec_vol, astra_rec_alg, astra_create_sino_geo, astra_create_sino, astra_create_sinostack
 from nDTomo.ct.conv_tomo import radonvol, fbpvol
 
 from tqdm import tqdm
@@ -32,7 +32,7 @@ import pymcr
 Part 1: Data generation
 '''
 
-#%% Ground truth
+#% Ground truth
 
 '''
 These are the five ground truth componet spectra
@@ -101,12 +101,8 @@ showvol(chemct)
 
 nproj = 220
 
-chemsinos = np.zeros((chemct.shape[0], nproj, chemct.shape[2]))
-
-for ii in tqdm(range(chemct.shape[2])):
-    
-    proj_id = astra_create_sino_geo(chemct[:,:,ii], theta=np.deg2rad(np.arange(0, 180, 180/nproj)))
-    chemsinos[:,:,ii] = astra_create_sino(chemct[:,:,ii], proj_id).transpose()
+chemsinos = astra_create_sinostack(chemct, nproj)
+print(chemsinos.shape)
 
 #%% We can also try with skimage and CPU which is very slow
 
