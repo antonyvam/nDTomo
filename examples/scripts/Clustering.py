@@ -8,7 +8,8 @@ Dimensionality reduction/ cluster analysis using a phantom xrd-ct dataset
 #%%
 
 from nDTomo.sim.shapes.phantoms import nDphantom_2D, load_example_patterns, nDphantom_3D, nDphantom_4D, nDphantom_2Dmap
-from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, showvol, normvol, addpnoise1D,  addpnoise2D, addpnoise3D, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
+from nDTomo.utils.misc import h5read_data, h5write_data, closefigs, showplot, showspectra, showim, normvol, addpnoise1D,  addpnoise2D, addpnoise3D, interpvol, plotfigs_imgs, plotfigs_spectra, create_complist_imgs, create_complist_spectra
+from nDTomo.utils.misc3D import showvol
 from nDTomo.utils.hyperexpl import HyperSliceExplorer
 from nDTomo.ct.astra_tomo import astra_create_geo, astra_rec_vol, astra_rec_alg, astra_create_sino_geo, astra_create_sino
 from nDTomo.ct.conv_tomo import radonvol, fbpvol
@@ -22,7 +23,7 @@ import time, h5py
 
 from sklearn.decomposition import PCA, NMF, FastICA, LatentDirichletAllocation
 from sklearn.cluster import KMeans, SpectralClustering, DBSCAN, AgglomerativeClustering
-from clustimage import Clustimage
+# from clustimage import Clustimage
 import pymcr
 
 #%%
@@ -785,8 +786,6 @@ plotfigs_imgs(imlist, legendlist, rows=2, cols=5, figsize=(20,9), cl=True)
 
 
 
-
-
 #%% Let's add some noise!!!
 
 im = np.mean(chemct, axis = 2)
@@ -935,7 +934,7 @@ spectralist, legendlist = create_complist_spectra(nmf.components_)
 
 plotfigs_spectra(spectralist, legendlist, xaxis=np.arange(0,spectralist[0].shape[0]), rows=3, cols=5, figsize=(20,6))
 
-#%% Cluster image analysis
+#%% Clustimage analysis
 
 data = np.reshape(vol, (vol.shape[0]*vol.shape[1],vol.shape[2])).transpose()
 
