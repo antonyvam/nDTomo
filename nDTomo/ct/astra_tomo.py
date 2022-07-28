@@ -94,8 +94,21 @@ def astra_rec_single(sino, theta=None, scanrange = '180', method='FBP_CUDA', fil
     return(rec)
 
 
-def astra_create_sino(im, theta=None, proj_id=None):
+def astra_create_sino(im, npr = None, scanrange = '180', theta=None, proj_id=None):
     
+    '''
+    Create a sinogram using the astra toolbox for parallel beam geometry
+    '''
+
+    if npr is None:
+        npr = im.shape[0]
+
+    if theta is None:
+        if scanrange == '180':
+            theta = deg2rad(arange(0, 180, 180/npr))
+        elif scanrange == '360':
+            theta = deg2rad(arange(0, 360, 360/npr))
+
     if proj_id is None:
         proj_id = astra_create_sino_geo(im, theta)
 
