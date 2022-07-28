@@ -224,7 +224,12 @@ def astra_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'
     start=time.time()
     rec = astra.data2d.get(rec_id)
     print((time.time()-start))             
-             
+    
+    astra.data2d.delete(rec_id)
+    astra.algorithm.delete(alg_id)
+    astra.data2d.delete(sinogram_id)
+    astra.projector.delete(proj_id)
+
     return(rec)
                    
              
