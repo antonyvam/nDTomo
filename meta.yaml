@@ -1,6 +1,5 @@
 package:
   name: ndtomo
-  version: "2022.05"
 source:
   path: .
 channels:
@@ -13,7 +12,7 @@ requirements:
     - setuptools
     - pip
   run:
-    - python >3.7
+    - python >=3.7
     - ase
     - tifffile
     - pyfai ==0.19
@@ -32,8 +31,6 @@ requirements:
     - pyopencl 
     - ipython
     - matplotlib
-    - jupyterlab
-    - spyder    
     - astra-toolbox
     - tomopy 
     - mayavi
