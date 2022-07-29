@@ -101,7 +101,7 @@ showvol(chemct)
 
 nproj = 220
 
-chemsinos = astra_create_sinostack(chemct, nproj)
+chemsinos = astra_create_sinostack(chemct, npr=nproj)
 print(chemsinos.shape)
 
 #%% We can also try with skimage and CPU which is very slow
