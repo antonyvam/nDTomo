@@ -154,25 +154,7 @@ s = np.copy(sino_under)
 npr = s.shape[0]
 theta = np.deg2rad(np.arange(0, 180, 180/npr))
 
-geo = tigre.geometry()
-
-# Distances
-geo.DSD = 1536  # Distance Source Detector      (mm)
-geo.DSO = 1000  # Distance Source Origin        (mm)
-
-geo.nVoxel = np.array([1, s.shape[1], s.shape[1],])  # number of voxels              (vx)
-geo.sVoxel = np.array([1, s.shape[1], s.shape[1],])  # total size of the image       (mm)
-geo.dVoxel = geo.sVoxel / geo.nVoxel  # size of each voxel            (mm)
-# Detector parameters
-geo.nDetector = np.array([1, s.shape[1]])  # number of pixels              (px)
-geo.dDetector = np.array([geo.dVoxel[0], 1])  # size of each pixel            (mm)
-geo.sDetector = geo.nDetector * geo.dDetector  # total size of the detector    (mm)
-# Offsets
-geo.offOrigin = np.array([0, 0, 0])  # Offset of image from origin   (mm)
-geo.offDetector = np.array([0, 0])  # Offset of Detector            (mm)
-# MAKE SURE THAT THE DETECTOR PIXELS SIZE IN V IS THE SAME AS THE IMAGE!
-
-geo.mode = "parallel"
+geo = tigre.geometry(mode="parallel", nVoxel=np.array([1, s.shape[1], s.shape[1]]))
 
 rec = algs.fbp(s.reshape(s.shape[0], 1, s.shape[1]), geo, theta)[0,:,:].transpose()
 # rec = algs.cgls(s.reshape(s.shape[0], 1, s.shape[1]), geo, theta, 40)[0,:,:].transpose()
