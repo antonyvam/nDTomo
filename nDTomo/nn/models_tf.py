@@ -10,7 +10,7 @@ Neural networks models
 import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Lambda, Conv1D, UpSampling1D, Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
-from numpy import mod
+from numpy import mod, ceil
 
 def SD2I(npix, factor=8, upsample = True):
 
@@ -29,9 +29,9 @@ def SD2I(npix, factor=8, upsample = True):
         x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
         x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
         x = Dense(64, kernel_initializer='random_normal', activation='relu')(x)
-        x = Dense(int(np.ceil(npix / 4)) * int(np.ceil(npix / 4)) * factor, kernel_initializer='random_normal', activation='linear')(x)
+        x = Dense(int(ceil(npix / 4)) * int(ceil(npix / 4)) * factor, kernel_initializer='random_normal', activation='linear')(x)
         
-        x = Reshape((int(np.ceil(npix / 4)), int(np.ceil(npix / 4)), factor))(x)   
+        x = Reshape((int(ceil(npix / 4)), int(ceil(npix / 4)), factor))(x)   
         
         x = UpSampling2D(size = (2,2))(x)
         x = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(x)
