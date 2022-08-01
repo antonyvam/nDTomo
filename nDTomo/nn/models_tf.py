@@ -2,7 +2,7 @@
 """
 Neural networks models
 
-@author: Antony Vamvakeros and Hongyang Dong
+@authors: Antony Vamvakeros and Hongyang Dong
 """
 
 #%%
