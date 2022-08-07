@@ -308,7 +308,6 @@ def astra_rec_vol(sinos, scanrange = '180', theta=None,  proj_geom=None, proj_id
         
     astra.data2d.delete(rec_id)
     astra.data2d.delete(sinogram_id)
-    astra.projector.delete(proj_id)
     
     return(rec)
 
