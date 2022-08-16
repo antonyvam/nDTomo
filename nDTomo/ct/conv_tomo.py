@@ -8,7 +8,7 @@ Tomography tools for nDTomo
 import numpy as np
 from skimage.transform import iradon, radon
 from scipy.sparse import csr_matrix
-from scipt.ndimage import center_of_mass
+from scipy.ndimage import center_of_mass
 from tqdm import tqdm
 
 def radonvol(vol, scan = 180, theta=None):
@@ -138,9 +138,7 @@ def sinocomcor(sinograms):
         ss = np.sum(sinograms, axis = 2)
     else:
         ss = np.copy(sinograms)
-        
-    ss = np.sum(sinograms, axis = 2)
-    
+            
     com = np.zeros((ss.shape[1],1))
     
     for ii in range(ss.shape[1]):
@@ -162,10 +160,8 @@ def sinocomcor(sinograms):
                 
             sn[:,ii] = np.interp(xnew, xold, sinograms[:,ii])    
         
-    elif len(di)==2:
-        
-        sn = np.zeros((len(xnew), sinograms.shape[1], sinograms.shape[2]))  
-        
+    elif len(di)>2:
+                
         for ll in tqdm(range(sinograms.shape[2])):
             
             for ii in range(sinograms.shape[1]):        
