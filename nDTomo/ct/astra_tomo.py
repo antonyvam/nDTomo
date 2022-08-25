@@ -395,6 +395,14 @@ def astra_rec_vol_singlesino(sino, ims = 100, scanrange = '180', proj_geom=None,
     sino2 = sino[:,1::2]
     
     npr = sino.shape[1] # Number of projections
+    if proj_geom is None:
+        # Create a basic square volume geometry
+        vol_geom = astra.create_vol_geom(sino.shape[0], sino.shape[0])
+        # Create a parallel beam geometry with 180 angles between 0 and pi, and image.shape[0] detector pixels of width 1.
+        
+    if rec_id is None:
+        # Create a data object for the reconstruction
+        rec_id = astra.data2d.create('-vol', vol_geom)   
         
     rec = zeros((sino.shape[0], sino.shape[0], ims))
     rec2 = zeros((sino.shape[0], sino.shape[0], ims))
@@ -409,20 +417,14 @@ def astra_rec_vol_singlesino(sino, ims = 100, scanrange = '180', proj_geom=None,
         proj_geom = astra.create_proj_geom('parallel', 1.0, int(1.0*sino.shape[0]), theta[0::2])
         proj_geom2 = astra.create_proj_geom('parallel', 1.0, int(1.0*sino.shape[0]), theta[1::2])
         
-        if proj_geom is None:
-            # Create a basic square volume geometry
-            vol_geom = astra.create_vol_geom(sino.shape[0], sino.shape[0])
-            # Create a parallel beam geometry with 180 angles between 0 and pi, and image.shape[0] detector pixels of width 1.
-        if proj_geom is None:
-            if method == 'FBP_CUDA':
-                # Create a sinogram using the GPU. 
-                proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
-            elif method == 'FBP':
-                # Create a sinogram using the GPU. 
-                proj_id = astra.create_projector('strip',proj_geom,vol_geom)
-        if rec_id is None:
-            # Create a data object for the reconstruction
-            rec_id = astra.data2d.create('-vol', vol_geom)    
+
+        if method == 'FBP_CUDA':
+            # Create a sinogram using the GPU. 
+            proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
+        elif method == 'FBP':
+            # Create a sinogram using the GPU. 
+            proj_id = astra.create_projector('strip',proj_geom,vol_geom)
+             
         
         cfg = astra.astra_dict(method)
         cfg['ReconstructionDataId'] = rec_id
