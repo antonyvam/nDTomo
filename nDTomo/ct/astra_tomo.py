@@ -376,7 +376,7 @@ def astra_rec_2vols(sinos, method='FBP_CUDA', filt='Ram-Lak'):
     
     return(vol1, vol2)
 
-def astra_rec_vol_singlesino(sino, ims = 100, scanrange = '180', proj_geom=None, proj_id=None, rec_id=None, method='FBP_CUDA', filt='Ram-Lak'):
+def astra_rec_vol_singlesino(sino, ims = 100, ofs=None, scanrange = '180', proj_geom=None, proj_id=None, rec_id=None, method='FBP_CUDA', filt='Ram-Lak'):
 
     '''
     Reconstruct a sinogram volume with astra toolbox
@@ -393,6 +393,9 @@ def astra_rec_vol_singlesino(sino, ims = 100, scanrange = '180', proj_geom=None,
         
     sino1 = sino[:,0::2]
     sino2 = sino[:,1::2]
+    
+    if ofs is None:
+        ofs = rand(ims)
     
     npr = sino.shape[1] # Number of projections
     if proj_geom is None:
@@ -415,9 +418,9 @@ def astra_rec_vol_singlesino(sino, ims = 100, scanrange = '180', proj_geom=None,
     for ii in tqdm(range(ims)):
 
         if scanrange == '180':
-            theta = deg2rad(arange(0, 180, 180/npr)) + rand(1)*360
+            theta = deg2rad(arange(0, 180, 180/npr)) + ofs[ii]*360
         elif scanrange == '360':
-            theta = deg2rad(arange(0, 360, 360/npr)) + rand(1)*360
+            theta = deg2rad(arange(0, 360, 360/npr)) + ofs[ii]*360
             
         proj_geom = astra.create_proj_geom('parallel', 1.0, int(1.0*sino.shape[0]), theta[0::2])
         proj_geom2 = astra.create_proj_geom('parallel', 1.0, int(1.0*sino.shape[0]), theta[1::2])
