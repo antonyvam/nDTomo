@@ -391,6 +391,9 @@ def astra_rec_vol_singlesino(sino, ims = 100, scanrange = '180', proj_geom=None,
     blackman-nuttall, flat-top, kaiser, parzen    
     '''    
         
+    sino1 = sino[:,0::2]
+    sino2 = sino[:,1::2]
+    
     npr = sino.shape[1] # Number of projections
     
     if proj_geom is None:
@@ -415,6 +418,8 @@ def astra_rec_vol_singlesino(sino, ims = 100, scanrange = '180', proj_geom=None,
         cfg['option'] = { 'FilterType': filt }    
     
     rec = zeros((sino.shape[0], sino.shape[0], ims))
+    rec2 = zeros((sino.shape[0], sino.shape[0], ims))
+    
     for ii in tqdm(range(ims)):
 
         if scanrange == '180':
@@ -422,9 +427,11 @@ def astra_rec_vol_singlesino(sino, ims = 100, scanrange = '180', proj_geom=None,
         elif scanrange == '360':
             theta = deg2rad(arange(0, 360, 360/npr)) + rand(1)*360
             
-        proj_geom = astra.create_proj_geom('parallel', 1.0, int(1.0*sino.shape[0]), theta)
+        proj_geom = astra.create_proj_geom('parallel', 1.0, int(1.0*sino.shape[0]), theta[0::2])
+        proj_geom2 = astra.create_proj_geom('parallel', 1.0, int(1.0*sino.shape[0]), theta[1::2])
         
-        sinogram_id = astra.data2d.create('-sino', proj_geom, sino.transpose())
+        sinogram_id = astra.data2d.create('-sino', proj_geom, sino1.transpose())
+        sinogram_id2 = astra.data2d.create('-sino', proj_geom2, sino2.transpose())
         
         cfg['ProjectionDataId'] = sinogram_id
         
@@ -434,13 +441,23 @@ def astra_rec_vol_singlesino(sino, ims = 100, scanrange = '180', proj_geom=None,
         
         # Get the result
         rec[:,:,ii] = astra.data2d.get(rec_id)
+
+        cfg['ProjectionDataId'] = sinogram_id2
+        
+        # Create the algorithm object from the configuration structure
+        alg_id = astra.algorithm.create(cfg)
+        astra.algorithm.run(alg_id)
+        
+        # Get the result
+        rec2[:,:,ii] = astra.data2d.get(rec_id)
+
              
         astra.algorithm.delete(alg_id)
         
     astra.data2d.delete(rec_id)
     astra.data2d.delete(sinogram_id)
     
-    return(rec)
+    return(rec, rec2)
 
 def ConeBeamCTGeometry(downSizeFactor=4, distance_source_detector=926.79, distance_source_origin=349.565,
                   detector_pixel_size = 0.1, mag_factor = 2.65, horizontalOffset=0, verticalOffset=0):
