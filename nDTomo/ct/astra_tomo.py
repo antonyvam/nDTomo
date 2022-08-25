@@ -8,6 +8,7 @@ Functions for tomography using astra-toolbox library
 
 import scipy, astra, time
 from numpy import deg2rad, arange, linspace, pi, zeros, mod, mean, where, floor, log, inf, exp
+from numpy.random import rand
 from tqdm import tqdm
 
 def astra_Amatrix(ntr, ang):
@@ -375,6 +376,71 @@ def astra_rec_2vols(sinos, method='FBP_CUDA', filt='Ram-Lak'):
     
     return(vol1, vol2)
 
+def astra_rec_vol_singlesino(sino, ims = 100, scanrange = '180', proj_geom=None, proj_id=None, rec_id=None, method='FBP_CUDA', filt='Ram-Lak'):
+
+    '''
+    Reconstruct a sinogram volume with astra toolbox
+    
+    Available astra-toolbox reconstruction algorithms:
+    ART, SART, SIRT, CGLS, FBP
+    SIRT_CUDA, SART_CUDA, EM_CUDA, FBP_CUDA
+    
+    possible values for FilterType:
+    none, ram-lak, shepp-logan, cosine, hamming, hann, tukey, lanczos,
+    triangular, gaussian, barlett-hann, blackman, nuttall, blackman-harris,
+    blackman-nuttall, flat-top, kaiser, parzen    
+    '''    
+        
+    npr = sino.shape[1] # Number of projections
+    
+    if proj_geom is None:
+        # Create a basic square volume geometry
+        vol_geom = astra.create_vol_geom(sino.shape[0], sino.shape[0])
+        # Create a parallel beam geometry with 180 angles between 0 and pi, and image.shape[0] detector pixels of width 1.
+    if proj_geom is None:
+        if method == 'FBP_CUDA':
+            # Create a sinogram using the GPU. 
+            proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
+        elif method == 'FBP':
+            # Create a sinogram using the GPU. 
+            proj_id = astra.create_projector('strip',proj_geom,vol_geom)
+    if rec_id is None:
+        # Create a data object for the reconstruction
+        rec_id = astra.data2d.create('-vol', vol_geom)    
+    
+    cfg = astra.astra_dict(method)
+    cfg['ReconstructionDataId'] = rec_id
+    cfg['ProjectorId'] = proj_id
+    if method == 'FBP' or method == 'FBP_CUDA':
+        cfg['option'] = { 'FilterType': filt }    
+    
+    rec = zeros((sino.shape[0], sino.shape[0], ims))
+    for ii in tqdm(range(ims)):
+
+        if scanrange == '180':
+            theta = deg2rad(arange(0, 180, 180/npr)) + rand(1)*360
+        elif scanrange == '360':
+            theta = deg2rad(arange(0, 360, 360/npr)) + rand(1)*360
+            
+        proj_geom = astra.create_proj_geom('parallel', 1.0, int(1.0*sino.shape[0]), theta)
+        
+        sinogram_id = astra.data2d.create('-sino', proj_geom, sino.transpose())
+        
+        cfg['ProjectionDataId'] = sinogram_id
+        
+        # Create the algorithm object from the configuration structure
+        alg_id = astra.algorithm.create(cfg)
+        astra.algorithm.run(alg_id)
+        
+        # Get the result
+        rec[:,:,ii] = astra.data2d.get(rec_id)
+             
+        astra.algorithm.delete(alg_id)
+        
+    astra.data2d.delete(rec_id)
+    astra.data2d.delete(sinogram_id)
+    
+    return(rec)
 
 def ConeBeamCTGeometry(downSizeFactor=4, distance_source_detector=926.79, distance_source_origin=349.565,
                   detector_pixel_size = 0.1, mag_factor = 2.65, horizontalOffset=0, verticalOffset=0):
