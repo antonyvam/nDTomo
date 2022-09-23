@@ -345,6 +345,28 @@ def regimtmat(im, tmat):
     
     return(reg)
 
+def translate_xy(vol, npix):
+    
+    '''
+    This is quite slow - has to be replaced with 3D interpolation
+    '''
+    
+    xold = np.arange(vol.shape[1])
+    xnew = np.arange(vol.shape[1]) + npix
+    
+    voln = np.zeros_like(vol)
+    
+    for ii in tqdm(range(voln.shape[0])):
+        
+        im_tmp = vol[ii,:,:]
+        
+        for jj in range(im_tmp.shape[0]):
+            
+            f = interp1d(xold, im_tmp[jj,:], kind='linear', bounds_error=False, fill_value=0)
+            voln[ii,jj,:] = f(xnew)    
+            
+    return(voln)
+
 def maskvolume(vol, msk):
     
     '''
