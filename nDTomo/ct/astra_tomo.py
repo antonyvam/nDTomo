@@ -291,7 +291,7 @@ def astra_rec_vol(sinos, scanrange = '180', theta=None,  proj_geom=None, proj_id
     if method == 'FBP' or method == 'FBP_CUDA':
         cfg['option'] = { 'FilterType': filt }    
     
-    rec = zeros((sinos.shape[0], sinos.shape[0], sinos.shape[2]))
+    rec = zeros((sinos.shape[0], sinos.shape[0], sinos.shape[2]), dtype='float32')
     for ii in tqdm(range(sinos.shape[2])):
 
         sinogram_id = astra.data2d.create('-sino', proj_geom, sinos[:,:,ii].transpose())
