@@ -90,6 +90,39 @@ def merge_patches(img, patches, PATCH_WIDTH, PATCH_HEIGHT):
         
     return(inv)
 	
+
+def image_to_patches(image, patch_width, patch_height):
+
+    '''
+    Edited from: https://stackoverflow.com/questions/41564321/split-image-tensor-into-small-patches    
+    '''
+    
+    image_height = image.shape[1]
+    image_width = image.shape[2]
+    
+    height = int(tf.math.ceil(image_height/patch_height)*patch_height)
+    width = int(tf.math.ceil(image_width/patch_width)*patch_width)
+
+    image_resized = tf.squeeze(tf.image.resize_with_crop_or_pad(image, height, width))
+    image_reshaped = tf.reshape(image_resized, [height // patch_height, patch_height, -1, patch_width])
+    image_transposed = tf.transpose(image_reshaped, [0, 2, 1, 3])
+    return tf.reshape(image_transposed, [-1, patch_height, patch_width, 1])
+
+
+def patches_to_image(patches, image_height, image_width, patch_height, patch_width):
+
+    '''
+    Edited from: https://stackoverflow.com/questions/41564321/split-image-tensor-into-small-patches    
+    '''
+
+    height = int(tf.math.ceil(image_height/patch_height)*patch_height)
+    width = int(tf.math.ceil(image_width/patch_width)*patch_width)
+
+    image_reshaped = tf.reshape(tf.squeeze(patches), [height // patch_height, width // patch_width, patch_height, patch_width])
+    image_transposed = tf.transpose(image_reshaped, [0, 2, 1, 3])
+    image_resized = tf.reshape(image_transposed, [height, width, 1])
+    return tf.image.resize_with_crop_or_pad(image_resized, image_height, image_width)
+
 class ReduceLROnPlateau_custom(Callback):
 
     '''
