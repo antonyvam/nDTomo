@@ -57,6 +57,38 @@ def rotate_yz(vol, ang):
         voln[ii,:,:] = rotate(vol[ii,:,:].reshape(dims[1], dims[2], 1), ang, interpolation = 'bilinear')[:,:,0]
     
     return(voln)
+
+def extract_patches(x, PATCH_WIDTH, PATCH_HEIGHT):
+    '''
+    Edited from: https://gist.github.com/hwaxxer/17ea565f86b748ba9471546b2532d0cf
+    '''
+    
+    ksizes = [1, PATCH_WIDTH, PATCH_HEIGHT, 1]
+    strides = [1, PATCH_WIDTH, PATCH_HEIGHT, 1]
+    rates = [1, 1, 1, 1]
+    padding = 'SAME'
+    return tf.image.extract_patches(x, ksizes, strides, rates, padding)
+
+def extract_patches_inverse(x, y, tape, PATCH_WIDTH, PATCH_HEIGHT):
+    '''
+    Edited from: https://gist.github.com/hwaxxer/17ea565f86b748ba9471546b2532d0cf
+    '''    
+    _x = tf.zeros_like(x)
+    _y = extract_patches(_x, PATCH_WIDTH, PATCH_HEIGHT)
+    grad = tape.gradient(_y, _x)
+    # Divide by grad, to "average" together the overlapping patches
+    # otherwise they would simply sum up
+    return tape.gradient(_y, _x, output_gradients=y) / grad
+
+def merge_patches(img, patches, PATCH_WIDTH, PATCH_HEIGHT):
+    '''
+    Edited from: https://gist.github.com/hwaxxer/17ea565f86b748ba9471546b2532d0cf
+    '''    
+    with tf.GradientTape(persistent=True) as tape:
+        tape.watch(img)
+        inv = extract_patches_inverse(img, patches, tape, PATCH_WIDTH, PATCH_HEIGHT)
+        
+    return(inv)
 	
 class ReduceLROnPlateau_custom(Callback):
 
