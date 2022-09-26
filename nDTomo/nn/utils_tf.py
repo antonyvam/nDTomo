@@ -61,6 +61,15 @@ def rotate_yz(vol, ang):
 def extract_patches(x, PATCH_WIDTH, PATCH_HEIGHT):
     '''
     Edited from: https://gist.github.com/hwaxxer/17ea565f86b748ba9471546b2532d0cf
+
+    ksizes is used to decide the dimensions of each patch, or in other words, how many pixels each patch should contain.
+
+    strides denotes the length of the gap between the start of one patch and the start of the next consecutive patch within the original image.
+
+    rates is a number that essentially means our patch should jump by rates pixels in the original image for each consecutive pixel that ends up in our patch. (The example below helps illustrate this.)
+
+    padding is either "VALID", which means every patch must be fully contained in the image, or "SAME", which means patches are allowed to be incomplete (the remaining pixels will be filled in with zeroes).
+
     '''
     
     ksizes = [1, PATCH_WIDTH, PATCH_HEIGHT, 1]
