@@ -96,18 +96,17 @@ def Automap(npix, npr):
 
     return(model)
 
-def DnCNN(npix, nlayers = 15, skip='Yes', filts = 64):
+def DnCNN(nlayers = 15, skip='Yes', filts = 64):
     
     '''
     A simple 2D deep convolutional neural network having muptiple conv2D layers in series
     Inputs:
-        npix: number of pixels in the image per each dimension; it is a list [npixs_x, npixs_y]
         nlayers: number of conv2D layers
         skip: residual learning or not i.e. if the network uses a skip connection
         filts: number of filters in the conv2D layers
     '''
     
-    im = Input(shape=(npix[0],npix[1],1))
+    im = Input(shape=(None,None,1))
 
     x = Conv2D(filters=filts, kernel_size=3, padding='same', activation='relu')(im)
 
