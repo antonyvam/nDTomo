@@ -10,6 +10,7 @@ from tensorflow.keras.callbacks import Callback
 from numpy import less, greater, Inf, zeros_like
 from tqdm import tqdm
 from tensorflow_addons.image import rotate
+from nDTomo.nn.tomo_tf import tf_tomo_transf
 
 def tf_gpu_devices():
         
@@ -23,6 +24,17 @@ def tf_gpu_allocateRAM():
     physical_devices = tf.config.list_physical_devices('GPU') 
     for device in physical_devices:
         tf.config.experimental.set_memory_growth(device, True)
+
+
+def rotate_tf(im, ang):
+    
+    '''
+    Rotate a 2D image using tensorflow
+    '''
+    
+    im = rotate(tf_tomo_transf(im), ang, interpolation = 'bilinear')[0,:,:,0]
+
+    return(im)
 
 def rotate_xz(vol, ang):
     
