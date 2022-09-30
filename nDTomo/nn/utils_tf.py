@@ -7,7 +7,7 @@ Various tensorflow functions
 
 import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
-from numpy import less, greater, Inf, zeros_like
+from numpy import less, greater, Inf, zeros_like, deg2rad
 from tqdm import tqdm
 from tensorflow_addons.image import rotate
 from nDTomo.nn.tomo_tf import tf_tomo_transf
@@ -29,10 +29,10 @@ def tf_gpu_allocateRAM():
 def rotate_tf(im, ang):
     
     '''
-    Rotate a 2D image using tensorflow
+    Rotate a 2D image using tensorflow; angle in degrees
     '''
-    
-    im = rotate(tf_tomo_transf(im), ang, interpolation = 'bilinear')[0,:,:,0]
+
+    im = rotate(tf_tomo_transf(im), deg2rad(ang), interpolation = 'bilinear')[0,:,:,0]
 
     return(im)
 
