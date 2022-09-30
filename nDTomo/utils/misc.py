@@ -687,6 +687,20 @@ def pol2cartim(imp, im_size=None, thpix=1024, rpix=1024, ofs=0):
     return(imn)
 
 
+def even_idx(a):
+    '''
+    Returns all even elements from a matrix
+    Answer to: https://stackoverflow.com/questions/41839634/numpy-array-select-all-even-elements-from-d-dimensional-array
+    '''
+    return a[np.ix_(*[range(0,i,2) for i in a.shape])]
+
+def odd_idx(a):
+    '''
+    Returns all odd elements from a matrix
+    '''
+    return a[np.ix_(*[range(1,i,2) for i in a.shape])]
+
+     
 def tv_image(im, method = 'isotropic'):
     
     '''

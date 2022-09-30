@@ -467,7 +467,7 @@ def DCNN2D(nx, ny, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nco
     2D Deep Convolutional Neural Network
     
     Inputs:
-        npix: number of pixels in the input image
+        nx, ny: number of pixels in the input image (rows, columns)
         nomega: number of pixels in the second dimension (e.g. number of projections for sinograms in tomography)
         nlayers: the depth of the CNN
         net: type of network, options are 'unet', 'autoencoder'
@@ -482,7 +482,9 @@ def DCNN2D(nx, ny, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nco
         pad: padding type, default is 'same'
         dense_layers: 'Default/Custom' string; if 'Custom', then the use has to pass a list conpixaining the number of nodes per dense layer
     '''
-    pads = padcalc(nx, nlayers)
+    
+    pads_x = padcalc(nx, nlayers)
+    pads_y = padcalc(ny, nlayers)
     
     image_in = Input(shape=(nx, ny,  1))
     convl = convblock2D(image_in, nconvs = 3, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
@@ -528,7 +530,7 @@ def DCNN2D(nx, ny, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nco
         
         for ii in range(nlayers-2):
     
-            up = upblock2D(convl, pads[ii], filtnums= filtnums, pad=pad)
+            up = upblock2D(convl, [pads_x[ii], pads_y[ii]] , filtnums= filtnums, pad=pad)
             if net == 'unet':
                 up = concatenate([dconvs[-(ii+2)],up], axis = 3)
             convl = convblock2D(convl=up, nconvs = 2, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
@@ -567,7 +569,7 @@ def DCNN2D(nx, ny, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nco
         
         for ii in range(nlayers-2):
     
-            up = upblock2D(convl, pads[ii], filtnums= filtnums, pad=pad)
+            up = upblock2D(convl, [pads_x[ii], pads_y[ii]], filtnums= filtnums, pad=pad)
             if net == 'unet':
                 up = concatenate([dconvs[-(ii+2)],up], axis = 3)
             convl = convblock2D(convl=up, nconvs = 2, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
@@ -576,12 +578,12 @@ def DCNN2D(nx, ny, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nco
         
         for ii in range(nlayers-1):
     
-            up = upblock2D(convl, pads[ii], filtnums= filtnums, pad=pad)
+            up = upblock2D(convl, [pads_x[ii], pads_y[ii]], filtnums= filtnums, pad=pad)
             if net == 'unet':
                 up = concatenate([dconvs[-(ii+2)],up], axis = 3)
             convl = convblock2D(convl=up, nconvs = 2, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)        
     
-    up = upblock2D(convl, pads[-1], filtnums= filtnums, pad=pad)
+    up = upblock2D(convl, [pads_x[-1], pads_y[-1]], filtnums= filtnums, pad=pad)
     if net == 'unet':
         up = concatenate([dconvs[0],up], axis = 3)
     convl = convblock2D(convl=up, nconvs = 2, dropout = 'No', batchnorm= 'No')
@@ -624,16 +626,20 @@ def downblock2D(convl, nconvs = 3, filtnums= 64, kersz = 3, pad='same', dropout 
 
     return(convl)    
     
-def upblock2D(convl, padsize, filtnums= 64, pad='same'):
+def upblock2D(convl, padsizes, filtnums= 64, pad='same'):
     
     convl = UpSampling2D(size = (2,2))(convl)
 
     convl = Conv2D(filters=filtnums, kernel_size=2, activation = 'relu', padding = pad, 
             kernel_initializer = 'he_normal')(convl)
 
-    if padsize % 2 != 0:
+    if padsizes[0] % 2 != 0:
         convl = tf.keras.layers.Cropping2D(
-                cropping=((1, 0), (1, 0)), data_format=None)(convl)
+                cropping=((1, 0), (0, 0)), data_format=None)(convl)
+
+    if padsizes[1] % 2 != 0:
+        convl = tf.keras.layers.Cropping2D(
+                cropping=((0, 0), (1, 0)), data_format=None)(convl)
     
     return(convl)
     
@@ -1012,3 +1018,67 @@ class Discriminator(tf.keras.Model):
         x = self.conv_3(x)
         x = self.conv_4(x)
         return self.reshape(x)
+
+
+def DFCNN2D(nx, ny, nlayers = 4, net = 'unet', skipcon = 'No', 
+            nconvs =3, filtnums= 64, kersz = 3, dropout = 'Yes', batchnorm = 'No', 
+            actlayermid = 'relu', actlayerfi = 'linear', pad='same'):
+
+    '''
+    2D Deep Fully Convolutional Neural Network
+    
+    Inputs:
+        npix: number of pixels in the input image
+        nomega: number of pixels in the second dimension (e.g. number of projections for sinograms in tomography)
+        nlayers: the depth of the CNN
+        net: type of network, options are 'unet', 'autoencoder'
+        filtnums: number of filters to be used in the conv layers
+        kersz: kernel size to be used in the conv layers
+        dropout: 'Yes/No' string; if dropout (10%) will be used
+        batchnorm: 'Yes/No' string; if batch normalisation will be used
+        nconvs: number of convolutional layers per conv block
+        actlayermid: the activation function used in all layers apart from the final layer
+        actlayerfi: the activation function used in the final layer
+        pad: padding type, default is 'same'
+    '''
+    pads_x = padcalc(nx, nlayers)
+    pads_y = padcalc(ny, nlayers)
+    
+    
+    image_in = Input(shape=(None, None,  1))
+    convl = convblock2D(image_in, nconvs = 3, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
+
+    dconvs = [convl]
+    
+    for ii in range(nlayers):
+        
+        convl = downblock2D(convl, nconvs = 3, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
+        dconvs.append(convl)
+    
+
+    for ii in range(nlayers-1):
+
+        up = upblock2D(convl, [pads_x[ii], pads_y[ii]], filtnums= filtnums, pad=pad)
+        if net == 'unet':
+            up = concatenate([dconvs[-(ii+2)],up], axis = 3)
+        convl = convblock2D(convl=up, nconvs = 2, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)        
+    
+    up = upblock2D(convl, [pads_x[-1], pads_y[-1]], filtnums= filtnums, pad=pad)
+    if net == 'unet':
+        up = concatenate([dconvs[0],up], axis = 3)
+    convl = convblock2D(convl=up, nconvs = 2, dropout = 'No', batchnorm= 'No')
+
+    convl = convblock2D(convl, nconvs = 1, filtnums= 32, kersz = 2, pad=pad, dropout=dropout, batchnorm=batchnorm)
+
+    convl = Conv2D(1, 1, activation = actlayerfi)(convl)
+
+    if skipcon == 'Yes':
+        
+        added = Add()([image_in, convl])
+        model = Model(image_in, added)
+
+    else:
+    
+        model = Model(image_in, convl)
+
+    return model
