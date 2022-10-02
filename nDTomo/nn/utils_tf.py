@@ -11,7 +11,7 @@ from numpy import less, greater, Inf, zeros_like, deg2rad
 from tqdm import tqdm
 from tensorflow_addons.image import rotate
 from nDTomo.nn.tomo_tf import tf_tomo_transf
-from np.random import rand
+from numpy.random import rand
 
 def tf_gpu_devices():
         
