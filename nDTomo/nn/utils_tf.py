@@ -12,6 +12,7 @@ from tqdm import tqdm
 from tensorflow_addons.image import rotate
 from nDTomo.nn.tomo_tf import tf_tomo_transf
 from numpy.random import rand
+from numpy import append
 
 def tf_gpu_devices():
         
@@ -43,18 +44,13 @@ def rotate_tf_random(im, nims=1):
     '''
     Rotate a 2D image using tensorflow; angle in degrees
     '''
+    
+    angles =  rand(nims)*180
+    angles =  append(angles, 0)
+    img = tf.tile(tf_tomo_transf(im), [len(angles), 1, 1, 1])
+    vol = rotate(img, angles, interpolation = 'bilinear')
 
-    im = tf_tomo_transf(im)
-
-    vol = tf .zeros((nims,im.shape[1],im.shape[2],1), dtype = 'float32')
-
-    for ii in tqdm(range(nims)):
-
-        ang = rand(1)[0]*180
-
-        vol[ii,:,:,:] = rotate(im, deg2rad(ang), interpolation = 'bilinear')[0,:,:,0]
-
-    return(im)
+    return(vol)
 
 def rotate_xz(vol, ang):
     
