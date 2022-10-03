@@ -118,5 +118,5 @@ Citation
 --------
 Please cite using the following:
 
-Vamvakeros, A. et al., nDTomo software suite, 2019, DOI: https://doi.org/10.5281/zenodo.6560430
+Vamvakeros, A. et al., nDTomo software suite, 2019, DOI: https://doi.org/10.5281/zenodo.6560430, url: https://github.com/antonyvam/nDTomo
 
