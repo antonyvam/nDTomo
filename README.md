@@ -21,23 +21,6 @@ To do
 -----
 Modernise the GUIs and update the documentation
 
-Installation instructions using conda (Windows only)
-----------------------------------------------------
-The nDTomo is currently being developed using python v3.8
-
-I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and then simply run the following:
-
-Make sure that you have added the following channels:
-
-```conda config --add channels conda-forge```
-
-```conda config --add channels astra-toolbox/label/dev```
-
-Next install nDTomo:
-
-```conda install -c antonyvam ndtomo```
-
-Tensorflow is not included in the conda package so one has to install it using pip (please see below for more information).
 
 Installation instructions from sources
 --------------------------------------
@@ -110,6 +93,25 @@ Extra packages to be installed (not essential)
 Neural networks were built/tested using Tensorflow; make sure to follow these instruction for GPU support: https://www.tensorflow.org/install/gpu. As an example:
 
 ```pip install tensorflow==2.7 tensorflow-addons==0.15```
+
+
+Installation instructions using conda (Windows only)
+----------------------------------------------------
+The conda package of nDTomo might not be up to date so try installing from sources. The nDTomo is currently being developed using python v3.8
+
+I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and then simply run the following:
+
+Make sure that you have added the following channels:
+
+```conda config --add channels conda-forge```
+
+```conda config --add channels astra-toolbox/label/dev```
+
+Next install nDTomo:
+
+```conda install -c antonyvam ndtomo```
+
+Tensorflow is not included in the conda package so one has to install it using pip (please see below for more information).
 
 
 Citation
