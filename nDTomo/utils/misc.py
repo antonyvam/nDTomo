@@ -840,7 +840,7 @@ def crop_volume(vol, thr=None, plot=False, dtype='float32'):
 
     for ii in tqdm(range(vol.shape[2])):
 
-        volc[:,:,ii] = vol[indr[0]:indr[-1], indc[0]:indc[-1], ii]
+        volc[:,:,ii] = vol[indr[0]:indr[-1]+1, indc[0]:indc[-1]+1, ii]
     
     return(volc)
 
