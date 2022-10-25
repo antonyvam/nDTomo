@@ -780,5 +780,74 @@ def ssim_images(x, y, max_val, compensation=1.0, k1=0.01, k2=0.03):
     
     return(ssim_val)
     
+def crop_image(im, thr=None, plot=False):
+
+    '''
+    Crop an image
+    '''
     
+    if thr is not None:
+        im[im<thr] = 0
+    
+    row_vector = np.sum(im, axis = 1)
+    col_vector = np.sum(im, axis = 0)
+
+    indr = [i for i, x in enumerate(row_vector) if x > 0]
+    indc = [i for i, x in enumerate(col_vector) if x > 0]
+
+    imc = im[indr[0]:indr[-1], indc[0]:indc[-1]]
+
+    if plot:
+        
+        plt.figure(1);plt.clf()
+        plt.imshow(im, cmap = 'gray')
+        plt.colorbar()
+        plt.show()        
+
+        plt.figure(2);plt.clf()
+        plt.imshow(imc, cmap = 'gray')
+        plt.colorbar()
+        plt.show() 
+        
+    return(imc)    
+
+    
+def crop_volume(vol, thr=None, plot=False, dtype='float32'):
+
+    '''
+    Crops a data volume using the average image along the third dimension
+    '''
+    
+    im = np.sum(vol, axis = 2)
+    
+    if thr is not None:
+        im[im<thr] = 0
+    
+    row_vector = np.sum(im, axis = 1)
+    col_vector = np.sum(im, axis = 0)
+
+    indr = [i for i, x in enumerate(row_vector) if x > 0]
+    indc = [i for i, x in enumerate(col_vector) if x > 0]
+
+    volc = np.zeros((vol.shape[2]), dtype=dtype)
+
+    for ii in tqdm(range(len(indr), len(indc), vol.shape[2])):
+
+        volc[:,:,ii] = vol[indr[0]:indr[-1], indc[0]:indc[-1], ii]
+    
+    return(volc)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     
