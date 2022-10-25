@@ -14,6 +14,8 @@ from matplotlib import cm
 from matplotlib.colors import ListedColormap
 from tqdm import tqdm
 from scipy.interpolate import griddata
+from scipy.ndimage import binary_fill_holes, binary_dilation, generate_binary_structure
+from skimage.segmentation import flood, flood_fill
 
 def nDTomo_colormap():
     
@@ -839,8 +841,26 @@ def crop_volume(vol, thr=None, plot=False, dtype='float32'):
     return(volc)
 
 
-
-
+def fill_2d_binary(im, thr = None, dil_its = 2):
+    
+    '''
+    Fill a 2D binary image
+    '''
+    
+    im = im / np.max(im)
+    if thr is not None:
+        im[im<thr] = 0
+    im[im>0] = 1
+    
+    struct = generate_binary_structure(2, 1).astype(im.dtype)
+    
+    for ii in range(dil_its):
+        
+        im = binary_dilation(im, structure=struct).astype(im.dtype)
+    
+    im[binary_fill_holes(im)] = 1
+    
+    return(im)
 
 
 
