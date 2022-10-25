@@ -807,7 +807,7 @@ def crop_image(im, thr=None, plot=False):
     if plot:
         
         plt.figure(1);plt.clf()
-        plt.imshow(im, cmap = 'gray')
+        plt.imshow(imo, cmap = 'gray')
         plt.colorbar()
         plt.show()        
 
