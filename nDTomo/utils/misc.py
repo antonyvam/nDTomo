@@ -788,6 +788,10 @@ def crop_image(im, thr=None, plot=False):
     Crop an image
     '''
     
+    dims = im.shape
+    if len(dims)==2:
+        im = np.mean(im, axis = 2)
+    
     if thr is not None:
         im[im<thr] = 0
     
