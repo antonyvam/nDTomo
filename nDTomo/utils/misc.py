@@ -899,5 +899,11 @@ def nan_to_number(array, val=0):
     return(np.where(np.isnan(array), val, array))
 
 
-
+def number_to_nan(array, val=0):
+    
+    '''
+    Replace a number with NaN, default value is 0
+    '''
+    array[array==val] = np.nan
+    return(array)
     
