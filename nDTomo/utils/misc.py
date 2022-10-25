@@ -888,7 +888,7 @@ def image_segm(im, thr, norm = False, plot = False):
         plt.colorbar()
         plt.show() 
         
-    return(im)
+    return(imt)
 
 
 
