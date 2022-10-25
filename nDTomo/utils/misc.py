@@ -862,8 +862,33 @@ def fill_2d_binary(im, thr = None, dil_its = 2):
     
     return(im)
 
+def image_segm(im, thr, norm = False, plot = False):
+    
+    '''
+    Perform simple threshold based image segmentation
+    '''
+    
+    imt = np.copy(im)
 
+    if norm:
+        imt = imt / np.max(imt)
 
+    imt[imt<thr] = 0
+    imt[imt>0] = 1
+    
+    if plot:
+        
+        plt.figure(1);plt.clf()
+        plt.imshow(im, cmap = 'gray')
+        plt.colorbar()
+        plt.show()        
+
+        plt.figure(2);plt.clf()
+        plt.imshow(imt, cmap = 'gray')
+        plt.colorbar()
+        plt.show() 
+        
+    return(im)
 
 
 
