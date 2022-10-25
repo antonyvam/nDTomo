@@ -789,6 +789,7 @@ def crop_image(im, thr=None, plot=False):
     '''
     
     dims = im.shape
+    imo = np.copy(im)
     if len(dims)==3:
         im = np.mean(im, axis = 2)
     
@@ -801,7 +802,7 @@ def crop_image(im, thr=None, plot=False):
     indr = [i for i, x in enumerate(row_vector) if x > 0]
     indc = [i for i, x in enumerate(col_vector) if x > 0]
 
-    imc = im[indr[0]:indr[-1], indc[0]:indc[-1]]
+    imc = imo[indr[0]:indr[-1], indc[0]:indc[-1]]
 
     if plot:
         
