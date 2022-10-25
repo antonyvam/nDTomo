@@ -890,9 +890,13 @@ def image_segm(im, thr, norm = False, plot = False):
         
     return(imt)
 
-
-
-
+def nan_to_number(array, val=0):
+    
+    '''
+    Replace NaNs with a number, default value is 0
+    '''
+    
+    return(np.where(np.isnan(array), val, array))
 
 
 
