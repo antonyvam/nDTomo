@@ -836,9 +836,9 @@ def crop_volume(vol, thr=None, plot=False, dtype='float32'):
     indr = [i for i, x in enumerate(row_vector) if x > 0]
     indc = [i for i, x in enumerate(col_vector) if x > 0]
 
-    volc = np.zeros((vol.shape[2]), dtype=dtype)
+    volc = np.zeros((len(indr), len(indc), vol.shape[2]), dtype=dtype)
 
-    for ii in tqdm(range(len(indr), len(indc), vol.shape[2])):
+    for ii in tqdm(range(vol.shape[2])):
 
         volc[:,:,ii] = vol[indr[0]:indr[-1], indc[0]:indc[-1], ii]
     
