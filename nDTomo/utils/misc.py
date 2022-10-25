@@ -819,6 +819,7 @@ def crop_volume(vol, thr=None, plot=False, dtype='float32'):
     '''
     
     im = np.sum(vol, axis = 2)
+    im = im/np.max(im)
     
     if thr is not None:
         im[im<thr] = 0
