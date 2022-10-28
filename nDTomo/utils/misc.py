@@ -416,9 +416,14 @@ def normvol(vol):
                 
     return(voln)
 
-def mask_thr(vol, roi, thr, fignum = 1):
+def mask_thr(vol, thr, roi=None, fignum = 1):
     
-    im = np.sum(vol[:,:,roi], axis = 2)
+    dims = vol.shape
+    if len(dims)==3:
+        if roi is None:
+            im = np.sum(vol, axis = 2)
+        else:
+            im = np.sum(vol[:,:,roi], axis = 2)
     im = im/np.max(im)
     msk = np.where(im<thr, 0, 1)
 
