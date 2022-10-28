@@ -424,6 +424,8 @@ def mask_thr(vol, thr, roi=None, fignum = 1):
             im = np.sum(vol, axis = 2)
         else:
             im = np.sum(vol[:,:,roi], axis = 2)
+    elif len(dims)==2:            
+        im = np.copy(vol)
     im = im/np.max(im)
     msk = np.where(im<thr, 0, 1)
 
