@@ -241,6 +241,26 @@ def addpnoise3D(vol, ct):
     
     return(vol)
 
+def create_cirmask(npix_im=512, npx=0):
+    
+    """
+    
+    Create a circular mask for a squarred image
+    
+    """
+    im = np.ones((npix_im, npix_im), dtype='float32')
+    sz = np.floor(im.shape[0])
+    x = np.arange(0,sz)
+    x = np.tile(x,(int(sz),1))
+    y = np.swapaxes(x,0,1)
+    
+    xc = np.round(sz/2)
+    yc = np.round(sz/2)
+    
+    r = np.sqrt(((x-xc)**2 + (y-yc)**2))
+    
+    im = np.where(r>np.floor(sz/2) - npx,0,1)
+    return(im)
 
 def cirmask(im, npx=0):
     
