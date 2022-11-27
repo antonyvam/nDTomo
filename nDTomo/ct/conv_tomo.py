@@ -633,12 +633,12 @@ def paralleltomo(N, theta, p, w):
         
 #    A.eliminate_zeros()
 #        % Create phantom head as a reshaped vector.
-    x = myphantom(N)
+    # x = myphantom(N)
 
 #        % Create rhs.
-    b = A*x
+    # b = A*x
 #    
-    return A, b, x#, theta, p, w
+    return A #, b, x, theta, p, w
 
 
 def myphantom(N):
