@@ -587,8 +587,9 @@ def paralleltomo(N, theta, p, w):
                     xxy = np.delete(xxy[I])
                     yxy = np.delete(yxy[I])
                 except:
-                    xxy = np.delete(xxy[I[:-1]]) # need to fix this
-                    yxy = np.delete(yxy[I[:-1]]) # need to fix this
+                    pass
+                    # xxy = np.delete(xxy[I[:-1]]) # need to fix this
+                    # yxy = np.delete(yxy[I[:-1]]) # need to fix this
 
                
 #            % Calculate the length within cell and determines the number of
