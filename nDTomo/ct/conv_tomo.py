@@ -4,6 +4,7 @@ Tomography tools for nDTomo
 
 @author: Antony Vamvakeros
 """
+#%%
 
 import numpy as np
 from skimage.transform import iradon, radon
@@ -582,8 +583,13 @@ def paralleltomo(N, theta, p, w):
 #            print(I)
             
             if np.count_nonzero(I)>0:
-                xxy = np.delete(xxy[I])
-                yxy = np.delete(yxy[I])
+                try:
+                    xxy = np.delete(xxy[I])
+                    yxy = np.delete(yxy[I])
+                except:
+                    xxy = np.delete(xxy[I[:-1]]) # need to fix this
+                    yxy = np.delete(yxy[I[:-1]]) # need to fix this
+
                
 #            % Calculate the length within cell and determines the number of
 #            % cells which are hit.
