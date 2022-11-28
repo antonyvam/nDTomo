@@ -13,6 +13,7 @@ from scipy.ndimage import center_of_mass
 from tqdm import tqdm
 from scipy.fft import rfft
 import matplotlib.pyplot as plt
+from scipy.sparse import csc_matrix
 
 def radonvol(vol, scan = 180, theta=None):
     
@@ -952,6 +953,14 @@ def cgls(A, b, K = 25, plot=False):
           plt.imshow(xn, cmap = 'jet');plt.title(j)
           plt.pause(0.5)
       
-      return(xn)
+    return(xn)
       
     
+def concatenate_csc_matrices_by_columns(matrix1, matrix2):
+    new_data = np.concatenate((matrix1.data, matrix2.data))
+    new_indices = np.concatenate((matrix1.indices, matrix2.indices))
+    new_ind_ptr = matrix2.indptr + len(matrix1.data)
+    new_ind_ptr = new_ind_ptr[1:]
+    new_ind_ptr = np.concatenate((matrix1.indptr, new_ind_ptr))
+
+    return csc_matrix((new_data, new_indices, new_ind_ptr))
