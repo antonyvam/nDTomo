@@ -744,6 +744,136 @@ def myphantom2(N):
             
     return X    
 
+def fstomo(N, omegas, rs):
+
+    p = N
+    w = N
+        
+    #    Define the number of angles.
+    nA = len(omegas)
+
+    #    The starting values both the x and the y coordinates. 
+    x0 = np.array([np.linspace(-w/2,w/2,p)])
+    x0 = np.transpose(x0)
+    y0 = np.zeros((p,1))
+
+    #    The intersection lines.
+    x = np.arange(-N/2,N/2+1)
+    y = x
+
+    #    Initialize vectors that contains the row numbers, the column numbers and
+    #    the values for creating the matrix A effiecently.
+    rows = np.zeros((2*N*nA,))
+    cols = np.zeros((2*N*nA,))
+    vals = np.zeros((2*N*nA,))
+    idxend = 0
+
+    npoints = int(len(rs))
+
+    for point in tqdm(np.arange(npoints)):
+                
+    #        % All the starting points for the current angle.
+        x0theta = np.cos(omegas[point])*x0 - np.sin(omegas[point])*y0
+        y0theta = np.sin(omegas[point])*x0 + np.cos(omegas[point])*y0
+        
+    #        % The direction vector for all the rays corresponding to the current 
+    #        % angle.
+        a = -np.sin(omegas[point])
+        b = np.cos(omegas[point])
+        
+
+    #            % Use the parametrisation of line to get the y-coordinates of
+    #            % intersections with x = k, i.e. x constant.
+        tx = (x - x0theta[int(rs[point])])/a
+        yx = b*tx + y0theta[int(rs[point])]
+        
+    #            % Use the parametrisation of line to get the x-coordinates of
+    #            % intersections with y = k, i.e. y constant.
+        ty = (y - y0theta[int(rs[point])])/b
+        xy = a*ty + x0theta[int(rs[point])]
+        
+    #            % Collect the intersection times and coordinates. 
+        t = np.array([tx,ty]);t = np.ndarray.flatten(t)
+        xxy = np.array([x,xy]); xxy = np.ndarray.flatten(xxy) 
+        yxy = np.array([yx, y]); yxy = np.ndarray.flatten(yxy) 
+                    
+        
+    #            % Sort the coordinates according to intersection time.
+        
+        I = np.argsort(t)
+        t = np.sort(t)
+        
+        xxy = xxy[I]
+        yxy = yxy[I]        
+        
+    #            % Skip the points outside the box.
+                    
+        I = (xxy >= -N/2) & (xxy <= N/2) & (yxy >= -N/2) & (yxy <= N/2)
+        xxy = xxy[I]
+        yxy = yxy[I]
+        
+    #            % Skip double points.
+        I = (np.abs(np.diff(xxy)) <= 1e-10) & (np.abs(np.diff(yxy)) <= 1e-10)
+        
+    #            print(I)
+        
+        if np.count_nonzero(I)>0:
+            try:
+                xxy = np.delete(xxy[I])
+                yxy = np.delete(yxy[I])
+            except:
+                pass
+                # xxy = np.delete(xxy[I[:-1]]) # need to fix this
+                # yxy = np.delete(yxy[I[:-1]]) # need to fix this
+
+            
+    #            % Calculate the length within cell and determines the number of
+    #            % cells which are hit.
+        d = np.sqrt(np.diff(xxy)**2 + np.diff(yxy)**2)
+        numvals = d.size
+        
+        
+                
+    #            % Store the values inside the box.
+        if numvals > 0:
+            
+    #                % If the ray is on the boundary of the box in the top or to the
+    #                % right the ray does not by definition lie with in a valid cell.
+            if ~(((b == 0) & (np.abs(y0theta[int(rs[point])] - N/2) < 1e-15)) | ((a == 0) & (np.abs(x0theta[int(rs[point])] - N/2) < 1e-15))):
+                
+    #                    % Calculates the midpoints of the line within the cells.
+                xm = 0.5*(xxy[0:-1]+xxy[1:]) + N/2
+                ym = 0.5*(yxy[0:-1]+yxy[1:]) + N/2
+
+    #                    % Translate the midpoint coordinates to index.
+                col = np.floor(xm)*N + (N - np.floor(ym))
+                
+    #                    % Create the indices to store the values to vector for
+    #                    % later creation of A matrix.
+                idxstart = idxend + 0
+                idxend = idxstart + numvals
+                idx = np.arange(idxstart, idxend)
+
+    #                    % Store row numbers, column numbers and values. 
+                
+                rows[idx] = point
+    #                    print(rows[idx])
+                cols[idx] = col - 1
+    #                    print(cols[idx])
+                vals[idx] = d
+    #                    print(vals[idx])
+
+    #    % Truncate excess zeros.
+    rows = rows[0:idxend]
+    cols = cols[0:idxend]
+    vals = vals[0:idxend]
+
+
+    #    % Create sparse matrix A from the stored values.
+    A = csr_matrix((vals,(rows,cols)),shape=(npoints,N**2), dtype=np.float32)
+
+    return(A)
+
         
 
     
