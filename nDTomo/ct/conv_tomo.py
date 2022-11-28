@@ -12,6 +12,7 @@ from scipy.sparse import csr_matrix
 from scipy.ndimage import center_of_mass
 from tqdm import tqdm
 from scipy.fft import rfft
+import matplotlib.pyplot as plt
 
 def radonvol(vol, scan = 180, theta=None):
     
@@ -898,5 +899,59 @@ def create_circle(npix_im=512, r0=128):
 
     return(im)
         
+def cgls(A, b, K = 25, plot=False):
 
+    
+    # Initialization.
+    k = np.max(K)
+    
+    n = A.shape[1]
+    
+    npix = int(np.sqrt(A.shape[1]))
+    
+    # Prepare for CG iteration.
+    x = np.zeros((n,))
+    
+    d = csr_matrix.dot(np.transpose(A),b)
+    
+    r = b
+    normr2 = np.dot(np.transpose(d),d)
+    #normr2 = sparse.csr_matrix.dot(np.transpose(d),d)
+    
+    if plot:
+        plt.figure();plt.clf()
+    # Iterate.
+
+    for j in range(0,k):
+    
+    #  Update x and r vectors.
+      Ad = csr_matrix.dot(A,d)
+      alpha = normr2/(np.dot(np.transpose(Ad),Ad))
+    
+      x  = x + d*alpha
+    
+      r  = r - Ad*alpha
+      s  = csr_matrix.dot(np.transpose(A),r)
+      
+    #  Update d vector.
+      normr2_new =  np.dot(np.transpose(s),s)
+      beta = normr2_new/normr2
+      normr2 = normr2_new
+      d = s + d*beta
+      
+    #  Save, if wanted.
+      j
+    
+      xn = x 
+      xn = np.reshape(xn,(npix,npix))
+      xn = np.where(xn<0, 0, xn)
+      xn = xn/np.max(xn)
+      xn = np.flipud(np.transpose(xn))
+      
+      if plot:
+          plt.imshow(xn, cmap = 'jet');plt.title(j)
+          plt.pause(0.5)
+      
+      return(xn)
+      
     
