@@ -57,7 +57,7 @@ def read_data(h5name, counter, scans ):
     return data
 
 
-def global_sino(ctr, nproj=1448):
+def global_sino(ctr, nproj=1448, plot=True):
     
     ss = np.sum(ctr, axis=1)
     
@@ -66,23 +66,29 @@ def global_sino(ctr, nproj=1448):
     # ss = sinocentering(ss)
     ss = scalesinos(ss)
     
-    plt.figure()
-    plt.imshow(ss, cmap = 'jet')
-    plt.axis('tight')
-    plt.show()
+    if plot:
+        plt.figure()
+        plt.imshow(ss, cmap = 'jet')
+        plt.axis('tight')
+        plt.show()
+    
+    return(ss)
 
 
-def global_im(ss):
+def global_im(ss, plot=True):
 
     r = astra_rec_single(ss)
     r[r<0] = 0
     r = cirmask(r, 5)
     
-    plt.figure()
-    plt.imshow(r, cmap = 'jet')
-    plt.colorbar()
-    plt.axis('tight')
-    plt.show()
+    if plot:    
+        plt.figure()
+        plt.imshow(r, cmap = 'jet')
+        plt.colorbar()
+        plt.axis('tight')
+        plt.show()
+    
+    return(r)
 
 def reshape_data(ctr, nproj):
     
