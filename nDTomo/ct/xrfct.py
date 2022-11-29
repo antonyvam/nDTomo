@@ -5,8 +5,9 @@ Created on Tue Nov 29 10:01:36 2022
 @author: Antony Vamvakeros
 """
 
-from nDTomo.ct.conv_tomo import scalesinos, sinocentering, circmask
+from nDTomo.ct.conv_tomo import scalesinos, sinocentering
 from nDTomo.ct.astra_tomo import astra_rec_single
+from nDTomo.utils.misc import cirmask
 
 import numpy as np
 import os, h5py
