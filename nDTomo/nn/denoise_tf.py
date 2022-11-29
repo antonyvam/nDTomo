@@ -7,7 +7,7 @@ Created on Tue Nov 29 11:14:21 2022
 
 import numpy as np
 import time
-from twdm import tqdm
+from tqdm import tqdm
 
 def denoise_vol1D(vol, model, gpu=True):
 
