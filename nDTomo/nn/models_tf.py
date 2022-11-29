@@ -1081,3 +1081,31 @@ def DFCNN2D(nx, ny, nlayers = 4, net = 'unet', skipcon = 'No',
         model = Model(image_in, convl)
 
     return model
+
+def CNN1D(nlayers = 4, skip=False, filts = 64, kernel_size=10):
+    
+    '''
+    A simple 1D deep convolutional neural network having muptiple conv1D layers in series
+    Inputs:
+        nlayers: number of conv1D layers
+        skip: residual learning or not i.e. if the network uses a skip connection
+        filts: number of filters in the conv1D layers
+    '''
+    
+    data = Input(shape=(None,1))
+
+    x = Conv1D(filters=filts, kernel_size=kernel_size, padding='same', activation='relu')(data)
+
+    for i in range(nlayers):
+        x = Conv1D(filters=filts, kernel_size=kernel_size, padding='same')(x)
+        x = Conv1D(filters=filts, kernel_size=kernel_size, padding='same', activation='relu')(x)
+
+    x = Conv1D(filters=1, kernel_size=kernel_size, padding='same', activation='linear')(x)
+    
+    if skip:
+        added = Add()([data, x])
+        model = Model(data, added)
+    else:
+        model = Model(data, x)
+    
+    return model
