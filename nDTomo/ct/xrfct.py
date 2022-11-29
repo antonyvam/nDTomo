@@ -41,7 +41,7 @@ def read_xrfct_data(home, sample, dataset):
     rot = np.concatenate( rot )
     ctr = np.concatenate( read_data(h5name, 'measurement/mca_det0' , scans ) )
     
-    dty = read_data( 'instrument/positioners/dty', scans )
+    dty = read_data(h5name, 'instrument/positioners/dty', scans )
     dty = np.concatenate( [ np.full( n, y ) for n,y in zip(npx, dty)  ] )
     
     print(ctr.shape)
