@@ -832,7 +832,7 @@ def ssim_images(x, y, max_val, compensation=1.0, k1=0.01, k2=0.03):
     
     return(ssim_val)
     
-def crop_image(im, thr=None, plot=False):
+def crop_image(im, thr=None, plot=False, inds=None):
 
     '''
     Crop an image
@@ -846,11 +846,17 @@ def crop_image(im, thr=None, plot=False):
     if thr is not None:
         im[im<thr] = 0
     
-    row_vector = np.sum(im, axis = 1)
-    col_vector = np.sum(im, axis = 0)
-
-    indr = [i for i, x in enumerate(row_vector) if x > 0]
-    indc = [i for i, x in enumerate(col_vector) if x > 0]
+    if inds is None:
+        row_vector = np.sum(im, axis = 1)
+        col_vector = np.sum(im, axis = 0)
+    
+        indr = [i for i, x in enumerate(row_vector) if x > 0]
+        indc = [i for i, x in enumerate(col_vector) if x > 0]
+        inds = [indr, indc]
+    else:
+        indr = inds[0]
+        indc = inds[1]
+        
 
     imc = imo[indr[0]:indr[-1], indc[0]:indc[-1]]
 
@@ -866,7 +872,7 @@ def crop_image(im, thr=None, plot=False):
         plt.colorbar()
         plt.show() 
         
-    return(imc)    
+    return(imc, inds)    
 
     
 def crop_volume(vol, thr=None, plot=False, dtype='float32'):
