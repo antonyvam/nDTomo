@@ -5,7 +5,7 @@ Methods for data splitting
 @author: Antony Vamvakeros
 """
 
-from nDTomo.utils.misc import even_idx, odd_idx
+from nDTomo.utils.misc import even_idx, odd_idx, EMPatches
 import numpy as np
 from tqdm import tqdm
 
@@ -85,9 +85,18 @@ def create_odd_even_ims(im):
     return(im00, im01, im11, im10)
 
 
+def create_im_patches(im_list, patchsize = 32, overlap = 0):
 
+    emp = EMPatches()
+    
+    patches = []
+    
+    for im in range(len(im_list)):
 
+        im_patches, indices = emp.extract_patches(im_list[im], patchsize=patchsize, overlap=overlap)
+        patches.append(np.array(im_patches, dtype='float32'))
 
+    return(patches)
 
 
 
