@@ -831,6 +831,24 @@ def ssim_images(x, y, max_val, compensation=1.0, k1=0.01, k2=0.03):
     ssim_val = np.mean(luminance * cs)
     
     return(ssim_val)
+
+def crop_ctimage(im, plot=False):
+    
+    '''
+    Crop a CT image using a square inside the reconstruction circle
+    '''
+    
+    d = int(np.round((1 - np.cos(np.deg2rad(45)))*(im.shape[0]/2)))
+    im = im[d:-d, d:-d]
+    
+    if plot:
+        
+        plt.figure(1);plt.clf()
+        plt.imshow(im, cmap = 'gray')
+        plt.colorbar()
+        plt.show()  
+        
+    return(im)
     
 def crop_image(im, thr=None, plot=False, inds=None):
 
@@ -902,7 +920,32 @@ def crop_volume(vol, thr=None, plot=False, dtype='float32'):
 
         volc[:,:,ii] = vol[indr[0]:indr[-1]+1, indc[0]:indc[-1]+1, ii]
     
+    if plot:
+        
+        plt.figure(1);plt.clf()
+        plt.imshow(np.sum(volc, axis=2), cmap = 'gray')
+        plt.colorbar()
+        plt.show()  
+        
     return(volc)
+
+def crop_ctvolume(vol, plot=False):
+    
+    '''
+    Crop a CT image using a square inside the reconstruction circle
+    '''
+    
+    d = int(np.round((1 - np.cos(np.deg2rad(45)))*(vol.shape[0]/2)))
+    vol = vol[d:-d, d:-d,:]
+    
+    if plot:
+        
+        plt.figure(1);plt.clf()
+        plt.imshow(np.sum(vol, axis=2), cmap = 'gray')
+        plt.colorbar()
+        plt.show()  
+        
+    return(vol)
 
 
 def fill_2d_binary(im, thr = None, dil_its = 2):
