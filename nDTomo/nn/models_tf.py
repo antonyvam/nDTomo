@@ -1109,3 +1109,31 @@ def CNN1D(nlayers = 4, skip=False, filts = 64, kernel_size=10):
         model = Model(data, x)
     
     return model
+
+def CNN2D(nlayers = 4, skip=True, filts = 64):
+    
+    '''
+    A simple 2D deep convolutional neural network having muptiple conv2D layers in series
+    Inputs:
+        nlayers: number of conv2D layers
+        skip: residual learning or not i.e. if the network uses a skip connection
+        filts: number of filters in the conv2D layers
+    '''
+    
+    im = Input(shape=(None,None,1))
+
+    x = Conv2D(filters=filts, kernel_size=3, padding='same', activation='relu')(im)
+
+    for i in range(nlayers):
+        x = Conv2D(filters=filts, kernel_size=3, padding='same')(x)
+        x = Conv2D(filters=filts, kernel_size=3, padding='same', activation='relu')(x)
+
+    x = Conv2D(filters=1, kernel_size=3, padding='same', activation='linear')(x)
+    
+    if skip:
+        added = Add()([im, x])
+        model = Model(im, added)
+    else:
+        model = Model(im, x)
+    
+    return model
