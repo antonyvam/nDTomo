@@ -45,7 +45,12 @@ def create_2vols1D(vol):
     return(train, target)
 
 
-def create_left_up(im):
+def create_left_up_ims(im):
+
+    '''
+    Create four images by taking the odd/even pixels and squeezing up/left
+    This is the method used in the Noise2Fast method
+    '''    
 
     im_even_left = np.zeros((im.shape[0], int(im.shape[1]/2)), dtype = 'float32')
     im_even_left[0::2,:] = im[0::2,0::2]
@@ -64,6 +69,38 @@ def create_left_up(im):
     im_odd_up[:,1::2] = im[0::2,1::2]
         
     return(im_even_left, im_odd_left, im_even_up, im_odd_up)
+
+
+def create_odd_even_ims(im):
+    
+    '''
+    Create four images by taking the odd/even pixels without squeezing the pixels
+    '''
+    
+    im00 = im[0::2,0::2]
+    im01 = im[0::2,1::2]
+    im11 = im[1::2,1::2]
+    im10 = im[1::2,0::2]
+    
+    return(im00, im01, im11, im10)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

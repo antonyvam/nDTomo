@@ -27,14 +27,19 @@ def SheppLogan(npix):
     im = rescale(im, scale=npix/im.shape[0], mode='reflect')
     return(im)
 
-def phantom_random_shapes(sz=368, min_shapes=3, max_shapes=10, min_size=5, max_size=50, norm=False):
+def phantom_random_shapes(sz=368, min_shapes=3, max_shapes=10, 
+                          min_size=5, max_size=50, shape=None, 
+                          norm=False, 
+                          allow_overlap=True):
 
     '''
     Create an image with random shapes
+    rectangle, circle, triangle, ellipse
     '''    
 
-    im, _ = random_shapes((sz, sz), min_shapes=min_shapes, max_shapes=max_shapes, multichannel=False,
-                             min_size=min_size, max_size=max_size, allow_overlap=True)
+    im, _ = random_shapes((sz, sz), min_shapes=min_shapes, max_shapes=max_shapes, 
+                          shape=shape, multichannel=False, min_size=min_size, 
+                          max_size=max_size, allow_overlap=allow_overlap)
 
     im = np.where(im==255, 1, im)
     
