@@ -90,13 +90,15 @@ def create_im_patches(im_list, patchsize = 32, overlap = 0):
     emp = EMPatches()
     
     patches = []
+    inds = []
     
     for im in range(len(im_list)):
 
         im_patches, indices = emp.extract_patches(im_list[im], patchsize=patchsize, overlap=overlap)
         patches.append(np.array(im_patches, dtype='float32'))
+        inds.append(indices)
 
-    return(patches)
+    return(patches, inds)
 
 
 
