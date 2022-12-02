@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue Nov 29 11:02:33 2022
+Methods for data splitting
 
 @author: Antony Vamvakeros
 """
 
-from nDTomo.utils.misc import even_idx, odd_idx, EMPatches
+from nDTomo.utils.misc import even_idx, odd_idx
 import numpy as np
 from tqdm import tqdm
 
@@ -43,4 +43,28 @@ def create_2vols1D(vol):
     print(train.shape, target.shape)
     
     return(train, target)
+
+
+def create_left_up(im):
+
+    im_even_left = np.zeros((im.shape[0], int(im.shape[1]/2)), dtype = 'float32')
+    im_even_left[0::2,:] = im[0::2,0::2]
+    im_even_left[1::2,:] = im[1::2,1::2]
+    
+    im_odd_left = np.zeros((im.shape[0], int(im.shape[1]/2)), dtype = 'float32')
+    im_odd_left[0::2,:] = im[0::2,1::2]
+    im_odd_left[1::2,:] = im[1::2,0::2]
+        
+    im_even_up = np.zeros((int(im.shape[0]/2), im.shape[1]), dtype = 'float32')
+    im_even_up[:,0::2] = im[0::2,0::2]
+    im_even_up[:,1::2] = im[1::2,1::2]
+    
+    im_odd_up = np.zeros((int(im.shape[0]/2), im.shape[1]), dtype = 'float32')
+    im_odd_up[:,0::2] = im[1::2,0::2]
+    im_odd_up[:,1::2] = im[0::2,1::2]
+        
+    return(im_even_left, im_odd_left, im_even_up, im_odd_up)
+
+
+
 
