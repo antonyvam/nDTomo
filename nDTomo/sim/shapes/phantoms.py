@@ -5,7 +5,7 @@ Create phantoms (2D-4D) for image processing and analysis experiments
 @author: Antony Vamvakeros
 """
 
-from nDTomo.utils.misc import ndtomopath
+from nDTomo.utils.misc import ndtomopath, cirmask
 from xdesign import Mesh, HyperbolicConcentric,SiemensStar, Circle, Triangle, DynamicRange, DogaCircles, Phantom, Polygon, Point, SimpleMaterial, plot_phantom, discrete_phantom, SlantedSquares
 import numpy as np
 import h5py
@@ -34,7 +34,7 @@ def phantom_random_shapes(sz=368, min_shapes=3, max_shapes=10,
 
     '''
     Create an image with random shapes
-    rectangle, circle, triangle, ellipse
+    Available shapes: rectangle, circle, triangle, ellipse
     '''    
 
     im, _ = random_shapes((sz, sz), min_shapes=min_shapes, max_shapes=max_shapes, 
@@ -43,11 +43,43 @@ def phantom_random_shapes(sz=368, min_shapes=3, max_shapes=10,
 
     im = np.where(im==255, 1, im)
     
+    im = im - 1
+    
     if norm == True:
         im = im/np.max(im)
     
     return(im)
 
+def phantom_comp_im(npix=512, nshapes=50, 
+                          minsize=5, maxsize=50, shape=None, 
+                          norm=False, 
+                          allow_overlap=True, tomo=False):
+    
+    '''
+    Create a composite image using random shapes and a Shepp-Logan image
+    '''
+    
+    rectangles = phantom_random_shapes(sz=npix, min_shapes=nshapes, max_shapes=nshapes, 
+                                     shape='rectangle', min_size=minsize, max_size=maxsize, norm=norm, allow_overlap=allow_overlap)
+    ellipses = phantom_random_shapes(sz=npix, min_shapes=nshapes, max_shapes=nshapes, 
+                                     shape='ellipse', min_size=minsize, max_size=maxsize, norm=norm, allow_overlap=allow_overlap)
+    triangles = phantom_random_shapes(sz=npix, min_shapes=nshapes, max_shapes=nshapes, 
+                                     shape='triangle', min_size=minsize, max_size=maxsize, norm=norm, allow_overlap=allow_overlap)
+    circles = phantom_random_shapes(sz=npix, min_shapes=nshapes, max_shapes=nshapes, 
+                                     shape='circle', min_size=minsize, max_size=maxsize, norm=norm, allow_overlap=allow_overlap)
+    
+    rectangles = rectangles/np.max(rectangles)
+    ellipses = ellipses/np.max(ellipses)
+    triangles = triangles/np.max(triangles)
+    circles = circles/np.max(circles)
+    
+    im = rectangles + ellipses + triangles + circles + SheppLogan(npix)
+    im[im>1] = 1
+    
+    if tomo:
+        im = cirmask(im)
+        
+    return(im)
 
 def sstar(npix, nstars=32):
     
