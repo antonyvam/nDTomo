@@ -53,7 +53,7 @@ def phantom_random_shapes(sz=368, min_shapes=3, max_shapes=10,
 def phantom_comp_im(npix=512, nshapes=50, 
                           minsize=5, maxsize=50, shape=None, 
                           norm=False, 
-                          allow_overlap=True, tomo=False):
+                          allow_overlap=True, tomo=False, SL=False):
     
     '''
     Create a composite image using random shapes and a Shepp-Logan image
@@ -73,7 +73,9 @@ def phantom_comp_im(npix=512, nshapes=50,
     triangles = triangles/np.max(triangles)
     circles = circles/np.max(circles)
     
-    im = rectangles + ellipses + triangles + circles + SheppLogan(npix)
+    im = rectangles + ellipses + triangles + circles
+    if SL:
+        im = im + SheppLogan(npix)
     im[im>1] = 1
     
     if tomo:
