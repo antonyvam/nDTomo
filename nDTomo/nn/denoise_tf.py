@@ -8,7 +8,6 @@ Created on Tue Nov 29 11:14:21 2022
 import numpy as np
 import time
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 
 
 def denoise_vol1D(vol, model, gpu=True):
@@ -46,43 +45,3 @@ def denoise_vol1D(vol, model, gpu=True):
         noisy = np.float32(100*noisy)
 
     return(pred1d)
-
-
-def create_global_mask(vol, thr = 0.1):
-    
-    '''
-    Method to extract the indices from a region of interest from a 3D array
-    Use a list containing the 3d arrays
-    '''
-    
-    newvol = np.zeros_like(vol[0], dtype='float32')
-    for ii in range(len(vol)):
-        newvol = newvol + vol[ii]
-    
-    mask = np.sum(newvol,axis=2)
-    mask = mask/np.max(mask)
-    mask = np.where(mask<0.1, 0, 1)
-    
-    plt.figure()
-    plt.imshow(mask, cmap = 'gray');
-    plt.colorbar()
-    plt.show()
-    
-    inds = np.where(mask>0)    
-    
-    return(inds)
-    
-    
-def roisp(vol, inds, nsp=10000):
-    
-    rows = inds[0]
-    cols = inds[1]
-    nch = vol.shape[2]
-    
-    inds = np.arange(len(rows))
-    np.random.shuffle(inds)
-    inds = inds[:nsp]
-        
-    vol = np.reshape(vol[rows[inds], cols[inds],:], (nsp, nch, 1))    
-    
-    return(vol)
