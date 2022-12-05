@@ -850,7 +850,7 @@ def crop_ctimage(im, plot=False):
         
     return(im)
     
-def crop_image(im, thr=None, plot=False, inds=None):
+def crop_image(im, thr=None, norm=False, plot=False, inds=None):
 
     '''
     Crop an image
@@ -860,6 +860,9 @@ def crop_image(im, thr=None, plot=False, inds=None):
     imo = np.copy(im)
     if len(dims)==3:
         im = np.mean(im, axis = 2)
+    
+    if norm:
+        im = im/np.max(im)
     
     if thr is not None:
         im[im<thr] = 0
