@@ -73,5 +73,16 @@ def create_global_mask(vol, thr = 0.1):
     return(inds)
     
     
+def roisp(vol, inds, nsp=10000):
     
+    rows = inds[0]
+    cols = inds[1]
+    nch = vol.shape[2]
     
+    inds = np.arange(len(rows))
+    np.random.shuffle(inds)
+    inds = inds[:nsp]
+        
+    vol = np.reshape(vol[rows[inds], cols[inds],:], (nsp, nch, 1))    
+    
+    return(vol)
