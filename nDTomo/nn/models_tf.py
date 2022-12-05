@@ -9,7 +9,7 @@ Neural networks models
 
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Lambda, Conv1D, UpSampling1D, Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
+from tensorflow.keras.layers import Lambda, Conv3D, Conv1D, UpSampling1D, Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
 from numpy import mod, ceil
 
 def SD2I(npix, factor=8, upsample = True):
@@ -1129,6 +1129,34 @@ def CNN2D(nlayers = 4, skip=True, filts = 64, lastactl = 'relu'):
         x = Conv2D(filters=filts, kernel_size=3, padding='same', activation='relu')(x)
 
     x = Conv2D(filters=1, kernel_size=3, padding='same', activation=lastactl)(x)
+    
+    if skip:
+        added = Add()([im, x])
+        model = Model(im, added)
+    else:
+        model = Model(im, x)
+    
+    return model
+
+def CNN3D(nlayers = 15, skip=True, filts = 64):
+    
+    '''
+    A simple 3D deep convolutional neural network having muptiple conv2D layers in series
+    Inputs:
+        nlayers: number of conv2D layers
+        skip: residual learning or not i.e. if the network uses a skip connection
+        filts: number of filters in the conv3D layers
+    '''
+    
+    im = Input(shape=(None,None,None,1))
+
+    x = Conv3D(filters=filts, kernel_size=3, padding='same', activation='relu')(im)
+
+    for i in range(nlayers):
+        x = Conv3D(filters=filts, kernel_size=3, padding='same')(x)
+        x = Conv3D(filters=filts, kernel_size=3, padding='same', activation='relu')(x)
+
+    x = Conv3D(filters=1, kernel_size=3, padding='same', activation='linear')(x)
     
     if skip:
         added = Add()([im, x])

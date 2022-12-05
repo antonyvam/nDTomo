@@ -857,9 +857,12 @@ def crop_image(im, thr=None, norm=False, plot=False, inds=None):
     '''
     
     dims = im.shape
-    imo = np.copy(im)
+    
     if len(dims)==3:
         im = np.mean(im, axis = 2)
+        imo = np.copy(im)
+    else:
+        imo = np.mean(im, axis = 2)
     
     if norm:
         im = im/np.max(im)
