@@ -167,7 +167,7 @@ def patches_to_image(patches, image_height, image_width, patch_height, patch_wid
 
 def create_image_patches(im, patch_size = 32):
 
-    patches = extract_patches(tf_tomo_transf(im),
+    patches = tf.image.extract_patches(tf_tomo_transf(im),
                                sizes=[1, patch_size, patch_size, 1],
                                strides=[1, patch_size, patch_size, 1],
                                rates=[1, 1, 1, 1],
