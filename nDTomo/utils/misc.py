@@ -886,12 +886,12 @@ def crop_image(im, thr=None, norm=False, plot=False, inds=None):
 
     if plot:
         
-        plt.figure(1);plt.clf()
+        plt.figure()
         plt.imshow(imo, cmap = 'gray')
         plt.colorbar()
         plt.show()        
 
-        plt.figure(2);plt.clf()
+        plt.figure()
         plt.imshow(imc, cmap = 'gray')
         plt.colorbar()
         plt.show() 
