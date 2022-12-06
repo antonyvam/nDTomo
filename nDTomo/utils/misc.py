@@ -862,7 +862,7 @@ def crop_image(im, thr=None, norm=False, plot=False, inds=None):
         im = np.mean(im, axis = 2)
         imo = np.copy(im)
     else:
-        imo = np.mean(im, axis = 2)
+        imo = np.copy(im)
     
     if norm:
         im = im/np.max(im)
