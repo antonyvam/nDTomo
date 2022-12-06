@@ -5,14 +5,18 @@ Various tensorflow functions
 @author: Antony Vamvakeros
 """
 
-import tensorflow as tf
-from tensorflow.keras.callbacks import Callback
-from numpy import less, greater, Inf, zeros_like, deg2rad
-from tqdm import tqdm
-from tensorflow_addons.image import rotate
 from nDTomo.nn.tomo_tf import tf_tomo_transf
+from tqdm import tqdm
+
+from numpy import less, greater, Inf, zeros_like, deg2rad
 from numpy.random import rand
 from numpy import append
+
+import tensorflow as tf
+from tensorflow.keras.callbacks import Callback
+from tensorflow_addons.image import rotate
+from tensorflow.image import extract_patches
+
 
 def tf_gpu_devices():
         
@@ -159,6 +163,21 @@ def patches_to_image(patches, image_height, image_width, patch_height, patch_wid
     image_transposed = tf.transpose(image_reshaped, [0, 2, 1, 3])
     image_resized = tf.reshape(image_transposed, [height, width, 1])
     return tf.image.resize_with_crop_or_pad(image_resized, image_height, image_width)
+
+
+def create_image_patches(im, patch_size = 32):
+
+    patches = extract_patches(tf_tomo_transf(im),
+                               sizes=[1, patch_size, patch_size, 1],
+                               strides=[1, patch_size, patch_size, 1],
+                               rates=[1, 1, 1, 1],
+                               padding='VALID')
+    
+    
+    patches = tf.reshape(patches, (patches.shape[0]*patches.shape[1]*patches.shape[2], patches.shape[3]))
+    patches = tf.reshape(patches, (patches.shape[0], patch_size,patch_size,1))
+
+    return(patches)
 
 class ReduceLROnPlateau_custom(Callback):
 
