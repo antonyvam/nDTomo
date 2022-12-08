@@ -1003,6 +1003,137 @@ def image_segm(im, thr, norm = False, plot = False):
         
     return(imt)
 
+
+def make_matrix_even(mat):
+
+    '''
+    Makes a 1D, 2D or 3D array have dimension sizes equal to an even number
+    '''
+    
+    dims = mat.shape
+
+    if len(dims)==1:
+        if np.mod(dims[0],2) != 0:
+            mat = mat[1:]
+        dims = mat.shape
+        
+    if len(dims)==2:
+        if np.mod(dims[0],2) != 0:
+            mat = mat[1:,:]
+        if np.mod(dims[1],2) != 0:
+            mat = mat[:,1:]
+        dims = mat.shape
+        
+    if len(dims)==3: 
+        if np.mod(dims[0],2) != 0:
+            mat = mat[1:,:,:]
+        if np.mod(dims[1],2) != 0:
+            mat = mat[:,1:,:]
+        if np.mod(dims[2],2) != 0:
+            mat = mat[:,:,1:]
+        dims = mat.shape        
+       
+    return(mat)
+    
+def pad_zeros_vol(vol1, vol2):
+
+    # Make each dimension of both volumes an even number
+    vol1 = make_matrix_even(vol1)
+    vol2 = make_matrix_even(vol2)
+    
+    dims1 = vol1.shape
+    dims2 = vol2.shape
+
+    ofsx = int((dims1[0]-dims2[0])/2)
+    ofsy = int((dims1[1]-dims2[1])/2)
+    ofsz = int((dims1[2]-dims2[2])/2)
+
+    if ofsx>0:
+        zerosmat = np.zeros((ofsx, vol2.shape[1], vol2.shape[2]), dtype='float32')
+        vol2 = np.concatenate((zerosmat, vol2, zerosmat), axis = 0)
+    elif ofsx<0:
+        zerosmat = np.zeros((np.abs(ofsx), vol1.shape[1], vol1.shape[2]), dtype='float32')
+        vol1 = np.concatenate((zerosmat, vol1, zerosmat), axis = 0)
+
+    if ofsy>0:
+        zerosmat = np.zeros((vol2.shape[0], ofsx, vol2.shape[2]), dtype='float32')
+        vol2 = np.concatenate((zerosmat, vol2, zerosmat), axis = 1)
+    elif ofsy<0:
+        zerosmat = np.zeros((vol1.shape[0], np.abs(ofsy), vol1.shape[2]), dtype='float32')
+        vol1 = np.concatenate((zerosmat, vol1, zerosmat), axis = 1)
+
+    if ofsz>0:
+        zerosmat = np.zeros((vol2.shape[0], vol2.shape[1], ofsz), dtype='float32')
+        vol2 = np.concatenate((zerosmat, vol2, zerosmat), axis = 2)
+    elif ofsz<0:
+        zerosmat = np.zeros((vol1.shape[0], vol2.shape[2], np.abs(ofsz)), dtype='float32')
+        vol1 = np.concatenate((zerosmat, vol1, zerosmat), axis = 2)
+
+    return(vol1, vol2)
+
+def pad_zeros_svol(vol, dims):
+
+    # Make each dimension of both volumes an even number
+    vol = make_matrix_even(vol)
+    
+    dimsvol = vol.shape
+
+    ofsx = int((dimsvol[0]-dims[0])/2)
+    ofsy = int((dimsvol[1]-dims[1])/2)
+    ofsz = int((dimsvol[2]-dims[2])/2)
+
+    if ofsx<0:
+        zerosmat = np.zeros((np.abs(ofsx), vol.shape[1], vol.shape[2]), dtype='float32')
+        vol = np.concatenate((zerosmat, vol, zerosmat), axis = 0)
+
+    if ofsy<0:
+        zerosmat = np.zeros((vol.shape[0], np.abs(ofsy), vol.shape[2]), dtype='float32')
+        vol = np.concatenate((zerosmat, vol, zerosmat), axis = 1)
+
+    if ofsz<0:
+        zerosmat = np.zeros((vol.shape[0], vol.shape[1], np.abs(ofsz)), dtype='float32')
+        vol = np.concatenate((zerosmat, vol, zerosmat), axis = 2)
+
+    return(vol)
+
+def pad_zeros(im1, im2):
+
+    '''
+    Compare two images that can have different sizes and make them the same size by padding zeros
+    '''
+
+    im1 = make_matrix_even(im1)
+    im2 = make_matrix_even(im2)
+    
+    dims1 = im1.shape
+    dims2 = im2.shape
+
+    # Pad zeros rowise
+    ofsr = int((dims1[0]-dims2[0])/2)
+    if ofsr>0:
+        
+        zerosmat = np.zeros((ofsr, im2.shape[1]), dtype='float32')
+        im2 = np.concatenate((zerosmat, im2, zerosmat), axis = 0)
+    
+    elif ofsr<0:  
+
+        zerosmat = np.zeros((np.abs(ofsr), im1.shape[1]), dtype='float32')
+        im1 = np.concatenate((zerosmat, im1, zerosmat), axis = 0)
+
+    # Pad zeros colmnwise
+    ofsc = int((dims1[1]-dims2[1])/2)
+    if ofsc>0:
+        
+        zerosmat = np.zeros((im2.shape[0], np.abs(ofsc)), dtype='float32')
+        im2 = np.concatenate((zerosmat, im2, zerosmat), axis = 1)
+    
+    elif ofsc<0:  
+
+        zerosmat = np.zeros((im1.shape[0], np.abs(ofsc)), dtype='float32')
+        im1 = np.concatenate((zerosmat, im1, zerosmat), axis = 1)
+
+    return(im1, im2)
+
 def nan_to_number(array, val=0):
     
     '''
