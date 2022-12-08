@@ -91,7 +91,7 @@ def airrem(sinograms, ofs = 1):
         
     return(sinograms)
 
-def scalesinos(sinograms):
+def scalesinos(sinograms, pbar=False):
     
     """
     Method for normalising a sinogram volume (translations x projections x nz/spectral).
@@ -110,8 +110,12 @@ def scalesinos(sinograms):
         sf = scint/np.max(scint)
         
         # Normalise the sinogram data    
-        for jj in tqdm(range(sinograms.shape[1])):
-            sinograms[:,jj,:] = sinograms[:,jj,:]/sf[jj] 
+        if pbar:
+            for jj in tqdm(range(sinograms.shape[1])):
+                sinograms[:,jj,:] = sinograms[:,jj,:]/sf[jj] 
+        else:
+            for jj in range(sinograms.shape[1]):
+                sinograms[:,jj,:] = sinograms[:,jj,:]/sf[jj]             
             
     elif len(di)==2:
 
@@ -123,8 +127,12 @@ def scalesinos(sinograms):
         sf = scint/np.max(scint)        
         
         # Normalise the sinogram data    
-        for jj in tqdm(range(sinograms.shape[1])):
-            sinograms[:,jj] = sinograms[:,jj]/sf[jj] 
+        if pbar:
+            for jj in tqdm(range(sinograms.shape[1])):
+                sinograms[:,jj] = sinograms[:,jj]/sf[jj] 
+        else:
+            for jj in range(sinograms.shape[1]):
+                sinograms[:,jj] = sinograms[:,jj]/sf[jj] 
             
     return(sinograms)
 
