@@ -1035,7 +1035,7 @@ def make_matrix_even(mat):
        
     return(mat)
     
-def pad_zeros_vol(vol1, vol2):
+def pad_zeros_vol(vol1, vol2, dtype):
 
     # Make each dimension of both volumes an even number
     vol1 = make_matrix_even(vol1)
@@ -1049,29 +1049,29 @@ def pad_zeros_vol(vol1, vol2):
     ofsz = int((dims1[2]-dims2[2])/2)
 
     if ofsx>0:
-        zerosmat = np.zeros((ofsx, vol2.shape[1], vol2.shape[2]), dtype='float32')
+        zerosmat = np.zeros((ofsx, vol2.shape[1], vol2.shape[2]), dtype=dtype)
         vol2 = np.concatenate((zerosmat, vol2, zerosmat), axis = 0)
     elif ofsx<0:
-        zerosmat = np.zeros((np.abs(ofsx), vol1.shape[1], vol1.shape[2]), dtype='float32')
+        zerosmat = np.zeros((np.abs(ofsx), vol1.shape[1], vol1.shape[2]), dtype=dtype)
         vol1 = np.concatenate((zerosmat, vol1, zerosmat), axis = 0)
 
     if ofsy>0:
-        zerosmat = np.zeros((vol2.shape[0], ofsx, vol2.shape[2]), dtype='float32')
+        zerosmat = np.zeros((vol2.shape[0], ofsx, vol2.shape[2]), dtype=dtype)
         vol2 = np.concatenate((zerosmat, vol2, zerosmat), axis = 1)
     elif ofsy<0:
-        zerosmat = np.zeros((vol1.shape[0], np.abs(ofsy), vol1.shape[2]), dtype='float32')
+        zerosmat = np.zeros((vol1.shape[0], np.abs(ofsy), vol1.shape[2]), dtype=dtype)
         vol1 = np.concatenate((zerosmat, vol1, zerosmat), axis = 1)
 
     if ofsz>0:
-        zerosmat = np.zeros((vol2.shape[0], vol2.shape[1], ofsz), dtype='float32')
+        zerosmat = np.zeros((vol2.shape[0], vol2.shape[1], ofsz), dtype=dtype)
         vol2 = np.concatenate((zerosmat, vol2, zerosmat), axis = 2)
     elif ofsz<0:
-        zerosmat = np.zeros((vol1.shape[0], vol2.shape[2], np.abs(ofsz)), dtype='float32')
+        zerosmat = np.zeros((vol1.shape[0], vol2.shape[2], np.abs(ofsz)), dtype=dtype)
         vol1 = np.concatenate((zerosmat, vol1, zerosmat), axis = 2)
 
     return(vol1, vol2)
 
-def pad_zeros_svol(vol, dims):
+def pad_zeros_svol(vol, dims, dtype):
 
     # Make each dimension of both volumes an even number
     vol = make_matrix_even(vol)
@@ -1083,56 +1083,66 @@ def pad_zeros_svol(vol, dims):
     ofsz = int((dimsvol[2]-dims[2])/2)
 
     if ofsx<0:
-        zerosmat = np.zeros((np.abs(ofsx), vol.shape[1], vol.shape[2]), dtype='float32')
+        zerosmat = np.zeros((np.abs(ofsx), vol.shape[1], vol.shape[2]), dtype=dtype)
         vol = np.concatenate((zerosmat, vol, zerosmat), axis = 0)
 
     if ofsy<0:
-        zerosmat = np.zeros((vol.shape[0], np.abs(ofsy), vol.shape[2]), dtype='float32')
+        zerosmat = np.zeros((vol.shape[0], np.abs(ofsy), vol.shape[2]), dtype=dtype)
         vol = np.concatenate((zerosmat, vol, zerosmat), axis = 1)
 
     if ofsz<0:
-        zerosmat = np.zeros((vol.shape[0], vol.shape[1], np.abs(ofsz)), dtype='float32')
+        zerosmat = np.zeros((vol.shape[0], vol.shape[1], np.abs(ofsz)), dtype=dtype)
         vol = np.concatenate((zerosmat, vol, zerosmat), axis = 2)
 
     return(vol)
 
-def pad_zeros(im1, im2):
 
-    '''
-    Compare two images that can have different sizes and make them the same size by padding zeros
-    '''
+def pad_zeros(im1, im2, dtype):
 
-    im1 = make_matrix_even(im1)
-    im2 = make_matrix_even(im2)
-    
     dims1 = im1.shape
     dims2 = im2.shape
+
+    if np.mod(dims1[0],2) != 0:
+        im1 = im1[1:,:]
+        dims1 = im1.shape
+    if np.mod(dims2[0],2) != 0:
+        im2 = im2[1:,:]
+        dims1 = im1.shape
+    if np.mod(dims1[1],2) != 0:
+        im1 = im1[:,1:]
+        dims1 = im1.shape
+    if np.mod(dims2[1],2) != 0:
+        im2 = im2[:,1:]
+        dims2 = im2.shape
 
     # Pad zeros rowise
     ofsr = int((dims1[0]-dims2[0])/2)
     if ofsr>0:
         
-        zerosmat = np.zeros((ofsr, im2.shape[1]), dtype='float32')
+        zerosmat = np.zeros((ofsr, im2.shape[1]), dtype=dtype)
         im2 = np.concatenate((zerosmat, im2, zerosmat), axis = 0)
     
     elif ofsr<0:  
 
-        zerosmat = np.zeros((np.abs(ofsr), im1.shape[1]), dtype='float32')
+        zerosmat = np.zeros((np.abs(ofsr), im1.shape[1]), dtype=dtype)
         im1 = np.concatenate((zerosmat, im1, zerosmat), axis = 0)
 
     # Pad zeros colmnwise
+    dims1 = im1.shape
+    dims2 = im2.shape
     ofsc = int((dims1[1]-dims2[1])/2)
     if ofsc>0:
         
-        zerosmat = np.zeros((im2.shape[0], np.abs(ofsc)), dtype='float32')
+        zerosmat = np.zeros((im2.shape[0], np.abs(ofsc)), dtype=dtype)
         im2 = np.concatenate((zerosmat, im2, zerosmat), axis = 1)
     
     elif ofsc<0:  
 
-        zerosmat = np.zeros((im1.shape[0], np.abs(ofsc)), dtype='float32')
+        zerosmat = np.zeros((im1.shape[0], np.abs(ofsc)), dtype=dtype)
         im1 = np.concatenate((zerosmat, im1, zerosmat), axis = 1)
 
     return(im1, im2)
+
 
 def nan_to_number(array, val=0):
     
