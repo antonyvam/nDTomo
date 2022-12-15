@@ -7,7 +7,7 @@ Functions for tomography using astra-toolbox library
 
 
 import scipy, astra, time
-from numpy import deg2rad, arange, linspace, pi, zeros, mod, mean, where, floor, log, inf, exp
+from numpy import deg2rad, arange, linspace, pi, zeros, mean, where, floor, log, inf, exp
 from numpy.random import rand
 from tqdm import tqdm
 
