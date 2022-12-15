@@ -482,7 +482,7 @@ def ConeBeamCTbeam(sf = 15, whiteCounts = 4500, countsToCut = 1):
     beam['countsToCut'] = 1
     return(beam)
 
-def coneBeamFP(vol, nproj, geo, v_cut = 0):    
+def coneBeamFP(vol, nproj, geo, v_cut = 0, detector_cols=None, detector_rows=None):    
         
     v_cut_local = int(v_cut * 8 / geo['downSizeFactor'])
     v_window = range(v_cut_local,  vol.shape[0])    
@@ -491,8 +491,10 @@ def coneBeamFP(vol, nproj, geo, v_cut = 0):
 
     # Configuration. - need to read this from a configuration file
     distance_origin_detector =geo['distance_source_detector'] - geo['distance_source_origin']  # [mm]
-    detector_cols = vol.shape[2]  # Horizontal size of detector [pixels].
-    detector_rows = vol.shape[0]  # Vertical size of detector [pixels].
+    if detector_cols is None:
+        detector_cols = vol.shape[2]  # Horizontal size of detector [pixels].
+    if detector_rows is None:
+        detector_rows = vol.shape[0]  # Vertical size of detector [pixels].
     angles = linspace(0, 2 * pi, num=nproj, endpoint=False)
  
     # Set up multi-GPU usage.
