@@ -152,7 +152,7 @@ def astra_create_sino_geo(im, theta=None):
     return(proj_id)
 
             
-def astra_create_sinostack(vol, npr = None, scanrange = '180', theta=None, proj_id=None):
+def astra_create_sinostack(vol, npr = None, scanrange = '180', theta=None, proj_id=None, dtype='float32'):
 
     if npr is None:
         npr = vol.shape[0]
@@ -169,7 +169,7 @@ def astra_create_sinostack(vol, npr = None, scanrange = '180', theta=None, proj_
     sz = vol.shape[0]
     nim = vol.shape[2]
 
-    sinograms = zeros((len(theta), sz, nim))
+    sinograms = zeros((len(theta), sz, nim), dtype=dtype)
     
     for ii in tqdm(range(nim)):
         
