@@ -533,6 +533,9 @@ def radiographs_mu(projections, geo, beam):
 
 def coneBeamFDK(projections, geo, v_cut = 0):    
    
+    '''
+    Be careful, there is some kind of weird bug here
+    '''
     v_cut_local = int(v_cut * 8 / geo['downSizeFactor'])
     v_window = range(v_cut_local,  projections.shape[0])    
     v_corr = v_window[0] / 2
@@ -580,8 +583,12 @@ def coneBeamFDK(projections, geo, v_cut = 0):
 
     return(reconstruction)
 
-def coneBeamFP_FDK(vol, nproj, geo, beam, v_cut = 0):    
-        
+def coneBeamFP_FDK(vol, nproj, geo, beam=None, v_cut = 0):    
+    
+    '''
+    Be careful, there is some kind of weird bug here
+    '''
+    
     v_cut_local = int(v_cut * 8 / geo['downSizeFactor'])
     v_window = range(v_cut_local,  vol.shape[0])    
     
@@ -613,8 +620,8 @@ def coneBeamFP_FDK(vol, nproj, geo, beam, v_cut = 0):
 
     proj_id, proj_data =  astra.create_sino3d_gpu(vol, proj_geom_cor, vol_geom)
         
-
-    proj_data = radiographs_mu(proj_data, geo, beam)
+    if beam is not None:
+        proj_data = radiographs_mu(proj_data, geo, beam)
      
     # Set up multi-GPU usage.
     # This only works for 3D GPU forward projection and back projection.
