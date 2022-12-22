@@ -653,5 +653,29 @@ def number_to_nan(array, val=0):
     
 
 
+def find_first_neighbors_2D(mat, r, c):
+    
+    '''
+    Takes a binary 2D matrix as input and the coordinates (row, column) and returns a list with the first neighbour elements that are non-zero
+    '''
+    
+    dims = mat.shape
+    
+    el_list = [[r-1, c-1], [r-1, c], [r-1, c+1],
+               [r, c-1], [r, c+1],
+               [r+1, c-1], [r+1, c], [r+1, c+1]]
 
+    ind_list = []
+    
+    for el in range(len(el_list)):
+        
+        x, y = el_list[el]
+        
+        if x>=0 and y>=0 and x<dims[0] and y<dims[1]:
+
+            if mat[x,y] > 0:
+                
+                ind_list.append([x,y])
+
+    return(ind_list)
 
