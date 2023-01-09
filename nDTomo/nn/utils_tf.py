@@ -16,7 +16,7 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
 from tensorflow_addons.image import rotate
 from tensorflow.image import extract_patches
-
+from tensorflow import extract_volume_patches
 
 def tf_gpu_devices():
         
@@ -89,6 +89,15 @@ def rotate_yz(vol, ang):
         voln[ii,:,:] = rotate(vol[ii,:,:].reshape(dims[1], dims[2], 1), ang, interpolation = 'bilinear')[:,:,0]
     
     return(voln)
+
+def vol_patches(vol, patch_size = 64):
+
+    train_patches = extract_volume_patches(
+        np.expand_dims(vol, axis=(0,4)), ksizes=[1,patch_size,patch_size,patch_size,1], strides=[1,patch_size,patch_size,patch_size,1], padding='VALID', name=None
+    )    
+    train_patches = np.reshape(train_patches, (train_patches.shape[0]*train_patches.shape[1]*train_patches.shape[2]*train_patches.shape[3], train_patches.shape[4]))
+    train_patches = np.reshape(train_patches, (train_patches.shape[0], patch_size,patch_size, patch_size, 1))
+    return(train_patches)
 
 def extract_patches(x, PATCH_WIDTH, PATCH_HEIGHT):
     '''
