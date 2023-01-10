@@ -16,7 +16,7 @@ import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
 from tensorflow_addons.image import rotate
 from tensorflow.image import extract_patches
-
+from tensorflow import extract_volume_patches
 
 def tf_gpu_devices():
         
@@ -89,6 +89,106 @@ def rotate_yz(vol, ang):
         voln[ii,:,:] = rotate(vol[ii,:,:].reshape(dims[1], dims[2], 1), ang, interpolation = 'bilinear')[:,:,0]
     
     return(voln)
+
+def vol_patches(vol, patch_size = 64):
+
+    train_patches = extract_volume_patches(
+        np.expand_dims(vol, axis=(0,4)), ksizes=[1,patch_size,patch_size,patch_size,1], strides=[1,patch_size,patch_size,patch_size,1], padding='VALID', name=None
+    )    
+    train_patches = np.reshape(train_patches, (train_patches.shape[0]*train_patches.shape[1]*train_patches.shape[2]*train_patches.shape[3], train_patches.shape[4]))
+    train_patches = np.reshape(train_patches, (train_patches.shape[0], patch_size,patch_size, patch_size, 1))
+    return(train_patches)
+
+
+def create_vol_train_data(volc, nvols = 5000, nsubvol = None, method='lr'):
+
+    '''
+
+    method: 'lr', 'lrtb'
+
+    '''
+
+    if nsubvol is None:
+        nsubvol = int(nvols/8)
+        
+    # top xy plane
+    vol000 = volc[0::2,0::2,0::2] # top left
+    vol100 = volc[1::2,0::2,0::2] # bottom left
+    vol010 = volc[0::2,1::2,0::2] # top right
+    vol110 = volc[1::2,1::2,0::2] # bottom right
+
+    # bottom xy plane
+    vol001 = volc[0::2,0::2,1::2] # top left
+    vol101 = volc[1::2,0::2,1::2] # bottom left
+    vol011 = volc[0::2,1::2,1::2] # top right
+    vol111 = volc[1::2,1::2,1::2] # bottom right
+
+    # top xy plane
+
+    vol000 = vol_patches(vol000)
+    # Mix
+    inds = np.arange(vol000.shape[0])
+    np.random.shuffle(inds)
+
+    vol000 = vol000[inds,:,:,:,:]
+    vol000 = vol000[:nsubvol,:,:,:,:]
+
+    vol100 = vol_patches(vol100)
+    vol100 = vol100[inds,:,:,:,:]
+    vol100 = vol100[:nsubvol,:,:,:,:]
+
+    vol010 = vol_patches(vol010)
+    vol010 = vol010[inds,:,:,:,:]
+    vol010 = vol010[:nsubvol,:,:,:,:]
+
+    vol110 = vol_patches(vol110)
+    vol110 = vol110[inds,:,:,:,:]
+    vol110 = vol110[:nsubvol,:,:,:,:]
+
+    # bottom xy plane
+
+    vol001 = vol_patches(vol001)
+    vol001 = vol001[inds,:,:,:,:]
+    vol001 = vol001[:nsubvol,:,:,:,:]
+
+    vol101 = vol_patches(vol101)
+    vol101 = vol101[inds,:,:,:,:]
+    vol101 = vol101[:nsubvol,:,:,:,:]
+
+    vol011 = vol_patches(vol011)
+    vol011 = vol011[inds,:,:,:,:]
+    vol011 = vol011[:nsubvol,:,:,:,:]
+
+    vol111 = vol_patches(vol111)
+    vol111 = vol111[inds,:,:,:,:]
+    vol111 = vol111[:nsubvol,:,:,:,:]
+
+    if method == 'lrtb':
+    
+        train_patches = np.concatenate((vol000, vol100, vol000, vol010, vol100, vol110, vol010, vol110,
+                                    vol001, vol101, vol001, vol011, vol101, vol111, vol011, vol111), axis =0)
+        target_patches = np.concatenate((vol100, vol000, vol010, vol000, vol110, vol100, vol110, vol010,
+                                         vol101, vol001, vol011, vol001, vol111, vol101, vol111, vol011), axis =0)
+
+    elif method == 'lr':
+    
+        train_patches = np.concatenate((vol000, vol010, vol100, vol110,
+                                        vol001, vol011, vol101, vol111), axis =0)
+        target_patches = np.concatenate((vol010, vol000, vol110, vol100,
+                                         vol011, vol001, vol111, vol101), axis =0)
+    
+    # Mix
+
+    inds = np.arange(train_patches.shape[0])
+    np.random.shuffle(inds)
+
+    train_patches = train_patches[inds,:,:,:,:]
+    target_patches = target_patches[inds,:,:,:,:]
+    
+    return(train_patches, target_patches)
+    
+    
+    
 
 def extract_patches(x, PATCH_WIDTH, PATCH_HEIGHT):
     '''

@@ -99,6 +99,8 @@ def create_im_patches(im_list, patchsize = 32, overlap = 0):
         patches.append(np.array(im_patches, dtype='float32'))
         inds.append(indices)
 
+    patches = np.array(patches, dtype='float32')
+
     return(patches, inds)
 
 def create_global_mask(vol, thr = 0.1):
