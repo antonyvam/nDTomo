@@ -919,7 +919,7 @@ def cgls(A, b, K = 25, plot=False):
     npix = int(np.sqrt(A.shape[1]))
     
     # Prepare for CG iteration.
-    x = np.zeros((n,))
+    x = np.zeros((n,1))
     
     d = csr_matrix.dot(np.transpose(A),b)
     
