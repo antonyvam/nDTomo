@@ -955,7 +955,6 @@ def cgls(A, b, K = 25, plot=False):
       xn = np.reshape(xn,(npix,npix))
       xn = np.where(xn<0, 0, xn)
       xn = xn/np.max(xn)
-      xn = np.flipud(np.transpose(xn))
       
       if plot:
           plt.imshow(xn, cmap = 'jet');plt.title(j)
