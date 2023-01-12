@@ -1179,3 +1179,60 @@ def CNN3D(nlayers = 15, skip=True, filts = 64):
         model = Model(im, x)
     
     return model
+
+
+
+def mask_rcnn(input_shape, num_classes):
+    
+    
+    '''
+    This example creates a Mask R-CNN model with an input shape of (224,224,3), 
+    and a number of classes of 80. It uses a ResNet50 model as the base model (backbone) 
+    and adds the Region Proposal Network (RPN) and the Fully Convolutional Network (FCN) on top of it. 
+    The RPN is responsible for generating object proposals and the FCN is responsible for predicting the class, 
+    bounding box and mask for each object.
+    usage example:
+
+    input_shape = (224, 224, 3)
+    num_classes = 80
+    
+    model = mask_rcnn(input_shape, num_classes)    
+    '''
+    
+    # define the base model (backbone)
+    base_model = tf.keras.applications.ResNet50(weights='imagenet', include_top=False, input_shape=input_shape)
+
+    # define the input layer
+    inputs = base_model.input
+    # extract features from the base model
+    features = base_model.output
+
+    # define the Region Proposal Network (RPN)
+    rpn = tf.keras.layers.Conv2D(256, (3, 3), padding='same', activation='relu', kernel_initializer='normal')(features)
+    rpn = tf.keras.layers.Dropout(0.5)(rpn)
+    rpn_class = tf.keras.layers.Conv2D(num_classes, (1, 1), activation='sigmoid', kernel_initializer='uniform')(rpn)
+    rpn_bbox = tf.keras.layers.Conv2D(num_classes * 4, (1, 1), activation='linear', kernel_initializer='zero')(rpn)
+
+    # define the Fully Convolutional Network (FCN)
+    fcn = tf.keras.layers.Conv2D(256, (3, 3), padding='same', activation='relu', kernel_initializer='normal')(features)
+    fcn = tf.keras.layers.Dropout(0.5)(fcn)
+    fcn = tf.keras.layers.Conv2D(256, (3, 3), padding='same', activation='relu', kernel_initializer='normal')(fcn)
+    fcn = tf.keras.layers.Dropout(0.5)(fcn)
+    fcn_class = tf.keras.layers.Conv2D(num_classes, (1, 1), activation='sigmoid', kernel_initializer='uniform')(fcn)
+    fcn_bbox = tf.keras.layers.Conv2D(num_classes * 4, (1, 1), activation='linear', kernel_initializer='zero')(fcn)
+    fcn_mask = tf.keras.layers.Conv2D(num_classes, (1, 1), activation='sigmoid', kernel_initializer='uniform')(fcn)
+
+    # reshape the output of the FCN
+    fcn_class = tf.keras.layers.Reshape((-1, num_classes))(fcn_class)
+    fcn_bbox = tf.keras.layers.Reshape((-1, num_classes * 4))(fcn_bbox)
+    
+    fcn_mask = tf.keras.layers.Reshape((-1, num_classes))(fcn_mask)
+    
+    # define the output layers
+    outputs = [rpn_class, rpn_bbox, fcn_class, fcn_bbox, fcn_mask]
+    
+    # create the Mask R-CNN model
+    model = tf.keras.Model(inputs, outputs)
+    
+    return model
+    

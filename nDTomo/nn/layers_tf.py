@@ -6,7 +6,7 @@ Custom layers for Tensorflow
 """
 
 from tensorflow.keras import layers
-from tensorflow import matmul, multiply, reduce_mean
+from tensorflow import matmul, multiply, reduce_mean, add
 from tensorflow.nn import softmax, sigmoid
 
 class SelfAttention(layers.Layer):
@@ -60,4 +60,22 @@ class ScaleAwareAttention2D(layers.Layer):
         attention_output = multiply(inputs, attention_weights)
         return attention_output
 
+class ResidualBlock2D(layers.Layer):
+    def __init__(self, filters, kernel_size, strides, num_conv_layers, **kwargs):
+        super(ResidualBlock2D, self).__init__(**kwargs)
+        self.num_conv_layers = num_conv_layers
+        self.conv_layers = [layers.Conv2D(filters, kernel_size, strides, padding='same', activation='relu') for _ in range(num_conv_layers)]
+        
+    def call(self, inputs):
+        x = inputs
+        for layer in self.conv_layers:
+            x = layer(x)
+        # add the input to the output of the block
+        output = add(x, inputs)
+        return output
 
+def residual_block_stack(inputs, filters, kernel_size, strides, num_conv_layers, num_blocks):
+    x = inputs
+    for _ in range(num_blocks):
+        x = ResidualBlock2D(filters, kernel_size, strides, num_conv_layers)(x)
+    return x
