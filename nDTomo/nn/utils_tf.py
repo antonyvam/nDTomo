@@ -6,9 +6,11 @@ Various tensorflow functions
 """
 
 from nDTomo.nn.tomo_tf import tf_tomo_transf
+from nDTomo.sim.shapes.phantoms import SheppLogan
+
 from tqdm import tqdm
 
-from numpy import less, greater, Inf, zeros_like, deg2rad, append, expand_dims, reshape, concatenate, arange
+from numpy import less, greater, Inf, zeros_like, deg2rad, append, expand_dims, reshape, concatenate, arange, transpose, tile
 from numpy.random import rand, shuffle
 
 import tensorflow as tf
@@ -318,6 +320,22 @@ def create_volume_patches(vol, patch_size = 32):
 
     return(patches)
 
+def example_SL_vol(npix=256, nz=32):
+        
+    vol = SheppLogan(npix)
+    vol = tile(vol, (nz, 1, 1))
+    vol = transpose(vol, (1,2,0))
+    vol = expand_dims(vol, axis=(0,4))
+    
+    print(vol.shape)
+    
+    volpatches = create_volume_patches(vol, patch_size = 32)
+    
+    voln = merge_vol_patches(tf.cast(vol, dtype='float64'), volpatches, PATCH_WIDTH=32, PATCH_HEIGHT=32, PATCH_DEPTH=32)    
+
+    print(voln)
+
+    return(voln)
 
 class ReduceLROnPlateau_custom(Callback):
 
