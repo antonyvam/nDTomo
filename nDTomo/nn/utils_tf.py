@@ -8,9 +8,8 @@ Various tensorflow functions
 from nDTomo.nn.tomo_tf import tf_tomo_transf
 from tqdm import tqdm
 
-from numpy import less, greater, Inf, zeros_like, deg2rad
-from numpy.random import rand
-from numpy import append
+from numpy import less, greater, Inf, zeros_like, deg2rad, append, expand_dims, reshape, concatenate, arange
+from numpy.random import rand, shuffle
 
 import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
@@ -93,10 +92,10 @@ def rotate_yz(vol, ang):
 def vol_patches(vol, patch_size = 64):
 
     train_patches = extract_volume_patches(
-        np.expand_dims(vol, axis=(0,4)), ksizes=[1,patch_size,patch_size,patch_size,1], strides=[1,patch_size,patch_size,patch_size,1], padding='VALID', name=None
+        expand_dims(vol, axis=(0,4)), ksizes=[1,patch_size,patch_size,patch_size,1], strides=[1,patch_size,patch_size,patch_size,1], padding='VALID', name=None
     )    
-    train_patches = np.reshape(train_patches, (train_patches.shape[0]*train_patches.shape[1]*train_patches.shape[2]*train_patches.shape[3], train_patches.shape[4]))
-    train_patches = np.reshape(train_patches, (train_patches.shape[0], patch_size,patch_size, patch_size, 1))
+    train_patches = reshape(train_patches, (train_patches.shape[0]*train_patches.shape[1]*train_patches.shape[2]*train_patches.shape[3], train_patches.shape[4]))
+    train_patches = reshape(train_patches, (train_patches.shape[0], patch_size,patch_size, patch_size, 1))
     return(train_patches)
 
 
@@ -127,8 +126,8 @@ def create_vol_train_data(volc, nvols = 5000, nsubvol = None, method='lr'):
 
     vol000 = vol_patches(vol000)
     # Mix
-    inds = np.arange(vol000.shape[0])
-    np.random.shuffle(inds)
+    inds = arange(vol000.shape[0])
+    shuffle(inds)
 
     vol000 = vol000[inds,:,:,:,:]
     vol000 = vol000[:nsubvol,:,:,:,:]
@@ -165,22 +164,22 @@ def create_vol_train_data(volc, nvols = 5000, nsubvol = None, method='lr'):
 
     if method == 'lrtb':
     
-        train_patches = np.concatenate((vol000, vol100, vol000, vol010, vol100, vol110, vol010, vol110,
+        train_patches = concatenate((vol000, vol100, vol000, vol010, vol100, vol110, vol010, vol110,
                                     vol001, vol101, vol001, vol011, vol101, vol111, vol011, vol111), axis =0)
-        target_patches = np.concatenate((vol100, vol000, vol010, vol000, vol110, vol100, vol110, vol010,
+        target_patches = concatenate((vol100, vol000, vol010, vol000, vol110, vol100, vol110, vol010,
                                          vol101, vol001, vol011, vol001, vol111, vol101, vol111, vol011), axis =0)
 
     elif method == 'lr':
     
-        train_patches = np.concatenate((vol000, vol010, vol100, vol110,
+        train_patches = concatenate((vol000, vol010, vol100, vol110,
                                         vol001, vol011, vol101, vol111), axis =0)
-        target_patches = np.concatenate((vol010, vol000, vol110, vol100,
+        target_patches = concatenate((vol010, vol000, vol110, vol100,
                                          vol011, vol001, vol111, vol101), axis =0)
     
     # Mix
 
-    inds = np.arange(train_patches.shape[0])
-    np.random.shuffle(inds)
+    inds = arange(train_patches.shape[0])
+    shuffle(inds)
 
     train_patches = train_patches[inds,:,:,:,:]
     target_patches = target_patches[inds,:,:,:,:]
