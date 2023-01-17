@@ -277,6 +277,48 @@ def create_image_patches(im, patch_size = 32):
 
     return(patches)
 
+
+def extract_vol_patches(x, PATCH_WIDTH, PATCH_HEIGHT, PATCH_DEPTH):
+
+    ksizes = [1, PATCH_WIDTH, PATCH_HEIGHT, PATCH_DEPTH, 1]
+    strides = [1, PATCH_WIDTH, PATCH_HEIGHT, PATCH_DEPTH, 1]
+    padding = 'SAME'
+    return tf.extract_volume_patches(x, ksizes, strides, padding)
+
+def extract_vol_patches_inverse(x, y, tape, PATCH_WIDTH, PATCH_HEIGHT, PATCH_DEPTH):
+    '''
+    Edited from: https://gist.github.com/hwaxxer/17ea565f86b748ba9471546b2532d0cf
+    '''    
+    _x = tf.zeros_like(x)
+    _y = extract_vol_patches(_x, PATCH_WIDTH, PATCH_HEIGHT, PATCH_DEPTH)
+    grad = tape.gradient(_y, _x)
+    # Divide by grad, to "average" together the overlapping patches
+    # otherwise they would simply sum up
+    return tape.gradient(_y, _x, output_gradients=y) / grad
+
+def merge_vol_patches(vol, patches, PATCH_WIDTH, PATCH_HEIGHT, PATCH_DEPTH):
+    '''
+    Edited from: https://gist.github.com/hwaxxer/17ea565f86b748ba9471546b2532d0cf
+    '''    
+    with tf.GradientTape(persistent=True) as tape:
+        tape.watch(vol)
+        inv = extract_vol_patches_inverse(vol, patches, tape, PATCH_WIDTH, PATCH_HEIGHT, PATCH_DEPTH)
+        
+    return(inv)
+
+def create_volume_patches(vol, patch_size = 32):
+
+    patches = tf.extract_volume_patches(vol, 
+                                        ksizes = [1, patch_size, patch_size, patch_size, 1], 
+                                        strides = [1, patch_size, patch_size, patch_size, 1], 
+                                        padding='SAME')
+    
+    patches = tf.reshape(patches, (patches.shape[0]*patches.shape[1]*patches.shape[2]*patches.shape[3], patches.shape[4]))
+    patches = tf.reshape(patches, (patches.shape[0], patch_size, patch_size, patch_size, 1))
+
+    return(patches)
+
+
 class ReduceLROnPlateau_custom(Callback):
 
     '''
