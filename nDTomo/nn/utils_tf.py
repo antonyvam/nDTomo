@@ -94,7 +94,7 @@ def vol_patches(vol, patch_size = 64):
         expand_dims(vol, axis=(0,4)), ksizes=[1,patch_size,patch_size,patch_size,1], strides=[1,patch_size,patch_size,patch_size,1], padding='VALID', name=None
     )    
     train_patches = reshape(train_patches, (train_patches.shape[0]*train_patches.shape[1]*train_patches.shape[2]*train_patches.shape[3], train_patches.shape[4]))
-    train_patches = reshape(train_patches, (train_patches.shape[0], patch_size,patch_size, patch_size, 1))
+    train_patches = reshape(train_patches, (train_patches.shape[0], patch_size, patch_size, patch_size, 1))
     return(train_patches)
 
 
