@@ -14,7 +14,6 @@ from numpy.random import rand, shuffle
 import tensorflow as tf
 from tensorflow.keras.callbacks import Callback
 from tensorflow_addons.image import rotate
-from tensorflow.image import extract_patches
 from tensorflow import extract_volume_patches
 
 def tf_gpu_devices():
