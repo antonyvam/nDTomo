@@ -1124,7 +1124,7 @@ def CNN1D(nlayers = 4, skip=False, filts = 64, kernel_size=10):
     
     return model
 
-def CNN2D(nlayers = 4, skip=True, filts = 64, lastactl = 'relu'):
+def CNN2D(nlayers = 4, skip=True, filts = 64, lastactl = 'linear'):
     
     '''
     A simple 2D deep convolutional neural network having muptiple conv2D layers in series
