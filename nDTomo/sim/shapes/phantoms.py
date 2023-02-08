@@ -298,7 +298,7 @@ def nDphantom_3D(npix, use_spectra = 'No', spectra = None, nz = 100, imgs = None
             sp1, sp2, sp3, sp4, sp5, tth, q = load_example_patterns()
             spectra = [sp1, sp2, sp3, sp4, sp5]
         else:
-            sp1, sp2, sp3, sp4, sp5 = spectra
+            sp1 = spectra[0]
 
         nch = len(sp1)
         vol =  np.zeros((npix, npix, nch))
