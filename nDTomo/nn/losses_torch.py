@@ -29,4 +29,11 @@ def total_variation_loss(img, weight):
      tv_h = torch.pow(img[:,:,1:,:]-img[:,:,:-1,:], 2).sum()
      tv_w = torch.pow(img[:,:,:,1:]-img[:,:,:,:-1], 2).sum()
      return weight*(tv_h+tv_w)/(bs_img*c_img*h_img*w_img)
-	 
+	
+def gram_matrix(y):
+    (b, ch, h, w) = y.size()
+    features = y.view(b, ch, w * h)
+    features_t = features.transpose(1, 2)
+    gram = features.bmm(features_t) / (ch * h * w)
+    return gram
+	
