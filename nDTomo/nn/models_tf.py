@@ -780,9 +780,22 @@ def pixel_shuffle(scale):
 	
     return lambda x: tf.nn.depth_to_space(x, scale)
 
-def DCNN2D_block(npix, image_in, pads, nlayers = 4, net = 'unet', dlayer = 'No', skipcon = 'No', nconvs =3, filtnums= 64, kersz = 3, dropout = 'Yes', batchnorm = 'No', 
-                  actlayermid = 'relu', pad='same', dense_layers = 'Default', dlayers = None):
+def DCNN2D_block(nx=None, ny=None, net = 'unet', skipcon= False, 
+           nlayers = 3, nconvs=3, filtnums= 64, kersz = 3, 
+           dropout=False, batchnorm=False,
+           dlayer= False, dense_layers = 'Default', dlayers = None,
+           actlayermid = 'relu', actlayerfi = 'linear', pad='same', image_in=None):
     
+    if nx is not None and ny is not None:
+        fconv = False
+        pads_x = padcalc(nx, nlayers)
+        pads_y = padcalc(ny, nlayers)
+    else:
+        fconv = True
+    
+    if image_in is None:
+        image_in = Input(shape=(nx, ny,  1))
+        
     convl = convblock2D(image_in, nconvs = 3, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
 
     dconvs = [convl]
@@ -792,7 +805,9 @@ def DCNN2D_block(npix, image_in, pads, nlayers = 4, net = 'unet', dlayer = 'No',
         convl = downblock2D(convl, nconvs = 3, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
         dconvs.append(convl)
     
-    if dlayer == 'Yes' and dense_layers == 'Default':
+    if dlayer and dense_layers == 'Default':
+        
+        convl = Conv2D(1, 1, activation = actlayermid)(convl)
         
         convl = Flatten()(convl)
         
@@ -800,57 +815,94 @@ def DCNN2D_block(npix, image_in, pads, nlayers = 4, net = 'unet', dlayer = 'No',
     
             convl = Dense(100, kernel_initializer='he_normal', activation = actlayermid)(convl)
 
-            if batchnorm == 'Yes':
+            if batchnorm:
                 convl = BatchNormalization()(convl)
         
-            if dropout == 'Yes':
+            if dropout:
                 convl = Dropout(0.1)(convl)                 
         
-        convl = Dense(int(tf.math.ceil(pads[0] / 2)) * int(tf.math.ceil(pads[0] / 2)) * 8, kernel_initializer='he_normal', activation=actlayermid)(convl)
-        if batchnorm == 'Yes':
+        convl = Dense(int(nx / 4) * int(nx / 4) * 1, kernel_initializer='he_normal', activation=actlayermid)(convl)
+        if batchnorm:
             convl = BatchNormalization()(convl)
     
-        if dropout == 'Yes':
+        if dropout:
             convl = Dropout(0.1)(convl)     
-        convl = Reshape((int(tf.math.ceil(pads[0] / 2)), int(tf.math.ceil(pads[0] / 2)), 8))(convl)    
+        convl = Reshape((int(nx / 4) , int(nx / 4), 1))(convl)    
+
+        convl = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(convl)
+        convl = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(convl)
+        convl = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(convl)
+        if batchnorm:
+            convl = BatchNormalization()(convl)
+        if dropout:
+            convl = SpatialDropout2D(0.1)(convl)    
+        
+        for ii in range(nlayers-2):
     
-    elif dlayer == 'Yes' and dense_layers == 'Custom':
+            up = upblock2D(convl, [pads_x[ii], pads_y[ii]] , filtnums= filtnums, pad=pad)
+            if net == 'unet':
+                up = concatenate([dconvs[-(ii+2)],up], axis = 3)
+            convl = convblock2D(convl=up, nconvs = 2, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
+
+    elif dlayer and dense_layers == 'Custom':
+        
+        convl = Conv2D(1, 1, activation = actlayermid)(convl)
         
         convl = Flatten()(convl)
         
         for ii in range(len(dlayers)):
     
             convl = Dense(dlayers[ii], kernel_initializer='he_normal', activation = actlayermid)(convl)
-
-            if batchnorm == 'Yes':
+    
+            if batchnorm:
                 convl = BatchNormalization()(convl)
         
-            if dropout == 'Yes':
+            if dropout:
                 convl = Dropout(0.1)(convl)                 
         
-        convl = Dense(int(tf.math.ceil(pads[0] / 2)) * int(tf.math.ceil(pads[0] / 2)) * 8, kernel_initializer='he_normal', activation=actlayermid)(convl)
-        if batchnorm == 'Yes':
+        convl = Dense(int(nx / 4) * int(nx / 4) * 1, kernel_initializer='he_normal', activation=actlayermid)(convl)
+        if batchnorm:
             convl = BatchNormalization()(convl)
     
-        if dropout == 'Yes':
+        if dropout:
             convl = Dropout(0.1)(convl)     
-        convl = Reshape((int(tf.math.ceil(pads[0] / 2)), int(tf.math.ceil(pads[0] / 2)), 8))(convl)           
-    
-    for ii in range(nlayers-1):
+        convl = Reshape((int(nx / 4) , int(nx / 4), 1))(convl)    
 
-        up = upblock2D(convl, pads[ii], filtnums= filtnums, pad=pad)
-        if net == 'unet':
-            up = concatenate([dconvs[-(ii+2)],up], axis = 3)
-        convl = convblock2D(convl=up, nconvs = 2, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
+        convl = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(convl)
+        convl = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(convl)
+        convl = Conv2D(filters = 64, kernel_size = (3,3), strides = 1, padding = 'same', kernel_initializer='random_normal', activation = 'relu')(convl)
+        if batchnorm:
+            convl = BatchNormalization()(convl)
+        if dropout:
+            convl = SpatialDropout2D(0.1)(convl)    
+        
+        for ii in range(nlayers-2):
     
-    up = upblock2D(convl, pads[-1], filtnums= filtnums, pad=pad)
+            up = upblock2D(convl, [pads_x[ii], pads_y[ii]], filtnums= filtnums, pad=pad)
+            if net == 'unet':
+                up = concatenate([dconvs[-(ii+2)],up], axis = 3)
+            convl = convblock2D(convl=up, nconvs = 2, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)
+         
+    else:
+        
+        for ii in range(nlayers-1):
+            if fconv:
+                up = upblock2D(convl, filtnums= filtnums, pad=pad)                
+            else:
+                up = upblock2D(convl, padsizes=[pads_x[ii], pads_y[ii]], filtnums= filtnums, pad=pad)
+            if net == 'unet':
+                up = concatenate([dconvs[-(ii+2)],up], axis = 3)
+            convl = convblock2D(convl=up, nconvs = 2, filtnums=filtnums, kersz=kersz, pad=pad, dropout=dropout, batchnorm=batchnorm)        
+    
+    if fconv:
+        up = upblock2D(convl, filtnums= filtnums, pad=pad)
+    else:
+        up = upblock2D(convl, [pads_x[-1], pads_y[-1]], filtnums= filtnums, pad=pad)
     if net == 'unet':
         up = concatenate([dconvs[0],up], axis = 3)
-    convl = convblock2D(convl=up, nconvs = 2, dropout = 'No', batchnorm= 'No')
+    convl = convblock2D(convl=up, nconvs = 2, dropout = False, batchnorm= False)
 
-    convl = convblock2D(convl, nconvs = 1, filtnums= 32, kersz = 2, pad=pad, dropout=dropout, batchnorm=batchnorm)
-
-    return convl
+    return(convl)    
 
 def DCNN2D_dual(npix, nlayers=4, net = 'unet', dropout = 'No', batchnorm = 'No', 
                 nconvs =3, filtnums= 64,

@@ -10,7 +10,7 @@ from nDTomo.sim.shapes.phantoms import SheppLogan
 
 from tqdm import tqdm
 
-from numpy import less, greater, Inf, zeros_like, deg2rad, append, expand_dims, reshape, concatenate, arange, transpose, tile
+from numpy import array, less, greater, Inf, zeros_like, deg2rad, append, expand_dims, reshape, concatenate, arange, transpose, tile
 from numpy.random import rand, shuffle
 
 import tensorflow as tf
@@ -187,6 +187,16 @@ def create_vol_train_data(volc, nvols = 5000, nsubvol = None, method='lr'):
     
     return(train_patches, target_patches)
     
+def extract_impatches_vol(vol, patch_size = 128):
+    
+    patches = []
+    for ii in range(vol.shape[2]):
+        img = tf_tomo_transf(vol[:,:,ii])
+        im_patches = extract_patches(img, patch_size, patch_size)
+        im_patches = tf.reshape(im_patches, (im_patches.shape[0]*im_patches.shape[1]*im_patches.shape[2], im_patches.shape[3]))
+        patches.append(reshape(im_patches, (im_patches.shape[0], patch_size, patch_size, 1)))
+    patches = array(patches, dtype = 'float32')
+    return(patches)
     
     
 
