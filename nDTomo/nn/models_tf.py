@@ -1235,4 +1235,39 @@ def mask_rcnn(input_shape, num_classes):
     model = tf.keras.Model(inputs, outputs)
     
     return model
+
+def DCNN2D_multi_inp(ninpts = 4,nx=None, ny=None, nch = 10, net = 'unet', skipcon= False, 
+           nlayers = 4, nconvs=3, filtnums= 64, kersz = 3, 
+           dropout=False, batchnorm=False,
+           dlayer= False, dense_layers = 'Default', dlayers = None,
+           actlayermid = 'relu', actlayerfi = 'linear', pad='same'):
+    
+    inputs = []
+    convs = []
+    for block in range(ninpts):
+    
+        image_in = Input(shape=(None, None, nch))    
+        inputs.append(image_in)
+        
+        convl = DCNN2D_block(nx=nx, ny=ny, net = 'unet', skipcon= skipcon, 
+                   nlayers = nlayers, nconvs=nconvs, filtnums= filtnums, kersz = kersz, 
+                   dropout=dropout, batchnorm=batchnorm,
+                   dlayer= dlayer, dense_layers = dense_layers, dlayers = dlayers,
+                   actlayermid = actlayermid, actlayerfi = actlayerfi, pad=pad, image_in=image_in)  
+        
+        convs.append(convl)
+    
+    x = convs[0]
+    for block in range(1,ninpts):
+        x = concatenate([x,convs[block]], axis =3)
+
+    convl = convblock2D(x, nconvs = 1, filtnums= 32, kersz = 3, pad='same', dropout=dropout, batchnorm=batchnorm)
+
+            
+    convl = Conv2D(filters=nch, kernel_size=3, activation = actlayerfi)(convl)
+
+    model = Model(inputs = inputs, outputs = convl)
+            
+    return model 
+
     
