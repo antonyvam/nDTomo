@@ -425,6 +425,25 @@ def crop_volume(vol, thr=None, plot=False, dtype='float32'):
         
     return(volc)
 
+def crop_volume_getinds(vol, thr=None, plot=False, dtype='float32'):
+
+    '''
+    Crops a data volume using the average image along the third dimension
+    '''
+    
+    im = np.sum(vol, axis = 2)
+    im = im/np.max(im)
+    
+    if thr is not None:
+        im[im<thr] = 0
+    
+    row_vector = np.sum(im, axis = 1)
+    col_vector = np.sum(im, axis = 0)
+
+    indr = [i for i, x in enumerate(row_vector) if x > 0]
+    indc = [i for i, x in enumerate(col_vector) if x > 0]
+    return(indr, indc)
+    
 def crop_ctvolume(vol, plot=False):
     
     '''
