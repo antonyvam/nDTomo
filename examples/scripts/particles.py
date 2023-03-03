@@ -341,9 +341,6 @@ for epoch in tqdm(range(epochs)):
     tc = torch.reshape(t, (t.shape[0],1))
     
     peak_pred = gaussian_peaks_bkg(xv, tc)*sfmap
-    peak_pred = torch.reshape(peak_pred, (npix, npix, nch))
-    peak_pred = torch.transpose(peak_pred, 1, 0)
-    peak_pred = torch.reshape(peak_pred, (npix*npix, nch))
     
     loss = MAE(simpats, peak_pred)
     
