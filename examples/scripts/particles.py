@@ -233,6 +233,229 @@ plt.title('Intercept')
 plt.colorbar()
 plt.show()
 
+
+
+
+
+
+
+#%% Now let's try with a CNN
+
+class CNN2D(nn.Module):
+    
+    def __init__(self, npix, nch=5, nfilts=32, nlayers =4):
+        
+        super(CNN2D, self).__init__()
+        
+        
+        conv2d_in = nn.Conv2d(nch, nfilts, kernel_size=3, stride=1, padding='same')
+
+        conv2d_layer = nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same')
+
+        relu =  nn.ReLU()
+
+        conv2d_final = nn.Conv2d(nfilts, nch, kernel_size=3, stride=1, padding='same')
+           
+        layers = []
+        layers.append(conv2d_in)
+        layers.append(relu)
+        
+        for layer in range(nlayers):
+            layers.append(conv2d_layer)
+            layers.append(conv2d_layer)
+            layers.append(relu)
+
+        layers.append(conv2d_final)
+        
+        self.cnn2d = nn.Sequential(*layers)
+
+    def forward(self, x):
+        
+        out = self.cnn2d(x)
+        
+        return(out)
+
+
+
+model = CNN2D(npix = 256, nlayers=2, nch=5, nfilts=32).to(device)
+
+print(model)
+
+npix = 256
+nch = vol.shape[2]
+
+learning_rate = 0.01
+epochs = 10000
+
+microct = np.transpose(np.copy(im))
+microct[microct>0] = 1
+microct = np.reshape(microct, (microct.shape[0]*microct.shape[1], 1))
+sfmap = torch.tensor(microct, requires_grad=False, device=device, dtype=torch.float32)
+
+Ai = 1*torch.ones((1,npix,npix), requires_grad=False, device=device, dtype=torch.float32)
+mi = 5*torch.ones((1,npix,npix), requires_grad=False, device=device, dtype=torch.float32)
+si = 0.5*torch.ones((1,npix,npix), requires_grad=False, device=device, dtype=torch.float32)
+sl = 0.001*torch.ones((1,npix,npix), requires_grad=False, device=device, dtype=torch.float32)
+it = 0.001*torch.ones((1,npix,npix), requires_grad=False, device=device, dtype=torch.float32)
+
+lower_bound = torch.zeros((npeaks*5, ), device=device, requires_grad=False)
+lower_bound[0::5] = 0.1*torch.ones((npeaks,), requires_grad=False, device=device)
+lower_bound[1::5] = 2*torch.ones((npeaks,), requires_grad=False, device=device)
+lower_bound[2::5] = 0.05*torch.ones((npeaks,), requires_grad=False, device=device)
+lower_bound[3::5] = 0*torch.ones((npeaks,), requires_grad=False, device=device)
+lower_bound[4::5] = 0*torch.ones((npeaks,), requires_grad=False, device=device)
+upper_bound = torch.zeros((npeaks*5, ), device=device, requires_grad=False)
+upper_bound[0::5] = 5*torch.ones((npeaks,), requires_grad=False, device=device)
+upper_bound[1::5] = 8*torch.ones((npeaks,), requires_grad=False, device=device)
+upper_bound[2::5] = 50*torch.ones((npeaks,), requires_grad=False, device=device)
+upper_bound[3::5] = 0.1*torch.ones((npeaks,), requires_grad=False, device=device)
+upper_bound[4::5] = 0.1*torch.ones((npeaks,), requires_grad=False, device=device)
+
+MSE = nn.MSELoss()
+MAE = nn.L1Loss()
+
+prms = torch.concat((Ai, mi, si, sl, it), dim=0).to(device)
+
+print(prms.shape)
+
+optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
+
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=50, factor=0.5, min_lr=1E-4, verbose=1)
+
+for epoch in tqdm(range(epochs)):
+
+    t = torch.zeros((npeaks*5, ), device=device, dtype=torch.float32)
+    
+    gen_im = model(prms)
+    gen_im = torch.abs(gen_im)
+    
+    gen_im = torch.reshape(gen_im, (gen_im.shape[0], gen_im.shape[1]*gen_im.shape[2]))
+    gen_im = torch.transpose(gen_im, 1,0)
+
+    t[0::5] = gen_im[:,0]
+    t[1::5] = gen_im[:,1]
+    t[2::5] = gen_im[:,2]
+    t[3::5] = gen_im[:,3]
+    t[4::5] = gen_im[:,4]
+
+    tc = torch.reshape(t, (t.shape[0],1))
+    
+    peak_pred = gaussian_peaks_bkg(xv, tc)*sfmap
+    peak_pred = torch.reshape(peak_pred, (npix, npix, nch))
+    peak_pred = torch.transpose(peak_pred, 1, 0)
+    peak_pred = torch.reshape(peak_pred, (npix*npix, nch))
+    
+    loss = MAE(simpats, peak_pred)
+    
+    if epoch % 10 == 0:
+        print(loss)
+
+    # Backpropagation
+    optimizer.zero_grad()
+    loss.backward()
+
+    optimizer.step()
+            
+    scheduler.step(loss)
+
+    if optimizer.param_groups[0]['lr'] == scheduler.min_lrs[0]:
+        print("Minimum learning rate reached, stopping the optimization")
+        print(epoch)
+        break
+
 #%%
+
+gen_im = model(prms)
+gen_im = torch.abs(gen_im)
+
+gen_im = torch.reshape(gen_im, (gen_im.shape[0], gen_im.shape[1]*gen_im.shape[2]))
+gen_im = torch.transpose(gen_im, 1,0)
+
+
+t = torch.zeros((npeaks*5, ), device=device, dtype=torch.float32)
+t[0::5] = gen_im[:,0]
+t[1::5] = gen_im[:,1]
+t[2::5] = gen_im[:,2]
+t[3::5] = gen_im[:,3]
+t[4::5] = gen_im[:,4]
+
+tc = torch.reshape(t, (t.shape[0],1))
+
+peak_pred = gaussian_peaks_bkg(xv, tc)*sfmap
+
+peak_pred = peak_pred.cpu()
+peak_pred = peak_pred.detach().numpy()
+peak_pred = np.reshape(peak_pred, (vol.shape[0], vol.shape[1], vol.shape[2]))
+
+peak_pred[peak_pred<0] = 0
+
+print(peak_pred.shape)
+
+hs = HyperSliceExplorer(np.concatenate((vol, peak_pred), axis = 1))
+hs.explore(cmap='gray')
+
+
+
+#%% Let's do a test using the ground truth maps
+
+microct = np.transpose(np.copy(im))
+microct[microct>0] = 1
+microct = np.reshape(microct, (microct.shape[0]*microct.shape[1], 1))
+sfmap = torch.tensor(microct, requires_grad=False, device=device, dtype=torch.float32)
+
+
+t = torch.zeros((npeaks*5, ), dtype=torch.float32)
+
+Amap_small_t = torch.tensor(Amap_small)
+xomap_small_t = torch.tensor(xomap_small)
+stdmap_small_t = torch.tensor(stdmap_small)
+slopemap_small_t = torch.tensor(slopemap_small)
+intermap_small_t = torch.tensor(intermap_small)
+
+Amap_small_t = torch.reshape(Amap_small_t, (1,Amap_small_t.shape[0],Amap_small_t.shape[1]))
+xomap_small_t = torch.reshape(xomap_small_t, (1,xomap_small_t.shape[0],xomap_small_t.shape[1]))
+stdmap_small_t = torch.reshape(stdmap_small_t, (1,stdmap_small_t.shape[0],stdmap_small_t.shape[1]))
+slopemap_small_t = torch.reshape(slopemap_small_t, (1,slopemap_small_t.shape[0],slopemap_small_t.shape[1]))
+intermap_small_t = torch.reshape(intermap_small_t, (1,intermap_small_t.shape[0],intermap_small_t.shape[1]))
+
+
+gen_im = torch.concat((Amap_small_t, xomap_small_t, stdmap_small_t, slopemap_small_t, intermap_small_t), dim=0)
+gen_im = torch.reshape(gen_im, (gen_im.shape[0], gen_im.shape[1]*gen_im.shape[2]))
+gen_im = torch.transpose(gen_im, 1,0)
+
+t[0::5] = gen_im[:,0]
+t[1::5] = gen_im[:,1]
+t[2::5] = gen_im[:,2]
+t[3::5] = gen_im[:,3]
+t[4::5] = gen_im[:,4]
+
+tc = torch.reshape(t, (t.shape[0],1)).to(device)
+
+peak_pred = gaussian_peaks_bkg(xv, tc)*sfmap
+
+peak_pred = peak_pred.cpu()
+peak_pred = peak_pred.detach().numpy()
+peak_pred = np.reshape(peak_pred, (vol.shape[0], vol.shape[1], vol.shape[2]))
+peak_pred = np.transpose(peak_pred, (1,0,2))
+peak_pred[peak_pred<0] = 0
+
+print(peak_pred.shape)
+
+pats = torch.reshape(simpats, (npix, npix, nch))
+pats = pats.cpu()
+pats = pats.detach().numpy()
+
+hs = HyperSliceExplorer(np.concatenate((pats, peak_pred), axis = 1))
+hs.explore(cmap='gray')
+
+
+
+
+
+
+
+
+
+
 
 
