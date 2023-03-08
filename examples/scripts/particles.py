@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Mar  3 08:51:35 2023
+Fitting chemical imaging data
 
 @author: Antony Vamvakeros
 """
@@ -41,7 +41,7 @@ from nDTomo.ct.astra_tomo import astra_rec_vol
 
 #%%
 
-fn = 'particles_small.h5'
+fn = 'C:\\Users\\Antony\\Documents\\GitHub\\nDTomo\\examples\\volumes\\particles_small.h5'
 
 with h5py.File(fn, 'r') as f:
     
@@ -65,6 +65,8 @@ def gaussian_peaks(x, prms):
 def gaussian_peaks_bkg(x, prms):
     return prms[0::5] * torch.exp(-(x - prms[1::5])**2 / (2 * prms[2::5]**2)) + prms[3::5]*x + prms[4::5]
 
+#%%
+
 im = np.sum(vol, axis = 2)
 
 npeaks = im.shape[0]*im.shape[1]
@@ -78,7 +80,7 @@ simpats = torch.reshape(simpats, (simpats.shape[0]*simpats.shape[1], simpats.sha
 MSE = nn.MSELoss()
 MAE = nn.L1Loss()
 
-#%
+#%% Prepare a mask for the void
 
 microct = np.copy(im)
 microct[microct>0] = 1
@@ -131,7 +133,7 @@ tc = torch.reshape(t, (t.shape[0],1))
 
 start = time.time()
 
-for epoch in tqdm(epochs):
+for epoch in tqdm(range(epochs)):
     
     peak_pred = gaussian_peaks_bkg(xv, tc)*sfmap
     
@@ -166,7 +168,7 @@ peak_preds = np.reshape(peak_preds, (vol.shape[0], vol.shape[1], vol.shape[2]))
 print(peak_preds.shape)
 
 hs = HyperSliceExplorer(np.concatenate((vol, peak_preds), axis = 1))
-hs.explore(cmap='gray')
+hs.explore(cmap='jet')
 
 
 #%% Results
@@ -241,6 +243,10 @@ plt.show()
 
 #%% Now let's try with a CNN
 
+def gaussian_peaks_bkg_t(x, A, xo, st, sl, i):
+    return A * torch.exp(-(x - xo)**2 / (2 * st**2)) + sl*x + i
+
+
 class CNN2D(nn.Module):
     
     def __init__(self, npix, nch=5, nfilts=32, nlayers =4):
@@ -271,79 +277,71 @@ class CNN2D(nn.Module):
 
     def forward(self, x):
         
-        out = self.cnn2d(x) + x
+        out = self.cnn2d(x) #+ x
         
         return(out)
 
 
-
-model = CNN2D(npix = 256, nlayers=2, nch=5, nfilts=32).to(device)
+model = CNN2D(npix = 256, nlayers=1, nch=5, nfilts=32).to(device)
 
 print(model)
 
-npix = 256
-nch = vol.shape[2]
+#%%
 
-learning_rate = 0.01
-epochs = 10000
-
-microct = np.transpose(np.copy(im))
+microct = np.copy(im)
 microct[microct>0] = 1
 microct = np.reshape(microct, (microct.shape[0]*microct.shape[1], 1))
 sfmap = torch.tensor(microct, requires_grad=False, device=device, dtype=torch.float32)
 
-Ai = 1*torch.ones((1,npix,npix), requires_grad=False, device=device, dtype=torch.float32)
-mi = 5*torch.ones((1,npix,npix), requires_grad=False, device=device, dtype=torch.float32)
-si = 0.5*torch.ones((1,npix,npix), requires_grad=False, device=device, dtype=torch.float32)
-sl = 0.001*torch.ones((1,npix,npix), requires_grad=False, device=device, dtype=torch.float32)
-it = 0.001*torch.ones((1,npix,npix), requires_grad=False, device=device, dtype=torch.float32)
+#%%
 
-lower_bound = torch.zeros((npeaks*5, ), device=device, requires_grad=False)
-lower_bound[0::5] = 0.1*torch.ones((npeaks,), requires_grad=False, device=device)
-lower_bound[1::5] = 2*torch.ones((npeaks,), requires_grad=False, device=device)
-lower_bound[2::5] = 0.05*torch.ones((npeaks,), requires_grad=False, device=device)
-lower_bound[3::5] = 0*torch.ones((npeaks,), requires_grad=False, device=device)
-lower_bound[4::5] = 0*torch.ones((npeaks,), requires_grad=False, device=device)
-upper_bound = torch.zeros((npeaks*5, ), device=device, requires_grad=False)
-upper_bound[0::5] = 5*torch.ones((npeaks,), requires_grad=False, device=device)
-upper_bound[1::5] = 8*torch.ones((npeaks,), requires_grad=False, device=device)
-upper_bound[2::5] = 50*torch.ones((npeaks,), requires_grad=False, device=device)
-upper_bound[3::5] = 0.1*torch.ones((npeaks,), requires_grad=False, device=device)
-upper_bound[4::5] = 0.1*torch.ones((npeaks,), requires_grad=False, device=device)
+npix = 256
+nch = vol.shape[2]
 
-MSE = nn.MSELoss()
-MAE = nn.L1Loss()
+learning_rate = 0.001
+epochs = 10000
+min_lr=1E-5
 
+# Perform peak fitting using the Adam optimizer
+Ai = 1*torch.ones((npeaks,), requires_grad=True, device=device, dtype=torch.float32)
+mi = 5*torch.ones((npeaks,), requires_grad=True, device=device, dtype=torch.float32)
+si = 0.5*torch.ones((npeaks,), requires_grad=True, device=device, dtype=torch.float32)
+sl = 0.001*torch.ones((npeaks,), requires_grad=True, device=device, dtype=torch.float32)
+it = 0.001*torch.ones((npeaks,), requires_grad=True, device=device, dtype=torch.float32)
 prms = torch.concat((Ai, mi, si, sl, it), dim=0).to(device)
-
 print(prms.shape)
 
 optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
 
-scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=50, factor=0.5, min_lr=1E-4, verbose=1)
+scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=50, factor=0.5, min_lr=min_lr, verbose=1)
 
 for epoch in tqdm(range(epochs)):
 
-    t = torch.zeros((npeaks*5, ), device=device, dtype=torch.float32)
+    # t = torch.zeros((npeaks*5, ), device=device, dtype=torch.float32)
     
     gen_im = model(prms)
-    gen_im = torch.abs(gen_im)
+    # gen_im = torch.abs(gen_im)
     
     gen_im = torch.reshape(gen_im, (gen_im.shape[0], gen_im.shape[1]*gen_im.shape[2]))
     gen_im = torch.transpose(gen_im, 1,0)
 
-    t[0::5] = gen_im[:,0]
-    t[1::5] = gen_im[:,1]
-    t[2::5] = gen_im[:,2]
-    t[3::5] = gen_im[:,3]
-    t[4::5] = gen_im[:,4]
 
-    tc = torch.reshape(t, (t.shape[0],1))
+    #### Approach 1 ####
+    # t[0::5] = gen_im[:,0]
+    # t[1::5] = gen_im[:,1]
+    # t[2::5] = gen_im[:,2]
+    # t[3::5] = gen_im[:,3]
+    # t[4::5] = gen_im[:,4]
+
+    # tc = torch.reshape(t, (t.shape[0],1))
     
-    peak_pred = gaussian_peaks_bkg(xv, tc)*sfmap
-    peak_pred = torch.reshape(peak_pred, (npix, npix, nch))
-    peak_pred = torch.transpose(peak_pred, 1, 0)
-    peak_pred = torch.reshape(peak_pred, (npix*npix, nch))
+    # peak_pred = gaussian_peaks_bkg(xv, tc)*sfmap
+    # peak_pred = torch.reshape(peak_pred, (npix, npix, nch))
+    # peak_pred = torch.transpose(peak_pred, 1, 0)
+    # peak_pred = torch.reshape(peak_pred, (npix*npix, nch))
+    
+    #### Approach 2 ####
+    peak_pred = gaussian_peaks_bkg_t(xv, gen_im[:,0:1], gen_im[:,1:2], gen_im[:,2:3], gen_im[:,3:4], gen_im[:,4:5])*sfmap
     
     loss = MAE(simpats, peak_pred)
     
@@ -396,13 +394,12 @@ hs.explore(cmap='gray')
 
 
 
-#%% Let's do a test using the ground truth maps
+#%% Let's do a test using the ground truth maps  - this is to check that the sfmap and the orientation of the matrices are correct
 
 microct = np.transpose(np.copy(im))
 microct[microct>0] = 1
 microct = np.reshape(microct, (microct.shape[0]*microct.shape[1], 1))
 sfmap = torch.tensor(microct, requires_grad=False, device=device, dtype=torch.float32)
-
 
 t = torch.zeros((npeaks*5, ), dtype=torch.float32)
 
