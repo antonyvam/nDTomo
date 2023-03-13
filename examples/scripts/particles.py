@@ -256,24 +256,35 @@ class CNN2D(nn.Module):
         
         conv2d_in = nn.Conv2d(nch, nfilts, kernel_size=3, stride=1, padding='same')
 
-        conv2d_layer = nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same')
-
         relu =  nn.ReLU()
 
         conv2d_final = nn.Conv2d(nfilts, nch, kernel_size=3, stride=1, padding='same')
            
-        layers = []
-        layers.append(conv2d_in)
-        layers.append(relu)
+        # layers = []
+        # layers.append(conv2d_in)
+        # layers.append(relu)
         
-        for layer in range(nlayers):
-            layers.append(conv2d_layer)
-            layers.append(conv2d_layer)
-            layers.append(relu)
+        # for layer in range(nlayers):
+        #     layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'))
+        #     layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'))
+        #     layers.append(relu)
 
-        layers.append(conv2d_final)
+        # layers.append(conv2d_final)
         
-        self.cnn2d = nn.Sequential(*layers)
+        # self.cnn2d = nn.Sequential(layers)
+
+
+        self.cnn2d = nn.Sequential(conv2d_in,
+                                   relu,
+                                   nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
+                                   nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
+                                   relu,
+                                   nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
+                                   nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
+                                   relu,
+                                   conv2d_final,
+                                   nn.Sigmoid())
+
 
     def forward(self, x):
         
@@ -308,6 +319,14 @@ mi = 5*torch.ones((npeaks,), requires_grad=True, device=device, dtype=torch.floa
 si = 0.5*torch.ones((npeaks,), requires_grad=True, device=device, dtype=torch.float32)
 sl = 0.001*torch.ones((npeaks,), requires_grad=True, device=device, dtype=torch.float32)
 it = 0.001*torch.ones((npeaks,), requires_grad=True, device=device, dtype=torch.float32)
+
+Ai = 1*torch.ones((1, npix, npix), requires_grad=False, device=device, dtype=torch.float32)
+mi = 5*torch.ones((1, npix, npix), requires_grad=False, device=device, dtype=torch.float32)
+si = 0.5*torch.ones((1, npix, npix), requires_grad=False, device=device, dtype=torch.float32)
+sl = 0.001*torch.ones((1, npix, npix), requires_grad=False, device=device, dtype=torch.float32)
+it = 0.001*torch.ones((1, npix, npix), requires_grad=False, device=device, dtype=torch.float32)
+
+
 prms = torch.concat((Ai, mi, si, sl, it), dim=0).to(device)
 print(prms.shape)
 
@@ -341,7 +360,12 @@ for epoch in tqdm(range(epochs)):
     # peak_pred = torch.reshape(peak_pred, (npix*npix, nch))
     
     #### Approach 2 ####
-    peak_pred = gaussian_peaks_bkg_t(xv, gen_im[:,0:1], gen_im[:,1:2], gen_im[:,2:3], gen_im[:,3:4], gen_im[:,4:5])*sfmap
+    peak_pred = gaussian_peaks_bkg_t(xv, 
+                                     1*gen_im[:,0:1], 
+                                     5*gen_im[:,1:2], 
+                                     1.5*gen_im[:,2:3], 
+                                     0.1*gen_im[:,3:4], 
+                                     0.1*gen_im[:,4:5])*sfmap
     
     loss = MAE(simpats, peak_pred)
     
@@ -364,7 +388,7 @@ for epoch in tqdm(range(epochs)):
 #%%
 
 gen_im = model(prms)
-gen_im = torch.abs(gen_im)
+# gen_im = torch.abs(gen_im)
 
 gen_im = torch.reshape(gen_im, (gen_im.shape[0], gen_im.shape[1]*gen_im.shape[2]))
 gen_im = torch.transpose(gen_im, 1,0)
@@ -392,7 +416,16 @@ print(peak_pred.shape)
 hs = HyperSliceExplorer(np.concatenate((vol, peak_pred), axis = 1))
 hs.explore(cmap='gray')
 
+#%%
 
+gen_im = model(prms)
+gen_im = gen_im.cpu()
+gen_im = gen_im.detach().numpy()
+
+plt.figure(1);plt.clf()
+plt.imshow(gen_im[2,:,:])
+plt.colorbar()
+plt.show()
 
 #%% Let's do a test using the ground truth maps  - this is to check that the sfmap and the orientation of the matrices are correct
 
