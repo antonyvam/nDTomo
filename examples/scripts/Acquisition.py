@@ -76,6 +76,7 @@ import numpy as np
 from nDTomo.utils.hyperexpl import HyperSliceExplorer
 from nDTomo.ct.astra_tomo import astra_rec_vol
 from nDTomo.ct.conv_tomo import sinocentering
+from nDTomo.utils.misc import cirmask
 
 #%%
 
@@ -142,6 +143,10 @@ hs.explore()
 
 rec = astra_rec_vol(s)
 rec[rec<0] = 0
+
+#%%
+
+rec = cirmask(rec, 2)
 
 #%%
 
