@@ -131,16 +131,16 @@ for ii in tqdm(range(nproj)):
 
 #%%
 
-sinos = sinocentering(sinos)
+s = sinocentering(sinos)
 
 #%%
 
-hs = HyperSliceExplorer(sinos)
+hs = HyperSliceExplorer(s)
 hs.explore()
 
 #%%
 
-rec = astra_rec_vol(sinos)
+rec = astra_rec_vol(s)
 rec[rec<0] = 0
 
 #%%
