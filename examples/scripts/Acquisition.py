@@ -7,8 +7,10 @@ nDAacq to simulate an XRD-CT dataset with 2D diffraction patterns from 1D diffra
 
 #%%
 
-from nDTomo.utils.misc import ndtomopath, showim, addpnoise2D
+from nDTomo.utils.misc import ndtomopath
+from nDTomo.utils.noise import addpnoise2D
 from nDTomo.ct.virtacq import nDVAcq
+from nDTomo.utils.plots import showim
 
 #%% Perform a test
 
@@ -26,9 +28,9 @@ Acq.savedir = savedir
 Acq.dname = 'xrdct_test'
 
 #%%
-p = ndtomopath()
-savedir = 'Y:\\Antony\\nDTomo\\test2'
 
+p = ndtomopath()
+savedir = 'Y:\\Antony\\nDTomo\\test'
 
 Acq = nDVAcq(file_format ='cbf', scantype = 'Zigzig', fastaxis = 'Translation', slowaxis = 'Rotation', units = "q_A^-1")
 
