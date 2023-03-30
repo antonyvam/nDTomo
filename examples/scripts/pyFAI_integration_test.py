@@ -13,6 +13,7 @@ print(pyFAI.version)
 '''
 This is also crucial
 '''
+#%%
 
 import os
 os.environ['PYOPENCL_COMPILER_OUTPUT'] = '1'
@@ -72,6 +73,11 @@ kwargs["method"] = pyFAI.method_registry.IntegrationMethod.select_method(dim=1, 
                                                    algo="csr",
                                                    impl="opencl",
                                                    target_type="gpu")[0]
+
+
+kwargs["method"] = pyFAI.method_registry.IntegrationMethod.select_method(dim=1, split="no",
+                                                   algo="csr",
+                                                   impl="python")[0]
 
 print(kwargs)
 

@@ -67,11 +67,69 @@ Acq.start_scan(addnoise = 'Yes', ct = 0.05)
 
 
 
+#%% Integrate the data
+
+import pyFAI, fabio
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+import numpy as np
+from nDTomo.utils.hyperexpl import HyperSliceExplorer
+
+#%%
+
+fn = 'Y:\\Antony\\nDTomo\\test\\xrdct_test_1_50.cbf'
+
+im = fabio.open(fn).data
+
+showim(im)
+
+poni = 'Y:\\Antony\\nDTomo\\calib.poni'
+ai = pyFAI.load(poni)
 
 
+npt_rad = 250
 
 
+kwargs = {"npt":npt_rad,
+          "unit":"2th_deg",
+          "correctSolidAngle": False,
+          "polarization_factor": 0.95}
 
+
+kwargs["method"] = pyFAI.method_registry.IntegrationMethod.select_method(dim=1, split="no",
+                                                   algo="csr",
+                                                   impl="python")[0]
+
+print(kwargs)
+
+tth, I = ai.integrate1d(data = im, **kwargs)
+
+plt.figure(2);plt.clf()
+plt.plot(tth,I)
+plt.show()
+
+#%%
+
+npix = 100
+nproj = 110
+
+sinos = np.zeros((npix, nproj, npt_rad), dtype = 'float32')
+
+for ii in tqdm(range(nproj)):
+    for jj in range(npix):
+
+        fn = 'Y:\\Antony\\nDTomo\\test\\xrdct_test_%d_%d.cbf' %(ii+1, jj+1)
+
+        im = fabio.open(fn).data
+        
+        tth, I = ai.integrate1d(data = im, **kwargs)
+
+        sinos[jj,ii,:] = I
+
+#%%
+
+hs = HyperSliceExplorer(sinos)
+hs.explore()
 
 
 
