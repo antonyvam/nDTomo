@@ -23,7 +23,7 @@ Acq = nDVAcq(file_format ='cbf', scantype = 'Zigzig', fastaxis = 'Translation', 
 Acq.readponi(poni)
 Acq.setdetector(shape=(1000,1000))
 Acq.azimint()
-Acq.create_nDTomo_phantom(npix = 100, nproj = 110)
+Acq.create_nDTomo_phantom(npix = 101, nproj = 110)
 Acq.savedir = savedir
 Acq.dname = 'xrdct_test'
 
@@ -38,14 +38,14 @@ Acq.setwvl(wvl=1.24e-11)
 Acq.setxrdprms(dist=0.35, poni1=(500/2)*0.000172, poni2=(500/2)*0.000172, rot1=0, rot2=0, rot3=0)
 Acq.setdetector(shape=(500,500))
 Acq.azimint()
-Acq.create_nDTomo_phantom(npix = 100, nproj = 110)
+Acq.create_nDTomo_phantom(npix = 101, nproj = 110)
 Acq.savedir = savedir
 Acq.dname = 'xrdct_test'
 
 #%%
 
 im = Acq.conv1Dto2D( Acq.data[50,50,:])
-im = addpnoise2D(im, ct = 0.05)
+im = addpnoise2D(im, ct = 0.15)
 
 showim(im,1,cmap='gray')
 
@@ -59,7 +59,7 @@ Acq.readscanprms()
 
 #%% Perform the XRD-CT scan
 
-Acq.start_scan(addnoise = 'Yes', ct = 0.05)
+Acq.start_scan(addnoise = 'Yes', ct = 0.15)
 
 
 
@@ -74,6 +74,8 @@ import matplotlib.pyplot as plt
 from tqdm import tqdm
 import numpy as np
 from nDTomo.utils.hyperexpl import HyperSliceExplorer
+from nDTomo.ct.astra_tomo import astra_rec_vol
+from nDTomo.ct.conv_tomo import sinocentering
 
 #%%
 
@@ -110,7 +112,7 @@ plt.show()
 
 #%%
 
-npix = 100
+npix = 101
 nproj = 110
 
 sinos = np.zeros((npix, nproj, npt_rad), dtype = 'float32')
@@ -126,13 +128,25 @@ for ii in tqdm(range(nproj)):
 
         sinos[jj,ii,:] = I
 
+
+#%%
+
+sinos = sinocentering(sinos)
+
 #%%
 
 hs = HyperSliceExplorer(sinos)
 hs.explore()
 
+#%%
 
+rec = astra_rec_vol(sinos)
+rec[rec<0] = 0
 
+#%%
+
+hs = HyperSliceExplorer(rec)
+hs.explore()
 
 
 
