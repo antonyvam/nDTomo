@@ -344,4 +344,4 @@ class SD2I_peaks(nn.Module):
         x = self.conv2d_final(x)
         x = self.Sigmoid(x)
         return(x)
-    
+
