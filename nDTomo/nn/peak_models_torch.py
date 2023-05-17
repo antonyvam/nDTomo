@@ -88,7 +88,12 @@ def split_pearson_peak(x, amplitude, x0, sigma1, sigma2, m1, m2, a1, a2, b1, b2,
 def exponential_power_peak(x, amplitude, x0, sigma, alpha, beta):
     return amplitude * (1 + (x-x0)/sigma)**(-alpha) * torch.exp(-beta*(x-x0))
 
-
+def pseudo_voigt_peak_t(x, A, xo, st, fraction, sl, i):
+    """
+    fraction is the fraction of the gaussian component, 
+    1-fraction is the fraction of lorentzian component
+    """    
+    return fraction*(A * torch.exp(-(x - xo)**2 / (2 * st**2))) + (1-fraction)*((A / torch.pi) * (st / ((x - xo)**2 + st**2))) + sl*x + i
 
 
 
