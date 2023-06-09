@@ -188,6 +188,124 @@ def mask_thr(vol, thr, roi=None, fignum = 1):
 
     return(msk)
 
+def calculate_center_of_mass(spectrum):
+    """
+    Calculate the center of mass of a spectrum with subpixel resolution.
+    
+    Arguments:
+    spectrum -- A list or numpy array representing the spectrum.
+    
+    Returns:
+    The center of mass of the spectrum with subpixel resolution.
+    """
+    spectrum = np.array(spectrum)
+    
+    # Calculate the total intensity of the spectrum
+    total_intensity = np.sum(spectrum)
+    
+    # Calculate the weighted indices
+    weighted_indices = np.arange(len(spectrum)) * spectrum
+    
+    # Calculate the center of mass with subpixel resolution
+    center_of_mass = np.sum(weighted_indices) / total_intensity
+    
+    # Calculate the subpixel correction
+    subpixel_correction = np.sum((np.arange(len(spectrum)) - center_of_mass) * spectrum) / (total_intensity * 2)
+    
+    # Calculate the final center of mass with subpixel resolution
+    center_of_mass += subpixel_correction
+    
+    return center_of_mass
+
+def compare_spectra(reference_spectrum, translated_spectrum, pixel_range, resolution):
+    """
+    Compare two spectra by translating the second spectrum with subpixel resolution using interpolation.
+    
+    Arguments:
+    reference_spectrum -- A list or numpy array representing the reference spectrum.
+    translated_spectrum -- A list or numpy array representing the spectrum to be translated.
+    pixel_range -- The range of subpixel translation in pixels (e.g., (-0.5, 0.5)).
+    resolution -- The resolution of subpixel translation (e.g., 0.1).
+    
+    Returns:
+    The translated spectrum aligned with the reference spectrum.
+    """
+    reference_spectrum = np.array(reference_spectrum)
+    translated_spectrum = np.array(translated_spectrum)
+    
+    # Calculate the subpixel translation range
+    subpixel_range = np.arange(pixel_range[0], pixel_range[1] + resolution, resolution)
+    
+    best_shift = 0
+    best_error = np.inf
+    
+    # Iterate through subpixel translations and find the best match
+    for shift in subpixel_range:
+        # Perform subpixel translation using interpolation
+        translated_spectrum_shifted = interp1d(np.arange(len(translated_spectrum)), translated_spectrum, kind='cubic', fill_value=0.0, bounds_error=False)(np.arange(len(translated_spectrum)) + shift)
+        
+        # Calculate the error between the reference spectrum and translated spectrum
+        error = np.sum(np.abs(reference_spectrum - translated_spectrum_shifted))
+        
+        # Update the best shift if the current error is lower
+        if error < best_error:
+            best_error = error
+            best_shift = shift
+    
+    # Perform the final subpixel translation using interpolation
+    translated_spectrum_aligned = interp1d(np.arange(len(translated_spectrum)), translated_spectrum, kind='cubic', fill_value=0.0, bounds_error=False)(np.arange(len(translated_spectrum)) + best_shift)
+    
+    return translated_spectrum_aligned
+
+def sinocom_correction(sinograms):
+
+    """
+    Method correcting the sinograms for any motor jitter
+    Sinogram can be a 2D or 3D matrix (stack of sinograms)
+    Dimensions: translation steps (detector elements), projections, z (spectral)
+    """   
+    
+    di = sinograms.shape
+    if len(di)>2:
+        ss = np.sum(sinograms, axis = 2)
+    else:
+        ss = np.copy(sinograms)
+            
+    com = np.zeros((ss.shape[1],1))
+    
+    for ii in range(ss.shape[1]):
+        
+        com[ii,:] = calculate_center_of_mass(ss[:,ii])
+        
+    com = com - com[0]    
+    
+    sn = np.zeros_like(sinograms)
+    
+    xold = np.arange(sn.shape[0])
+
+
+    if len(di)==2:
+        
+        for ii in tqdm(range(sn.shape[1])):
+        
+            xnew =  xold + com[ii,:]
+                
+            sn[:,ii] = np.interp(xnew, xold, sinograms[:,ii])    
+        
+    elif len(di)>2:
+                
+        for ll in tqdm(range(sinograms.shape[2])):
+            
+            for ii in range(sinograms.shape[1]):        
+                        
+                xnew =  xold + com[ii,:]
+                    
+                sn[:,ii,ll] = np.interp(xnew, xold, sinograms[:,ii,ll])                    
+        
+        
+    return(sn)
+
+
 def matsum(mat, axes = [0,1], method = 'sum'):
 
     '''
