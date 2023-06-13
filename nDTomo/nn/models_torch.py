@@ -350,6 +350,17 @@ class SD2I_peaks(nn.Module):
 class SD2Inu_peaks(nn.Module):
     def __init__(self, npix, factor=8, nims=5, nfilts = 64, ndense = 64):
         
+        """
+        SD2Inu_peaks neural network module.
+
+        Args:
+            npix (int): Number of pixels in the image.
+            factor (int, optional): Factor for upsampling. Defaults to 8.
+            nims (int, optional): Number of output channels. Defaults to 5.
+            nfilts (int, optional): Number of filters in convolutional layers. Defaults to 64.
+            ndense (int, optional): Number of units in dense layers. Defaults to 64.
+        """
+		
         super(SD2Inu_peaks, self).__init__()
         self.flatten = nn.Flatten()
         self.dense_stack = nn.Sequential(
@@ -388,6 +399,17 @@ class SD2Inu_peaks(nn.Module):
         self.Sigmoid = nn.Sigmoid()
         
     def forward(self, x):
+	
+        """
+        Forward pass of the network.
+
+        Args:
+            x (torch.Tensor): Input tensor.
+
+        Returns:
+            torch.Tensor: Output tensor.
+        """
+		
         x = self.flatten(x)
         x = self.dense_stack(x)
         x = self.dense_large(x)
