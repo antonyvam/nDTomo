@@ -17,9 +17,12 @@ from scipy.optimize import minimize
    
 def ndtomopath():
     
-    '''
-    Finds the absolute path of the nDTomo software
-    '''
+    """
+    Finds the absolute path of the nDTomo software.
+
+    Returns:
+        str: The absolute path of the nDTomo software.
+    """
     
     package = pkgutil.get_loader('nDTomo')
     ndtomo_path = package.get_filename('nDTomo')
@@ -30,10 +33,17 @@ def ndtomopath():
 def create_circle(npix_im=512, r0=128):
     
     """
-    
-    Create a circular mask for a squarred image
-    
+    Create a circular mask for a squared image.
+
+    Args:
+        npix_im (int): Size of the squared image (default: 512).
+        r0 (int): Radius of the circular mask (default: 128).
+
+    Returns:
+        numpy.ndarray: A binary circular mask with the specified radius.
+
     """
+    
     im = np.ones((npix_im, npix_im), dtype='float32')
     sz = np.floor(im.shape[0])
     x = np.arange(0,sz)
@@ -53,10 +63,17 @@ def create_circle(npix_im=512, r0=128):
 def create_cirmask(npix_im=512, npx=0):
     
     """
-    
-    Create a circular mask for a squarred image
-    
+    Create a circular mask for a squared image.
+
+    Args:
+        npix_im (int): Size of the squared image (default: 512).
+        npx (int): Number of pixels to exclude from the circular mask (default: 0).
+
+    Returns:
+        numpy.ndarray: A binary circular mask with excluded pixels.
+
     """
+    
     im = np.ones((npix_im, npix_im), dtype='float32')
     sz = np.floor(im.shape[0])
     x = np.arange(0,sz)
@@ -74,9 +91,14 @@ def create_cirmask(npix_im=512, npx=0):
 def cirmask(im, npx=0):
     
     """
-    
-    Apply a circular mask to the image/volume
-    
+    Apply a circular mask to the image/volume.
+
+    Args:
+        im (numpy.ndarray): Input image or volume.
+        npx (int): Number of pixels to exclude from the circular mask (default: 0).
+
+    Returns:
+        numpy.ndarray: Image or volume with a circular mask applied.
     """
     
     sz = np.floor(im.shape[0])
@@ -100,9 +122,17 @@ def cirmask(im, npx=0):
 
 def translate_xy(vol, npix):
     
-    '''
-    This is quite slow - has to be replaced with 3D interpolation
-    '''
+    """
+    Translate the volume along the x-axis by a specified number of pixels.
+
+    Args:
+        vol (numpy.ndarray): Input volume.
+        npix (int): Number of pixels to translate the volume along the x-axis.
+
+    Returns:
+        numpy.ndarray: Translated volume.
+
+    """
     
     xold = np.arange(vol.shape[1])
     xnew = np.arange(vol.shape[1]) + npix
@@ -122,10 +152,17 @@ def translate_xy(vol, npix):
 
 def maskvolume(vol, msk):
     
-    '''
-    Apply a mask to a 3D array
-    It assumes that the spectral/heigh dimension is the 3rd dimension    
-    '''
+    """
+    Apply a mask to a 3D array.
+
+    Args:
+        vol (numpy.ndarray): Input 3D array.
+        msk (numpy.ndarray): Mask array.
+
+    Returns:
+        numpy.ndarray: Resulting masked 3D array.
+
+    """
     voln = np.zeros_like(vol)
     
     for ii in tqdm(range(vol.shape[2])):
@@ -136,10 +173,18 @@ def maskvolume(vol, msk):
 
 def interpvol(vol, xold, xnew):
     
-    '''
-    Linear interpolation of a 3D matrix
-    It assumes that the spectral/heigh dimension is the 3rd dimension   
-    '''
+    """
+    Perform linear interpolation on a 3D matrix along the spectral/height dimension.
+
+    Args:
+        vol (numpy.ndarray): Input 3D matrix.
+        xold (numpy.ndarray): Original x-coordinates along the spectral/height dimension.
+        xnew (numpy.ndarray): New x-coordinates for interpolation.
+
+    Returns:
+        numpy.ndarray: Interpolated 3D matrix.
+
+    """
         
     voln = np.zeros((vol.shape[0], vol.shape[1], len(xnew)))
     
@@ -154,10 +199,16 @@ def interpvol(vol, xold, xnew):
 
 def normvol(vol):
     
-    '''
-    Normalise a 3D matrix
-    It assumes that the spectral/heigh dimension is the 3rd dimension   
-    '''
+    """
+    Normalize a 3D matrix along the spectral/height dimension.
+
+    Args:
+        vol (numpy.ndarray): Input 3D matrix.
+
+    Returns:
+        numpy.ndarray: Normalized 3D matrix.
+
+    """
         
     voln = np.zeros_like(vol)
     
@@ -168,6 +219,20 @@ def normvol(vol):
     return(voln)
 
 def mask_thr(vol, thr, roi=None, fignum = 1):
+    
+    """
+    Apply a threshold-based mask to a 2D or 3D volume.
+
+    Args:
+        vol (numpy.ndarray): Input 2D or 3D volume.
+        thr (float): Threshold value.
+        roi (numpy.ndarray, optional): Region of interest (default: None).
+        fignum (int, optional): Figure number for displaying the plot (default: 1).
+
+    Returns:
+        numpy.ndarray: Binary mask based on the threshold.
+
+    """
     
     dims = vol.shape
     if len(dims)==3:
@@ -189,15 +254,17 @@ def mask_thr(vol, thr, roi=None, fignum = 1):
     return(msk)
 
 def calculate_center_of_mass(spectrum):
+    
     """
     Calculate the center of mass of a spectrum with subpixel resolution.
     
-    Arguments:
-    spectrum -- A list or numpy array representing the spectrum.
+    Args:
+        spectrum (list or numpy.ndarray): A list or numpy array representing the spectrum.
     
     Returns:
-    The center of mass of the spectrum with subpixel resolution.
+        float: The center of mass of the spectrum with subpixel resolution.
     """
+    
     spectrum = np.array(spectrum)
     
     # Calculate the total intensity of the spectrum
@@ -218,18 +285,20 @@ def calculate_center_of_mass(spectrum):
     return center_of_mass
 
 def compare_spectra(reference_spectrum, translated_spectrum, pixel_range, resolution):
+    
     """
     Compare two spectra by translating the second spectrum with subpixel resolution using interpolation.
     
-    Arguments:
-    reference_spectrum -- A list or numpy array representing the reference spectrum.
-    translated_spectrum -- A list or numpy array representing the spectrum to be translated.
-    pixel_range -- The range of subpixel translation in pixels (e.g., (-0.5, 0.5)).
-    resolution -- The resolution of subpixel translation (e.g., 0.1).
+    Args:
+        reference_spectrum (list or numpy.ndarray): A list or numpy array representing the reference spectrum.
+        translated_spectrum (list or numpy.ndarray): A list or numpy array representing the spectrum to be translated.
+        pixel_range (tuple): The range of subpixel translation in pixels (e.g., (-0.5, 0.5)).
+        resolution (float): The resolution of subpixel translation (e.g., 0.1).
     
     Returns:
-    The translated spectrum aligned with the reference spectrum.
+        numpy.ndarray: The translated spectrum aligned with the reference spectrum.
     """
+    
     reference_spectrum = np.array(reference_spectrum)
     translated_spectrum = np.array(translated_spectrum)
     
@@ -260,10 +329,15 @@ def compare_spectra(reference_spectrum, translated_spectrum, pixel_range, resolu
 def sinocom_correction(sinograms):
 
     """
-    Method correcting the sinograms for any motor jitter
-    Sinogram can be a 2D or 3D matrix (stack of sinograms)
-    Dimensions: translation steps (detector elements), projections, z (spectral)
-    """   
+    Correct the sinograms for any motor jitter.
+    
+    Args:
+        sinograms (numpy.ndarray): Input sinograms. Can be a 2D or 3D matrix (stack of sinograms).
+            Dimensions: translation steps (detector elements), projections, z (spectral).
+    
+    Returns:
+        numpy.ndarray: Corrected sinograms.
+    """
     
     di = sinograms.shape
     if len(di)>2:
@@ -308,13 +382,17 @@ def sinocom_correction(sinograms):
 
 def matsum(mat, axes = [0,1], method = 'sum'):
 
-    '''
-    Dimensionality redunction of a multidimensional array
-    Inputs:
-        mat: the nD array
-        axes: a list containing the axes along which the operation will take place
-        method: the type of operation, options are 'sum' and 'mean'
-    '''
+    """
+    Perform dimensionality reduction of a multidimensional array.
+    
+    Args:
+        mat (numpy.ndarray): The n-dimensional array.
+        axes (list): A list containing the axes along which the operation will take place.
+        method (str): The type of operation. Options are 'sum' and 'mean'.
+    
+    Returns:
+        numpy.ndarray: The dimensionality-reduced array.
+    """
     
     naxes = len(axes)
     squeezed = np.copy(mat)
@@ -335,9 +413,16 @@ def matsum(mat, axes = [0,1], method = 'sum'):
 
 def cart2pol(x, y):
     
-    '''
-    Convert cartesian (x,y) coordinates to polar coordinates (rho, phi)
-    '''
+    """
+    Convert Cartesian (x,y) coordinates to polar coordinates (rho, phi).
+    
+    Args:
+        x (float): x-coordinate.
+        y (float): y-coordinate.
+    
+    Returns:
+        tuple: Polar coordinates (phi, rho).
+    """
     
     rho = np.sqrt(x**2 + y**2)
     phi = np.arctan2(y, x)
@@ -346,9 +431,16 @@ def cart2pol(x, y):
 
 def pol2cart(phi, rho):
 
-    '''
-    Convert polar (rho, phi) coordinates to cartesian coordinates (x,y)
-    '''
+    """
+    Convert polar (rho, phi) coordinates to Cartesian coordinates (x, y).
+    
+    Args:
+        phi (float): Angle in radians.
+        rho (float): Distance from the origin.
+    
+    Returns:
+        tuple: Cartesian coordinates (x, y).
+    """
 
     x = rho * np.cos(phi)
     y = rho * np.sin(phi)
@@ -358,14 +450,18 @@ def pol2cart(phi, rho):
 
 def cart2polim(im, thpix=1024, rpix=1024, ofs=0):
     
-    '''
-    Converts an image from cartestian to polar coordinates
-    Inputs:
-        im: 2D array corresponding to the image
-        thpix: number of bins for the azimuthal range, default=1024
-        rpix: number of bins for the r distance range, default=1024
-        ofs: angular offset, default=0
-    '''
+    """
+    Convert an image from Cartesian to polar coordinates.
+    
+    Args:
+        im (numpy.ndarray): 2D array corresponding to the image.
+        thpix (int): Number of bins for the azimuthal range (default: 1024).
+        rpix (int): Number of bins for the r distance range (default: 1024).
+        ofs (float): Angular offset (default: 0).
+    
+    Returns:
+        numpy.ndarray: Image in polar coordinates.
+    """
     
     x = np.arange(0, im.shape[0]) - im.shape[0]/2
     y = np.arange(0, im.shape[1]) - im.shape[1]/2
@@ -386,15 +482,19 @@ def cart2polim(im, thpix=1024, rpix=1024, ofs=0):
 
 def pol2cartim(imp, im_size=None, thpix=1024, rpix=1024, ofs=0):
     
-    '''
-    Converts an image from polar to cartestian coordinates
-    Inputs:
-        imp: 2D array corresponding to the polar transformed image
-        im_size: list containing the two dimensions of the image with cartesian coordinates
-        thpix: number of bins for the azimuthal range, default=1024
-        rpix: number of bins for the r distance range, default=1024
-        ofs: angular offset, default=0
-    '''
+    """
+    Convert an image from polar to Cartesian coordinates.
+    
+    Args:
+        imp (numpy.ndarray): 2D array corresponding to the polar-transformed image.
+        im_size (list): List containing the two dimensions of the image with Cartesian coordinates (default: None).
+        thpix (int): Number of bins for the azimuthal range (default: 1024).
+        rpix (int): Number of bins for the r distance range (default: 1024).
+        ofs (float): Angular offset (default: 0).
+    
+    Returns:
+        numpy.ndarray: Image in Cartesian coordinates.
+    """
     if im_size is None:
         im_size = [imp.shape[0], imp.shape[1]]
 
@@ -416,24 +516,35 @@ def pol2cartim(imp, im_size=None, thpix=1024, rpix=1024, ofs=0):
 
 
 def even_idx(a):
-    '''
-    Returns all even elements from a matrix
-    Answer to: https://stackoverflow.com/questions/41839634/numpy-array-select-all-even-elements-from-d-dimensional-array
-    '''
+    """
+    Return all even elements from a matrix.
+    Args:
+        a (numpy.ndarray): Input matrix.
+    Returns:
+        numpy.ndarray: Array containing only the even elements.
+    """
     return a[np.ix_(*[range(0,i,2) for i in a.shape])]
 
 def odd_idx(a):
-    '''
-    Returns all odd elements from a matrix
-    '''
+    """
+    Return all odd elements from a matrix.
+    Args:
+        a (numpy.ndarray): Input matrix.
+    Returns:
+        numpy.ndarray: Array containing only the odd elements.
+    """
     return a[np.ix_(*[range(1,i,2) for i in a.shape])]
 
      
 def rgb2gray(im):
     
-    '''
-    RBG image to grayscale using the luminosity method
-    '''
+    """
+    Convert an RGB image to grayscale using the luminosity method.
+    Args:
+        im (numpy.ndarray): RGB image.
+    Returns:
+        numpy.ndarray: Grayscale image.
+    """
     
     im = im[:,:0]*0.3 + im[:,:1]*0.59 + im[:,:2]*0.11
     
@@ -442,9 +553,15 @@ def rgb2gray(im):
 
 def crop_ctimage(im, plot=False):
     
-    '''
-    Crop a CT image using a square inside the reconstruction circle
-    '''
+    """
+    Crop a CT image using a square inside the reconstruction circle.
+    Args:
+        im (numpy.ndarray): CT image.
+        plot (bool): Flag to display a plot of the cropped image (default: False).
+    
+    Returns:
+        numpy.ndarray: Cropped CT image.
+    """
     
     d = int(np.round((1 - np.cos(np.deg2rad(45)))*(im.shape[0]/2)))
     im = im[d:-d, d:-d]
@@ -460,9 +577,20 @@ def crop_ctimage(im, plot=False):
     
 def crop_image(im, thr=None, norm=False, plot=False, inds=None):
 
-    '''
-    Crop an image
-    '''
+    """
+    Crop an image.
+    
+    Args:
+        im (numpy.ndarray): Input image.
+        thr (float): Threshold value to apply for cropping (default: None).
+        norm (bool): Flag to normalize the image (default: False).
+        plot (bool): Flag to display plots of the original and cropped images (default: False).
+        inds (list): List of indices for cropping (default: None).
+    
+    Returns:
+        numpy.ndarray: Cropped image.
+        list: List of indices used for cropping.
+    """
     
     dims = im.shape
     
@@ -509,9 +637,19 @@ def crop_image(im, thr=None, norm=False, plot=False, inds=None):
     
 def crop_volume(vol, thr=None, plot=False, dtype='float32', inds=None):
 
-    '''
-    Crops a data volume using the average image along the third dimension
-    '''
+    """
+    Crop a data volume using the average image along the third dimension.
+    
+    Args:
+        vol (numpy.ndarray): Input data volume.
+        thr (float): Threshold value to apply for cropping (default: None).
+        plot (bool): Flag to display a plot of the cropped volume (default: False).
+        dtype (str): Data type of the cropped volume (default: 'float32').
+        inds (list): List of indices for cropping (default: None).
+    
+    Returns:
+        numpy.ndarray: Cropped data volume.
+    """
     
     im = np.sum(vol, axis = 2)
     im = im/np.max(im)
@@ -549,9 +687,16 @@ def crop_volume(vol, thr=None, plot=False, dtype='float32', inds=None):
 
 def crop_volume_getinds(vol, thr=None):
 
-    '''
-    Crops a data volume using the average image along the third dimension
-    '''
+    """
+    Crop a data volume using the average image along the third dimension and return the indices.
+    
+    Args:
+        vol (numpy.ndarray): Input data volume.
+        thr (float): Threshold value to apply for cropping (default: None).
+    
+    Returns:
+        tuple: Tuple of lists containing the row and column indices used for cropping.
+    """
     
     im = np.sum(vol, axis = 2)
     im = im/np.max(im)
@@ -568,9 +713,16 @@ def crop_volume_getinds(vol, thr=None):
     
 def crop_ctvolume(vol, plot=False):
     
-    '''
-    Crop a CT image using a square inside the reconstruction circle
-    '''
+    """
+    Crop a CT volume using a square inside the reconstruction circle.
+    
+    Args:
+        vol (numpy.ndarray): Input CT volume.
+        plot (bool): Flag to display a plot of the cropped volume (default: False).
+    
+    Returns:
+        numpy.ndarray: Cropped CT volume.
+    """
     
     d = int(np.round((1 - np.cos(np.deg2rad(45)))*(vol.shape[0]/2)))
     vol = vol[d:-d, d:-d,:]
@@ -587,9 +739,17 @@ def crop_ctvolume(vol, plot=False):
 
 def fill_2d_binary(im, thr = None, dil_its = 2):
     
-    '''
-    Fill a 2D binary image
-    '''
+    """
+    Fill a 2D binary image.
+    
+    Args:
+        im (numpy.ndarray): Input binary image.
+        thr (float): Threshold value to apply for filling (default: None).
+        dil_its (int): Number of dilation iterations (default: 2).
+    
+    Returns:
+        numpy.ndarray: Filled binary image.
+    """
     
     im = im / np.max(im)
     if thr is not None:
@@ -608,9 +768,18 @@ def fill_2d_binary(im, thr = None, dil_its = 2):
 
 def image_segm(im, thr, norm = False, plot = False):
     
-    '''
-    Perform simple threshold based image segmentation
-    '''
+    """
+    Perform simple threshold-based image segmentation.
+    
+    Args:
+        im (numpy.ndarray): Input image.
+        thr (float): Threshold value for segmentation.
+        norm (bool): Flag to normalize the image (default: False).
+        plot (bool): Flag to display a plot of the segmented image (default: False).
+    
+    Returns:
+        numpy.ndarray: Segmented image.
+    """
     
     imt = np.copy(im)
 
@@ -637,9 +806,15 @@ def image_segm(im, thr, norm = False, plot = False):
 
 def make_matrix_even(mat):
 
-    '''
-    Makes a 1D, 2D or 3D array have dimension sizes equal to an even number
-    '''
+    """
+    Make the dimensions of a 1D, 2D, or 3D array have even sizes.
+    
+    Args:
+        mat (numpy.ndarray): Input array.
+    
+    Returns:
+        numpy.ndarray: Array with even dimensions.
+    """
     
     dims = mat.shape
 
@@ -668,6 +843,19 @@ def make_matrix_even(mat):
     
 def pad_zeros_vol(vol1, vol2, dtype):
 
+    """
+    Pad two volumes with zeros to match their sizes.
+    
+    Args:
+        vol1 (numpy.ndarray): First volume.
+        vol2 (numpy.ndarray): Second volume.
+        dtype (str): Data type for the padded volumes.
+    
+    Returns:
+        numpy.ndarray: Padded vol1.
+        numpy.ndarray: Padded vol2.
+    """
+    
     # Make each dimension of both volumes an even number
     vol1 = make_matrix_even(vol1)
     vol2 = make_matrix_even(vol2)
@@ -704,6 +892,18 @@ def pad_zeros_vol(vol1, vol2, dtype):
 
 def pad_zeros_svol(vol, dims, dtype):
 
+    """
+    Pad a volume with zeros to match a specific size.
+    
+    Args:
+        vol (numpy.ndarray): Input volume.
+        dims (tuple): Target dimensions for the padded volume.
+        dtype (str): Data type for the padded volume.
+    
+    Returns:
+        numpy.ndarray: Padded volume.
+    """
+    
     # Make each dimension of both volumes an even number
     vol = make_matrix_even(vol)
     
@@ -730,6 +930,18 @@ def pad_zeros_svol(vol, dims, dtype):
 
 def pad_zeros(im1, im2, dtype):
 
+    """
+    Pad two images with zeros to match their sizes.
+    
+    Args:
+        im1 (numpy.ndarray): First input image.
+        im2 (numpy.ndarray): Second input image.
+        dtype (str): Data type for the padded images.
+    
+    Returns:
+        tuple: Padded images (im1, im2).
+    """
+    
     dims1 = im1.shape
     dims2 = im2.shape
 
@@ -777,18 +989,33 @@ def pad_zeros(im1, im2, dtype):
 
 def nan_to_number(array, val=0):
     
-    '''
-    Replace NaNs with a number, default value is 0
-    '''
+    """
+    Replace NaN values in an array with a specified number.
+    
+    Args:
+        array (numpy.ndarray): Input array.
+        val (float): Value to replace NaN with. Default is 0.
+    
+    Returns:
+        numpy.ndarray: Array with NaN values replaced by the specified number.
+    """
     
     return(np.where(np.isnan(array), val, array))
 
 
 def number_to_nan(array, val=0):
     
-    '''
-    Replace a number with NaN, default value is 0
-    '''
+    """
+    Replace a specified number in an array with NaN values.
+    
+    Args:
+        array (numpy.ndarray): Input array.
+        val (float): Value to replace with NaN. Default is 0.
+    
+    Returns:
+        numpy.ndarray: Array with the specified number replaced by NaN values.
+    """
+    
     array[array==val] = np.nan
     return(array)
     
@@ -796,9 +1023,17 @@ def number_to_nan(array, val=0):
 
 def find_first_neighbors_2D(mat, r, c):
     
-    '''
-    Takes a binary 2D matrix as input and the coordinates (row, column) and returns a list with the first neighbour elements that are non-zero
-    '''
+    """
+    Find the first neighbor elements that are non-zero in a binary 2D matrix.
+    
+    Args:
+        mat (numpy.ndarray): Binary 2D matrix.
+        r (int): Row index of the element.
+        c (int): Column index of the element.
+    
+    Returns:
+        list: List of coordinates (row, column) of the first neighbor elements that are non-zero.
+    """
     
     dims = mat.shape
     
