@@ -13,7 +13,7 @@ from tqdm import tqdm
 from scipy.interpolate import griddata
 from scipy.ndimage import binary_fill_holes, binary_dilation, generate_binary_structure
 from skimage.segmentation import flood, flood_fill
-
+from scipy.optimize import minimize
    
 def ndtomopath():
     
@@ -820,3 +820,128 @@ def find_first_neighbors_2D(mat, r, c):
 
     return(ind_list)
 
+
+def fit_shape_to_points(image, shape='circle'):
+    """
+    Fits a circle or ellipse to five user-selected points on an image and overlays it on the original image.
+
+    Args:
+        image (numpy.ndarray): 2D numpy array representing the image.
+        shape (str): Shape to fit. Options: 'circle' (default) or 'ellipse'.
+
+    Returns:
+        None
+    """
+
+    # Plot the image
+    plt.imshow(image, cmap='gray')
+    plt.title('Click five points on the image')
+    plt.axis('image')
+
+    # Wait for user input to select points
+    plt.waitforbuttonpress()
+
+    # Get the figure and axes
+    fig = plt.gcf()
+    ax = fig.gca()
+
+    # Initialize a list to store the clicked points
+    clicked_points = []
+
+    def onclick(event):
+        """
+        Event handler for mouse click events.
+
+        Args:
+            event (matplotlib.backend_bases.MouseEvent): Mouse click event object.
+
+        Returns:
+            None
+        """
+        if len(clicked_points) < 5:
+            # Append the clicked point to the list
+            clicked_points.append((event.xdata, event.ydata))
+
+            # Plot the clicked point
+            ax.plot(event.xdata, event.ydata, 'ro', markersize=5)
+            plt.draw()
+
+    # Connect the onclick event handler
+    fig.canvas.mpl_connect('button_press_event', onclick)
+
+    # Wait for five points to be clicked
+    while len(clicked_points) < 5:
+        plt.waitforbuttonpress()
+
+    # Extract the x and y coordinates from the clicked points
+    x_coords, y_coords = zip(*clicked_points)
+
+    # Fit a shape to the clicked points using least squares optimization
+    if shape == 'circle':
+        def shape_residuals(params):
+            """
+            Residual function for circle fitting.
+
+            Args:
+                params (numpy.ndarray): Circle parameters (x0, y0, r).
+
+            Returns:
+                float: Residual error.
+            """
+            x0, y0, r = params
+            residuals = np.sqrt((x_coords - x0)**2 + (y_coords - y0)**2) - r
+            return np.sum(residuals**2)
+        
+        initial_guess = np.mean(x_coords), np.mean(y_coords), np.mean([np.sqrt((x - np.mean(x_coords))**2 + (y - np.mean(y_coords))**2) for x, y in clicked_points])
+        result = minimize(shape_residuals, initial_guess)
+        
+        # Extract the optimized circle parameters
+        x0, y0, r = result.x
+
+        # Plot the image with the fitted shape
+        plt.imshow(image, cmap='gray')
+        plt.title('Image with Fitted Circle')
+        plt.axis('image')
+
+        # Plot the circle
+        theta = np.linspace(0, 2*np.pi, 100)
+        x = x0 + r * np.cos(theta)
+        y = y0 + r * np.sin(theta)
+        plt.plot(x, y, 'r-', label='Fitted Circle')
+        plt.legend()
+
+    elif shape == 'ellipse':
+        def shape_residuals(params):
+            """
+            Residual function for ellipse fitting.
+
+            Args:
+                params (numpy.ndarray): Ellipse parameters (x0, y0, a, b).
+
+            Returns:
+                float: Residual error.
+            """
+            x0, y0, a, b = params
+            residuals = (((x_coords - x0) / a)**2 + ((y_coords - y0) / b)**2) - 1
+            return np.sum(residuals**2)
+        
+        initial_guess = np.mean(x_coords), np.mean(y_coords), np.std(x_coords), np.std(y_coords)
+        result = minimize(shape_residuals, initial_guess)
+        
+        # Extract the optimized ellipse parameters
+        x0, y0, a, b = result.x
+
+        # Plot the image with the fitted shape
+        plt.imshow(image, cmap='gray')
+        plt.title('Image with Fitted Ellipse')
+        plt.axis('image')
+
+        # Plot the ellipse
+        theta = np.linspace(0, 2*np.pi, 100)
+        x = x0 + a * np.cos(theta)
+        y = y0 + b * np.sin(theta)
+        plt.plot(x, y, 'r-', label='Fitted Ellipse')
+        plt.legend()
+
+    # Show the plot
+    plt.show()
