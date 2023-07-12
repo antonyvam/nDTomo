@@ -1233,21 +1233,47 @@ def CNN3D(nlayers = 15, skip=True, filts = 64):
     return model
 
 def CNN1D3D(nlayers_3d=4, skip_3d=False, filts_3d=32, nlayers_1d=4, skip_1d=False, filts_1d=32, kernel_size_1d=10):
-    # Define inputs for 3D and 1D models
-    input_3d = Input(shape=(None, None, None, 1))
-    input_1d = Input(shape=(None, 1))
 
     # Create the 3D model
-    model_3d = CNN3D(nlayers=nlayers_3d, skip=skip_3d, filts=filts_3d)(input_3d)
+    im3D = Input(shape=(None,None,None,1))
+
+    x = Conv3D(filters=filts_3d, kernel_size=3, padding='same', activation='relu')(im3D)
+
+    for i in range(nlayers_3d):
+        x = Conv3D(filters=filts_3d, kernel_size=3, padding='same')(x)
+        x = Conv3D(filters=filts_3d, kernel_size=3, padding='same', activation='relu')(x)
+
+    x = Conv3D(filters=1, kernel_size=3, padding='same', activation='linear')(x)
+    
+    if skip_3d:
+        added = Add()([im3D, x])
+        model_3D = Model(im3D, added)
+    else:
+        model = Model(im3D, x)
+
 
     # Create the 1D model
-    model_1d = CNN1D(nlayers=nlayers_1d, skip=skip_1d, filts=filts_1d, kernel_size=kernel_size_1d)(input_1d)
+    spectra = Input(shape=(None,1))
+
+    x = Conv1D(filters=filts_1d, kernel_size=kernel_size_1d, padding='same', activation='relu')(spectra)
+
+    for i in range(nlayers_1d):
+        x = Conv1D(filters=filts_1d, kernel_size=kernel_size_1d, padding='same')(x)
+        x = Conv1D(filters=filts_1d, kernel_size=kernel_size_1d, padding='same', activation='relu')(x)
+
+    x = Conv1D(filters=1, kernel_size=kernel_size_1d, padding='same', activation='linear')(x)
+    
+    if skip_1d:
+        added = Add()([spectra, x])
+        model = Model(spectra, added)
+    else:
+        model_1D = Model(spectra, x)
 
     # Concatenate the outputs of the 3D and 1D models
-    combined = Concatenate()([model_3d, model_1d])
+    combined = Concatenate()([model_3D, model_1D])
 
     # Create the combined model
-    model = Model(inputs=[input_3d, input_1d], outputs=combined)
+    model = Model(inputs=[im3D, spectra], outputs=combined)
 
     return model
 
