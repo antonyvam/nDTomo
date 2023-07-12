@@ -11,6 +11,12 @@ import tensorflow as tf
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Concatenate, Lambda, Conv3D, Conv1D, UpSampling1D, Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
 from numpy import mod, ceil
+from tensorflow.python.framework import ops
+from tensorflow.python.eager import def_function
+from tensorflow.python.framework import tensor_shape
+from tensorflow.python.framework import dtypes
+from tensorflow.keras import backend as K
+from tensorflow.keras.layers import Layer
 
 def SD2I(npix, factor=8, upsample = True):
 
@@ -1278,10 +1284,21 @@ def CNN1D3D(nlayers_3d=4, skip_3d=False, filts_3d=32, nlayers_1d=4, skip_1d=Fals
     return model
 
 
-def CNN1D3D_single_input(patch_size = 32, nlayers_3d=4, skip_3d=False, filts_3d=32, nlayers_1d=4, skip_1d=False, filts_1d=32, kernel_size_1d=10):
+class CustomReshapeLayer(Layer):
+    @tf.autograph.experimental.do_not_convert
+    def call(self, inputs, training=None):
+        self.original_shape = K.shape(inputs)
+        return K.reshape(inputs, (-1, self.original_shape[1]*self.original_shape[2]*self.original_shape[3], 1))
+
+class CustomReshapeBackLayer(Layer):
+    @tf.autograph.experimental.do_not_convert
+    def call(self, inputs, original_shape, training=None):
+        return K.reshape(inputs, (-1, original_shape[1]//original_shape[2], original_shape[2], original_shape[3], inputs.shape[-1]))
+    
+def CNN1D3D_single_input(nlayers_3d=2, skip_3d=False, filts_3d=32, nlayers_1d=4, skip_1d=False, filts_1d=32, kernel_size_1d=10):
 
     # Create the combined model
-    input_data = Input(shape=(patch_size, patch_size, patch_size, 1))
+    input_data = Input(shape=(None, None, None, 1))
 
     # 3D part
     x3D = Conv3D(filters=filts_3d, kernel_size=3, padding='same', activation='relu')(input_data)
@@ -1296,17 +1313,11 @@ def CNN1D3D_single_input(patch_size = 32, nlayers_3d=4, skip_3d=False, filts_3d=
         added3D = Add()([input_data, x3D])
         x3D = added3D
 
-
     # 1D part
     
-    # Define the shape of the desired output
-    output_shape = (patch_size * patch_size, patch_size, 1)
-    
-    # Create a Reshape layer
-    reshape_layer = Reshape(target_shape=output_shape)
-    
-    # Apply the reshape operation to the input_data
-    x1D = reshape_layer(input_data)
+    # Reshape input_data using a custom layer
+    customReshapeLayer = CustomReshapeLayer()
+    x1D = customReshapeLayer(input_data)
         
     x1D = Conv1D(filters=filts_1d, kernel_size=kernel_size_1d, padding='same', activation='relu')(x1D)
 
@@ -1320,15 +1331,8 @@ def CNN1D3D_single_input(patch_size = 32, nlayers_3d=4, skip_3d=False, filts_3d=
         added1D = Add()([input_data, x1D])
         x1D = added1D
 
-
-    # Define the shape of the desired output
-    output_shape = (patch_size, patch_size, patch_size, 1)
-    
-    # Create a Reshape layer
-    reshape_layer = Reshape(target_shape=output_shape)
-    
-    # Apply the reshape operation to the input_data
-    x1D_reshaped = reshape_layer(x1D)
+    # Reshape x1D back to its original shape using a custom layer
+    x1D_reshaped = CustomReshapeBackLayer()(x1D, customReshapeLayer.original_shape) 
     
     # Compute the average of x3D and x1D
     average = Average()([x3D, x1D_reshaped])
