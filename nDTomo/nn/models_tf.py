@@ -1316,7 +1316,7 @@ def CNN1D3D_single_input(nlayers_3d=4, skip_3d=False, filts_3d=32, nlayers_1d=4,
     x1D_reshaped = Reshape(shape_3D)(x1D)
 
     # Compute the average of x3D and x1D
-    average = Average()([x3D, x1D_reshaped])
+    average = (x3D + x1D_reshaped)/2
 
     # Create the combined model
     model = Model(inputs=input_data, outputs=average)
