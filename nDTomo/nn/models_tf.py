@@ -1298,7 +1298,8 @@ def CNN1D3D_single_input(nlayers_3d=4, skip_3d=False, filts_3d=32, nlayers_1d=4,
 
 
     # 1D part
-    x1D = Reshape((-1, input_data.shape[-1]))(input_data)
+    x1D = tf.reshape(input_data, (input_data.shape[0] * input_data.shape[1], input_data.shape[2], 1))
+    
     x1D = Conv1D(filters=filts_1d, kernel_size=kernel_size_1d, padding='same', activation='relu')(x1D)
 
     for i in range(nlayers_1d):
