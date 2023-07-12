@@ -9,7 +9,7 @@ Neural networks models
 
 import tensorflow as tf
 from tensorflow.keras.models import Model
-from tensorflow.keras.layers import Lambda, Conv3D, Conv1D, UpSampling1D, Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
+from tensorflow.keras.layers import Concatenate, Lambda, Conv3D, Conv1D, UpSampling1D, Activation, Subtract, LeakyReLU, LayerNormalization, SpatialDropout2D, Average, Add, Input, concatenate, UpSampling2D, Reshape, Dense, Conv2D, MaxPooling2D, Flatten, Dropout, BatchNormalization, Cropping2D
 from numpy import mod, ceil
 
 def SD2I(npix, factor=8, upsample = True):
@@ -1232,7 +1232,24 @@ def CNN3D(nlayers = 15, skip=True, filts = 64):
     
     return model
 
+def CNN1D3D(nlayers_3d=4, skip_3d=False, filts_3d=32, nlayers_1d=4, skip_1d=False, filts_1d=32, kernel_size_1d=10):
+    # Define inputs for 3D and 1D models
+    input_3d = Input(shape=(None, None, None, 1))
+    input_1d = Input(shape=(None, 1))
 
+    # Create the 3D model
+    model_3d = CNN3D(nlayers=nlayers_3d, skip=skip_3d, filts=filts_3d)(input_3d)
+
+    # Create the 1D model
+    model_1d = CNN1D(nlayers=nlayers_1d, skip=skip_1d, filts=filts_1d, kernel_size=kernel_size_1d)(input_1d)
+
+    # Concatenate the outputs of the 3D and 1D models
+    combined = Concatenate()([model_3d, model_1d])
+
+    # Create the combined model
+    model = Model(inputs=[input_3d, input_1d], outputs=combined)
+
+    return model
 
 def mask_rcnn(input_shape, num_classes):
     
