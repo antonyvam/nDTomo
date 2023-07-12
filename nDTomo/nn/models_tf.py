@@ -1313,8 +1313,7 @@ def CNN1D3D_single_input(nlayers_3d=4, skip_3d=False, filts_3d=32, nlayers_1d=4,
         x1D = added1D
 
     # Reshape x1D to match x3D
-    shape_3D = x3D.shape[1:]  # Get the shape of x3D
-    x1D_reshaped = Reshape(shape_3D)(x1D)
+    x1D_reshaped = tf.reshape(x1D, (input_data.shape[0], input_data.shape[1], input_data.shape[2], 1))
 
     # Compute the average of x3D and x1D
     average = (x3D + x1D_reshaped)/2
