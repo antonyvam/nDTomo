@@ -1277,6 +1277,52 @@ def CNN1D3D(nlayers_3d=4, skip_3d=False, filts_3d=32, nlayers_1d=4, skip_1d=Fals
 
     return model
 
+
+def CNN1D3D_single_input(nlayers_3d=4, skip_3d=False, filts_3d=32, nlayers_1d=4, skip_1d=False, filts_1d=32, kernel_size_1d=10):
+
+    # Create the combined model
+    input_data = Input(shape=(None, None, None, 1))
+
+    # 3D part
+    x3D = Conv3D(filters=filts_3d, kernel_size=3, padding='same', activation='relu')(input_data)
+
+    for i in range(nlayers_3d):
+        x3D = Conv3D(filters=filts_3d, kernel_size=3, padding='same')(x3D)
+        x3D = Conv3D(filters=filts_3d, kernel_size=3, padding='same', activation='relu')(x3D)
+
+    x3D = Conv3D(filters=1, kernel_size=3, padding='same', activation='linear')(x3D)
+    
+    if skip_3d:
+        added3D = Add()([input_data, x3D])
+        x3D = added3D
+
+
+    # 1D part
+    x1D = Reshape((-1, input_data.shape[-1]))(input_data)
+    x1D = Conv1D(filters=filts_1d, kernel_size=kernel_size_1d, padding='same', activation='relu')(x1D)
+
+    for i in range(nlayers_1d):
+        x1D = Conv1D(filters=filts_1d, kernel_size=kernel_size_1d, padding='same')(x1D)
+        x1D = Conv1D(filters=filts_1d, kernel_size=kernel_size_1d, padding='same', activation='relu')(x1D)
+
+    x1D = Conv1D(filters=1, kernel_size=kernel_size_1d, padding='same', activation='linear')(x1D)
+    
+    if skip_1d:
+        added1D = Add()([input_data, x1D])
+        x1D = added1D
+
+    # Reshape x1D to match x3D
+    shape_3D = x3D.shape[1:]  # Get the shape of x3D
+    x1D_reshaped = Reshape(shape_3D)(x1D)
+
+    # Compute the average of x3D and x1D
+    average = Average()([x3D, x1D_reshaped])
+
+    # Create the combined model
+    model = Model(inputs=input_data, outputs=average)
+
+    return model
+
 def mask_rcnn(input_shape, num_classes):
     
     
