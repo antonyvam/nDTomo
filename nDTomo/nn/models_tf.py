@@ -1285,15 +1285,33 @@ def CNN1D3D(nlayers_3d=4, skip_3d=False, filts_3d=32, nlayers_1d=4, skip_1d=Fals
 
 
 class CustomReshapeLayer(Layer):
-    @tf.autograph.experimental.do_not_convert
-    def call(self, inputs, training=None):
-        self.original_shape = K.shape(inputs)
-        return K.reshape(inputs, (-1, self.original_shape[1]*self.original_shape[2]*self.original_shape[3], 1))
+    def __init__(self, **kwargs):
+        super(CustomReshapeLayer, self).__init__(**kwargs)
+
+    def call(self, inputs):
+        # Flatten inputs to 1D while keeping the batch size and adding a dimension for channel
+        reshaped = tf.reshape(inputs, [tf.shape(inputs)[0], -1, 1])
+        return reshaped
+
+    def compute_output_shape(self, input_shape):
+        return (input_shape[0], -1, 1)
+
 
 class CustomReshapeBackLayer(Layer):
-    @tf.autograph.experimental.do_not_convert
-    def call(self, inputs, original_shape, training=None):
-        return K.reshape(inputs, (-1, original_shape[1]//original_shape[2], original_shape[2], original_shape[3], inputs.shape[-1]))
+    def __init__(self, **kwargs):
+        super(CustomReshapeBackLayer, self).__init__(**kwargs)
+
+    def call(self, inputs, original_shape):
+        
+        # Calculate new shape
+        new_shape = tf.concat([[-1], original_shape[1:-1], [1]], axis=0)
+
+        # Reshape inputs back to original_shape
+        reshaped_back = tf.reshape(inputs, new_shape)
+        return reshaped_back
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
     
 def CNN1D3D_single_input(nlayers_3d=2, skip_3d=False, filts_3d=32, nlayers_1d=4, skip_1d=False, filts_1d=32, kernel_size_1d=10):
 
@@ -1314,8 +1332,8 @@ def CNN1D3D_single_input(nlayers_3d=2, skip_3d=False, filts_3d=32, nlayers_1d=4,
         x3D = added3D
 
     # 1D part
-    
-    # Reshape input_data using a custom layer
+    # Use tf.shape() instead of K.int_shape()
+    original_shape = tf.shape(input_data)
     customReshapeLayer = CustomReshapeLayer()
     x1D = customReshapeLayer(input_data)
         
@@ -1332,7 +1350,8 @@ def CNN1D3D_single_input(nlayers_3d=2, skip_3d=False, filts_3d=32, nlayers_1d=4,
         x1D = added1D
 
     # Reshape x1D back to its original shape using a custom layer
-    x1D_reshaped = CustomReshapeBackLayer()(x1D, customReshapeLayer.original_shape) 
+    customReshapeBackLayer = CustomReshapeBackLayer()
+    x1D_reshaped = customReshapeBackLayer(x1D, original_shape)    
     
     # Compute the average of x3D and x1D
     average = Average()([x3D, x1D_reshaped])
