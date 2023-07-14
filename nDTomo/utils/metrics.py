@@ -70,7 +70,7 @@ def normalized_cross_correlation(data1, data2):
     return numerator/denominator
 
 
-def calculate_total_variation(image, tv_type):
+def total_variation_image(image, tv_type):
     """
     Calculates the isotropic or anisotropic total variation of an image.
 
@@ -97,7 +97,32 @@ def calculate_total_variation(image, tv_type):
     return tv
 
 
+def total_variation_volume(volume, tv_type):
+    """
+    Calculates the isotropic or anisotropic total variation of a volume.
 
+    Parameters:
+        volume (numpy.ndarray): Input volume as a 3D NumPy array.
+        tv_type (str): Type of total variation to calculate: 'isotropic' or 'anisotropic'.
+
+    Returns:
+        float: Total variation value.
+    """
+    # Calculate differences in x, y, and z directions
+    dx = diff(volume, axis=2)
+    dy = diff(volume, axis=1)
+    dz = diff(volume, axis=0)
+
+    if tv_type == 'isotropic':
+        # Calculate isotropic total variation
+        tv = sum(sqrt(dx**2 + dy**2 + dz**2))
+    elif tv_type == 'anisotropic':
+        # Calculate anisotropic total variation
+        tv = sum(abs(dx)) + sum(abs(dy)) + sum(abs(dz))
+    else:
+        raise ValueError("Invalid TV type. Allowed values are 'isotropic' and 'anisotropic'.")
+
+    return tv
 
 
 
