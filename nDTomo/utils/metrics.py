@@ -63,7 +63,7 @@ def ssim_data(data1, data2):
     Returns:
         float: The SSIM value.
     """    
-    data_range = max(data2.max(), data1.max()) - min(data2.min(), data1.min())    
+    data_range = max((data2.max(), data1.max())) - min((data2.min(), data1.min()))
     return ssim(data1, data2, data_range=data_range)
 
 
