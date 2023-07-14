@@ -8,6 +8,18 @@ Metrics for data science
 from skimage.metrics import structural_similarity as ssim
 from numpy import sum, mean, max, log10, sqrt, diff, abs
 
+def mae(data1, data2):
+    """
+    Computes the Mean Absolute Error (MAE) between two arrays.
+
+    Parameters:
+        data1 (numpy.ndarray): First input array.
+        data2 (numpy.ndarray): Second input array.
+
+    Returns:
+        float: The mean squared error value.
+    """    
+    return mean(abs(data1 - data2))
 
 def mse(data1, data2):
     """
