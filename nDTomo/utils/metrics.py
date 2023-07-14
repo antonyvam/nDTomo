@@ -159,5 +159,80 @@ def calculate_rmse(data1, data2):
 
     return rmse
 
+def Rwp(y_obs, y_calc, weights=None):
+    
+    """
+    Function to compute the weighted profile R-factor (Rwp) used in X-ray diffraction analysis.
+    
+    Parameters:
+    y_obs (numpy array): The observed (experimental) data points.
+    y_calc (numpy array): The calculated (or model) data points.
+    weights (numpy array, optional): The weights for each data point. Defaults to 1/y_obs.
+    
+    Returns:
+    float: The calculated Rwp value.
+    """
+    
+    if weights is None:
+        weights = 1 / y_obs
+    
+    numerator = sum(weights * (y_obs - y_calc)**2)
+    denominator = sum(weights * y_obs**2)
+    
+    return sqrt(numerator / denominator)
 
 
+def Rexp(y_obs, y_calc, weights=None):
+    """
+    Function to compute the expected profile R-factor (Rexp) used in X-ray diffraction analysis.
+    
+    Parameters:
+    y_obs (numpy array): The observed (experimental) data points.
+    y_calc (numpy array): The calculated (or model) data points.
+    weights (numpy array, optional): The weights for each data point. Defaults to 1/y_obs.
+    
+    Returns:
+    float: The calculated Rexp value.
+    """
+    
+    if weights is None:
+        weights = 1 / y_obs
+
+    denominator = sum(weights * y_obs**2)
+    
+    return sqrt(1 / denominator)
+
+
+def chi_square(y_obs, y_calc, weights=None):
+    """
+    Function to compute the chi-square value used in statistical analysis.
+    
+    Parameters:
+    y_obs (numpy array): The observed (experimental) data points.
+    y_calc (numpy array): The calculated (or model) data points.
+    weights (numpy array, optional): The weights for each data point. Defaults to 1/y_obs.
+    
+    Returns:
+    float: The calculated chi-square value.
+    """
+    
+    if weights is None:
+        weights = 1 / y_obs
+    
+    return sum(weights * (y_obs - y_calc)**2)
+
+
+def compute_goodness_of_fit(y_obs, y_calc, weights=None):
+    """
+    Function to compute the goodness of fit used in statistical analysis.
+    
+    Parameters:
+    y_obs (numpy array): The observed (experimental) data points.
+    y_calc (numpy array): The calculated (or model) data points.
+    weights (numpy array, optional): The weights for each data point. Defaults to 1/y_obs.
+    
+    Returns:
+    float: The calculated goodness of fit value.
+    """
+    
+    return Rwp(y_obs, y_calc, weights)**2 / Rexp(y_obs, y_calc, weights)
