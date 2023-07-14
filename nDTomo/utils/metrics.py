@@ -49,7 +49,7 @@ def psnr(data1, data2):
     mse_val = mse(data1, data2)
     if mse_val == 0:  # Same volumes
         return 100
-    max_pixel = max(data2)
+    max_pixel = max(data1)
     return 20 * log10(max_pixel / sqrt(mse_val))
 
 def ssim_data(data1, data2):
@@ -63,7 +63,8 @@ def ssim_data(data1, data2):
     Returns:
         float: The SSIM value.
     """    
-    return ssim(data1, data2, data_range=data2.max() - data2.min())
+    data_range = max(data2.max(), data1.max()) - min(data2.min(), data1.min())    
+    return ssim(data1, data2, data_range=data_range)
 
 
 def normalized_cross_correlation(data1, data2):
