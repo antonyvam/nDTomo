@@ -125,8 +125,27 @@ def total_variation_volume(volume, tv_type):
     return tv
 
 
+def calculate_rmse(data1, data2):
+    """
+    Calculates the root mean squared error (RMSE) between two datasets.
 
+    Parameters:
+        volume1 (numpy.ndarray): First input volume as a NumPy array.
+        volume2 (numpy.ndarray): Second input volume as a NumPy array.
 
+    Returns:
+        float: Root mean squared error value.
+    """
+    # Compute the squared difference between the volumes
+    squared_diff = (data1 - data2) ** 2
+
+    # Compute the mean squared error
+    mse = mean(squared_diff)
+
+    # Compute the root mean squared error
+    rmse = sqrt(mse)
+
+    return rmse
 
 
 
