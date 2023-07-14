@@ -52,7 +52,7 @@ def psnr(data1, data2):
     max_pixel = max(data2)
     return 20 * log10(max_pixel / sqrt(mse_val))
 
-def compute_ssim(data1, data2):
+def ssim_data(data1, data2):
     """
     Computes the Structural Similarity Index (SSIM) between two arrays.
 
