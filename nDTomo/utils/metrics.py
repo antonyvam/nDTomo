@@ -5,7 +5,9 @@ Metrics for data science
 @author: Antony Vamvakeros
 """
 
-from numpy import sum, square, mean
+from skimage.metrics import structural_similarity as ssim
+from numpy import sum, square, mean, max, log10, sqrt
+from scipy.signal import correlate
 
 def tv_image(im, method = 'isotropic'):
     
@@ -73,3 +75,79 @@ def ssim_images(x, y, max_val, compensation=1.0, k1=0.01, k2=0.03):
     ssim_val = mean(luminance * cs)
     
     return(ssim_val)
+
+def mse(data1, data2):
+    """
+    Computes the Mean Squared Error (MSE) between two arrays.
+
+    Parameters:
+        data1 (numpy.ndarray): First input array.
+        data2 (numpy.ndarray): Second input array.
+
+    Returns:
+        float: The mean squared error value.
+    """    
+    return mean((data1 - data2) ** 2)
+
+
+def psnr(data1, data2):
+    """
+    Computes the Peak Signal-to-Noise Ratio (PSNR) between two arrays.
+
+    Parameters:
+        data1 (numpy.ndarray): First input array.
+        data2 (numpy.ndarray): Second input array.
+
+    Returns:
+        float: The PSNR value.
+    """    
+    mse_val = mse(data1, data2)
+    if mse_val == 0:  # Same volumes
+        return 100
+    max_pixel = max(data2)
+    return 20 * log10(max_pixel / sqrt(mse_val))
+
+def compute_ssim(data1, data2):
+    """
+    Computes the Structural Similarity Index (SSIM) between two arrays.
+
+    Parameters:
+        data1 (numpy.ndarray): First input array.
+        data2 (numpy.ndarray): Second input array.
+
+    Returns:
+        float: The SSIM value.
+    """    
+    return ssim(data1, data2, data_range=data2.max() - data2.min())
+
+
+def normalized_cross_correlation(data1, data2):
+    """
+    Computes the Normalized Cross-Correlation (NCC) between two arrays.
+
+    Parameters:
+        data1 (numpy.ndarray): First input array.
+        data2 (numpy.ndarray): Second input array.
+
+    Returns:
+        float: The NCC value.
+    """    
+    numerator = sum((data1 - mean(data1)) * (data2 - mean(data2)))
+    denominator = sqrt(sum((data1 - mean(data1))**2) * sum((data2 - mean(data2))**2))
+    return numerator/denominator
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
