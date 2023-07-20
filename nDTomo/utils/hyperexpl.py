@@ -100,25 +100,13 @@ class HyperSliceExplorer():
                 self.histogramCurve[0].set_visible(True)          
                 self.plotter.legend()
                 
-#                self.plotter.axes.set_xlim(self.xaxis[0],self.xaxis[-1])
-#                self.plotter.axes.set_ylim(0,np.max(self.dproi))
                 self.plotter.show()        
                 self.plotter.draw()
 
-#                self.selectedDataSetList.addItem(np.str([row,col]))
-#                self.selectedDataSetList.setCurrentIndex(self.selectedDataSetList.count()-1)
-#                self.selectedDataSetList.update()
-                
-#            self.plot_fig.canvas.mpl_disconnect(self.plot_cid) 
-#            self.plot_cid = self.plot_fig.canvas.mpl_connect('motion_notify_event',self.onPlotMoveEvent)
-
             else:
                 self.selectedVoxels = np.empty(0,dtype=object)
-#                self.selectedDataSetList.clear()
-#                self.currentCurve = 0
                 self.plot_axes.clear() # not fast
                 self.plotter.plot(self.xaxis, self.mdp, label='Mean spectrum')
-#                self.selectedDataSetList.addItem('mean')
                 self.plotter.legend()                
                 self.plotter.draw() 
 
@@ -139,11 +127,8 @@ class HyperSliceExplorer():
             
             dproi = self.data[row,col,:]            
             
-            
             self.activeCurve[0].set_data(self.xaxis, dproi) 
-            # self.mapper.relim()
             self.activeCurve[0].set_label(str(row)+','+str(col))
-#            self.mapper.axes.autoscale(enable=True, axis='both', tight=True)#.axes.autoscale_view(False,True,True)
             self.activeCurve[0].set_visible(True)
             if np.max(dproi)>0:
                 self.plot_axes.set_ylim(0,np.max(dproi))
@@ -151,14 +136,10 @@ class HyperSliceExplorer():
         else:
             self.activeCurve[0].set_visible(False)
             self.activeCurve[0].set_label('')
-            
-#            self.plotter.axes.set_xlim(self.xaxis[0],self.xaxis[-1])
             self.plot_axes.set_ylim(0,np.max(self.dproi))
             
         self.plotter.legend()
         self.plotter.draw()
-    
-            
     
     def onPlotMoveEvent(self, event):
         
@@ -177,21 +158,15 @@ class HyperSliceExplorer():
             self.map_data = self.map_axes.imshow(self.imoi, cmap = self.cmap)
             title = "Channel = %d; %s = %.3f" % (nx, self.xaxislabel, self.xaxis[nx])
 
-
             try:
                 self.cb.remove()
             except:
                 pass
             
             self.cb = self.map_fig.colorbar(self.map_data)
-
-            
             self.map_axes.set_title(title)
             self.mapper.draw_all()             
-
-            
             self.vCurve.set_xdata(event.xdata) 
-                
             self.plotter.draw()
      
     def onPlotClick(self, event):
@@ -328,5 +303,116 @@ class ImageSpectrumGUI:
 
 
 
+class ImageSpectrumViewer:
+    def __init__(self, volume):
+        """
+        Initialize the ImageSpectrumViewer class.
+
+        Args:
+            volume (ndarray): The 3D volume containing the image data.
+        """
+        self.volume = volume
+        self.fig, (self.ax_image, self.ax_spectrum) = plt.subplots(1, 2)
+        self.canvas = self.fig.canvas
+        self.cid_image = None
+        self.cid_spectrum = None
+        self.cid_image_click = None
+        self.cid_spectrum_click = None
+
+        self.update_image()
+        self.update_spectrum()
+
+        self.cid_image = self.canvas.mpl_connect('motion_notify_event', self.on_image_hover)
+        self.cid_spectrum = self.canvas.mpl_connect('motion_notify_event', self.on_spectrum_hover)
+
+        self.cid_image_click = self.canvas.mpl_connect('button_press_event', self.on_image_click)
+        self.cid_spectrum_click = self.canvas.mpl_connect('button_press_event', self.on_spectrum_click)
+
+        self.image_real_time_update = True
+        self.spectrum_real_time_update = True
+
+    def update_image(self, x=None, y=None):
+        """
+        Update the image plot.
+
+        Args:
+            x (int, optional): The x-coordinate of the image pixel.
+            y (int, optional): The y-coordinate of the image pixel.
+        """
+        self.ax_image.clear()
+        if x is None or y is None:
+            image = np.mean(self.volume, axis=2).T
+            self.ax_image.imshow(image, cmap='gray')
+            self.ax_image.set_title('Image')
+        else:
+            image = self.volume[:, :, x].T
+            self.ax_image.imshow(image, cmap='gray')
+            self.ax_image.set_title(f'Image (Bin={x})')
+        self.canvas.draw()
+
+    def update_spectrum(self, x=None, y=None):
+        """
+        Update the spectrum plot.
+
+        Args:
+            x (int, optional): The x-coordinate of the image pixel.
+            y (int, optional): The y-coordinate of the image pixel.
+        """
+        self.ax_spectrum.clear()
+        if x is None or y is None:
+            spectrum = np.mean(self.volume, axis=(0, 1))
+            self.ax_spectrum.plot(spectrum, color='b')
+            self.ax_spectrum.set_title('Spectrum')
+        else:
+            spectrum = self.volume[x, y, :]
+            self.ax_spectrum.plot(spectrum, color='b')
+            self.ax_spectrum.set_title(f'Spectrum (x={x}, y={y})')
+        self.canvas.draw()
+
+    def on_image_hover(self, event):
+        """
+        Event handler for image hover.
+
+        Args:
+            event: The mouse motion event.
+        """
+        if event.inaxes == self.ax_image:
+            x = int(event.xdata) if event.xdata is not None else None
+            y = int(event.ydata) if event.ydata is not None else None
+            if self.image_real_time_update:
+                self.update_spectrum(x, y)
+
+    def on_spectrum_hover(self, event):
+        """
+        Event handler for spectrum hover.
+
+        Args:
+            event: The mouse motion event.
+        """
+        if event.inaxes == self.ax_spectrum:
+            x = int(event.xdata) if event.xdata is not None else None
+            y = np.argmax(np.mean(self.volume, axis=(0, 1)))
+            if self.spectrum_real_time_update:
+                self.update_image(x, y)
+
+    def on_image_click(self, event):
+        """
+        Event handler for image click.
+
+        Args:
+            event: The mouse button press event.
+        """
+        if event.inaxes == self.ax_image and event.button == 3:
+            self.image_real_time_update = not self.image_real_time_update
+
+    def on_spectrum_click(self, event):
+        """
+        Event handler for spectrum click.
+
+        Args:
+            event: The mouse button press event.
+        """
+        if event.inaxes == self.ax_spectrum and event.button == 3:
+            self.spectrum_real_time_update = not self.spectrum_real_time_update
 
 
