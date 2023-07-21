@@ -7,7 +7,8 @@ HyperSliceExplorer
 
 import matplotlib.pyplot as plt
 import numpy as np
-
+from scipy.ndimage import map_coordinates
+from matplotlib.lines import Line2D
 
 class HyperSliceExplorer():
     
@@ -205,8 +206,6 @@ def nDvis(data, xaxis=None, xaxislabel='Channels'):
     hs = HyperSliceExplorer(data, xaxis, xaxislabel)
     hs.explore()
 
-
-
 class ImageSpectrumGUI:
     def __init__(self, volume):
         """
@@ -302,3 +301,114 @@ class ImageSpectrumGUI:
 
 
 
+
+class InteractiveProfileExtraction:
+    def __init__(self, image):
+        self.image = image
+        self.line = None
+        self.profile = None
+
+        self.fig, self.axes = plt.subplots(1, 3, figsize=(12, 4))
+        self.axes[0].imshow(self.image, cmap='gray')
+        self.axes[0].set_title("Interactive Profile Extraction")
+        self.axes[1].set_title("Intensity Profile")
+        self.axes[1].set_xlabel("Distance (pixels)")
+        self.axes[1].set_ylabel("Intensity")
+        self.axes[2].set_xlabel('Position along the line')
+        self.axes[2].set_ylabel('Intensity')
+        self.axes[2].set_title('Intensity Profile')
+
+        self.line_completed = False
+
+        self.fig.canvas.mpl_connect('button_press_event', self.on_press)
+        self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
+
+    def on_press(self, event):
+        if event.button == 1 and event.inaxes == self.axes[0]:
+            if self.line is None:
+                self.profile = [event.ydata, event.xdata, event.ydata, event.xdata]
+                self.line = Line2D([self.profile[1], self.profile[3]], [self.profile[0], self.profile[2]], color='red')
+                self.axes[0].add_line(self.line)
+                self.fig.canvas.draw()
+            else:
+                self.profile[2] = event.ydata
+                self.profile[3] = event.xdata
+                self.line.set_xdata([self.profile[1], self.profile[3]])
+                self.line.set_ydata([self.profile[0], self.profile[2]])
+                self.fig.canvas.draw()
+                if not self.line_completed:
+                    self.line_completed = True
+                    self.extract_intensity_profile()
+                    self.show_intensity_profile()
+
+    def on_motion(self, event):
+        if self.line is not None and event.inaxes == self.axes[0] and not self.line_completed:
+            self.profile[2] = event.ydata
+            self.profile[3] = event.xdata
+            self.line.set_xdata([self.profile[1], self.profile[3]])
+            self.line.set_ydata([self.profile[0], self.profile[2]])
+            self.fig.canvas.draw()
+
+    def extract_intensity_profile(self):
+        y0, x0, y1, x1 = map(int, self.profile)
+        yy, xx = bresenham(y0, x0, y1, x1)
+        intensity_profile = self.image[yy, xx]
+        self.plot_intensity_profile(xx, yy, intensity_profile)
+
+    def plot_intensity_profile(self, xx, yy, intensity_profile):
+        self.axes[1].clear()
+        self.axes[1].imshow(self.image, cmap='gray')
+        self.axes[1].plot(yy, xx, 'r-')
+        self.axes[1].set_title("Intensity Profile")
+        self.axes[1].set_xlabel("Distance (pixels)")
+        self.axes[1].set_ylabel("Intensity")
+
+    def show_intensity_profile(self):
+        self.y_coords, self.x_coords = self.get_line_coordinates(self.profile[0], self.profile[1],
+                                                       self.profile[2], self.profile[3])
+        self.intensity_values = map_coordinates(self.image, np.vstack((self.y_coords,self.x_coords)))
+        self.axes[2].clear()
+        self.axes[2].plot(self.intensity_values)
+        self.axes[2].set_xlabel('Position along the line')
+        self.axes[2].set_ylabel('Intensity')
+        self.axes[2].set_title('Intensity Profile')
+        self.fig.canvas.draw()
+
+    def clear_profile(self):
+        if self.line is not None:
+            self.line.remove()
+            self.line = None
+            self.line_completed = False
+            self.fig.canvas.draw()
+            self.profile = None
+
+    def get_line_coordinates(self, y1, x1, y2, x2):
+        length = int(np.hypot(y2 - y1, x2 - x1))
+        y, x = np.linspace(y1, y2, length), np.linspace(x1, x2, length)
+        return y.astype(int), x.astype(int)
+
+def bresenham(y0, x0, y1, x1):
+    """Bresenham's line algorithm"""
+    dx = abs(x1 - x0)
+    dy = abs(y1 - y0)
+    steep = dy > dx
+    if steep:
+        x0, y0 = y0, x0
+        x1, y1 = y1, x1
+    if x0 > x1:
+        x0, x1 = x1, x0
+        y0, y1 = y1, y0
+    dx = x1 - x0
+    dy = y1 - y0
+    error = int(dx / 2.0)
+    ystep = 1 if y0 < y1 else -1
+    y = y0
+    points = []
+    for x in range(x0, x1 + 1):
+        coord = (y, x) if steep else (x, y)
+        points.append(coord)
+        error -= abs(dy)
+        if error < 0:
+            y += ystep
+            error += dx
+    return np.array(points).T
