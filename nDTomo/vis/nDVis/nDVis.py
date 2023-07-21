@@ -1,68 +1,61 @@
 # -*- coding: utf-8 -*-
 """
 
-nDVis GUI for chemical imaging data visualization
+nDTomoGUI for chemical imaging data visualization
 
 @author: A. Vamvakeros
 
 """
 
-#%%
+#%
 
 from __future__ import unicode_literals
-
 from matplotlib import use as u
 u('Qt5Agg')
-
 from PyQt5 import QtCore, QtWidgets, QtGui
-
-import sys, os, h5py
+from PyQt5.QtCore import pyqtSignal, QThread
+import h5py
 import numpy as np
-
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as Canvas
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
-
 import matplotlib.pyplot as plt
+from tqdm import tqdm
+import scipy.optimize as sciopt
 
-
-
-class ApplicationWindow(QtWidgets.QMainWindow):
+class nDTomoGUI(QtWidgets.QMainWindow):
     
     """
-    
-    nDVis GUI
-    
+    nDTomoGUI
     """
     
     def __init__(self):
 
-        super(ApplicationWindow, self).__init__()
+        super(nDTomoGUI, self).__init__()
         
-        self.data = np.zeros(())
+        self.volume = np.zeros(())
         self.xaxis = np.zeros(())
-        self.imoi = np.zeros(())
+        self.image = np.zeros(())
+        self.spectrum = np.zeros(())
         self.hdf_fileName = ''
-        self.dproi = 0
         self.c = 3E8
         self.h = 6.620700406E-34        
         self.cmap = 'jet'
         self.xaxislabel = 'Channel'
-        
+        self.chi = 0
+        self.chf = 1        
         self.cmap_list = ['viridis','plasma','inferno','magma','cividis','flag', 
             'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
             'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg', 'hsv',
             'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar']
         
+        self.peaktype = 'Gaussian'
+        self.Area = 0.5; self.Areamin = 0.; self.Areamax = 10.
+        self.FWHM = 1.; self.FWHMmin = 0.1; self.FWHMmax = 5.
+        
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-        self.setWindowTitle("MultiTool")
-
-#        self.left = 100
-#        self.top = 100
-#        self.width = 640
-#        self.height = 480
-#        self.setGeometry(self.left, self.top, self.width, self.height)
+        self.setWindowTitle("nDTomoGUI")
 
         self.file_menu = QtWidgets.QMenu('&File', self)
         self.file_menu.addAction('&Open Chemical imaging data', self.fileOpen, QtCore.Qt.CTRL + QtCore.Qt.Key_O)
@@ -84,61 +77,54 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         
         # Add tabs
         self.tabs.addTab(self.tab1,"Chemical imaging data")        
+        self.tabs.addTab(self.tab2,"ROI image")        
+        self.tabs.addTab(self.tab3,"ROI pattern")        
+        self.tabs.addTab(self.tab4,"Peak fitting")        
 
         self.tab1.layout = QtWidgets.QGridLayout()       
+        self.tab2.layout = QtWidgets.QGridLayout()
+        self.tab3.layout = QtWidgets.QGridLayout()
+        self.tab4.layout = QtWidgets.QGridLayout()
+        
+        ############ Tab1 - Hyperxplorer ############
+
+        # Create left panel for the image display
+        self.fig_image = Figure()
+        self.ax_image = self.fig_image.add_subplot(111)
+        self.canvas_image = FigureCanvas(self.fig_image)
+        self.ax_image.set_title("Image")
+
+        # Create right panel for the spectrum plot
+        self.fig_spectrum = Figure()
+        self.ax_spectrum = self.fig_spectrum.add_subplot(111)
+        self.canvas_spectrum = FigureCanvas(self.fig_spectrum)
+        self.ax_spectrum.set_title("Spectrum")
 
         # set up the mapper
         self.mapperWidget = QtWidgets.QWidget(self)
-        self.mapper = MyCanvas()
         self.mapperExplorerDock = QtWidgets.QDockWidget("Image", self)
         self.mapperExplorerDock.setWidget(self.mapperWidget)
         self.mapperExplorerDock.setFloating(False)
-        self.mapperToolbar = NavigationToolbar(self.mapper, self)
-        
+        self.mapperToolbar = NavigationToolbar(self.canvas_image, self)
         vbox1 = QtWidgets.QVBoxLayout()
-#        vbox1 = QtWidgets.QGridLayout()
-        
         vbox1.addWidget(self.mapperToolbar)
-        vbox1.addWidget(self.mapper)
+        vbox1.addWidget(self.canvas_image)
         self.mapperWidget.setLayout(vbox1)
-
 
         #set up the plotter
         self.plotterWidget = QtWidgets.QWidget(self)
-        self.plotter = MyCanvas()
         self.plotterExplorerDock = QtWidgets.QDockWidget("Histogram", self)
         self.plotterExplorerDock.setWidget(self.plotterWidget)
         self.plotterExplorerDock.setFloating(False)
-        self.plotterToolbar = NavigationToolbar(self.plotter, self)
-        
+        self.plotterToolbar = NavigationToolbar(self.canvas_spectrum, self)
         vbox2 = QtWidgets.QVBoxLayout()
-#        vbox2 = QtWidgets.QGridLayout()
-        
         vbox2.addWidget(self.plotterToolbar)        
-        vbox2.addWidget(self.plotter) # starting row, starting column, row span, column span
+        vbox2.addWidget(self.canvas_spectrum) # starting row, starting column, row span, column span
         self.plotterWidget.setLayout(vbox2)
         
-        self.setCentralWidget(self.tabs)
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.mapperExplorerDock)
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.plotterExplorerDock)
 
-        # set up the Chemical imaging image mapper
-        self.mapperWidget_xrdct = QtWidgets.QWidget(self)
-        self.mapper_xrdct = MyCanvas()
-        self.mapperExplorerDock_xrdct = QtWidgets.QDockWidget("Image", self)
-        self.mapperExplorerDock_xrdct.setWidget(self.mapperWidget_xrdct)
-        self.mapperExplorerDock_xrdct.setFloating(False)
-        self.mapperToolbar_xrdct = NavigationToolbar(self.mapper_xrdct, self)
-        vbox3 = QtWidgets.QVBoxLayout()        
-        vbox3.addWidget(self.mapperToolbar_xrdct)
-        vbox3.addWidget(self.mapper_xrdct)
-        self.mapperWidget_xrdct.setLayout(vbox3)
-        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.mapperExplorerDock_xrdct)
-        self.mapperExplorerDock_xrdct.setVisible(False)
-    
-        
-        ############### Chemical imaging panel ############### 
-        
         self.DatasetLabel = QtWidgets.QLabel(self)
         self.DatasetLabel.setText('Dataset:')
         self.tab1.layout.addWidget(self.DatasetLabel,0,0)
@@ -156,69 +142,292 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         self.ChooseColormapType.setMaximumWidth(170)
         self.tab1.layout.addWidget(self.ChooseColormapType,0,3)  
             
-
         self.ExportDPbutton = QtWidgets.QPushButton("Export local diffraction pattern",self)
         self.ExportDPbutton.clicked.connect(self.exportdp)
-#        self.ExportDPbutton.setMaximumWidth(150)
         self.tab1.layout.addWidget(self.ExportDPbutton,1,2)
 
         self.ExportIMbutton = QtWidgets.QPushButton("Export image of interest",self)
         self.ExportIMbutton.clicked.connect(self.exportim)
-#        self.ExportDPbutton.setMaximumWidth(150)
         self.tab1.layout.addWidget(self.ExportIMbutton,1,3)
         
-                
-#        self.main_widget.setFocus()
-#        self.setCentralWidget(self.main_widget)
+        ############ Tab2 - ROI ############
 
-        self.tabs.setFocus()
-        self.setCentralWidget(self.tabs)
-                
+
+        self.Labelbkg = QtWidgets.QLabel(self)
+        self.Labelbkg.setText('Set the channels for the ROI image')
+        self.tab2.layout.addWidget(self.Labelbkg,0,0)
+        
+        self.Channel1 = QtWidgets.QLabel(self)
+        self.Channel1.setText('Initial channel')
+        self.tab2.layout.addWidget(self.Channel1,1,0)        
+                    
+        self.crspinbox1 = QtWidgets.QSpinBox(self)
+        self.crspinbox1.valueChanged.connect(self.channel_initial)
+        self.crspinbox1.setMinimum(1)
+        self.tab2.layout.addWidget(self.crspinbox1,1,1)              
+        
+        self.Channel2 = QtWidgets.QLabel(self)
+        self.Channel2.setText('Final channel')
+        self.tab2.layout.addWidget(self.Channel2,1,2)        
+                    
+        self.crspinbox2 = QtWidgets.QSpinBox(self)
+        self.crspinbox2.valueChanged.connect(self.channel_final)
+        self.crspinbox2.setMinimum(1)
+        self.tab2.layout.addWidget(self.crspinbox2,1,3)           
+        
+        self.pbutton1 = QtWidgets.QPushButton("Plot mean image", self)
+        self.pbutton1.clicked.connect(self.plot_mean_image)
+        self.tab2.layout.addWidget(self.pbutton1, 2, 0)
+        
+        self.pbutton2 = QtWidgets.QPushButton("Plot mean image with mean bkg subtraction", self)
+        self.pbutton2.clicked.connect(self.plot_mean_image_mean_bkg)
+        self.tab2.layout.addWidget(self.pbutton2, 2, 1)
+
+        self.pbutton3 = QtWidgets.QPushButton("Plot mean image with linear bkg subtraction", self)
+        self.pbutton3.clicked.connect(self.plot_mean_image_linear_bkg)
+        self.tab2.layout.addWidget(self.pbutton3, 2, 2)
+
+        self.expimroi = QtWidgets.QPushButton("Export image",self)
+        self.expimroi.clicked.connect(self.export_roi_image)
+        self.tab2.layout.addWidget(self.expimroi,2,3)  
+        
+
+        ############ Tab3 - Segmentation and extraction of local pattern ############
+
+
+        self.Labelbkg = QtWidgets.QLabel(self)
+        self.Labelbkg.setText('Set the threshold to segment the ROI image - range is between 0 and 100')
+        self.tab3.layout.addWidget(self.Labelbkg,0,0)
+        
+        self.Channel3 = QtWidgets.QLabel(self)
+        self.Channel3.setText('Threshold')
+        self.tab3.layout.addWidget(self.Channel3,1,0)        
+                    
+        self.crspinbox3 = QtWidgets.QSpinBox(self)
+        self.crspinbox3.valueChanged.connect(self.set_thr)
+        self.crspinbox3.setMinimum(0)
+        self.crspinbox3.setMaximum(100)
+        self.tab3.layout.addWidget(self.crspinbox3,1,1)              
+        
+        self.pbutton4 = QtWidgets.QPushButton("Apply the threshold", self)
+        self.pbutton4.clicked.connect(self.segment_image)
+        self.tab3.layout.addWidget(self.pbutton4, 2, 0)
+        
+        self.pbutton5 = QtWidgets.QPushButton("Use mask to extract ROI pattern from the volume", self)
+        self.pbutton5.clicked.connect(self.plot_roi_pattern)
+        self.tab3.layout.addWidget(self.pbutton5, 2, 1)
+
+        self.exppatroi = QtWidgets.QPushButton("Export ROI pattern",self)
+        self.exppatroi.clicked.connect(self.export_roi_pattern)
+        self.tab3.layout.addWidget(self.exppatroi,2,3)  
+
+
+        ############ Tab4 - Peak fitting ############
+
+        self.Labelbkg = QtWidgets.QLabel(self)
+        self.Labelbkg.setText('Single peak fitting')
+        self.tab4.layout.addWidget(self.Labelbkg,0,0)
+        
+        self.LabelTypePeak = QtWidgets.QLabel(self)
+        self.LabelTypePeak.setText('Function')
+        self.tab4.layout.addWidget(self.LabelTypePeak,1,0)
+        
+        self.ChooseFunction = QtWidgets.QComboBox(self)
+        self.ChooseFunction.addItems(["Gaussian", "Lorentzian", "Pseudo-Voigt"])
+        self.ChooseFunction.currentIndexChanged.connect(self.profile_function)
+        self.ChooseFunction.setEnabled(True)
+        self.tab4.layout.addWidget(self.ChooseFunction,1,1)   
+
+        self.pbutton_fit = QtWidgets.QPushButton("Perform batch peak fitting",self)
+        self.pbutton_fit.clicked.connect(self.batchpeakfit)
+        self.tab4.layout.addWidget(self.pbutton_fit,1,2)
+        
+        self.progressbar_fit = QtWidgets.QProgressBar(self)
+        self.tab4.layout.addWidget(self.progressbar_fit,1,3)
+
+        self.pbutton_stop = QtWidgets.QPushButton("Stop",self)
+        self.pbutton_stop.clicked.connect(self.stopfit)
+        self.tab4.layout.addWidget(self.pbutton_stop,1,4)
+        
+        self.LabelRes = QtWidgets.QLabel(self)
+        self.LabelRes.setText('Display peak fitting results')
+        self.tab4.layout.addWidget(self.LabelRes,2,0)
+        
+        self.ChooseRes = QtWidgets.QComboBox(self)
+        self.ChooseRes.addItems(['Area','Position', 'FWHM', 'Slope', 'Intercept'])
+        self.ChooseRes.currentIndexChanged.connect(self.plot_fit_results)
+        self.ChooseRes.setEnabled(False)
+        self.tab4.layout.addWidget(self.ChooseRes,2,1)   
+        
+        self.pbutton_expfit = QtWidgets.QPushButton("Export fit results",self)
+        self.pbutton_expfit.clicked.connect(self.savefitresults)
+        self.pbutton_expfit.setEnabled(False)
+        self.tab4.layout.addWidget(self.pbutton_expfit,2,2)
+
+        ############
+
+        self.tabs.setFocus()        
         self.tab1.setLayout(self.tab1.layout)     
-        
-#        self.setLayout(layout)
+        self.tab2.setLayout(self.tab2.layout)   
+        self.tab3.setLayout(self.tab3.layout)   
+        self.tab4.setLayout(self.tab4.layout)   
+        self.setCentralWidget(self.tabs)
         self.show()
-        
-        self.selectedVoxels = np.empty(0,dtype=object)
-        self.selectedChannels = np.empty(0,dtype=object)
-    
-    
-    ####################### Chemical imaging #######################
+            
+    ####################### Methods #######################
+     
+            
+    def explore(self):
+        # Calculate mean image and mean spectrum
+        mean_image = np.mean(self.volume, axis=2)
+        mean_spectrum = np.mean(self.volume, axis=(0, 1))
 
+        # Update the image display and spectrum plot
+        self.ax_image.imshow(mean_image.T, cmap=self.cmap)
+        self.ax_spectrum.plot(self.xaxis, mean_spectrum, color='b')
+        self.ax_spectrum.set_xlabel(self.xaxislabel)
+
+        # Connect mouse hover events
+        self.canvas_image.mpl_connect('motion_notify_event', self.update_spectrum)
+        self.canvas_spectrum.mpl_connect('motion_notify_event', self.update_image)
+        self.canvas_image.mpl_connect('button_press_event', self.toggle_real_time_spectrum)
+        self.canvas_spectrum.mpl_connect('button_press_event', self.toggle_real_time_image)
+        # Connect mouse scroll events for zooming
+        self.canvas_image.mpl_connect('scroll_event', self.on_canvas_scroll)
+        self.canvas_spectrum.mpl_connect('scroll_event', self.on_canvas_scroll)
+
+        self.real_time_update_image = True  # Flag to enable real-time update for image
+        self.real_time_update_spectrum = True  # Flag to enable real-time update for spectrum
+
+        self.canvas_image.draw()
+        self.canvas_spectrum.draw()
+
+    def on_canvas_scroll(self, event):
+        """
+        Handle the mouse scroll event for zooming in the plots.
+        """
+        zoom_factor = 1.5  # Zoom factor
+
+        if event.button == 'up':
+            zoom_factor = 1 / zoom_factor  # Zoom in
+        elif event.button == 'down':
+            pass  # Zoom out
+        else:
+            return
+
+        if event.inaxes == self.ax_image:
+            self.ax_image.set_xlim(event.xdata - zoom_factor * (event.xdata - self.ax_image.get_xlim()[0]),
+                                   event.xdata + zoom_factor * (self.ax_image.get_xlim()[1] - event.xdata))
+            self.ax_image.set_ylim(event.ydata - zoom_factor * (event.ydata - self.ax_image.get_ylim()[0]),
+                                   event.ydata + zoom_factor * (self.ax_image.get_ylim()[1] - event.ydata))
+            self.canvas_image.draw()
+
+        elif event.inaxes == self.ax_spectrum:
+            self.ax_spectrum.set_xlim(event.xdata - zoom_factor * (event.xdata - self.ax_spectrum.get_xlim()[0]),
+                                      event.xdata + zoom_factor * (self.ax_spectrum.get_xlim()[1] - event.xdata))
+            self.ax_spectrum.set_ylim(event.ydata - zoom_factor * (event.ydata - self.ax_spectrum.get_ylim()[0]),
+                                      event.ydata + zoom_factor * (self.ax_spectrum.get_ylim()[1] - event.ydata))
+            self.canvas_spectrum.draw()
+
+    def update_spectrum(self, event):
+        """
+        Update the spectrum plot based on the mouse hover event on the image plot.
+        """
+        if self.real_time_update_spectrum and event.inaxes == self.ax_image:
+            self.x, self.y = int(event.xdata), int(event.ydata)
+
+            # Check if the mouse position is within the image dimensions
+            if self.x >= 0 and self.x < self.image_width and self.y >= 0 and self.y < self.image_height:
+                # Get the spectrum from the volume
+                self.spectrum = self.volume[self.x, self.y, :]
+
+                # Update the spectrum plot
+                self.ax_spectrum.clear()
+                self.ax_spectrum.plot(self.xaxis, self.spectrum, color='b')
+                self.ax_spectrum.set_title(f"Spectrum: ({self.x}, {self.y})")
+                self.ax_spectrum.set_xlabel(self.xaxislabel)
+                self.canvas_spectrum.draw()
+
+    def update_image(self, event):
+        """
+        Update the image plot based on the mouse hover event on the spectrum plot.
+        """
+        if self.real_time_update_image and event.inaxes == self.ax_spectrum:
+            self.index = event.xdata
+
+            if self.index >= 0 and self.index < self.nbins:
+                
+                try:
+
+                    if self.xaxislabel == 'd':
+                        self.index = len(self.xaxis) - np.searchsorted(self.xaxisd, [self.index])[0]
+                    else:
+                        self.index = np.searchsorted(self.xaxis.flatten(), [self.index])[0] -1
+                    
+                    if self.index<0:
+                        self.index = 0
+                    elif self.index>len(self.xaxis):
+                        self.index = len(self.xaxis)-1                
+    
+                    # Get the image from the volume
+                    self.image = self.volume[:, :, self.index]
+        
+                    # Update the image display
+                    self.ax_image.clear()
+                    self.ax_image.imshow(self.image.T, cmap=self.cmap)
+                    
+                    if self.xaxislabel == 'Channel':
+                        self.ax_image.set_title(f"Image: Channel {self.index}")
+                    else:
+                        self.ax_image.set_title("Image: Channel %d, %s %.3f" %(self.index, self.xaxislabel, self.xaxis[self.index]))
+    
+                    self.canvas_image.draw()
+                    
+                except:
+                    pass
+
+    def toggle_real_time_spectrum(self, event):
+        """
+        Toggle the real-time update of the spectrum plot based on the mouse button press event on the image plot.
+        """
+        if event.button == 1:
+            self.real_time_update_spectrum = True
+        elif event.button == 3:
+            self.real_time_update_spectrum = False
+
+    def toggle_real_time_image(self, event):
+        """
+        Toggle the real-time update of the image plot based on the mouse button press event on the spectrum plot.
+        """
+        if event.button == 1:
+            self.real_time_update_image = True
+        elif event.button == 3:
+            self.real_time_update_image = False
+            
     def exportdp(self):
         
         """
-        
         Method to export spectra/diffraction patterns of interest
-        
         """
         
-        if len(self.hdf_fileName)>0 and len(self.dproi)>0:
+        if len(self.hdf_fileName)>0 and len(self.spectrum)>0:
             
-            s = self.hdf_fileName.split('.hdf5'); s = s[0]
-            sn = "%s_%s_%s.h5" %(s,str(self.row),str(self.col))
+            s = self.hdf_fileName.split('.h5'); s = s[0]
+            sn = "%s_%s_%s.h5" %(s,str(self.x),str(self.y))
             print(sn)
 
             h5f = h5py.File(sn, "w")
-            h5f.create_dataset('I', data=self.dproi)
+            h5f.create_dataset('I', data=self.spectrum)
             h5f.create_dataset('xaxis', data=self.xaxis)
             h5f.close()
         
-            perm = 'chmod 777 %s' %sn
-            os.system(perm)    
-            
-            xy = np.column_stack((self.xaxis,self.dproi))
-            sn = "%s_%s_%s.asc" %(s,str(self.row),str(self.col))
+            xy = np.column_stack((self.xaxis,self.spectrum))
+            sn = "%s_%s_%s.asc" %(s,str(self.x),str(self.y))
             np.savetxt(sn,xy)
-            perm = 'chmod 777 %s' %sn
-            os.system(perm) 
             
-            xy = np.column_stack((self.xaxis,self.dproi))
-            sn = "%s_%s_%s.xy" %(s,str(self.row),str(self.col))
+            xy = np.column_stack((self.xaxis,self.spectrum))
+            sn = "%s_%s_%s.xy" %(s,str(self.x),str(self.y))
             np.savetxt(sn,xy)
-            perm = 'chmod 777 %s' %sn
-            os.system(perm) 
-
                 
         else:
             print("Something is wrong with the data")
@@ -226,26 +435,21 @@ class ApplicationWindow(QtWidgets.QMainWindow):
     def exportim(self):
         
         """
-        
         Method to export spectral/scattering image of interest
-        
         """
         
-        if len(self.hdf_fileName)>0 and len(self.imoi)>0:
-            s = self.hdf_fileName.split('.hdf5'); s = s[0]
-            sn = "%s_channel_%s.h5" %(s,str(self.nx))
+        if len(self.hdf_fileName)>0 and len(self.image)>0:
+            s = self.hdf_fileName.split('.h5'); s = s[0]
+            sn = "%s_channel_%s.h5" %(s,str(self.index))
             print(sn)
 
             h5f = h5py.File(sn, "w")
-            h5f.create_dataset('I', data=self.imoi)
-            h5f.create_dataset('Channel', data=self.nx)            
+            h5f.create_dataset('I', data=self.image)
+            h5f.create_dataset('Channel', data=self.index)            
             h5f.close()
         
-            perm = 'chmod 777 %s' %sn
-            os.system(perm)    
-            
-            sn = "%s_channel_%s.png" %(s,str(self.nx))
-            plt.imsave(sn,self.imoi,cmap=self.cmap)
+            sn = "%s_channel_%s.png" %(s,str(self.index))
+            plt.imsave(sn,self.image,cmap=self.cmap)
                         
         else:
             print("Something is wrong with the data")
@@ -259,193 +463,7 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             self.update()
         except: 
             pass
-            
-    def explore(self):
-                
-        self.imoi = np.mean(self.data,axis=2)
-        self.map_data = self.mapper.axes.imshow(self.imoi, cmap=self.cmap)
-        title = 'Mean image'
-        self.mapper.axes.set_title(title, fontstyle='italic')
-        self.mapper.fig.canvas.mpl_connect('button_press_event', self.onMapClick)
-        self.mapper.fig.canvas.mpl_connect('motion_notify_event', self.onMapMoveEvent)        
         
-        
-        # self.cb = self.mapper.fig.colorbar(self.map_data)
-        
-        self.mapper.show()
-        self.mapper.draw()  
-        
-        self.mdp = np.mean(np.mean(self.data,axis=1),axis=0)
-        self.sdp = np.sum(np.sum(self.data,axis=1),axis=0)
-        self.dproi = self.mdp
-        self.histogramCurve = self.plotter.axes.plot(self.xaxis, self.mdp, label='Mean diffraction pattern', color="b")
-        self.activeCurve = self.plotter.axes.plot(self.xaxis, self.mdp, label='Mean diffraction pattern', color="r")
-        
-        ########
-        self.vCurve = self.plotter.axes.axvline(x=0, color="k")
-        #######
-        
-#        self.selectedDataSetList.addItem('mean')
-        self.plotter.axes.legend()
-        self.plotter.axes.set_title("Mean diffraction pattern", fontstyle='italic')
-#        self.activeCurve[0].set_visible(False)
-#        self.plot_fig.canvas.mpl_connect('button_press_event',self.onPlotClick)        
-#        self.plot_fig.canvas.mpl_connect('motion_notify_event',self.onPlotMoveEvent)
-#        self.plot_cid = self.plotter.figure.canvas.mpl_connect('motion_notify_event',self.onPlotMoveEvent)
-        
-        self.plotter.fig.canvas.mpl_connect('motion_notify_event', self.onPlotClick)       
-        self.plot_cid = self.plotter.fig.canvas.mpl_connect('motion_notify_event', self.onPlotMoveEvent)   
-        self.plotter.show()        
-        self.plotter.draw()        
-                
-        
-    def onMapClick(self, event): # SDMJ version
-        if event.button == 1:
-            if event.inaxes:
-                self.col = int(event.xdata.round())
-                self.row = int(event.ydata.round())
-                
-                
-                
-                if self.xaxislabel == 'd':
-                    self.dproi = self.data[self.row,self.col,::-1]
-                else:
-                    self.dproi = self.data[self.row,self.col,:]
-                
-                self.histogramCurve[0].set_data(self.xaxis, self.dproi) 
-                self.histogramCurve[0].set_label(str(self.row)+','+str(self.col))
-                self.histogramCurve[0].set_visible(True)          
-                self.plotter.axes.legend()
-                
-#                self.plotter.axes.set_xlim(self.xaxis[0],self.xaxis[-1])
-#                self.plotter.axes.set_ylim(0,np.max(self.dproi))
-                self.plotter.show()        
-                self.plotter.draw()
-
-#                self.selectedDataSetList.addItem(np.str([row,col]))
-#                self.selectedDataSetList.setCurrentIndex(self.selectedDataSetList.count()-1)
-#                self.selectedDataSetList.update()
-                
-#            self.plot_fig.canvas.mpl_disconnect(self.plot_cid) 
-#            self.plot_cid = self.plot_fig.canvas.mpl_connect('motion_notify_event',self.onPlotMoveEvent)
-
-            else:
-                self.selectedVoxels = np.empty(0,dtype=object)
-#                self.selectedDataSetList.clear()
-#                self.currentCurve = 0
-                self.plotter.axes.clear() # not fast
-                self.plotter.axes.plot(self.xaxis, self.mdp, label='Mean diffraction pattern')
-#                self.selectedDataSetList.addItem('mean')
-                self.plotter.axes.legend()                
-                self.plotter.draw() 
-
-        if event.button == 3:
-            if event.inaxes:
-                self.histogramCurve[0].set_visible(False)          
-                
-                self.plotter.axes.set_xlim(self.xaxis[0],self.xaxis[-1])
-                self.plotter.axes.set_ylim(0,np.max(self.dproi))
-                self.plotter.show()        
-                self.plotter.draw()
-
-    def onMapMoveEvent(self, event): # SDMJ version
-        if event.inaxes:
-            
-            col = int(event.xdata.round())
-            row = int(event.ydata.round())
-            
-            if self.xaxislabel == 'd':
-                dproi = self.data[row,col,::-1]
-            else:
-                dproi = self.data[row,col,:]            
-            
-            
-            self.activeCurve[0].set_data(self.xaxis, dproi) 
-            self.mapper.axes.relim()
-            self.activeCurve[0].set_label(str(row)+','+str(col))
-#            self.mapper.axes.autoscale(enable=True, axis='both', tight=True)#.axes.autoscale_view(False,True,True)
-            self.activeCurve[0].set_visible(True)
-            if np.max(dproi)>0:
-                self.plotter.axes.set_ylim(0,np.max(dproi))
-
-        else:
-            self.activeCurve[0].set_visible(False)
-            self.activeCurve[0].set_label('')
-            
-#            self.plotter.axes.set_xlim(self.xaxis[0],self.xaxis[-1])
-            self.plotter.axes.set_ylim(0,np.max(self.dproi))
-            
-        self.plotter.axes.legend()
-        self.plotter.draw()
-    
-    
-    def onPlotMoveEvent(self, event):
-        if event.inaxes:
-            
-            x = event.xdata
-            
-            if self.xaxislabel == 'd':
-                self.nx = len(self.xaxis) - np.searchsorted(self.xaxisd, [x])[0]
-            else:
-                self.nx = np.searchsorted(self.xaxis, [x])[0] -1
-            
-            if self.nx<0:
-                self.nx = 0
-            elif self.nx>len(self.xaxis):
-                self.nx = len(self.xaxis)-1
-
-            
-            self.selectedChannels = self.nx;
-            self.mapper.axes.clear() # not fast
-            self.imoi = self.data[:,:,self.nx]
-#            self.map_data = self.mapper.axes.imshow(self.imoi,cmap='jet')
-            self.map_data = self.mapper.axes.imshow(self.imoi,cmap = self.cmap)
-            title = "Channel = %d; %s = %.3f" % (self.nx, self.xaxislabel, self.xaxis[self.nx])
-
-            try:
-                self.cb.remove()
-            except:
-                pass
-            
-            # self.cb = self.mapper.fig.colorbar(self.map_data)
-
-            self.mapper.axes.set_title(title)
-            self.mapper.draw() 
-            
-            
-            self.vCurve.set_xdata(x) 
-                
-            self.plotter.draw()
-
-    def onPlotClick(self, event):
-
-        if event.button == 1:
-            self.plotter.fig.canvas.mpl_disconnect(self.plot_cid)   
-
-        elif event.button == 3:
-            self.plot_cid = self.plotter.fig.canvas.mpl_connect('motion_notify_event', self.onPlotMoveEvent)
-            self.plotter.show()  
-            self.plotter.draw()   
-            
-    def update(self):
-        self.mapper.axes.clear() # not fast
-        # this bit is messy
-        
-        self.imoi = np.mean(self.data, axis = 2)
-        if (not self.selectedChannels):
-            self.mapper.axes.imshow(self.imoi ,cmap=self.cmap)
-            title = 'Mean image'
-        else:
-            if self.selectedChannels.size == 1:
-                self.mapper.axes.imshow(self.data[:,:,self.selectedChannels],cmap=self.cmap)
-                title = "Channel = %d; %s = %.3f" % (self.nx, self.xaxislabel, self.xaxis[self.nx])
-            if self.selectedChannels.size > 1:
-                self.mapper.axes.imshow(np.mean(self.data[:,:,self.selectedChannels],2),cmap=self.cmap)
-                title = self.name+' '+'mean of selected channels'
-        self.mapper.axes.set_title(title)
-        self.mapper.show()
-        self.mapper.draw()  
-            
 
     def selXRDCTdata(self):
         
@@ -474,8 +492,6 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             except:
                 pass
                 
-            
-        
     def fileOpen(self):
         
         self.hdf_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Chemical imaging data', "", "*.hdf5 *.h5")
@@ -487,75 +503,54 @@ class ApplicationWindow(QtWidgets.QMainWindow):
             datasetname = self.hdf_fileName.split("/")
             self.datasetname = datasetname[-1]
             self.DatasetNameLabel.setText(self.datasetname)
-    
-    
-            try:
-                self.histogramCurve.pop(0).remove()
-                self.activeCurve.pop(0).remove()
-                self.vCurve.remove()
-#                self.cb.remove()
-            except:
-                pass
-    
             self.explore()
         
     def loadchemvol(self):
         
+        xaxis_labels = ['/d', '/q', '/twotheta', '/Energy', '/tth', '/energy']
+        
         if len(self.hdf_fileName)>0:
-            
-            with h5py.File(self.hdf_fileName,'r') as f:
-                
-                try:
-                    self.data = f['/data'][:]
-                    self.data = np.transpose(self.data, (2,1,0))
-                    self.xaxis = np.arange(0, self.data.shape[2])
-                    
-                except:
-                    try:
-                        self.q = f['/q'][:]
-                        self.xaxis = self.q
-                        self.xaxislabel = 'Q'
-                        
-                    except:
-                        pass
 
-        
-        print(self.data.shape)
+            with h5py.File(self.hdf_fileName,'r') as f:
+                try:
+                    print(f.keys())
+                    self.volume = f['/data'][:]
+                    self.image_width, self.image_height, self.nbins = self.volume.shape
+                    self.xaxis = np.arange(0, self.volume.shape[2])
+                    self.crspinbox1.setMaximum(self.nbins - 1)
+                    self.crspinbox2.setMaximum(self.nbins)
+                except:
+                    print('Seems like there is a problem accessing the data')
+                for xaxis_label in xaxis_labels:
+                    if xaxis_label in f:
+                        self.xaxis = f[xaxis_label][:]
+                        self.xaxislabel = xaxis_label.lstrip('/')                         
+        print(self.volume.shape)
                         
-	       
-        
     def savechemvol(self):
 
-        self.fn, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Chemical imaging data', "", "*.hdf5")
+        self.fn, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Chemical imaging data', "", "*.h5")
 	
         if len(self.fn)>0:
     
-            st = self.fn.split(".hdf5")
+            st = self.fn.split(".h5")
             if len(st)<2:
-                self.fn = "%s.hdf5" %self.fn
+                self.fn = "%s.h5" %self.fn
                 print(self.fn)
 
-
             h5f = h5py.File(self.fn, "w")
-            h5f.create_dataset('data', data=self.data)
+            h5f.create_dataset('data', data=self.volume)
             h5f.create_dataset('xaxis', data=self.xaxis)
-            
             h5f.close()
-        
-            perm = 'chmod 777 %s' %self.fn
-            os.system(perm)    
-        
 
     def fileQuit(self):
-#        plt.close('all')
         self.close()
 
     def closeEvent(self, ce):
-#        plt.close('all')
         self.fileQuit()
 
     def about(self):
-        message = '<b>nDVis<p>'
+        message = '<b>nDTomoGUI<p>'
         message += '<p><i>Created by Antony Vamvakeros. Running under license under GPLv3'
         message += '\t '
         d = QtWidgets.QMessageBox()
@@ -564,29 +559,244 @@ class ApplicationWindow(QtWidgets.QMainWindow):
         d.exec_()
 
 
-class Coordinate(object):
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
+    ####################### ROI image #######################
+
+    def channel_initial(self, value):
+        self.chi = value
+        print(self.chi)
+
+    def channel_final(self, value):
+        self.chf = value
+        print(self.chf)
         
-class MyCanvas(Canvas):
-    #Ultimately, this is a QWidget (as well as a FigureCanvasAgg, etc.).
-    def __init__(self, parent=None, width=5, height=4, dpi=100):
-        fig = Figure(figsize=(width, height), dpi=dpi)
-        self.fig = fig
-        self.axes = fig.add_subplot(111)
-        # We want the axes cleared every time plot() is called
-#        self.axes.hold(False)
+    def plot_mean_image(self):
 
-        self.compute_initial_figure()
-        Canvas.__init__(self, fig)
-        self.setParent(parent)
+        roi = np.arange(self.chi,self.chf)
+        self.xroi = np.arange(0, len(roi))
+        if self.chf<self.chi:
+            self.chf = self.chi + 1
+            self.crspinbox2.setValue(self.chf)
+        # Update the image display
+        self.ax_image.clear()
+        self.image = np.sum(self.volume[:,:,self.chi:self.chf], axis = 2)
+        self.image = 100*(self.image/np.max(self.image))
+        self.mask = np.copy(self.image)
+        self.mask[self.mask<5] = 0
+        self.mask[self.mask>0] = 1
+        self.ax_image.imshow(self.image.T, cmap=self.cmap)
+        self.ax_image.set_title("ROI image")
+        self.canvas_image.draw()
 
-        Canvas.setSizePolicy(self, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding)
-        Canvas.updateGeometry(self)
-       
-    def compute_initial_figure(self):
-        pass
+    def plot_mean_image_mean_bkg(self):
+
+        if self.chf<self.chi:
+            self.chf = self.chi + 1
+            self.crspinbox2.setValue(self.chf)
+        # Update the image display
+        self.ax_image.clear()
+        roi = np.arange(self.chi,self.chf)
+        self.xroi = np.arange(0, len(roi))
+        self.image = np.sum(self.volume[:,:,roi],axis=2)-len(roi)*np.mean(self.volume[:,:,[self.chi,self.chf]],axis=2)
+        self.image[self.image<0] = 0
+        self.image = 100*(self.image/np.max(self.image))
+        self.mask = np.copy(self.image)
+        self.mask[self.mask<5] = 0
+        self.mask[self.mask>0] = 1
+        self.ax_image.imshow(self.image.T, cmap=self.cmap)
+        self.ax_image.set_title("ROI image")
+        self.canvas_image.draw()
+        
+    def plot_mean_image_linear_bkg(self):
+
+        if self.chf<self.chi:
+            self.chf = self.chi + 1
+            self.crspinbox2.setValue(self.chf)
+        # Update the image display
+        self.ax_image.clear()
+        roi = np.arange(self.chi,self.chf)
+        self.xroi = np.arange(0, len(roi))
+        self.volroi = self.volume[:,:,roi]
+        slope = (self.volroi[:,:,-1] - self.volroi[:,:,0])/len(roi)
+        slope = np.reshape(slope, (self.image_width*self.image_height,1))
+        inter = self.volroi[:,:,0]
+        inter = np.reshape(inter, (self.image_width*self.image_height,1))
+        volroi = np.reshape(self.volroi, (self.image_width*self.image_height,len(roi)))    
+        self.volroi = self.volroi/np.max(self.volroi)
+        self.image = volroi - (slope*np.arange(0,len(roi)) + inter)
+        self.image = np.sum(self.image, axis = 1)
+        self.image = np.reshape(self.image, (self.image_width, self.image_height))
+        self.image[self.image<0] = 0
+        self.image = 100*(self.image/np.max(self.image))
+        self.mask = np.copy(self.image)
+        self.mask[self.mask<5] = 0
+        self.mask[self.mask>0] = 1
+        self.ax_image.imshow(self.image.T, cmap=self.cmap)
+        self.ax_image.set_title("ROI image")
+        self.canvas_image.draw()
+        
+ 
+    def export_roi_image(self):
+
+        """
+        Method to export spectral/scattering image of interest
+        """
+        
+        if len(self.hdf_fileName)>0 and len(self.image)>0:
+            s = self.hdf_fileName.split('.h5'); s = s[0]
+            sn = "%s_roi_%sto%s.h5" %(s,str(self.chi), str(self.chf))
+            print(sn)
+            h5f = h5py.File(sn, "w")
+            h5f.create_dataset('I', data=self.image)
+            h5f.create_dataset('chi', data=self.chi)            
+            h5f.create_dataset('chf', data=self.chf)            
+            h5f.close()
+            sn = "%s_roi_%sto%s.png" %(s,str(self.chi), str(self.chf))
+            plt.imsave(sn,self.image,cmap=self.cmap)
+        else:
+            print("Something is wrong with the data")
+            
+    ####################### ROI pattern #######################
+
+    def set_thr(self, value):
+        self.thr = value
+        print(self.thr)
+
+    def segment_image(self):
+        
+        # Update the image display
+        self.ax_image.clear()
+        self.mask = np.copy(self.image)
+        self.mask[self.mask<self.thr] = 0
+        self.mask[self.mask>0] = 1
+        self.ax_image.imshow(self.mask.T, cmap=self.cmap)
+        self.ax_image.set_title("Mask")
+        self.canvas_image.draw()
+    
+    def plot_roi_pattern(self):
+        
+        voln = np.zeros_like(self.volume)
+        for ii in tqdm(range(self.volume.shape[2])):
+            voln[:,:,ii] = self.volume[:,:,ii]*self.mask
+
+        self.spectrum = np.sum(voln, axis = (0,1))
+        self.spectrum = self.spectrum/np.max(self.spectrum)
+        self.ax_spectrum.clear()
+        self.ax_spectrum.plot(self.xaxis, self.spectrum, color='b')
+        self.ax_spectrum.set_title("ROI pattern")
+        self.ax_spectrum.set_xlabel(self.xaxislabel)
+        self.canvas_spectrum.draw()
+            
+    def export_roi_pattern(self):
+        
+        if len(self.hdf_fileName)>0 and len(self.spectrum)>0:
+            
+            s = self.hdf_fileName.split('.h5'); s = s[0]
+            sn = "%s_ROI_thr%s.h5" %(s,str(self.thr))
+            print(sn)
+
+            h5f = h5py.File(sn, "w")
+            h5f.create_dataset('I', data=self.spectrum)
+            h5f.create_dataset('xaxis', data=self.xaxis)
+            h5f.close()
+        
+            xy = np.column_stack((self.xaxis,self.spectrum))
+            sn = "%s_ROI_thr%s.asc" %(s,str(self.thr))
+            np.savetxt(sn,xy)
+            
+            xy = np.column_stack((self.xaxis,self.spectrum))
+            sn = "%s_ROI_thr%s.xy" %(s,str(self.thr))
+            np.savetxt(sn,xy)
+                
+        else:
+            print("Something is wrong with the data")
+
+    ####################### Peak fitting #######################
+
+    def profile_function(self,ind):
+        if ind == 0:
+            self.peaktype = "Gaussian"
+            print("Gaussian profile")
+        elif ind == 1:
+            self.peaktype = "Lorentzian"
+            print("Lorentzian profile")
+        elif ind == 2:
+            self.peaktype = "Pseudo-Voigt"
+            print("Pseudo-Voigt profile")
+
+    def batchpeakfit(self):
+
+        self.pbutton_fit.setEnabled(False)
+        self.Pos = (int(self.volroi.shape[2]/2))
+        self.Posmin = (int(self.volroi.shape[2]/2) - 5)
+        self.Posmax = (int(self.volroi.shape[2]/2) + 5)
+        
+        for ii in range(self.volroi.shape[2]):
+            self.volroi[:,:,ii] = self.volroi[:,:,ii]*self.mask
+            
+        self.PeakFitData = FitData(self.peaktype, self.volroi, self.xroi,
+                                   self.Area, self.Areamin, self.Areamax,
+                                   self.Pos, self.Posmin, self.Posmax,
+                                   self.FWHM, self.FWHMmin, self.FWHMmax)
+        self.PeakFitData.start()            
+        self.PeakFitData.progress_fit.connect(self.progressbar_fit.setValue)
+        self.PeakFitData.fitdone.connect(self.updatefitdata)
+        
+    def updatefitdata(self):
+        
+        self.res = self.PeakFitData.res #### need to think about this
+        self.pbutton_fit.setEnabled(True)
+        self.ChooseRes.setEnabled(True)
+        self.pbutton_expfit.setEnabled(True)
+        
+        self.ax_image.clear()
+        self.ax_image.imshow(self.res['Area'].T,cmap='jet')
+        self.ax_image.set_title("Peak area")
+
+    def stopfit(self):
+        self.PeakFitData.terminate()
+        self.progressbar_fit.setValue(0)
+        self.pbutton_fit.setEnabled(True)
+        
+    def plot_fit_results(self,ind):
+        
+        self.ax_image.clear()
+        if ind == 0:
+            self.ax_image.imshow(self.res['Area'].T,cmap='jet')
+            self.ax_image.set_title("Peak area")
+        elif ind == 1:
+            self.ax_image.imshow(self.res['Position'].T,cmap='jet')
+            self.ax_image.set_title("Peak position")        
+        elif ind == 2:
+            self.ax_image.imshow(self.res['FWHM'].T,cmap='jet')
+            self.ax_image.set_title("FWHM")  
+        elif ind == 3:
+            self.ax_image.imshow(self.res['Background1'].T,cmap='jet')
+            self.ax_image.set_title("Background 1")  
+        elif ind == 4:
+            self.ax_image.imshow(self.res['Background2'].T,cmap='jet')
+            self.ax_image.set_title("Background 2")  
+        self.canvas_image.draw()       
+ 
+        
+    def savefitresults(self):
+        
+        """
+        Method to export the peak fitting results
+        """
+        if len(self.hdf_fileName)>0:
+            s = self.hdf_fileName.split('.h5'); s = s[0]
+            sn = "%s_fit_results.h5" %(s)
+            with h5py.File(sn, 'w') as h5f:            
+                h5f.create_dataset('Area', data=self.res['Area'])
+                h5f.create_dataset('Position', data=self.res['Position'])
+                h5f.create_dataset('FWHM', data=self.res['FWHM'])
+                h5f.create_dataset('bkga', data=self.res['Background1'])
+                h5f.create_dataset('bkgb', data=self.res['Background2'])
+                if self.peaktype == "Pseudo-Voigt":                
+                    h5f.create_dataset('gamma', data=self.res['Fraction'])            
+        else:
+            print("Something is wrong with the data")
+                    
 
 class FileDialog(QtWidgets.QFileDialog):
         def __init__(self, *args):
@@ -596,17 +806,140 @@ class FileDialog(QtWidgets.QFileDialog):
             for view in self.findChildren((QtWidgets.QListView, QtWidgets.QTreeView)):
                 if isinstance(view.model(), QtWidgets.QFileSystemModel):
                     view.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+
+
+class FitData(QThread):
+    
+    '''
+    Single peak batch fitting class   
+    
+    :data: the spectral/scattering data
+    :roi: bin number of interest
+    :Area: initial value for peak area
+    :Areamin: minimum value for peak area
+    :Areamax: maximum value for peak area
+    :Pos: initial value for peak position
+    :Posmin: minimum value for peak position
+    :Posmax: maximum value for peak position
+    :FWHM: initial value for peak full width at half maximum (FWHM)
+    :FWHMmin: minimum value for peak FWHM
+    :FWHMmax: maximum value for peak FWHM
+
+    '''
+    
+    fitdone = pyqtSignal()
+    progress_fit = pyqtSignal(int)
+    
+    def __init__(self, peaktype, data, x, Area, Areamin, Areamax, Pos, Posmin, Posmax, FWHM, FWHMmin, FWHMmax):
+        QThread.__init__(self)
+        
+        self.peaktype = peaktype
+        self.fitdata = data  
+        self.phase = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
+        self.cen = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
+        self.wid = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
+        self.bkg1 = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
+        self.bkg2 = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
+        self.fr = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
+        self.xroi = x
+        self.Area = Area; self.Areamin = Areamin; self.Areamax = Areamax; 
+        self.Pos = Pos; self.Posmin = Posmin; self.Posmax = Posmax; 
+        self.FWHM = FWHM; self.FWHMmin = FWHMmin; self.FWHMmax = FWHMmax;
+        
+        msk = np.sum(self.fitdata,axis = 2)
+        msk[msk>0] = 1
+        self.i, self.j = np.where(msk > 0)
+
+    def run(self):
+        
+        """
+        Initialise the single peak batch fitting process
+        """  
+        self.batchfit()
+        
+    def batchfit(self):
+                
+        if self.peaktype == "Pseudo-Voigt":
+            x0 = np.array([float(self.Area), float(self.Pos), float(self.FWHM), 0., 0., 0.5], dtype=float)
+        else:
+            x0 = np.array([float(self.Area), float(self.Pos), float(self.FWHM), 0., 0.], dtype=float)
+        
+        if self.peaktype == "Pseudo-Voigt":
+            param_bounds=([float(self.Areamin),float(self.Posmin),float(self.FWHMmin),-0.5,-1.0,0],
+                          [float(self.Areamax),float(self.Posmax),float(self.FWHMmax),0.5,1.0,1])
+        else:
+            param_bounds=([float(self.Areamin),float(self.Posmin),float(self.FWHMmin),-0.5,-1.0],
+                          [float(self.Areamax),float(self.Posmax),float(self.FWHMmax),0.5,1.0])
+        
+        for ind in tqdm(np.arange(0,len(self.i))):
+                
+                ii = self.i[ind]
+                jj = self.j[ind]
+                dp = self.fitdata[ii,jj,:]
+                try:
+                    if self.peaktype == "Gaussian":
+                        params, params_covariance = sciopt.curve_fit(self.gmodel, self.xroi, dp[self.xroi], p0=x0, bounds=param_bounds)
+                    elif self.peaktype == "Lorentzian":
+                        params, params_covariance = sciopt.curve_fit(self.lmodel, self.xroi, dp[self.xroi], p0=x0, bounds=param_bounds)
+                    elif self.peaktype == "Pseudo-Voigt":
+                        params, params_covariance = sciopt.curve_fit(self.pvmodel, self.xroi, dp[self.xroi], p0=x0, bounds=param_bounds)
                     
-def main():
-    qApp = QtWidgets.QApplication(sys.argv)
-    aw = ApplicationWindow()
-    aw.show()
-    sys.exit(qApp.exec_())
-    qApp.exec_()
+                    self.phase[ii,jj] = params[0]
+                    self.cen[ii,jj] = params[1]
+                    self.wid[ii,jj] = params[2]         
+                    self.bkg1[ii,jj] = params[3]   
+                    self.bkg2[ii,jj] = params[4]      
+                    if self.peaktype == "Pseudo-Voigt":
+                        self.fr[ii,jj] = params[5]  
+           
+                except: 
+                    self.cen[ii,jj] = (param_bounds[0][1] + param_bounds[1][1])/2
+                    self.wid[ii,jj] = (param_bounds[0][2] + param_bounds[1][2])/2     
+                        
+                v = (100.*(ind+1))/(len(self.i))
+                self.progress_fit.emit(v)
+                
+        self.phase = np.where(self.phase<0,0,self.phase)
+        
+        if self.peaktype == "Pseudo-Voigt":
+            self.res = {'Area':self.phase, 'Position':self.cen, 'FWHM':self.wid, 'Background1':self.bkg1, 'Background2':self.bkg2, 'Fraction':self.fr}
+        else:
+            self.res = {'Area':self.phase, 'Position':self.cen, 'FWHM':self.wid, 'Background1':self.bkg1, 'Background2':self.bkg2}
+        
+        self.fitdone.emit()
+
+    def gmodel(self, x, A, m, w, a, b):
+        
+        """
+        Gaussian model with linear background: (A/(sqrt(2*pi)*w) )* exp( - (x-m)**2 / (2*w**2)) + a*x + b
+        """
+        return (A/(np.sqrt(2*np.pi)*w) )* np.exp( - (x-m)**2 / (2*w**2)) + a*x + b
     
-if __name__ == "__main__":
-    main()
+    def lmodel(self, x, A, m, w, a, b):
+        
+        """
+        Lorentzian model with linear background: (A/(1 + ((1.0*x-m)/w)**2)) / (pi*w) + a*x + b   
+        """
+        return (A/(1 + ((x-m)/w)**2)) / (np.pi*w) + a*x + b    
+
+    def pvmodel(self, x, A, m, w, a, b, fr):
+        
+        """
+        pseudo-Voigt model with linear background: ((1-fr)*gaumodel(x, A, m, s) + fr*lormodel(x, A, m, s))
+        """
+        return ((1-fr)*(A/(np.sqrt(2*np.pi)*w) )*np.exp( - (x-m)**2 / (2*w**2)) + fr*(A/(1 + ((x-m)/w)**2)) / (np.pi*w) + a*x + b)
+
+
+ def main():
+     qApp = QtWidgets.QApplication(sys.argv)
+     aw = nDTomoGUI()
+     aw.show()
+     sys.exit(qApp.exec_())
+     qApp.exec_()
     
-# aw = ApplicationWindow()    
-# aw.show()
+ if __name__ == "__main__":
+     main()
+    
+#aw = nDTomoGUI()    
+#aw.show()
    
