@@ -412,3 +412,122 @@ def bresenham(y0, x0, y1, x1):
             y += ystep
             error += dx
     return np.array(points).T
+
+
+class InteractiveHyperProfileExtraction:
+    def __init__(self, vol):
+        self.vol = vol
+        self.mean_image = np.sum(self.vol, axis=2)
+        self.line = None
+        self.profile = None
+
+        self.fig, self.axes = plt.subplots(2, 2, figsize=(12, 12))
+        self.axes[0, 0].imshow(self.mean_image, cmap='gray')
+        self.axes[0, 0].set_title("Interactive Profile Extraction")
+        self.axes[1, 0].set_title("Intensity Profile")
+        self.axes[1, 0].set_xlabel("Distance (pixels)")
+        self.axes[1, 0].set_ylabel("Intensity")
+        self.axes[0, 1].set_xlabel('Position along the line')
+        self.axes[0, 1].set_ylabel('Intensity')
+        self.axes[0, 1].set_title('Intensity Profile')
+        self.axes[1, 1].set_xlabel('Position along the line')
+        self.axes[1, 1].set_ylabel('Intensity')
+        self.axes[1, 1].set_title('Spectral Profile')
+
+        self.line_completed = False
+
+        self.fig.canvas.mpl_connect('button_press_event', self.on_press)
+        self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
+
+    def on_press(self, event):
+        if event.button == 1 and event.inaxes is not None and event.inaxes in [self.axes[0, 0]]:
+            if self.line is None:
+                self.profile = [event.ydata, event.xdata, event.ydata, event.xdata]
+                self.line = Line2D([self.profile[1], self.profile[3]], [self.profile[0], self.profile[2]], color='red')
+                self.axes[0, 0].add_line(self.line)
+                self.fig.canvas.draw()
+            else:
+                self.profile[2] = event.ydata
+                self.profile[3] = event.xdata
+                self.line.set_xdata([self.profile[1], self.profile[3]])
+                self.line.set_ydata([self.profile[0], self.profile[2]])
+                self.fig.canvas.draw()
+                if not self.line_completed:
+                    self.line_completed = True
+                    self.extract_intensity_profile()
+                    self.show_intensity_profile()
+                    self.show_spectral_profile()
+
+    def on_motion(self, event):
+        if self.line is not None and event.inaxes is not None and event.inaxes in [self.axes[0, 0]]:
+            if not self.line_completed:
+                self.profile[2] = event.ydata
+                self.profile[3] = event.xdata
+                self.line.set_xdata([self.profile[1], self.profile[3]])
+                self.line.set_ydata([self.profile[0], self.profile[2]])
+                self.fig.canvas.draw()
+
+    def extract_intensity_profile(self):
+        y0, x0, y1, x1 = map(int, self.profile)
+        yy, xx = bresenham(y0, x0, y1, x1)
+        intensity_profile = self.mean_image[yy, xx]
+        self.plot_intensity_profile(xx, yy, intensity_profile)
+
+    def plot_intensity_profile(self, xx, yy, intensity_profile):
+        self.axes[1,0].clear()
+        self.axes[1,0].imshow(self.mean_image, cmap='gray')
+        self.axes[1,0].plot(yy, xx, 'r-')
+        self.axes[1,0].set_title("Intensity Profile")
+        self.axes[1,0].set_xlabel("Distance (pixels)")
+        self.axes[1,0].set_ylabel("Intensity")
+
+    def show_intensity_profile(self):
+        self.y_coords, self.x_coords = self.get_line_coordinates(self.profile[0], self.profile[1],
+                                                       self.profile[2], self.profile[3])
+        self.intensity_values = map_coordinates(self.mean_image, np.vstack((self.y_coords,self.x_coords)))
+        self.axes[0,1].clear()
+        self.axes[0,1].plot(self.intensity_values)
+        self.axes[0,1].set_xlabel('Position along the line')
+        self.axes[0,1].set_ylabel('Intensity')
+        self.axes[0,1].set_title('Intensity Profile')
+        self.fig.canvas.draw()
+
+    def show_spectral_profile(self):
+
+        self.y_coords, self.x_coords = self.get_line_coordinates(self.profile[0], self.profile[1],
+                                                       self.profile[2], self.profile[3])
+    
+        sorted_indices = np.argsort(self.x_coords)
+        self.sorted_x_coords = self.x_coords[sorted_indices]
+        self.sorted_y_coords = self.y_coords[sorted_indices]
+    
+        self.spectra = np.zeros((len(self.sorted_x_coords),self.vol.shape[2]), dtype = 'float32')
+        
+        self.axes[1, 1].clear()
+    
+        ii = 0
+        for y, x in zip(self.sorted_y_coords, self.sorted_x_coords):
+            spectrum = self.vol[y, x, :]
+            self.spectra[ii] = spectrum
+            self.axes[1, 1].plot(spectrum + ii * 0.1)
+            ii = ii + 1
+
+
+        self.axes[1,1].set_xlabel('Position along the line')
+        self.axes[1,1].set_ylabel('Intensity')
+        self.axes[1,1].set_title('Spectral Profile')
+        self.fig.canvas.draw()
+        
+    def clear_profile(self):
+        if self.line is not None:
+            self.line.remove()
+            self.line = None
+            self.line_completed = False
+            self.fig.canvas.draw()
+            self.profile = None
+
+    def get_line_coordinates(self, y1, x1, y2, x2):
+        length = int(np.hypot(y2 - y1, x2 - x1))
+        y, x = np.linspace(y1, y2, length), np.linspace(x1, x2, length)
+        return y.astype(int), x.astype(int)
+
