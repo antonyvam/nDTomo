@@ -14,7 +14,7 @@ from matplotlib import use as u
 u('Qt5Agg')
 from PyQt5 import QtCore, QtWidgets, QtGui
 from PyQt5.QtCore import pyqtSignal, QThread
-import h5py
+import h5py, sys
 import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
@@ -930,15 +930,15 @@ class FitData(QThread):
         return ((1-fr)*(A/(np.sqrt(2*np.pi)*w) )*np.exp( - (x-m)**2 / (2*w**2)) + fr*(A/(1 + ((x-m)/w)**2)) / (np.pi*w) + a*x + b)
 
 
- def main():
-     qApp = QtWidgets.QApplication(sys.argv)
-     aw = nDTomoGUI()
-     aw.show()
-     sys.exit(qApp.exec_())
-     qApp.exec_()
-    
- if __name__ == "__main__":
-     main()
+def main():
+    qApp = QtWidgets.QApplication(sys.argv)
+    aw = nDTomoGUI()
+    aw.show()
+    sys.exit(qApp.exec_())
+    qApp.exec_()
+   
+if __name__ == "__main__":
+    main()
     
 #aw = nDTomoGUI()    
 #aw.show()
