@@ -185,7 +185,7 @@ def sinocomcor(sinograms):
         
     return(sn)
 
-def sinocentering(sinograms, crsr=5, interp=True, scan=180):
+def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None):
             
     """
     Method for centering sinograms by flipping the projection at 180 deg and comparing it with the one at 0 deg
@@ -195,7 +195,10 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180):
     
     di = sinograms.shape
     if len(di)>2:
-        s = np.sum(sinograms, axis = 2)
+        if channels is None:
+            s = np.sum(sinograms, axis = 2)
+        else:
+            s = np.sum(sinograms[:,:,channels[0]:channels[-1]], axis = 2)
     else:
         s = np.copy(sinograms)
         
@@ -215,7 +218,6 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180):
         
         xnew = cr[kk] + np.arange(-np.ceil(s.shape[0]/2), np.ceil(s.shape[0]/2)-1)
         sn = np.zeros((len(xnew),s.shape[1]), dtype='float32')
-        
         
         for ii in range(s.shape[1]):
             
