@@ -1180,3 +1180,95 @@ def fit_shape_to_points(image, shape='circle'):
 
     # Show the plot
     plt.show()
+    
+def rebinmat(array, factor = 2, axis=0):
+    
+    """
+    Rebin a 2D/3D array along an axis
+
+    Args:
+        array: numpy.ndarray.
+        factor (int): Rebinning factor (default: 2).
+        axis (int): Axis for rebinning (default: 0).
+
+    Returns:
+        numpy.ndarray: A rebinned array along an axis
+    """
+
+    dims = array.shape
+    
+    if len(dims) == 3:
+
+        if axis == 0:    
+    
+            rebinned = np.zeros((int(array.shape[0]/factor), array.shape[1], array.shape[2]), dtype='float32')
+            kk = 0
+            for ii in tqdm(range(0, array.shape[0], factor)):
+                rebinned[kk,:,:] = np.mean(array[ii:ii+factor, :,:], axis = 0)
+                kk = kk + 1
+        
+        elif axis == 1:    
+            
+            rebinned = np.zeros((array.shape[0], int(array.shape[1]/2), array.shape[2]), dtype='float32')
+            kk = 0
+            for ii in tqdm(range(0, array.shape[1], factor)):
+                rebinned[:,kk,:] = np.mean(array[:,ii:ii+factor,:], axis = 1)
+                kk = kk + 1
+
+        elif axis == 2:    
+            
+            rebinned = np.zeros((array.shape[0], array.shape[1], int(array.shape[2]/2)), dtype='float32')
+            kk = 0
+            for ii in tqdm(range(0, array.shape[2], factor)):
+                rebinned[:,:,kk] = np.mean(array[:,:,ii:ii+factor], axis = 1)
+                kk = kk + 1
+    
+    if len(dims) == 2:
+
+        if axis == 0:    
+    
+            rebinned = np.zeros((int(array.shape[0]/factor), array.shape[1]), dtype='float32')
+            kk = 0
+            for ii in tqdm(range(0, array.shape[0], factor)):
+                rebinned[kk,:] = np.mean(array[ii:ii+factor,:], axis = 0)
+                kk = kk + 1
+                
+        elif axis == 1:    
+            
+            rebinned = np.zeros((array.shape[0], int(array.shape[1]/factor)), dtype='float32')
+            kk = 0
+            for ii in tqdm(range(0, array.shape[1], factor)):
+                rebinned[:,kk] = np.mean(array[:,ii:ii+factor], axis = 1)
+                kk = kk + 1
+
+    return(rebinned)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
