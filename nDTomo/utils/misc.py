@@ -1247,17 +1247,74 @@ def rebinmat(array, factor = 2, axis=0):
 
 
 
+def rebin1d(x, y, x_new):
+    
+    # Arrays to store the sum of the weighted y values and the sum of the weights
+    sum_weighted_y = np.zeros(len(x_new))
+    sum_weights = np.zeros(len(x_new))
+    
+    min_x_new = np.min(x_new)
+    max_x_new = np.max(x_new)
+    
+    # Loop over each observation point
+    for i in range(len(x)):
+        
+        arr = np.abs(x_new - x[i])
+        # Get the indices that would sort the array
+        sorted_indices = np.argsort(arr)
+        # Get the indices of the two smallest values
+        smallest_indices = sorted_indices[:2]
+            
+        # print(arr)
+        # print(sorted_indices)
+        # print(smallest_indices)
+        
+        # Calculate the weights based on the relative distance to the two neighboring bins
+    
+        if x[i] <= min_x_new:
+            
+            # Add the weighted y value to the sum of weighted y values in the two bins
+            sum_weighted_y[smallest_indices[0]] += y[i]
+            # Add the weights to the sum of weights in the two bins
+            sum_weights[smallest_indices[0]] += 1
+    
+        elif x[i] >= max_x_new:
+            
+            # Add the weighted y value to the sum of weighted y values in the two bins
+            sum_weighted_y[smallest_indices[0]] += y[i]
+            # Add the weights to the sum of weights in the two bins
+            sum_weights[smallest_indices[0]] += 1
+    
+        else:
+            
+            if smallest_indices[1]>smallest_indices[0]:
+                
+                w0 = np.abs((x_new[smallest_indices[0]] - x[i]) / (x_new[smallest_indices[1]] - x_new[smallest_indices[0]]))
+                w1 = 1 - w0            
+                # Add the weighted y value to the sum of weighted y values in the two bins
+                sum_weighted_y[smallest_indices[0]] += y[i] * w0
+                sum_weighted_y[smallest_indices[1]] += y[i] * w1
+                
+                # Add the weights to the sum of weights in the two bins
+                sum_weights[smallest_indices[0]] += w0
+                sum_weights[smallest_indices[1]] += w1        
+    
+            elif smallest_indices[1]<smallest_indices[0]:
+    
+                w0 = np.abs((x_new[smallest_indices[0]] - x[i]) / (x_new[smallest_indices[1]] - x_new[smallest_indices[0]]))
+                w1 = 1 - w0            
+                # Add the weighted y value to the sum of weighted y values in the two bins
+                sum_weighted_y[smallest_indices[0]] += y[i] * w0
+                sum_weighted_y[smallest_indices[1]] += y[i] * w1
+                
+                # Add the weights to the sum of weights in the two bins
+                sum_weights[smallest_indices[0]] += w0
+                sum_weights[smallest_indices[1]] += w1    
+            
 
+    rebin_data = np.array(sum_weighted_y / sum_weights, dtype = 'float32')
 
-
-
-
-
-
-
-
-
-
+    return(rebin_data)
 
 
 
