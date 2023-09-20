@@ -197,224 +197,198 @@ class Autoencoder(nn.Module):
 
 class CNN2D(nn.Module):
     
-    def __init__(self, npix, nch=5, nfilts=32, nlayers =4):
+    def __init__(self, npix, nch_in=1, nch_out=1, nfilts=32, nlayers=4, norm_type='layer', activation='Linear'):
         
         super(CNN2D, self).__init__()
         
+        self.npix = npix
+        
         layers = []
-        layers.append(nn.Conv2d(nch, nfilts, kernel_size=3, stride=1, padding='same'))
-        layers.append(nn.BatchNorm2d(nfilts))
+        layers.append(nn.Conv2d(nch_in, nfilts, kernel_size=3, stride=1, padding=1))  # 'same' padding in PyTorch is usually done by manually specifying the padding
+        if norm_type is not None:
+            self.add_norm_layer(layers, nfilts, norm_type)
         layers.append(nn.ReLU())
         
         for layer in range(nlayers):
-            layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'))
-            layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'))
-            layers.append(nn.BatchNorm2d(nfilts))
+            layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding=1))
+            if norm_type is not None:
+                self.add_norm_layer(layers, nfilts, norm_type)
             layers.append(nn.ReLU())
 
-        layers.append(nn.Conv2d(nfilts, nch, kernel_size=3, stride=1, padding='same'))
-        layers.append(nn.Sigmoid())
+        layers.append(nn.Conv2d(nfilts, nch_out, kernel_size=3, stride=1, padding=1))
+        
+        if activation == 'Sigmoid':
+            layers.append(nn.Sigmoid())
         
         self.cnn2d = nn.Sequential(*layers)
 
-    def forward(self, x):
-        
-        out = self.cnn2d(x)
-        
-        return(out)
+    def add_norm_layer(self, layers, nfilts, norm_type):
+        if norm_type == 'batch':
+            layers.append(nn.BatchNorm2d(nfilts))
+        elif norm_type == 'layer':
+            layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))
+        else:
+            raise ValueError('Invalid normalization type')
+            
+    def forward(self, x, residual=False):
+        if residual:
+            out = self.cnn2d(x) + x
+        else:
+            out = self.cnn2d(x)
+        return out
 
 
+class CNN3D(nn.Module):
+    
+    def __init__(self, npix, nch_in=1, nch_out=1, nfilts=32, nlayers=4, norm_type='layer', activation='Linear'):
+        
+        super(CNN3D, self).__init__()
+        
+        self.npix = npix
+        
+        layers = []
+        layers.append(nn.Conv3d(nch_in, nfilts, kernel_size=3, stride=1, padding=1))  # 'same' padding in PyTorch is usually done by manually specifying the padding
+        if norm_type is not None:
+            self.add_norm_layer(layers, nfilts, norm_type)
+        layers.append(nn.ReLU())
+        
+        for layer in range(nlayers):
+            layers.append(nn.Conv3d(nfilts, nfilts, kernel_size=3, stride=1, padding=1))
+            if norm_type is not None:
+                self.add_norm_layer(layers, nfilts, norm_type)
+            layers.append(nn.ReLU())
+
+        layers.append(nn.Conv3d(nfilts, nch_out, kernel_size=3, stride=1, padding=1))
+        
+        if activation == 'Sigmoid':
+            layers.append(nn.Sigmoid())
+        
+        self.cnn3d = nn.Sequential(*layers)
+
+    def add_norm_layer(self, layers, nfilts, norm_type):
+        if norm_type == 'batch':
+            layers.append(nn.BatchNorm3d(nfilts))
+        elif norm_type == 'layer':
+            layers.append(nn.LayerNorm([nfilts, self.npix, self.npix, self.npix]))
+        else:
+            raise ValueError('Invalid normalization type')
+            
+    def forward(self, x, residual=False):
+        if residual:
+            out = self.cnn3d(x) + x
+        else:
+            out = self.cnn3d(x)
+        return out
+    
 class SD2I(nn.Module):
-    def __init__(self, npix, factor=8, nims=1, nfilts = 128, ndense = 128):
+    
+    def __init__(self, npix, factor=8, nims=5, nfilts = 32, ndense = 64, dropout=True, norm_type='layer', upsampling = 4):
         
         super(SD2I, self).__init__()
+        
+        self.upsampling = upsampling
         self.flatten = nn.Flatten()
-        self.dense_stack = nn.Sequential(
-            nn.Linear(1, ndense),
-            nn.ReLU(),
-            nn.Linear(ndense, ndense),
-            nn.ReLU(),
-            nn.Linear(ndense, ndense),
-            nn.ReLU(),
-            nn.Linear(ndense, ndense),
-            nn.ReLU(),            
-        )
-        self.dense_large = nn.Sequential(nn.Linear(ndense, int(np.ceil(npix / 4)) * int(np.ceil(npix / 4)) * factor),
-                                         nn.ReLU()
-                                         )
-
-        self.reshape = nn.Unflatten(1, (factor, int(np.ceil(npix / 4)), int(np.ceil(npix / 4))))
-        self.upsample2D = nn.Upsample(scale_factor=2, mode='bilinear')
         
-        self.conv2d_stack_afterdense = nn.Sequential(
-            nn.Conv2d(factor, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.ReLU(),
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.ReLU(),
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.ReLU()
-            )
-        self.conv2d_stack = nn.Sequential(
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.ReLU(),
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.ReLU(),
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.ReLU()
-            )
+        layers = []
+        for _ in range(4):  # Repeat the following block 4 times
+            layers.append(nn.Linear(1, ndense))
+            layers.append(nn.ReLU())
+            if dropout:
+                layers.append(nn.Dropout1d(0.01))
+
+        self.dense_stack = nn.Sequential(*layers)
+        dense_large = []
+        dense_large.append(nn.Linear(ndense, int(np.ceil(npix / self.upsampling)) * int(np.ceil(npix / self.upsampling)) * factor))
+        dense_large.append(nn.ReLU())
+        if dropout:
+            dense_large.append(nn.Dropout1d(0.01))
+        self.dense_large = dense_large
+        self.reshape = nn.Unflatten(1, (factor, int(np.ceil(npix / self.upsampling)), int(np.ceil(npix / self.upsampling))))
+            
+        conv_layers = []
+        conv_layers.append(nn.Conv2d(factor, nfilts, kernel_size=3, stride=1, padding='same'))
+        if norm_type is not None:
+            self.add_norm_layer(layers, nfilts, norm_type)            
+        conv_layers.append(nn.ReLU())        
+        for _ in range(2):  # Repeat the following block 3 times
+            conv_layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'))
+            if norm_type is not None:
+                self.add_norm_layer(layers, nfilts, norm_type)            
+            conv_layers.append(nn.ReLU())        
+        self.conv2d_stack_afterdense = nn.Sequential(*conv_layers)
+
+        conv_layers = []
+        for _ in range(3):  # Repeat the following block 3 times
+            conv_layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'))
+            if norm_type is not None:
+                self.add_norm_layer(layers, nfilts, norm_type)            
+            conv_layers.append(nn.ReLU())        
+        self.conv2d_stack = nn.Sequential(*conv_layers)
+        
         self.conv2d_final = nn.Conv2d(nfilts, nims, kernel_size=3, stride=1, padding='same')
-        
-    def forward(self, x):
-        x = self.flatten(x)
-        x = self.dense_stack(x)
-        x = self.dense_large(x)
-        x = self.reshape(x)
-        x = self.upsample2D(x)
-        x = self.conv2d_stack_afterdense(x)
-        x = self.upsample2D(x)
-        x = self.conv2d_stack(x)
-        x = self.conv2d_final(x)
-        return(x)
-    
-    
-
-class SD2I_peaks(nn.Module):
-    def __init__(self, npix, factor=8, nims=5, nfilts = 128, ndense = 128):
-        
-        super(SD2I_peaks, self).__init__()
-        self.flatten = nn.Flatten()
-        self.dense_stack = nn.Sequential(
-            nn.Linear(1, ndense),
-            nn.ReLU(),
-            nn.Dropout1d(0.01),
-            nn.Linear(ndense, ndense),
-            nn.ReLU(),
-            nn.Dropout1d(0.01),
-            nn.Linear(ndense, ndense),
-            nn.ReLU(),
-            nn.Dropout1d(0.01),
-            nn.Linear(ndense, ndense),
-            nn.ReLU(),            
-            nn.Dropout1d(0.01),
-        )
-        self.dense_large = nn.Sequential(nn.Linear(ndense, int(np.ceil(npix / 4)) * int(np.ceil(npix / 4)) * factor),
-                                         nn.ReLU(),
-                                         nn.Dropout1d(0.01)
-                                         )
-
-        self.reshape = nn.Unflatten(1, (factor, int(np.ceil(npix / 4)), int(np.ceil(npix / 4))))
         self.upsample2D = nn.Upsample(scale_factor=2, mode='bilinear')
-        
-        self.conv2d_stack_afterdense = nn.Sequential(
-            nn.Conv2d(factor, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm2d(nfilts),
-            nn.ReLU(),
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm2d(nfilts),
-            nn.ReLU(),
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm2d(nfilts),
-            nn.ReLU()
-            )
-        self.conv2d_stack = nn.Sequential(
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm2d(nfilts),
-            nn.ReLU(),
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm2d(nfilts),
-            nn.ReLU(),
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm2d(nfilts),
-            nn.ReLU()
-            )
-        self.conv2d_final = nn.Conv2d(nfilts, nims, kernel_size=3, stride=1, padding='same')
         self.Sigmoid = nn.Sigmoid()
-        self.BatchNorm2d = nn.BatchNorm2d(nfilts)
-        self.BatchNorm1d = nn.BatchNorm1d(nfilts)
         
+    def add_norm_layer(self, layers, nfilts, norm_type):
+        if norm_type == 'batch':
+            layers.append(nn.BatchNorm2d(nfilts))
+        elif norm_type == 'layer':
+            layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))
+        else:
+            raise ValueError('Invalid normalization type')
+            
     def forward(self, x):
         x = self.flatten(x)
         x = self.dense_stack(x)
         x = self.dense_large(x)
         x = self.reshape(x)
-        x = self.upsample2D(x)
-        x = self.conv2d_stack_afterdense(x)
-        x = self.upsample2D(x)
-        x = self.conv2d_stack(x)
+
+        if self.upsampling == 4:
+            x = self.upsample2D(x)
+            x = self.conv2d_stack_afterdense(x)
+            x = self.upsample2D(x)
+            x = self.conv2d_stack(x)
+        elif self.upsampling == 2: 
+            x = self.upsample2D(x)
+            x = self.conv2d_stack_afterdense(x)
+        elif self.upsampling == 1: 
+            x = self.conv2d_stack_afterdense(x)            
         x = self.conv2d_final(x)
         x = self.Sigmoid(x)
         return(x)
 
 
-
-class SD2Inu_peaks(nn.Module):
-    def __init__(self, npix, factor=8, nims=5, nfilts = 64, ndense = 64):
+    
+class VolumeModel(nn.Module):
+    
+    '''
+    Requires npix and num_slices
+    '''
+    def __init__(self, npix, num_slices, vol=None, device='cuda'):
+        super(VolumeModel, self).__init__()
+        self.num_slices = num_slices
+        if vol is None:
+            self.volume = nn.Parameter(torch.zeros((num_slices, npix, npix)).to(device))
+        else:
+            self.volume = nn.Parameter(vol)
+    
+    def forward(self, input_volume, diff = True):
         
-        """
-        SD2Inu_peaks neural network module.
-
-        Args:
-            npix (int): Number of pixels in the image.
-            factor (int, optional): Factor for upsampling. Defaults to 8.
-            nims (int, optional): Number of output channels. Defaults to 5.
-            nfilts (int, optional): Number of filters in convolutional layers. Defaults to 64.
-            ndense (int, optional): Number of units in dense layers. Defaults to 64.
-        """
-		
-        super(SD2Inu_peaks, self).__init__()
-        self.flatten = nn.Flatten()
-        self.dense_stack = nn.Sequential(
-            nn.Linear(1, ndense),
-            nn.ReLU(),
-            nn.Dropout1d(0.01),
-            nn.Linear(ndense, ndense),
-            nn.ReLU(),
-            nn.Dropout1d(0.01),
-            nn.Linear(ndense, ndense),
-            nn.ReLU(),
-            nn.Dropout1d(0.01),
-            nn.Linear(ndense, ndense),
-            nn.ReLU(),            
-            nn.Dropout1d(0.01),
-        )
-        self.dense_large = nn.Sequential(nn.Linear(ndense, npix * npix * factor),
-                                         nn.ReLU(),
-                                         nn.Dropout1d(0.01)
-                                         )
-
-        self.reshape = nn.Unflatten(1, (factor, npix, npix))
+        if diff:
+            transformed_volume = input_volume + self.volume
+        else:
+            transformed_volume = self.volume
         
-        self.conv2d_stack_afterdense = nn.Sequential(
-            nn.Conv2d(factor, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm2d(nfilts),
-            nn.ReLU(),
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm2d(nfilts),
-            nn.ReLU(),
-            nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'),
-            nn.BatchNorm2d(nfilts),
-            nn.ReLU()
-            )
-        self.conv2d_final = nn.Conv2d(nfilts, nims, kernel_size=3, stride=1, padding='same')
-        self.Sigmoid = nn.Sigmoid()
-        
-    def forward(self, x):
-	
-        """
-        Forward pass of the network.
-
-        Args:
-            x (torch.Tensor): Input tensor.
-
-        Returns:
-            torch.Tensor: Output tensor.
-        """
-		
-        x = self.flatten(x)
-        x = self.dense_stack(x)
-        x = self.dense_large(x)
-        x = self.reshape(x)
-        x = self.conv2d_stack_afterdense(x)
-        x = self.conv2d_final(x)
-        x = self.Sigmoid(x)
-        return(x)
+        return transformed_volume
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

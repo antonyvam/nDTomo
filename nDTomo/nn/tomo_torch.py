@@ -113,7 +113,7 @@ def imrotate_torch(im, theta, dtype = torch.cuda.FloatTensor if torch.cuda.is_av
     return(imr)
 
 
-def radon(vol, angles, grid_scaled=None, Amat = None, device='cuda'):
+def radon(vol, angles, Amat = None, grid_scaled=None, device='cuda'):
 
     '''
     If vol has 3 dimensions, then it should be in the form of (z, x, y)
