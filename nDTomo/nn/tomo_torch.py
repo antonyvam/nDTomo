@@ -14,19 +14,7 @@ from torchvision.transforms import InterpolationMode
 from numpy import vstack
 
 
-def radon_torch(img, theta, nproj):
-
-    imgn = torch.zeros(img.shape[1], img.shape[2], nproj).cuda()
-
-    for ii in range(nproj):
-        
-        imgn[:,:,ii] = TF.rotate(img, theta[ii].item())
-
-    imgn = torch.sum(imgn, 1)
-
-    return(imgn)
-
-def iradon_torch(s, theta, nproj):
+def iradon(s, theta, nproj):
 
     sn = torch.reshape(s, (1, 1, s.shape[0], s.shape[1]))
     sn = torch.tile(sn, (1, sn.shape[2], 1, 1))
@@ -125,23 +113,47 @@ def imrotate_torch(im, theta, dtype = torch.cuda.FloatTensor if torch.cuda.is_av
     return(imr)
 
 
-def radon3d(vol, angles, grid_scaled=None, device='cuda'):
+def radon(vol, angles, grid_scaled=None, Amat = None, device='cuda'):
 
-    nbins = vol.shape[0]
-    npix = vol.shape[1]
-    
-    sinos = torch.zeros((nbins, npix, len(angles)), device=device)
-    
-    for angle in range(len(angles)):
-         
-        vol_rot = F.rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
-        vol_rot = torch.reshape(vol_rot, (1, 1, vol.shape[0], vol.shape[1], vol.shape[1]))
+    dims = vol.shape    
+
+    if len(dims) == 3:
         
-        if grid_scaled is not None:
-            voli = F.grid_sample(vol_rot, grid_scaled, mode='bilinear')    
-            sinos[:,:,angle] = torch.sum(voli, dim=4)[0,0,:,:]
-        else:
-            sinos[:,:,angle] = torch.sum(vol_rot, dim=4)[0,0,:,:]
+        nbins = vol.shape[0]
+        npix = vol.shape[1]
+        
+        s = torch.zeros((nbins, npix, len(angles)), device=device)
+        
+        for angle in range(len(angles)):
+             
+            vol_rot = F.rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
+            vol_rot = torch.reshape(vol_rot, (1, 1, vol.shape[0], vol.shape[1], vol.shape[1]))
+            
+            if grid_scaled is not None:
+                voli = F.grid_sample(vol_rot, grid_scaled, mode='bilinear')    
+                s[:,:,angle] = torch.sum(voli, dim=4)[0,0,:,:]
+            else:
+                s[:,:,angle] = torch.sum(vol_rot, dim=4)[0,0,:,:]
 
-    return(sinos)
+    elif len(dims) == 2:
+
+        npix = vol.shape[0]
+
+        s = torch.zeros((npix, len(angles)), device=device)
+        
+        for angle in range(len(angles)):
+             
+            vol_rot = F.rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
+            vol_rot = torch.reshape(vol_rot, (1, 1, vol.shape[0], vol.shape[0]))
+            
+            s[:,angle] = torch.sum(vol_rot, dim=3)[0,0,:,:]
+
+        
+    return(s)
+
+
+
+
+
+
 
