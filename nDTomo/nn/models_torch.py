@@ -322,10 +322,12 @@ class CNN3D(nn.Module):
     
 class SD2I(nn.Module):
     
-    def __init__(self, npix, factor=8, nims=5, nfilts = 32, ndense = 64, dropout=True, norm_type='layer', upsampling = 4):
+    def __init__(self, npix, factor=8, nims=5, nfilts = 32, ndense = 64, dropout=True, norm_type='layer', upsampling = 4, act_layer='Sigmoid'):
         
         super(SD2I, self).__init__()
         
+        self.npix = npix
+        self.act_layer = act_layer
         self.upsampling = upsampling
         self.flatten = nn.Flatten()
         
@@ -338,12 +340,12 @@ class SD2I(nn.Module):
 
         self.dense_stack = nn.Sequential(*layers)
         dense_large = []
-        dense_large.append(nn.Linear(ndense, int(np.ceil(npix / self.upsampling)) * int(np.ceil(npix / self.upsampling)) * factor))
+        dense_large.append(nn.Linear(ndense, int(np.ceil(self.npix / self.upsampling)) * int(np.ceil(self.npix / self.upsampling)) * factor))
         dense_large.append(nn.ReLU())
         if dropout:
             dense_large.append(nn.Dropout1d(0.01))
         self.dense_large = dense_large
-        self.reshape = nn.Unflatten(1, (factor, int(np.ceil(npix / self.upsampling)), int(np.ceil(npix / self.upsampling))))
+        self.reshape = nn.Unflatten(1, (factor, int(np.ceil(self.npix / self.upsampling)), int(np.ceil(self.npix / self.upsampling))))
             
         conv_layers = []
         conv_layers.append(nn.Conv2d(factor, nfilts, kernel_size=3, stride=1, padding='same'))
@@ -394,7 +396,8 @@ class SD2I(nn.Module):
         elif self.upsampling == 1: 
             x = self.conv2d_stack_afterdense(x)            
         x = self.conv2d_final(x)
-        x = self.Sigmoid(x)
+        if self.act_layer == 'Sigmoid':
+            x = self.Sigmoid(x)
         return(x)
 
 class VolumeModel(nn.Module):
