@@ -195,6 +195,46 @@ class Autoencoder(nn.Module):
         return(x)
 
 
+class CNN1D(nn.Module):
+    
+    def __init__(self, nch_in=1, nch_out=1, nfilts=32, nlayers=4, norm_type='layer', activation='Linear'):
+        
+        super(CNN1D, self).__init__()
+        
+        layers = []
+        layers.append(nn.Conv1d(nch_in, nfilts, kernel_size=3, stride=1, padding=1))
+        if norm_type is not None:
+            self.add_norm_layer(layers, nfilts, norm_type)
+        layers.append(nn.ReLU())
+        
+        for layer in range(nlayers):
+            layers.append(nn.Conv1d(nfilts, nfilts, kernel_size=3, stride=1, padding=1))
+            if norm_type is not None:
+                self.add_norm_layer(layers, nfilts, norm_type)
+            layers.append(nn.ReLU())
+
+        layers.append(nn.Conv1d(nfilts, nch_out, kernel_size=3, stride=1, padding=1))
+        
+        if activation == 'Sigmoid':
+            layers.append(nn.Sigmoid())
+        
+        self.cnn1d = nn.Sequential(*layers)
+
+    def add_norm_layer(self, layers, nfilts, norm_type):
+        if norm_type == 'batch':
+            layers.append(nn.BatchNorm1d(nfilts))
+        elif norm_type == 'layer':
+            layers.append(nn.LayerNorm([nfilts]))
+        else:
+            raise ValueError('Invalid normalization type')
+            
+    def forward(self, x, residual=False):
+        if residual:
+            out = self.cnn1d(x) + x
+        else:
+            out = self.cnn1d(x)
+        return out
+    
 class CNN2D(nn.Module):
     
     def __init__(self, npix, nch_in=1, nch_out=1, nfilts=32, nlayers=4, norm_type='layer', activation='Linear'):
