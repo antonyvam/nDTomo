@@ -332,30 +332,39 @@ class SD2I(nn.Module):
         self.flatten = nn.Flatten()
         
         layers = []
-        for _ in range(4):  # Repeat the following block 4 times
-            layers.append(nn.Linear(1, ndense))
+        layers.append(nn.Linear(1, ndense))
+        layers.append(nn.ReLU())
+        for _ in range(3):  # Repeat the following block 4 times
+            layers.append(nn.Linear(ndense, ndense))
             layers.append(nn.ReLU())
             if dropout:
                 layers.append(nn.Dropout1d(0.01))
-
         self.dense_stack = nn.Sequential(*layers)
+        
         dense_large = []
         dense_large.append(nn.Linear(ndense, int(np.ceil(self.npix / self.upsampling)) * int(np.ceil(self.npix / self.upsampling)) * factor))
         dense_large.append(nn.ReLU())
         if dropout:
             dense_large.append(nn.Dropout1d(0.01))
-        self.dense_large = dense_large
+        self.dense_large = nn.Sequential(*dense_large)
+        
         self.reshape = nn.Unflatten(1, (factor, int(np.ceil(self.npix / self.upsampling)), int(np.ceil(self.npix / self.upsampling))))
             
         conv_layers = []
         conv_layers.append(nn.Conv2d(factor, nfilts, kernel_size=3, stride=1, padding='same'))
         if norm_type is not None:
-            self.add_norm_layer(layers, nfilts, norm_type)            
+            if norm_type == 'batch':
+                conv_layers.append(nn.BatchNorm2d(nfilts))
+            elif norm_type == 'layer':
+                conv_layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))            
         conv_layers.append(nn.ReLU())        
         for _ in range(2):  # Repeat the following block 3 times
             conv_layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'))
             if norm_type is not None:
-                self.add_norm_layer(layers, nfilts, norm_type)            
+                if norm_type == 'batch':
+                    conv_layers.append(nn.BatchNorm2d(nfilts))
+                elif norm_type == 'layer':
+                    conv_layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))           
             conv_layers.append(nn.ReLU())        
         self.conv2d_stack_afterdense = nn.Sequential(*conv_layers)
 
@@ -363,7 +372,10 @@ class SD2I(nn.Module):
         for _ in range(3):  # Repeat the following block 3 times
             conv_layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'))
             if norm_type is not None:
-                self.add_norm_layer(layers, nfilts, norm_type)            
+                if norm_type == 'batch':
+                    conv_layers.append(nn.BatchNorm2d(nfilts))
+                elif norm_type == 'layer':
+                    conv_layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))          
             conv_layers.append(nn.ReLU())        
         self.conv2d_stack = nn.Sequential(*conv_layers)
         
@@ -371,13 +383,6 @@ class SD2I(nn.Module):
         self.upsample2D = nn.Upsample(scale_factor=2, mode='bilinear')
         self.Sigmoid = nn.Sigmoid()
         
-    def add_norm_layer(self, layers, nfilts, norm_type):
-        if norm_type == 'batch':
-            layers.append(nn.BatchNorm2d(nfilts))
-        elif norm_type == 'layer':
-            layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))
-        else:
-            raise ValueError('Invalid normalization type')
             
     def forward(self, x):
         x = self.flatten(x)
@@ -399,6 +404,7 @@ class SD2I(nn.Module):
         if self.act_layer == 'Sigmoid':
             x = self.Sigmoid(x)
         return(x)
+
 
 class VolumeModel(nn.Module):
     
