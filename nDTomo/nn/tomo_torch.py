@@ -161,7 +161,7 @@ def radon(vol, angles, Amat = None, grid_scaled=None, device='cuda'):
     return(s)
 
 
-def grid(sinos, pgrid, Z, Z_start, device='cuda'):
+def grid(sinos, pgrid, Zi, Zf, device='cuda'):
 
     H = sinos.shape[0]
     W = sinos.shape[0]
@@ -173,14 +173,14 @@ def grid(sinos, pgrid, Z, Z_start, device='cuda'):
         
     tth = pgrid[:,int(npix/2),int(npix/2)]
     
-    pgrid = pgrid[Z_start : Z, 0:H, 0:W]
+    pgrid = pgrid[Zi : Zf, 0:H, 0:W]
     pgrid = torch.from_numpy(pgrid.copy())
     sinos = np.float32(sinos)
-    sinos = sinos[:, :, Z_start : Z].transpose([2,0,1])
+    sinos = sinos[:, :, Zi : Zf].transpose([2,0,1])
     
     sinos =  torch.from_numpy(sinos)
     
-    tth = tth[Z_start : Z]
+    tth = tth[Zi : Zf]
     npix = sinos.shape[1]
             
     Hv = torch.arange(0, W, device=device, dtype=torch.float32)
