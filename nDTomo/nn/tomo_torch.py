@@ -8,7 +8,7 @@ Need to debug the angles for radon/iradon
 """
 
 import torch
-import torchvision.transforms.functional as TF
+from torchvision.transforms.functional import rotate
 import torch.nn.functional as F
 from torchvision.transforms import InterpolationMode
 from numpy import vstack
@@ -23,7 +23,7 @@ def iradon(s, theta, nproj):
 
     for ii in range(nproj):
 
-        bp = bp + TF.rotate(sn[:,:,:,ii], theta[ii].item())
+        bp = bp + rotate(sn[:,:,:,ii], theta[ii].item())
 
     bp = bp / nproj
 
@@ -130,7 +130,7 @@ def radon(vol, angles, grid_scaled=None, Amat = None, device='cuda'):
         
         for angle in range(len(angles)):
              
-            vol_rot = F.rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
+            vol_rot = rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
             vol_rot = torch.reshape(vol_rot, (1, 1, vol.shape[0], vol.shape[1], vol.shape[1]))
             
             if grid_scaled is not None:
@@ -147,7 +147,7 @@ def radon(vol, angles, grid_scaled=None, Amat = None, device='cuda'):
         
         for angle in range(len(angles)):
              
-            vol_rot = F.rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
+            vol_rot = rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
             vol_rot = torch.reshape(vol_rot, (1, 1, vol.shape[0], vol.shape[0]))
             
             s[:,angle] = torch.sum(vol_rot, dim=3)[0,0,:,:]
