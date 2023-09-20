@@ -429,13 +429,13 @@ class PeakModel(nn.Module):
     '''
     def __init__(self, prms, device='cuda'):
 
-        super(PeakModel, self).__init__()
+        super(PeakModel, self).__init__()  # Call the parent class's constructor first
         
         self.prms = nn.Parameter(prms['val'])
         self.min = nn.Parameter(prms['min'])
         self.max = nn.Parameter(prms['max'])
         self.nch = prms['val'].shape[0]
-        self.npix = prms.shape[1]
+        self.npix = prms['val'].shape[1]
         
     def forward(self, x, model = 'Gaussian'):
     
