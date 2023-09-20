@@ -7,7 +7,7 @@ Functions for tomography using astra-toolbox library
 
 
 import scipy, astra, time
-from numpy import deg2rad, arange, linspace, pi, zeros, mean, where, floor, log, inf, exp
+from numpy import deg2rad, arange, linspace, pi, zeros, mean, where, floor, log, inf, exp, vstack
 from numpy.random import rand
 from tqdm import tqdm
 
@@ -647,3 +647,31 @@ def coneBeamFP_FDK(vol, nproj, geo, beam=None, v_cut = 0):
     astra.astra.delete(reconstruction_id)
     
     return(reconstruction)
+
+
+
+
+def create_Amat(npix, ang):
+    
+    vol_geom = astra.create_vol_geom(npix, npix) 
+    proj_geom = astra.create_proj_geom('parallel', 1.0, int(npix), ang) 
+    proj_id = astra.create_projector('strip', proj_geom, vol_geom) 
+    
+    # matrix id
+    matrix_id = astra.projector.matrix(proj_id)
+    
+    # Get the projection matrix as a Scipy sparse matrix.
+    A = astra.matrix.get(matrix_id)
+    
+    # Convert it to float32
+    A = A.astype(dtype='float32')
+    
+    print(A.shape)
+    
+    Acoo = A.tocoo()
+    values = Acoo.data
+    indices = vstack((Acoo.row, Acoo.col))
+    
+    return(Acoo, values, indices)
+    
+
