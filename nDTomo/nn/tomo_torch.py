@@ -143,18 +143,22 @@ def radon(vol, angles, Amat = None, grid_scaled=None, device='cuda'):
 
         npix = vol.shape[0]
 
-        s = torch.zeros((npix, len(angles)), device=device)
-        
-        for angle in range(len(angles)):
-             
-            vol_rot = rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
-            vol_rot = torch.reshape(vol_rot, (1, 1, vol.shape[0], vol.shape[0]))
+        if Amat is not None:
             
-            s[:,angle] = torch.sum(vol_rot, dim=3)[0,0,:,:]
+            s = Amat.mm(torch.reshape(vol, (vol.shape[0]*vol.shape[1], 1)))
 
-        
+        else:
+                
+            s = torch.zeros((npix, len(angles)), device=device)
+            
+            for angle in range(len(angles)):
+                 
+                vol_rot = rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
+                vol_rot = torch.reshape(vol_rot, (1, 1, vol.shape[0], vol.shape[0]))
+                
+                s[:,angle] = torch.sum(vol_rot, dim=3)[0,0,:,:]
+
     return(s)
-
 
 
 def grid(sinos, pgrid, Z, Z_start, device='cuda'):
