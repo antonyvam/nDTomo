@@ -9,8 +9,10 @@ Need to debug the angles for radon/iradon
 
 import torch
 import torchvision.transforms.functional as TF
-from numpy import vstack
 import torch.nn.functional as F
+from torchvision.transforms import InterpolationMode
+from numpy import vstack
+
 
 def radon_torch(img, theta, nproj):
 
@@ -24,7 +26,7 @@ def radon_torch(img, theta, nproj):
 
     return(imgn)
 
-def radon_torch(s, theta, nproj):
+def iradon_torch(s, theta, nproj):
 
     sn = torch.reshape(s, (1, 1, s.shape[0], s.shape[1]))
     sn = torch.tile(sn, (1, sn.shape[2], 1, 1))
@@ -121,3 +123,25 @@ def imrotate_torch(im, theta, dtype = torch.cuda.FloatTensor if torch.cuda.is_av
     grid = F.affine_grid(rot_mat, im.size()).type(dtype)
     imr = F.grid_sample(im, grid)
     return(imr)
+
+
+def radon3d(vol, angles, grid_scaled=None, device='cuda'):
+
+    nbins = vol.shape[0]
+    npix = vol.shape[1]
+    
+    sinos = torch.zeros((nbins, npix, len(angles)), device=device)
+    
+    for angle in range(len(angles)):
+         
+        vol_rot = F.rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
+        vol_rot = torch.reshape(vol_rot, (1, 1, vol.shape[0], vol.shape[1], vol.shape[1]))
+        
+        if grid_scaled is not None:
+            voli = F.grid_sample(vol_rot, grid_scaled, mode='bilinear')    
+            sinos[:,:,angle] = torch.sum(voli, dim=4)[0,0,:,:]
+        else:
+            sinos[:,:,angle] = torch.sum(vol_rot, dim=4)[0,0,:,:]
+
+    return(sinos)
+
