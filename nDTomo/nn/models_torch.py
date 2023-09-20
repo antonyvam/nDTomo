@@ -442,6 +442,9 @@ class PeakModel(nn.Module):
         prms = torch.reshape(self.prms, (self.nch, self.npix*self.npix))
         prms = torch.transpose(prms, 1, 0)
 
+        # Apply constraints to parameters
+        prms = torch.clamp(prms, 0, 1)
+ 
         if model == 'Gaussian':
             y = ((self.min['Area'] + (self.max['Area']-self.min['Area'])*prms[:, 0:1]) * 
                  torch.exp(-(x - (self.min['Position'] + (self.max['Position'] - self.min['Position'])*prms[:, 1:2]))**2 
