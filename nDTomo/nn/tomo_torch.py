@@ -12,7 +12,7 @@ from torchvision.transforms.functional import rotate
 import torch.nn.functional as F
 from torchvision.transforms import InterpolationMode
 from numpy import vstack
-
+import numpy as np
 
 def iradon(s, theta, nproj):
 
@@ -157,7 +157,48 @@ def radon(vol, angles, Amat = None, grid_scaled=None, device='cuda'):
 
 
 
+def grid(sinos, pgrid, Z, Z_start, device='cuda'):
 
+    H = sinos.shape[0]
+    W = sinos.shape[0]
+    
+    npix = sinos.shape[0]
+    pgrid = np.float32(pgrid)
+    pgrid = pgrid.transpose([2,0,1])
+    pgrid = np.flip(pgrid, 1)
+        
+    tth = pgrid[:,int(npix/2),int(npix/2)]
+    
+    pgrid = pgrid[Z_start : Z, 0:H, 0:W]
+    pgrid = torch.from_numpy(pgrid.copy())
+    sinos = np.float32(sinos)
+    sinos = sinos[:, :, Z_start : Z].transpose([2,0,1])
+    
+    sinos =  torch.from_numpy(sinos)
+    
+    tth = tth[Z_start : Z]
+    npix = sinos.shape[1]
+            
+    Hv = torch.arange(0, W, device=device, dtype=torch.float32)
+    Wv = torch.arange(0, H, device=device, dtype=torch.float32)
+    Zv = torch.tensor(tth, dtype=torch.float32 ,device=device)
+    
+    grid_z, grid_y, grid_x = torch.meshgrid(Zv, Hv, Wv)
+    grid = torch.stack((pgrid.to(device), grid_y, grid_x), 3).float()  # W(x), H(y), 2
+    grid.requires_grad = False
+    
+    grid_x = 2.0 * grid[:, :, :, 2] / max(W - 1, 1) - 1.0
+    grid_y = 2.0 * grid[:, :, :, 1] / max(H - 1, 1) - 1.0
+    max_value = torch.max(grid_z) - torch.min(grid_z)
+    grid_z = grid[:, :, :, 0] - torch.min(grid_z)
+    grid_z = 2.0 * grid_z/ max_value - 1.0
+    grid_z[grid_z<-1] = -1
+    grid_z[grid_z>1] = 1
+    
+    grid_scaled = torch.stack((grid_x, grid_y, grid_z), dim=3)
+    grid_scaled = torch.reshape(grid_scaled, (1, grid_scaled.shape[0], grid_scaled.shape[1], grid_scaled.shape[2], grid_scaled.shape[3]))
+
+    return(grid_scaled)
 
 
 

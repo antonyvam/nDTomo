@@ -397,8 +397,6 @@ class SD2I(nn.Module):
         x = self.Sigmoid(x)
         return(x)
 
-
-    
 class VolumeModel(nn.Module):
     
     '''
@@ -422,8 +420,48 @@ class VolumeModel(nn.Module):
         return transformed_volume
     
     
+
+
+class PeakModel(nn.Module):
     
+    '''
+    Requires npix and num_slices
+    '''
+    def __init__(self, prms, device='cuda'):
+
+        self.prms = nn.Parameter(prms['val'])
+        self.min = nn.Parameter(prms['min'])
+        self.max = nn.Parameter(prms['max'])
+        self.nch = prms['val'].shape[0]
+        self.npix = prms.shape[1]
+        
+    def forward(self, x, model = 'Gaussian'):
     
+        prms = torch.reshape(self.prms, (self.nch, self.npix*self.npix))
+        prms = torch.transpose(prms, 1, 0)
+
+        if model == 'Gaussian':
+            y = ((prms['min']['Area'] + (prms['max']['Area']-prms['min']['Area'])*prms[:, 0:1]) * 
+                 torch.exp(-(x - (prms['min']['Position'] + (prms['max']['Position'] - prms['min']['Position'])*prms[:, 1:2]))**2 
+                                          / (2 * (prms['min']['FWHM'] + (prms['max']['FWHM'] - prms['min']['FWHM'])*prms[:, 2:3])**2)) + 
+                 prms['min']['Slope'] + (prms['max']['Slope'] - prms['min']['Slope'])*prms[:, 3:4]*x + 
+                 prms['min']['Intercept'] + (prms['max']['Intercept'] - prms['min']['Intercept'])*prms[:, 4:5])  
+
+        elif model == 'PseudoVoigt':
+
+            y = ((prms['min']['Fraction'] + (prms['max']['Fraction']-prms['min']['Fraction'])*prms[:, 5:6])*
+                 (prms['min']['Area'] + (prms['max']['Area']-prms['min']['Area'])*prms[:, 0:1]) * 
+                 torch.exp(-(x - (prms['min']['Position'] + (prms['max']['Position'] - prms['min']['Position'])*prms[:, 1:2]))**2 
+                                          / (2 * (prms['min']['FWHM'] + (prms['max']['FWHM'] - prms['min']['FWHM'])*prms[:, 2:3])**2)) + 
+                 (1-(prms['min']['Fraction'] + (prms['max']['Fraction']-prms['min']['Fraction'])*prms[:, 5:6]))*
+                 ((prms['min']['Area'] + (prms['max']['Area']-prms['min']['Area'])*prms[:, 0:1])/ torch.pi) *
+                 ( (prms['min']['FWHM'] + (prms['max']['FWHM'] - prms['min']['FWHM'])*prms[:, 2:3]) / 
+                  (((x - (prms['min']['Position'] + (prms['max']['Position'] - prms['min']['Position'])*prms[:, 1:2]))**2) + 
+                   (prms['min']['FWHM'] + (prms['max']['FWHM'] - prms['min']['FWHM'])*prms[:, 2:3])**2)) + 
+                 prms['min']['Slope'] + (prms['max']['Slope'] - prms['min']['Slope'])*prms[:, 3:4]*x + 
+                 prms['min']['Intercept'] + (prms['max']['Intercept'] - prms['min']['Intercept'])*prms[:, 4:5])
+            
+        return y
     
     
     
