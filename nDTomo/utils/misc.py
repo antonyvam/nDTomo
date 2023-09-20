@@ -1318,7 +1318,24 @@ def rebin1d(x, y, x_new):
 
 
 
-
+def create_grid(npix, tres, sd, tth):
+        
+    Rs = sd/np.cos(np.deg2rad(tth))
+    
+    # p = np.polyfit(tth, Rs, 4)
+    # Rn = np.polyval(p, tth)
+        
+    grid = np.zeros((npix,len(tth)), dtype='float32')
+    
+    for ii in range(npix):
+        
+        xofs = ((np.round(npix/2) - (ii+1))*tres)
+        grid[ii,:] = tth + np.rad2deg(np.arcsin((np.sin(np.deg2rad(tth)) * xofs)/Rs))
+    
+    grid = np.expand_dims(grid, axis = 0)
+    grid = np.tile(grid, (npix, 1, 1))
+    
+    return(grid)
 
 
 
