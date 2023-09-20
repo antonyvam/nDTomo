@@ -649,8 +649,6 @@ def coneBeamFP_FDK(vol, nproj, geo, beam=None, v_cut = 0):
     return(reconstruction)
 
 
-
-
 def create_Amat(npix, ang):
     
     vol_geom = astra.create_vol_geom(npix, npix) 
@@ -671,7 +669,8 @@ def create_Amat(npix, ang):
     Acoo = A.tocoo()
     values = Acoo.data
     indices = vstack((Acoo.row, Acoo.col))
+    shape = Acoo.shape
     
-    return(Acoo, values, indices)
+    return(Acoo, values, indices, shape)
     
 

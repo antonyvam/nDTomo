@@ -201,4 +201,10 @@ def grid(sinos, pgrid, Z, Z_start, device='cuda'):
     return(grid_scaled)
 
 
+def create_torch_Amat(Acoo, values, indices, shape, device='cuda'):
 
+    i = torch.LongTensor(indices)
+    v = torch.FloatTensor(values)
+
+    Amat = torch.sparse.FloatTensor(i, v, torch.Size(shape)).to(device)
+    return(Amat)
