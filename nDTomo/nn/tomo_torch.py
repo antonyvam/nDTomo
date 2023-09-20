@@ -63,8 +63,6 @@ def Amatrix_torch(A, gpu = True):
 
         Atorch = torch.sparse.FloatTensor(i, v, torch.Size(shape))
 
-    AtorchT = torch.transpose(Atorch, 1, 0)
-
     return(Atorch, AtorchT)
 
 def Sino_torch(Atorch, im, ntr, npr):
