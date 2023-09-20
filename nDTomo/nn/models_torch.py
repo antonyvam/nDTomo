@@ -429,6 +429,8 @@ class PeakModel(nn.Module):
     '''
     def __init__(self, prms, device='cuda'):
 
+        super(PeakModel, self).__init__()
+        
         self.prms = nn.Parameter(prms['val'])
         self.min = nn.Parameter(prms['min'])
         self.max = nn.Parameter(prms['max'])
