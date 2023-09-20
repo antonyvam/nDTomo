@@ -443,25 +443,25 @@ class PeakModel(nn.Module):
         prms = torch.transpose(prms, 1, 0)
 
         if model == 'Gaussian':
-            y = ((prms['min']['Area'] + (prms['max']['Area']-prms['min']['Area'])*prms[:, 0:1]) * 
-                 torch.exp(-(x - (prms['min']['Position'] + (prms['max']['Position'] - prms['min']['Position'])*prms[:, 1:2]))**2 
-                                          / (2 * (prms['min']['FWHM'] + (prms['max']['FWHM'] - prms['min']['FWHM'])*prms[:, 2:3])**2)) + 
-                 prms['min']['Slope'] + (prms['max']['Slope'] - prms['min']['Slope'])*prms[:, 3:4]*x + 
-                 prms['min']['Intercept'] + (prms['max']['Intercept'] - prms['min']['Intercept'])*prms[:, 4:5])  
+            y = ((self.min['Area'] + (self.max['Area']-self.min['Area'])*prms[:, 0:1]) * 
+                 torch.exp(-(x - (self.min['Position'] + (self.max['Position'] - self.min['Position'])*prms[:, 1:2]))**2 
+                                          / (2 * (self.min['FWHM'] + (self.max['FWHM'] - self.min['FWHM'])*prms[:, 2:3])**2)) + 
+                 self.min['Slope'] + (self.max['Slope'] - self.min['Slope'])*prms[:, 3:4]*x + 
+                 self.min['Intercept'] + (self.max['Intercept'] - self.min['Intercept'])*prms[:, 4:5])  
 
         elif model == 'PseudoVoigt':
 
-            y = ((prms['min']['Fraction'] + (prms['max']['Fraction']-prms['min']['Fraction'])*prms[:, 5:6])*
-                 (prms['min']['Area'] + (prms['max']['Area']-prms['min']['Area'])*prms[:, 0:1]) * 
-                 torch.exp(-(x - (prms['min']['Position'] + (prms['max']['Position'] - prms['min']['Position'])*prms[:, 1:2]))**2 
-                                          / (2 * (prms['min']['FWHM'] + (prms['max']['FWHM'] - prms['min']['FWHM'])*prms[:, 2:3])**2)) + 
-                 (1-(prms['min']['Fraction'] + (prms['max']['Fraction']-prms['min']['Fraction'])*prms[:, 5:6]))*
-                 ((prms['min']['Area'] + (prms['max']['Area']-prms['min']['Area'])*prms[:, 0:1])/ torch.pi) *
-                 ( (prms['min']['FWHM'] + (prms['max']['FWHM'] - prms['min']['FWHM'])*prms[:, 2:3]) / 
-                  (((x - (prms['min']['Position'] + (prms['max']['Position'] - prms['min']['Position'])*prms[:, 1:2]))**2) + 
-                   (prms['min']['FWHM'] + (prms['max']['FWHM'] - prms['min']['FWHM'])*prms[:, 2:3])**2)) + 
-                 prms['min']['Slope'] + (prms['max']['Slope'] - prms['min']['Slope'])*prms[:, 3:4]*x + 
-                 prms['min']['Intercept'] + (prms['max']['Intercept'] - prms['min']['Intercept'])*prms[:, 4:5])
+            y = ((self.min['Fraction'] + (self.max['Fraction']-self.min['Fraction'])*prms[:, 5:6])*
+                 (self.min['Area'] + (self.max['Area']-self.min['Area'])*prms[:, 0:1]) * 
+                 torch.exp(-(x - (self.min['Position'] + (self.max['Position'] - self.min['Position'])*prms[:, 1:2]))**2 
+                                          / (2 * (self.min['FWHM'] + (self.max['FWHM'] - self.min['FWHM'])*prms[:, 2:3])**2)) + 
+                 (1-(self.min['Fraction'] + (self.max['Fraction']-self.min['Fraction'])*prms[:, 5:6]))*
+                 ((self.min['Area'] + (self.max['Area']-self.min['Area'])*prms[:, 0:1])/ torch.pi) *
+                 ( (self.min['FWHM'] + (self.max['FWHM'] - self.min['FWHM'])*prms[:, 2:3]) / 
+                  (((x - (self.min['Position'] + (self.max['Position'] - self.min['Position'])*prms[:, 1:2]))**2) + 
+                   (self.min['FWHM'] + (self.max['FWHM'] - self.min['FWHM'])*prms[:, 2:3])**2)) + 
+                 self.min['Slope'] + (self.max['Slope'] - self.min['Slope'])*prms[:, 3:4]*x + 
+                 self.min['Intercept'] + (self.max['Intercept'] - self.min['Intercept'])*prms[:, 4:5])
             
         return y
     
