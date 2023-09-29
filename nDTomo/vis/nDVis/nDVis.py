@@ -504,7 +504,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             self.datasetname = datasetname[-1]
             self.DatasetNameLabel.setText(self.datasetname)
             self.explore()
-        
+                        
     def loadchemvol(self):
         
         xaxis_labels = ['/d', '/q', '/twotheta', '/Energy', '/tth', '/energy']
@@ -515,6 +515,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                 try:
                     print(f.keys())
                     self.volume = f['/data'][:]
+                    self.check_and_transpose()
                     self.image_width, self.image_height, self.nbins = self.volume.shape
                     self.xaxis = np.arange(0, self.volume.shape[2])
                     self.crspinbox1.setMaximum(self.nbins - 1)
@@ -527,6 +528,15 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                         self.xaxislabel = xaxis_label.lstrip('/')                         
         print(self.volume.shape)
                         
+    def check_and_transpose(self):
+        dims = self.volume.shape
+        if dims[0] != dims[1] and dims[0] == dims[2]:
+            # Transpose the array so that the first dimension becomes the last dimension
+            self.volume = np.transpose(self.volume, (0, 2, 1))
+        elif dims[0] != dims[1] and dims[1] == dims[2]:
+            # Transpose the array so that the second dimension becomes the last dimension
+            self.volume = np.transpose(self.volume, (1, 2, 0))
+            
     def savechemvol(self):
 
         self.fn, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Chemical imaging data', "", "*.h5")
