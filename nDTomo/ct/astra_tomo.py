@@ -246,7 +246,7 @@ def astra_rec_alg(sino, proj_geom, rec_id, proj_id, method='FBP', filt='Ram-Lak'
     return(rec)
                    
              
-def astra_rec_vol(sinos, scanrange = '180', theta=None,  proj_geom=None, proj_id=None, rec_id=None, method='FBP_CUDA', filt='Ram-Lak'):
+def astra_rec_vol(sinos, scanrange = '180', theta=None,  proj_geom=None, proj_id=None, rec_id=None, method='FBP_CUDA', filt='Ram-Lak', pbar = True):
 
     '''
     Reconstruct a sinogram volume with astra toolbox
@@ -291,8 +291,10 @@ def astra_rec_vol(sinos, scanrange = '180', theta=None,  proj_geom=None, proj_id
     if method == 'FBP' or method == 'FBP_CUDA':
         cfg['option'] = { 'FilterType': filt }    
     
+    loop_range = tqdm(range(sinos.shape[2])) if pbar else range(sinos.shape[2])
+
     rec = zeros((sinos.shape[0], sinos.shape[0], sinos.shape[2]), dtype='float32')
-    for ii in tqdm(range(sinos.shape[2])):
+    for ii in loop_range:
 
         sinogram_id = astra.data2d.create('-sino', proj_geom, sinos[:,:,ii].transpose())
         
