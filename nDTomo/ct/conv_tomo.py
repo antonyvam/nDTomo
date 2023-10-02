@@ -238,8 +238,9 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pba
     
     print('Applying the COR correction')
 
-    loop_range = tqdm(range(sinograms.shape[2])) if pbar else range(sinograms.shape[2])
+    
     if len(di)>2:
+        loop_range = tqdm(range(sinograms.shape[2])) if pbar else range(sinograms.shape[2])
         sn = np.zeros((len(xnew), sinograms.shape[1], sinograms.shape[2]), dtype='float32')  
         for ll in loop_range:
             for ii in range(sinograms.shape[1]):
