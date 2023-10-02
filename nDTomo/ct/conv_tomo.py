@@ -71,7 +71,7 @@ def fbpvol(svol, scan = 180, theta=None, nt = None):
         
     return(vol)
 
-def airrem(sinograms, ofs = 1):
+def airrem(sinograms, ofs = 1, pbar = True):
     
     """
     Method for subtracting the backgroung signal from the sinograms
@@ -79,8 +79,10 @@ def airrem(sinograms, ofs = 1):
     """           
     
     di = sinograms.shape
+    loop_range = tqdm(range(sinograms.shape[1])) if pbar else range(sinograms.shape[1])
+    
     if len(di)>2:
-        for ii in tqdm(range(sinograms.shape[1])):
+        for ii in loop_range:
             air = (np.mean(sinograms[0:ofs,ii,:],axis = 0) + np.mean(sinograms[sinograms.shape[0]-ofs:sinograms.shape[0],ii,:],axis = 0))/2
             sinograms[:,ii,:] = sinograms[:,ii,:] - air
 
@@ -100,6 +102,8 @@ def scalesinos(sinograms, pbar=False):
     """  
     
     di = sinograms.shape
+    loop_range = tqdm(range(sinograms.shape[1])) if pbar else range(sinograms.shape[1])
+
     if len(di)>2:
         ss = np.sum(sinograms,axis = 2)
         scint = np.zeros((sinograms.shape[1]))
@@ -110,12 +114,9 @@ def scalesinos(sinograms, pbar=False):
         sf = scint/np.max(scint)
         
         # Normalise the sinogram data    
-        if pbar:
-            for jj in tqdm(range(sinograms.shape[1])):
-                sinograms[:,jj,:] = sinograms[:,jj,:]/sf[jj] 
-        else:
-            for jj in range(sinograms.shape[1]):
-                sinograms[:,jj,:] = sinograms[:,jj,:]/sf[jj]             
+
+        for jj in loop_range:
+            sinograms[:,jj,:] = sinograms[:,jj,:]/sf[jj]             
             
     elif len(di)==2:
 
@@ -127,12 +128,8 @@ def scalesinos(sinograms, pbar=False):
         sf = scint/np.max(scint)        
         
         # Normalise the sinogram data    
-        if pbar:
-            for jj in tqdm(range(sinograms.shape[1])):
-                sinograms[:,jj] = sinograms[:,jj]/sf[jj] 
-        else:
-            for jj in range(sinograms.shape[1]):
-                sinograms[:,jj] = sinograms[:,jj]/sf[jj] 
+        for jj in loop_range:
+            sinograms[:,jj] = sinograms[:,jj]/sf[jj] 
             
     return(sinograms)
 
@@ -185,7 +182,7 @@ def sinocomcor(sinograms):
         
     return(sn)
 
-def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None):
+def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pbar=True):
             
     """
     Method for centering sinograms by flipping the projection at 180 deg and comparing it with the one at 0 deg
@@ -194,6 +191,7 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None):
     """   
     
     di = sinograms.shape
+
     if len(di)>2:
         if channels is None:
             s = np.sum(sinograms, axis = 2)
@@ -214,7 +212,9 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None):
     
     print('Calculating the COR')
     
-    for kk in tqdm(range(len(cr))):
+    loop_range = tqdm(range(len(cr))) if pbar else range(len(cr))
+
+    for kk in loop_range:
         
         xnew = cr[kk] + np.arange(-np.ceil(s.shape[0]/2), np.ceil(s.shape[0]/2)-1)
         sn = np.zeros((len(xnew),s.shape[1]), dtype='float32')
@@ -238,9 +238,10 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None):
     
     print('Applying the COR correction')
 
+    loop_range = tqdm(range(sinograms.shape[2])) if pbar else range(sinograms.shape[2])
     if len(di)>2:
         sn = np.zeros((len(xnew), sinograms.shape[1], sinograms.shape[2]), dtype='float32')  
-        for ll in tqdm(range(sinograms.shape[2])):
+        for ll in loop_range:
             for ii in range(sinograms.shape[1]):
                 
                 if interp==True:
