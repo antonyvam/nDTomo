@@ -523,7 +523,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                 except:
                     print('Seems like there is a problem accessing the data')
                 for xaxis_label in xaxis_labels:
-                    if xaxis_label in f:
+                    if xaxis_label in f and len(f[xaxis_label][:])==self.volume.shape[2]:
                         self.xaxis = f[xaxis_label][:]
                         self.xaxislabel = xaxis_label.lstrip('/')                         
         print(self.volume.shape)
