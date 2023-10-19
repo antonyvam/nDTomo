@@ -9,7 +9,7 @@ Losses for pytorch
 
 import torch
 import torch.nn as nn
-import torch.functional as F
+import torch.nn.functional as F
 
 def dice_loss(pred, target, smooth = 1.):
 
@@ -60,3 +60,36 @@ def ssim_loss(img1, img2, data_range=1.0, window_size=11, size_average=True):
     else:
         return 1 - ssim_val
 
+class SSIM3DLoss(nn.Module):
+    def __init__(self, window_size=11):
+        super(SSIM3DLoss, self).__init__()
+        self.window = self.create_3D_window(window_size).cuda()  # Remove .cuda() if running on CPU
+        self.window_size = window_size
+
+    def create_3D_window(self, window_size):
+        window = torch.ones(1, 1, window_size, window_size, window_size)
+        return window / window.numel()
+
+    def forward(self, x, y):
+        # Add singleton dimensions for batch and channel
+        x = x.unsqueeze(0).unsqueeze(0)
+        y = y.unsqueeze(0).unsqueeze(0)
+
+        mu_x = F.conv3d(x, self.window, padding=self.window_size // 2, groups=1)
+        mu_y = F.conv3d(y, self.window, padding=self.window_size // 2, groups=1)
+
+        C1 = 0.01 ** 2
+        C2 = 0.03 ** 2
+
+        mu_x_mu_y = mu_x * mu_y
+        mu_x_sq = mu_x.pow(2)
+        mu_y_sq = mu_y.pow(2)
+
+        sigma_x_sq = F.conv3d(x * x, self.window, padding=self.window_size // 2, groups=1) - mu_x_sq
+        sigma_y_sq = F.conv3d(y * y, self.window, padding=self.window_size // 2, groups=1) - mu_y_sq
+        sigma_xy  = F.conv3d(x * y, self.window, padding=self.window_size // 2, groups=1) - mu_x_mu_y
+
+        ssim_map = ((2 * mu_x_mu_y + C1) * (2 * sigma_xy + C2)) / ((mu_x_sq + mu_y_sq + C1) * (sigma_x_sq + sigma_y_sq + C2))
+
+        # Remove singleton dimensions
+        return 1 - ssim_map.mean()
