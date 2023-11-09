@@ -480,11 +480,12 @@ class PeakModel(nn.Module):
     
     
 class ResNetBlock(nn.Module):
-    def __init__(self, nfilts, kernel_size=3, stride=1, padding=1, norm_type=None):
+    def __init__(self, nfilts, npix, kernel_size=3, stride=1, padding=1, norm_type=None):
         super(ResNetBlock, self).__init__()
         self.conv1 = nn.Conv2d(nfilts, nfilts, kernel_size, stride, padding)
         self.conv2 = nn.Conv2d(nfilts, nfilts, kernel_size, stride, padding)
         self.norm_type = norm_type
+        self.npix = npix
         self.norm1 = self.add_norm_layer(nfilts)
         self.norm2 = self.add_norm_layer(nfilts)
 
@@ -492,7 +493,7 @@ class ResNetBlock(nn.Module):
         if self.norm_type == 'batch':
             return nn.BatchNorm2d(nfilts)
         elif self.norm_type == 'layer':
-            return nn.LayerNorm(nfilts)
+            return nn.LayerNorm([nfilts, self.npix, self.npix])
         return None
 
     def forward(self, x):
@@ -523,7 +524,7 @@ class ResNet2D(nn.Module):
         layers.append(nn.ReLU())
 
         for _ in range(n_res_blocks):
-            layers.append(ResNetBlock(nfilts, norm_type=norm_type))
+            layers.append(ResNetBlock(nfilts, npix=npix, norm_type=norm_type))
 
         layers.append(nn.Conv2d(nfilts, nch_out, kernel_size=3, stride=1, padding=1))
         if activation == 'Sigmoid':
@@ -541,7 +542,8 @@ class ResNet2D(nn.Module):
         out = self.model(x)
         if residual:
             out += x
-        return out    
+        return out  
+    
     
     
 
