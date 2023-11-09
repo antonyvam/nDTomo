@@ -544,5 +544,108 @@ class ResNet2D(nn.Module):
         return out    
     
     
+
+class ConvBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, spatial_dims, norm_type='layer'):
+        super(ConvBlock, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1)
+        self.norm_type = norm_type
+        self.spatial_dims = spatial_dims
+        self.out_channels = out_channels
+        self.norm_layer1 = nn.LayerNorm([self.out_channels, self.spatial_dims[0], self.spatial_dims[1]])
+        self.norm_layer2 = nn.LayerNorm([self.out_channels, self.spatial_dims[0], self.spatial_dims[1]])
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.norm_layer1(x)
+        x = F.relu(x)
+        x = self.conv2(x)
+        x = self.norm_layer2(x)
+        x = F.relu(x)
+        return x
+
+class DownBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, spatial_dims, norm_type=None):
+        super(DownBlock, self).__init__()
+        self.down_conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1)
+        self.conv_block = ConvBlock(out_channels, out_channels, spatial_dims, norm_type=norm_type)
+
+    def forward(self, x):
+        x = F.relu(self.down_conv(x))
+        return self.conv_block(x)
+
+
+class UpBlock(nn.Module):
+    def __init__(self, in_channels, bridge_channels, out_channels, spatial_dims, norm_type='layer'):
+        super(UpBlock, self).__init__()
+        self.up = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
+        # The combined channels from the upsampled layer and the bridge
+        combined_channels = out_channels + bridge_channels
+        # Use the spatial dimensions for the ConvBlock
+        self.conv_block = ConvBlock(combined_channels, out_channels, spatial_dims, norm_type=norm_type)
+    def forward(self, x, bridge):
+        x = self.up(x)
+        # Determine padding for concatenation
+        diffY = bridge.size()[2] - x.size()[2]
+        diffX = bridge.size()[3] - x.size()[3]
+        x = F.pad(x, [diffX // 2, diffX - diffX // 2, diffY // 2, diffY - diffY // 2])
+        # Concatenate along the channel dimension
+        out = torch.cat([bridge, x], dim=1)
+        return self.conv_block(out)
+
     
+class UNet2D(nn.Module):
+    def __init__(self, nch_in, nch_out, npix, base_nfilts=64, num_blocks=4, norm_type=None, activation='Linear'):
+        super(UNet2D, self).__init__()
+
+        spatial_dims = [npix, npix]  # Initial spatial dimensions
+        self.initial_conv_block = ConvBlock(nch_in, base_nfilts, spatial_dims, norm_type=norm_type)
+        self.down_blocks = nn.ModuleList()
+        self.bridge_channels = []
+        for i in range(num_blocks):
+            spatial_dims = [s // 2 for s in spatial_dims]  # Halve spatial dimensions after down block
+            self.down_blocks.append(DownBlock(base_nfilts, base_nfilts, spatial_dims, norm_type=norm_type))
+            self.bridge_channels.append(base_nfilts)
+
+        self.up_blocks = nn.ModuleList()
+        # Adjust spatial_dims for UpBlocks
+        for i in range(num_blocks-1, -1, -1):
+            bridge_channels = self.bridge_channels[i]
+            self.up_blocks.append(UpBlock(base_nfilts, bridge_channels, base_nfilts, spatial_dims, norm_type=norm_type))
+            spatial_dims = [s * 2 for s in spatial_dims]  # Upsampling increases dimensions
+
+        self.final_up_block = UpBlock(base_nfilts, bridge_channels,  base_nfilts, spatial_dims, norm_type=norm_type)
+
+        # Final convolution layer
+        self.final_conv = nn.Conv2d(base_nfilts, nch_out, kernel_size=1)
+        self.activation = nn.Sigmoid() if activation == 'Sigmoid' else None
+
+    def forward(self, x):
+        bridges = []
+
+        # Initial convolution
+        initial_conv_output = self.initial_conv_block(x)
+
+        # Downsampling
+        x = initial_conv_output
+        for down_block in self.down_blocks:
+            x = down_block(x)
+            bridges.append(x)
+
+        bridges = bridges[::-1]
+
+        # Upsampling
+        for i, up_block in enumerate(self.up_blocks):
+            bridge = bridges[i]
+            x = up_block(x, bridge)
+
+        # Upsampling for the initial convolution block
+        x = self.final_up_block(x, initial_conv_output)
+
+        # Final convolution layer
+        x = self.final_conv(x)
+        if self.activation is not None:
+            x = self.activation(x)
+        return x
     
