@@ -479,7 +479,69 @@ class PeakModel(nn.Module):
     
     
     
-    
+class ResNetBlock(nn.Module):
+    def __init__(self, nfilts, kernel_size=3, stride=1, padding=1, norm_type=None):
+        super(ResNetBlock, self).__init__()
+        self.conv1 = nn.Conv2d(nfilts, nfilts, kernel_size, stride, padding)
+        self.conv2 = nn.Conv2d(nfilts, nfilts, kernel_size, stride, padding)
+        self.norm_type = norm_type
+        self.norm1 = self.add_norm_layer(nfilts)
+        self.norm2 = self.add_norm_layer(nfilts)
+
+    def add_norm_layer(self, nfilts):
+        if self.norm_type == 'batch':
+            return nn.BatchNorm2d(nfilts)
+        elif self.norm_type == 'layer':
+            return nn.LayerNorm(nfilts)
+        return None
+
+    def forward(self, x):
+        residual = x
+        out = self.conv1(x)
+        if self.norm1 is not None:
+            out = self.norm1(out)
+        out = F.relu(out)
+
+        out = self.conv2(out)
+        if self.norm2 is not None:
+            out = self.norm2(out)
+
+        out += residual  # Skip Connection
+        out = F.relu(out)
+        return out
+
+class ResNet2D(nn.Module):
+    def __init__(self, npix, nch_in=1, nch_out=1, nfilts=32, n_res_blocks=4, norm_type='layer', activation='Linear'):
+        super(ResNet2D, self).__init__()
+
+        self.npix = npix
+        self.n_res_blocks = n_res_blocks
+
+        layers = [nn.Conv2d(nch_in, nfilts, kernel_size=3, stride=1, padding=1)]
+        if norm_type is not None:
+            layers.append(self.add_norm_layer(nfilts, norm_type))
+        layers.append(nn.ReLU())
+
+        for _ in range(n_res_blocks):
+            layers.append(ResNetBlock(nfilts, norm_type=norm_type))
+
+        layers.append(nn.Conv2d(nfilts, nch_out, kernel_size=3, stride=1, padding=1))
+        if activation == 'Sigmoid':
+            layers.append(nn.Sigmoid())
+
+        self.model = nn.Sequential(*layers)
+
+    def add_norm_layer(self, nfilts, norm_type):
+        if norm_type == 'batch':
+            return nn.BatchNorm2d(nfilts)
+        elif norm_type == 'layer':
+            return nn.LayerNorm([nfilts, self.npix, self.npix])
+
+    def forward(self, x, residual=False):
+        out = self.model(x)
+        if residual:
+            out += x
+        return out    
     
     
     
