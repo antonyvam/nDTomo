@@ -3,7 +3,10 @@
 
 nDTomoGUI for chemical imaging data visualization
 
-@author: A. Vamvakeros
+This script provides a GUI for handling and visualizing chemical imaging data.
+It uses PyQt5 for the GUI and matplotlib for the visualization.
+
+@author: Dr Antony Vamvakeros
 
 """
 
@@ -26,11 +29,18 @@ import scipy.optimize as sciopt
 class nDTomoGUI(QtWidgets.QMainWindow):
     
     """
-    nDTomoGUI
-    """
+    The main GUI window for the application.
+    
+    This class provides the main application window, with a menu for file operations and help.
+    It also initializes various parameters and data structures used in the application.
+    """    
     
     def __init__(self):
 
+        """
+        Initialize the main GUI window.
+        This method sets up the main window, initializes various data structures, and creates the file and help menus.
+        """
         super(nDTomoGUI, self).__init__()
         
         self.volume = np.zeros(())
