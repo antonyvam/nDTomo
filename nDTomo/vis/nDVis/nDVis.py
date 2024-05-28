@@ -23,7 +23,6 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
-from tqdm import tqdm
 import scipy.optimize as sciopt
 
 class nDTomoGUI(QtWidgets.QMainWindow):
@@ -697,7 +696,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def plot_roi_pattern(self):
         
         voln = np.zeros_like(self.volume)
-        for ii in tqdm(range(self.volume.shape[2])):
+        for ii in range(self.volume.shape[2]):
             voln[:,:,ii] = self.volume[:,:,ii]*self.mask
 
         self.spectrum = np.sum(voln, axis = (0,1))
@@ -893,7 +892,7 @@ class FitData(QThread):
             param_bounds=([float(self.Areamin),float(self.Posmin),float(self.FWHMmin),-0.5,-1.0],
                           [float(self.Areamax),float(self.Posmax),float(self.FWHMmax),0.5,1.0])
         
-        for ind in tqdm(np.arange(0,len(self.i))):
+        for ind in np.arange(0,len(self.i)):
                 
                 ii = self.i[ind]
                 jj = self.j[ind]
