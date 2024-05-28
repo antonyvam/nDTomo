@@ -7,7 +7,7 @@ nDTomoGUI for chemical imaging data visualization
 
 """
 
-#%
+#%%
 
 from __future__ import unicode_literals
 from matplotlib import use as u
@@ -562,6 +562,8 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def about(self):
         message = '<b>nDTomoGUI<p>'
         message += '<p><i>Created by Antony Vamvakeros. Running under license under GPLv3'
+        message += '<p>Please cite using the following:<p>'
+        message += '<p>Vamvakeros, A. et al., nDTomo software suite, 2019, DOI: https://doi.org/10.5281/zenodo.7139214, url: https://github.com/antonyvam/nDTomo<p>'
         message += '\t '
         d = QtWidgets.QMessageBox()
         d.setWindowTitle('About')
