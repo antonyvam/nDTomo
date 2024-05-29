@@ -15,7 +15,7 @@ It uses PyQt5 for the GUI and matplotlib for the visualization.
 from __future__ import unicode_literals
 from matplotlib import use as u
 u('Qt5Agg')
-from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSignal, QThread
 import h5py, sys
 import numpy as np
