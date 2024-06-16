@@ -37,9 +37,8 @@ setup(
 	author="A. Vamvakeros",
 	author_email="antonyvam@gmail.com",
 	install_requires=[
-		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy>1.5.2",
-		"pyqtgraph", "scikit-image",  "xdesign", "cached_property", "tqdm",
-		"periodictable", "scikit-learn", "pystackreg", "pyopencl",
+		"pyqtgraph", "xdesign", "cached_property", "tqdm",
+		"periodictable", "pystackreg", "pyopencl",
 		"mayavi",
 	],
 	packages=find_packages(),
