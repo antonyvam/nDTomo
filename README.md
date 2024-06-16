@@ -55,51 +55,10 @@ python setup.py install --user
 pip install --user -r requirements.txt
 ```
 
-PyFAI
------
-The pyFAI version used in the nDTomo is 0.19
-
-To run with GPU, you need to install pyopencl
-
-For Windows, try installing Christoph Gohlke's repository: http://www.lfd.uci.edu/~gohlke/pythonlibs/
-
-For example: 
-
-```
-pip install pyopencl-2021.2.10-cp38-cp38-win_amd64.whl
-```
-
-PyFAI installation instructions can be found here: http://www.silx.org/doc/pyFAI/dev/operations/index.html
-
-Pytorch
-----------------------------------------------
-
-Neural networks were built/tested using Pytorch:
-
-```pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118```
-
 Other packages
 ----------------------------------------------
 conda install defaults::conda-libmamba-solver
 conda create --name finden_training -c conda-forge -c intel -c ccpi cil=23.0.1 astra-toolbox jupyterlab nb_conda_kernels "ipywidgets<8" --solver libmamba
-
-
-Installation instructions using conda (Windows only)
-----------------------------------------------------
-The conda package of nDTomo might not be up to date so try installing from sources. The nDTomo is currently being developed using python v3.8
-
-I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and then simply run the following:
-
-Make sure that you have added the following channels:
-
-```conda config --add channels conda-forge```
-
-```conda config --add channels astra-toolbox/label/dev```
-
-Next install nDTomo:
-
-```conda install -c antonyvam ndtomo```
-
 
 Citation
 --------

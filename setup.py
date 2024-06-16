@@ -39,7 +39,7 @@ setup(
 	install_requires=[
 		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy>1.5.2",
 		"pyqtgraph", "scikit-image",  "xdesign", "cached_property", "tqdm",
-		"periodictable", "scikit-learn", "pystackreg", "PyQt5",
+		"periodictable", "scikit-learn", "pystackreg", "PyQt5", "pyopencl",
 		"mayavi",
 	],
 	packages=find_packages(),
