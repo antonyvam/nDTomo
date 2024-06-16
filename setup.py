@@ -39,7 +39,7 @@ setup(
 	install_requires=[
 		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy>1.5.2",
 		"pyqtgraph", "scikit-image",  "xdesign", "cached_property", "tqdm",
-		"periodictable", "scikit-learn", "pystackreg", "PyQt5", "pyopencl",
+		"periodictable", "scikit-learn", "pystackreg", "pyopencl",
 		"mayavi",
 	],
 	packages=find_packages(),
@@ -47,7 +47,7 @@ setup(
         '': ['*.txt', '*.rst'],
     },
     entry_points={
-        'gui_scripts': ['nDTomoGUI = nDTomo.vis.nDTomoGUI.nDTomoGUI:main']
+        'gui_scripts': ['nDVis = nDTomo.vis.nDVis.nDVis:main']
     },		
 	license="LICENSE.txt",
 	classifiers=[

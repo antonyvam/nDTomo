@@ -22,7 +22,7 @@ Fist install some required packages through conda:
 conda create -n ndtomo_light python=3.8
 conda activate ndtomo_light
 conda install defaults::conda-libmamba-solver
-conda install -c conda-forge -c intel -c ccpi pyfai=0.19 cil=23.0.1 astra-toolbox jupyterlab nb_conda_kernels "ipywidgets<8" --solver libmamba
+conda install -c conda-forge -c intel -c ccpi pyfai=0.19 cil=23.0.1 astra-toolbox jupyterlab nb_conda_kernels scikit-image scikit-learn "ipywidgets<8" --solver libmamba
 ```
 
 Next, download the code from this github repository, unzip it, navigate with the terminal to the nDTomo directory where the setup.py file is located and run:
