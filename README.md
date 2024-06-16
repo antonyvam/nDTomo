@@ -1,7 +1,7 @@
 nDTomo software suite
 =====================
 The nDTomo software suite contains python scripts and GUIs for the simulation, visualisation and analysis of X-ray chemical imaging and tomography data.
-The code includes both conventional algorithms as well as artifical neural networks developed primarily using Tensorflow v2.
+The code includes both conventional algorithms as well as artifical neural networks developed using Pytorch.
 
 Current status
 --------------
@@ -9,16 +9,13 @@ Simulation code for creating phantoms (2D-4D)
 
 Scripts for handling tomography data
 
-Tensorflow neural network models and related functions for various applications
+Pytorch neural network models and related functions for various applications
 
-Clustering and dimensionality reduction methods (scikit-learn and autoencoders)
-
-nDVis GUI for visualising chemical imaging and tomography data
+nDTomoGUI for visualising chemical imaging and tomography data
 
 To do
 -----
-Modernise the GUIs and update the documentation
-
+Update the documentation
 
 Installation instructions from sources
 --------------------------------------
