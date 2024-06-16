@@ -19,6 +19,8 @@ The code has been developed and tested using Python v3.8
 Fist install some required packages through conda:
 
 ```
+conda create -n ndtomo_light python=3.8
+conda activate ndtomo_light
 conda install defaults::conda-libmamba-solver
 conda install -c conda-forge -c intel -c ccpi pyfai=0.19 cil=23.0.1 astra-toolbox jupyterlab nb_conda_kernels "ipywidgets<8" --solver libmamba
 ```
