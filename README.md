@@ -55,11 +55,6 @@ python setup.py install --user
 pip install --user -r requirements.txt
 ```
 
-To install astra-toolbox:
-
-```conda install -c astra-toolbox/label/dev astra-toolbox```
-
-
 PyFAI
 -----
 The pyFAI version used in the nDTomo is 0.19
@@ -83,6 +78,12 @@ Neural networks were built/tested using Pytorch:
 
 ```pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118```
 
+Other packages
+----------------------------------------------
+conda install defaults::conda-libmamba-solver
+conda create --name finden_training -c conda-forge -c intel -c ccpi cil=23.0.1 astra-toolbox jupyterlab nb_conda_kernels "ipywidgets<8" --solver libmamba
+
+
 Installation instructions using conda (Windows only)
 ----------------------------------------------------
 The conda package of nDTomo might not be up to date so try installing from sources. The nDTomo is currently being developed using python v3.8
@@ -98,8 +99,6 @@ Make sure that you have added the following channels:
 Next install nDTomo:
 
 ```conda install -c antonyvam ndtomo```
-
-Tensorflow is not included in the conda package so one has to install it using pip (please see below for more information).
 
 
 Citation
