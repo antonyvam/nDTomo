@@ -57,8 +57,10 @@ pip install --user -r requirements.txt
 
 Other packages
 ----------------------------------------------
+```
 conda install defaults::conda-libmamba-solver
 conda create --name finden_training -c conda-forge -c intel -c ccpi cil=23.0.1 astra-toolbox jupyterlab nb_conda_kernels "ipywidgets<8" --solver libmamba
+```
 
 Citation
 --------
