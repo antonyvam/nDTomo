@@ -28,10 +28,10 @@ conda install -c conda-forge -c intel -c ccpi pyfai=0.19 cil=23.0.1 astra-toolbo
 Next, download the code from this github repository, unzip it, navigate with the terminal to the nDTomo directory where the setup.py file is located and run:
 
 ```
+cd C:\Users\Antony\Documents\GitHub\nDTomo
 pip install --user -e .
 pip install --user -r requirements.txt
 ```
-
 
 Citation
 --------
