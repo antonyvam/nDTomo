@@ -20,47 +20,20 @@ It is possible to install astra-toolbox/tomopy from sources (i.e. if one wants t
 I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator).
 
 The code has been developed and tested using Python v3.8
+Fist install some required packages through conda:
 
-To install from git:
-
-```pip install --user git+https://github.com/antonyvam/nDTomo.git```
-
-For development work:
-
-```
-git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
-pip install --user -e .
-```
-
-For local installation, using the flag --user:
-
-```
-pip install --user -e .
-pip install --user -r requirements.txt
-```
-
-or:
-
-```
-python3 setup.py install --user
-pip install --user -r requirements.txt
-```
-
-For example, as a user at the Diamond Light Source:
-
-```
-git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
-module load python/3
-python setup.py install --user
-pip install --user -r requirements.txt
-```
-
-Other required packages
-----------------------------------------------
 ```
 conda install defaults::conda-libmamba-solver
-conda install -c conda-forge -c intel -c ccpi cil=23.0.1 astra-toolbox jupyterlab nb_conda_kernels "ipywidgets<8" --solver libmamba
+conda install -c conda-forge -c intel -c ccpi pyfai=0.19 cil=23.0.1 astra-toolbox jupyterlab nb_conda_kernels "ipywidgets<8" --solver libmamba
 ```
+
+Next, download the code from this github repository, unzip it, navigate with the terminal to the nDTomo directory where the setup.py file is located and run:
+
+```
+pip install --user -e .
+pip install --user -r requirements.txt
+```
+
 
 Citation
 --------
