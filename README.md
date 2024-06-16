@@ -13,13 +13,13 @@ Pytorch neural network models and related functions for various applications
 
 nDTomoGUI for visualising chemical imaging and tomography data
 
-To do
------
-Update the documentation
-
 Installation instructions from sources
 --------------------------------------
-An important part of the code is based on astra-toolbox (and tomopy) which is currently available through conda so to make your life easier please install anaconda. It is possible to install astra-toolbox/tomopy from sources (i.e. if one wants to avoid using conda) but it is not a trivial task. I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and make sure to install first the IDEs (Jupyter lab, Spyder etc) before installing the nDTomo.
+An important part of the code is based on astra-toolbox (and tomopy) which is currently available through conda so to make your life easier please install anaconda. 
+It is possible to install astra-toolbox/tomopy from sources (i.e. if one wants to avoid using conda) but it is not a trivial task. 
+I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator).
+
+The code has been developed and tested using Python v3.8
 
 To install from git:
 
