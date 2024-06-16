@@ -47,7 +47,7 @@ setup(
         '': ['*.txt', '*.rst'],
     },
     entry_points={
-        'gui_scripts': ['nDVis = nDTomo.vis.nDVis.nDVis:main']
+        'gui_scripts': ['nDTomoGUI = nDTomo.vis.nDTomoGUI.nDTomoGUI:main']
     },		
 	license="LICENSE.txt",
 	classifiers=[

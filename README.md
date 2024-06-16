@@ -29,7 +29,7 @@ Next, download the code from this github repository, unzip it, navigate with the
 
 ```
 cd C:\Users\Antony\Documents\GitHub\nDTomo
-pip install --user -e .
+pip install -e .
 pip install --user -r requirements.txt
 ```
 
