@@ -3,8 +3,6 @@ nDTomo software suite
 The nDTomo software suite contains python scripts and GUIs for the simulation, visualisation and analysis of X-ray chemical imaging and tomography data.
 The code includes both conventional algorithms as well as artifical neural networks developed primarily using Tensorflow v2.
 
-Documentation for the GUIs is provided at (needs to be updated): https://ndtomo.readthedocs.io
-
 Current status
 --------------
 Simulation code for creating phantoms (2D-4D)
@@ -28,25 +26,27 @@ An important part of the code is based on astra-toolbox (and tomopy) which is cu
 
 To install from git:
 
-```pip install git+https://github.com/antonyvam/nDTomo.git```
+```pip install --user git+https://github.com/antonyvam/nDTomo.git```
 
 For development work:
 
 ```
 git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
-pip install -e .
+pip install --user -e .
 ```
 
 For local installation, using the flag --user:
 
 ```
 pip install --user -e .
+pip install --user -r requirements.txt
 ```
 
 or:
 
 ```
 python3 setup.py install --user
+pip install --user -r requirements.txt
 ```
 
 For example, as a user at the Diamond Light Source:
@@ -55,21 +55,13 @@ For example, as a user at the Diamond Light Source:
 git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
 module load python/3
 python setup.py install --user
+pip install --user -r requirements.txt
 ```
 
 To install astra-toolbox:
 
 ```conda install -c astra-toolbox/label/dev astra-toolbox```
 
-To install tomopy:
-
-```conda install -c conda-forge tomopy```
-
-The GUIs require PyQt5 but I have removed it from the setup.py because it breaks the spyder IDE. If you don't use anaconda/spyder (PyQt5 is included in anaconda), then you can install it with pip: 
-
-```
-pip install PyQt5
-```
 
 PyFAI
 -----
@@ -87,13 +79,12 @@ pip install pyopencl-2021.2.10-cp38-cp38-win_amd64.whl
 
 PyFAI installation instructions can be found here: http://www.silx.org/doc/pyFAI/dev/operations/index.html
 
-Extra packages to be installed (not essential)
+Pytorch
 ----------------------------------------------
 
-Neural networks were built/tested using Tensorflow; make sure to follow these instruction for GPU support: https://www.tensorflow.org/install/gpu. As an example:
+Neural networks were built/tested using Pytorch:
 
-```pip install tensorflow==2.7 tensorflow-addons==0.15```
-
+```pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118```
 
 Installation instructions using conda (Windows only)
 ----------------------------------------------------

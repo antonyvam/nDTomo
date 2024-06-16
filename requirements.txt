@@ -1,0 +1,5 @@
+torch
+torchvision
+torchaudio
+
+-f https://download.pytorch.org/whl/cu118

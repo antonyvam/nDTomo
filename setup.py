@@ -31,7 +31,7 @@ with open("README.md", "r") as fh:
 
 setup(
 	name="nDTomo",
-	version="2022.05",
+	version="2024.06",
 	description="nDTomo software suite",
 	url="http://github.com/antonyvam/nDTomo",
 	author="A. Vamvakeros",
@@ -39,15 +39,15 @@ setup(
 	install_requires=[
 		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy>1.5.2",
 		"pyqtgraph", "scikit-image",  "xdesign", "cached_property", "tqdm",
-		"periodictable", "ase", "scikit-learn", "pystackreg",
-		"mayavi", "pyMCR",
+		"periodictable", "scikit-learn", "pystackreg", "PyQt5",
+		"mayavi",
 	],
 	packages=find_packages(),
     package_data={
         '': ['*.txt', '*.rst'],
     },
     entry_points={
-        'gui_scripts': ['Integrator = nDTomo.vis.Integrator.Integrator:main', 'MultiTool = nDTomo.vis.MultiTool.MultiTool:main', 'nDVis = nDTomo.vis.nDVis.nDVis:main']
+        'gui_scripts': ['nDTomoGUI = nDTomo.vis.nDTomoGUI.nDTomoGUI:main']
     },		
 	license="LICENSE.txt",
 	classifiers=[
