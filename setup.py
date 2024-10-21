@@ -40,7 +40,7 @@ setup(
 		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy>1.5.2",
 		"pyqtgraph", "scikit-image",  "xdesign", "cached_property", "tqdm",
 		"periodictable", "ase", "scikit-learn", "pystackreg",
-		"mayavi", "pyMCR",
+		"mayavi", "pyMCR", "algotom",
 	],
 	packages=find_packages(),
     package_data={
