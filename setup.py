@@ -38,7 +38,8 @@ setup(
 	author_email="antonyvam@gmail.com",
 	install_requires=[
 		"pyqtgraph", "xdesign", "cached_property", "tqdm",
-		"periodictable", "pystackreg", "pyopencl",
+		"periodictable", "pystackreg", "pyFAI", "algotom",
+        "torch", "torchvision", "numpy",
 		"mayavi",
 	],
 	packages=find_packages(),
