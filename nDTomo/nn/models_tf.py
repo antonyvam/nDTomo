@@ -1154,7 +1154,7 @@ def DFCNN2D(nx, ny, nlayers = 4, net = 'unet', skipcon = 'No',
 
     return model
 
-def CNN1D(nlayers = 4, skip=False, filts = 64, kernel_size=10, padding = 'same'):
+def CNN1D(nlayers = 4, skip=False, filts = 64, kernel_size=10, lastactl = 'linear', padding = 'same', batchnorm=False, dropout=False):
     
     '''
     A simple 1D deep convolutional neural network having muptiple conv1D layers in series
@@ -1167,12 +1167,20 @@ def CNN1D(nlayers = 4, skip=False, filts = 64, kernel_size=10, padding = 'same')
     data = Input(shape=(None,1))
 
     x = Conv1D(filters=filts, kernel_size=kernel_size, padding=padding, activation='relu')(data)
-
+    if batchnorm:
+        x = BatchNormalization()(x)
+    if dropout:
+        x = Dropout(0.1)(x)
+        
     for i in range(nlayers):
         x = Conv1D(filters=filts, kernel_size=kernel_size, padding=padding)(x)
         x = Conv1D(filters=filts, kernel_size=kernel_size, padding=padding, activation='relu')(x)
-
-    x = Conv1D(filters=1, kernel_size=kernel_size, padding=padding, activation='linear')(x)
+        if batchnorm:
+            x = BatchNormalization()(x)
+        if dropout:
+            x = Dropout(0.1)(x)
+            
+    x = Conv1D(filters=1, kernel_size=kernel_size, padding=padding, activation=lastactl)(x)
     
     if skip:
         added = Add()([data, x])
@@ -1182,7 +1190,7 @@ def CNN1D(nlayers = 4, skip=False, filts = 64, kernel_size=10, padding = 'same')
     
     return model
 
-def CNN2D(nlayers = 4, skip=True, filts = 64, lastactl = 'linear', padding = 'same'):
+def CNN2D(nlayers = 4, skip=True, filts = 64, lastactl = 'linear', padding = 'same', batchnorm=False, dropout=False):
     
     '''
     A simple 2D deep convolutional neural network having muptiple conv2D layers in series
@@ -1195,11 +1203,19 @@ def CNN2D(nlayers = 4, skip=True, filts = 64, lastactl = 'linear', padding = 'sa
     im = Input(shape=(None,None,1))
 
     x = Conv2D(filters=filts, kernel_size=3, padding=padding, activation='relu')(im)
-
+    if batchnorm:
+        x = BatchNormalization()(x)
+    if dropout:
+        x = Dropout(0.1)(x)
+        
     for i in range(nlayers):
         x = Conv2D(filters=filts, kernel_size=3, padding=padding)(x)
         x = Conv2D(filters=filts, kernel_size=3, padding=padding, activation='relu')(x)
-
+        if batchnorm:
+            x = BatchNormalization()(x)
+        if dropout:
+            x = Dropout(0.1)(x)
+            
     x = Conv2D(filters=1, kernel_size=3, padding=padding, activation=lastactl)(x)
     
     if skip:
@@ -1210,7 +1226,7 @@ def CNN2D(nlayers = 4, skip=True, filts = 64, lastactl = 'linear', padding = 'sa
     
     return model
 
-def CNN3D(nlayers = 15, skip=True, filts = 64, padding = 'same'):
+def CNN3D(nlayers = 15, skip=True, filts = 64, lastactl = 'linear' padding = 'same', batchnorm=False, dropout=False):
     
     '''
     A simple 3D deep convolutional neural network having muptiple conv2D layers in series
@@ -1223,12 +1239,20 @@ def CNN3D(nlayers = 15, skip=True, filts = 64, padding = 'same'):
     im = Input(shape=(None,None,None,1))
 
     x = Conv3D(filters=filts, kernel_size=3, padding=padding, activation='relu')(im)
-
+    if batchnorm:
+        x = BatchNormalization()(x)
+    if dropout:
+        x = Dropout(0.1)(x)
+        
     for i in range(nlayers):
         x = Conv3D(filters=filts, kernel_size=3, padding=padding)(x)
         x = Conv3D(filters=filts, kernel_size=3, padding=padding, activation='relu')(x)
+        if batchnorm:
+            x = BatchNormalization()(x)
+        if dropout:
+            x = Dropout(0.1)(x)
 
-    x = Conv3D(filters=1, kernel_size=3, padding=padding, activation='linear')(x)
+    x = Conv3D(filters=1, kernel_size=3, padding=padding, activation=lastactl)(x)
     
     if skip:
         added = Add()([im, x])
