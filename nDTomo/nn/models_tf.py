@@ -1226,7 +1226,7 @@ def CNN2D(nlayers = 4, skip=True, filts = 64, lastactl = 'linear', padding = 'sa
     
     return model
 
-def CNN3D(nlayers = 15, skip=True, filts = 64, lastactl = 'linear' padding = 'same', batchnorm=False, dropout=False):
+def CNN3D(nlayers = 15, skip=True, filts = 64, lastactl = 'linear', padding = 'same', batchnorm=False, dropout=False):
     
     '''
     A simple 3D deep convolutional neural network having muptiple conv2D layers in series
