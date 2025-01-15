@@ -9,7 +9,7 @@ Methods for creating shapes in 2D and 3D
 
 import numpy as np
 import matplotlib.pyplot as plt
-# %matplotlib qt
+%matplotlib qt
 from nDTomo.utils.hyperexpl import ImageSpectrumGUI
 from nDTomo.utils.misc3D import showvol
 import time
@@ -539,7 +539,6 @@ def create_sphere(arr, center, radius, fill_value=1):
     arr[mask] = fill_value
     return arr
 
-
 def create_sphere_hollow(arr, center, outer_radius, thickness=1, fill_value=1):
     """
     Creates a hollow sphere shell (i.e. ring in 3D) in `arr`.
@@ -558,6 +557,162 @@ def create_sphere_hollow(arr, center, outer_radius, thickness=1, fill_value=1):
 
     mask = (dist2 <= outer_r2) & (dist2 >= inner_r2)
     arr[mask] = fill_value
+    return arr
+
+def create_cube(arr, center, size, fill_value=1):
+    """
+    Creates a cube in a 3D NumPy array.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        3D NumPy array where the cube will be drawn.
+    center : tuple of int
+        (x, y, z) coordinates of the cube's center.
+    size : int
+        The edge length of the cube.
+    fill_value : int or float, optional
+        The value to fill inside the cube (default is 1).
+
+    Returns
+    -------
+    np.ndarray
+        Updated 3D array with the cube drawn.
+    """
+    x0, y0, z0 = center
+    half_size = size // 2
+
+    # Define cube boundaries
+    x_min, x_max = max(x0 - half_size, 0), min(x0 + half_size, arr.shape[0] - 1)
+    y_min, y_max = max(y0 - half_size, 0), min(y0 + half_size, arr.shape[1] - 1)
+    z_min, z_max = max(z0 - half_size, 0), min(z0 + half_size, arr.shape[2] - 1)
+
+    # Fill cube region
+    arr[x_min:x_max+1, y_min:y_max+1, z_min:z_max+1] = fill_value
+    return arr
+
+def create_cube_hollow(arr, center, size, thickness=1, fill_value=1):
+    """
+    Creates a hollow cube in a 3D NumPy array, ensuring top and bottom faces are closed.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        3D NumPy array where the hollow cube will be drawn.
+    center : tuple of int
+        (x, y, z) coordinates of the cube's center.
+    size : int
+        The edge length of the cube.
+    thickness : int, optional
+        The thickness of the cube walls (default: 1).
+    fill_value : int or float, optional
+        The value to fill inside the cube walls (default: 1).
+
+    Returns
+    -------
+    np.ndarray
+        Updated 3D array with the hollow cube drawn.
+    """
+    x0, y0, z0 = center
+    half_size = size // 2
+
+    # Define cube boundaries
+    x_min, x_max = max(x0 - half_size, 0), min(x0 + half_size, arr.shape[0] - 1)
+    y_min, y_max = max(y0 - half_size, 0), min(y0 + half_size, arr.shape[1] - 1)
+    z_min, z_max = max(z0 - half_size, 0), min(z0 + half_size, arr.shape[2] - 1)
+
+    # Define inner hollow region
+    inner_x_min, inner_x_max = x_min + thickness, x_max - thickness
+    inner_y_min, inner_y_max = y_min + thickness, y_max - thickness
+    inner_z_min, inner_z_max = z_min + thickness, z_max - thickness
+
+    # Fill the outer cube first
+    arr[x_min:x_max+1, y_min:y_max+1, z_min:z_max+1] = fill_value
+
+    # Hollow out the inner region but keep top and bottom layers intact
+    arr[inner_x_min:inner_x_max+1, inner_y_min:inner_y_max+1, inner_z_min+1:inner_z_max] = 0
+    return arr
+
+def create_cuboid(arr, center, size_x, size_y, size_z, fill_value=1):
+    """
+    Creates a cuboid in a 3D NumPy array.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        3D NumPy array where the cuboid will be drawn.
+    center : tuple of int
+        (x, y, z) coordinates of the cuboid's center.
+    size_x : int
+        The length of the cuboid along the x-axis.
+    size_y : int
+        The length of the cuboid along the y-axis.
+    size_z : int
+        The length of the cuboid along the z-axis.
+    fill_value : int or float, optional
+        The value to fill inside the cuboid (default is 1).
+
+    Returns
+    -------
+    np.ndarray
+        Updated 3D array with the cuboid drawn.
+    """
+    x0, y0, z0 = center
+    half_x, half_y, half_z = size_x // 2, size_y // 2, size_z // 2
+
+    # Define cuboid boundaries
+    x_min, x_max = max(x0 - half_x, 0), min(x0 + half_x, arr.shape[0] - 1)
+    y_min, y_max = max(y0 - half_y, 0), min(y0 + half_y, arr.shape[1] - 1)
+    z_min, z_max = max(z0 - half_z, 0), min(z0 + half_z, arr.shape[2] - 1)
+
+    # Fill cuboid region
+    arr[x_min:x_max+1, y_min:y_max+1, z_min:z_max+1] = fill_value
+    return arr
+
+def create_cuboid_hollow(arr, center, size_x, size_y, size_z, thickness=1, fill_value=1):
+    """
+    Creates a hollow cuboid in a 3D NumPy array, ensuring top and bottom faces are closed.
+
+    Parameters
+    ----------
+    arr : np.ndarray
+        3D NumPy array where the hollow cuboid will be drawn.
+    center : tuple of int
+        (x, y, z) coordinates of the cuboid's center.
+    size_x : int
+        The length of the cuboid along the x-axis.
+    size_y : int
+        The length of the cuboid along the y-axis.
+    size_z : int
+        The length of the cuboid along the z-axis.
+    thickness : int, optional
+        The thickness of the cuboid walls (default: 1).
+    fill_value : int or float, optional
+        The value to fill inside the cuboid walls (default: 1).
+
+    Returns
+    -------
+    np.ndarray
+        Updated 3D array with the hollow cuboid drawn.
+    """
+    x0, y0, z0 = center
+    half_x, half_y, half_z = size_x // 2, size_y // 2, size_z // 2
+
+    # Define cuboid boundaries
+    x_min, x_max = max(x0 - half_x, 0), min(x0 + half_x, arr.shape[0] - 1)
+    y_min, y_max = max(y0 - half_y, 0), min(y0 + half_y, arr.shape[1] - 1)
+    z_min, z_max = max(z0 - half_z, 0), min(z0 + half_z, arr.shape[2] - 1)
+
+    # Define inner hollow region
+    inner_x_min, inner_x_max = x_min + thickness, x_max - thickness
+    inner_y_min, inner_y_max = y_min + thickness, y_max - thickness
+    inner_z_min, inner_z_max = z_min + thickness, z_max - thickness
+
+    # Fill the outer cuboid first
+    arr[x_min:x_max+1, y_min:y_max+1, z_min:z_max+1] = fill_value
+
+    # Hollow out the inner region but keep top and bottom layers intact
+    arr[inner_x_min:inner_x_max+1, inner_y_min:inner_y_max+1, inner_z_min+1:inner_z_max] = 0
     return arr
 
 
@@ -1218,12 +1373,6 @@ plt.show()
 #%%
 
 
-#%%
-
-
-
-#%%
-
 # Create a 3D array of zeros
 shape = (256, 256, 256)  # (x, y, z)
 vol = np.zeros(shape, dtype='float32')
@@ -1247,7 +1396,6 @@ vol = create_sphere(vol, center=(100,100,100), radius=50, fill_value=1)
 # vol = create_mobius_strip(vol, center=(100,100,100), major_radius=100, width=100, num_points=10000, fill_value=1)
 # vol = create_menger_sponge(vol, center=(100,100,100), size=100, depth=3, fill_value=1)
 
-
 # num_points = 250
 # seed_points = [(np.random.randint(0, shape[0]), np.random.randint(0, shape[1]), np.random.randint(0, shape[2])) for _ in range(num_points)]
 
@@ -1256,56 +1404,228 @@ vol = create_sphere(vol, center=(100,100,100), radius=50, fill_value=1)
 # vol = create_voronoi_3d(vol, seed_points)
 # print(f"Time taken: {time.time() - start:.2f} seconds")
 
+
+#%%
+
+from nDTomo.utils.misc3D import showvol
+
 # ImageSpectrumGUI(vol)
-# showvol(vol)
+showvol(vol)
 
 
 #%%
 
-import pyvista as pv
+
+from mayavi import mlab
+from tvtk.util.ctf import ColorTransferFunction, PiecewiseFunction
+import time
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+
+def cmap_to_ctf(cmap_name, vmin=0, vmax=1):
+    """Convert a Matplotlib colormap to a Mayavi ColorTransferFunction."""
+    values = np.linspace(vmin, vmax, 256)
+    cmap = plt.colormaps.get_cmap(cmap_name)(values)  # Updated for Matplotlib 3.7+
+    ctf = ColorTransferFunction()
+    for i, v in enumerate(values):
+        ctf.add_rgb_point(v, cmap[i, 0], cmap[i, 1], cmap[i, 2])
+    return ctf
+
+def create_opacity_transfer_function(vmin, vmax):
+    """Create an Opacity Transfer Function (OTF) to fix transparency issues."""
+    otf = PiecewiseFunction()
+    otf.add_point(vmin, 0.0)   # Fully transparent at min value
+    otf.add_point(vmin + (vmax - vmin) * 0.2, 0.2)
+    otf.add_point(vmin + (vmax - vmin) * 0.5, 0.5)
+    otf.add_point(vmin + (vmax - vmin) * 0.8, 0.8)
+    otf.add_point(vmax, 1.0)   # Fully opaque at max value
+    return otf
+def create_adaptive_opacity_function(vol, vmin, vmax):
+    """Create an adaptive Opacity Transfer Function based on volume intensity distribution."""
+    otf = PiecewiseFunction()
+    
+    # Compute histogram to understand intensity distribution
+    hist, bin_edges = np.histogram(vol, bins=10, range=(vmin, vmax), density=True)
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2  # Midpoints of bins
+
+    # Define opacity dynamically based on intensity distribution
+    for i, bin_value in enumerate(bin_centers):
+        opacity = min(0.2 + hist[i] * 5, 1.0)  # Scale by histogram density
+        otf.add_point(bin_value, opacity)
+
+    return otf
+
+def create_balanced_opacity_function(vmin, vmax):
+    """Create a more uniform Opacity Transfer Function to prevent full transparency in regions."""
+    otf = PiecewiseFunction()
+    
+    otf.add_point(vmin, 0.05)   # Almost transparent at min value
+    otf.add_point(vmin + (vmax - vmin) * 0.25, 0.2)
+    otf.add_point(vmin + (vmax - vmin) * 0.5, 0.4)
+    otf.add_point(vmin + (vmax - vmin) * 0.75, 0.7)
+    otf.add_point(vmax, 1.0)   # Fully opaque at max value
+    
+    return otf
 
 
-# **FORCE EXTERNAL RENDERING** (Disable Jupyter Backend)
-pv.OFF_SCREEN = False  # Ensure interactive rendering
-pv.set_jupyter_backend(None)  # Force PyVista to use the system's native VTK window
-pv.global_theme.jupyter_backend = "static"  # Prevents PyVista from using Trame
+def create_corrected_opacity_function(vmin, vmax):
+    """Create an Opacity Transfer Function that ensures full grains are visible."""
+    otf = PiecewiseFunction()
+    
+    otf.add_point(vmin, 0.1)   # Slight transparency at min value
+    otf.add_point(vmin + (vmax - vmin) * 0.2, 0.6)  # Less transparency
+    otf.add_point(vmin + (vmax - vmin) * 0.4, 0.8)  # Mostly visible
+    otf.add_point(vmin + (vmax - vmin) * 0.6, 0.9)  # Almost fully visible
+    otf.add_point(vmax, 1.0)   # Fully opaque at max value
+    
+    return otf
 
-def render_volume_pyvista(volume, opacity=0.5):
-    """
-    Renders a 3D volume using PyVista in an external interactive window.
 
-    Parameters
-    ----------
-    volume : np.ndarray
-        3D NumPy array where nonzero values represent volumetric data.
-    opacity : float, optional
-        Opacity of the volume rendering (default: 0.5).
-    """
+def create_uniform_opacity_function(vmin, vmax):
+    """Create an Opacity Transfer Function that keeps grains fully visible."""
+    otf = PiecewiseFunction()
 
-    # Convert volume to float to avoid PyVista treating it as categorical
-    volume = volume.astype(np.float32)
+    otf.add_point(vmin, 0.0)   # Fully transparent at lowest values
+    otf.add_point(vmin + (vmax - vmin) * 0.1, 0.8)  # Almost fully visible at low intensity
+    otf.add_point(vmax, 1.0)   # Fully opaque at max intensity
 
-    # Convert NumPy array to PyVista grid
-    grid = pv.wrap(volume)
 
-    # Create a plotter with interactive mode
-    plotter = pv.Plotter(off_screen=False, window_size=[800, 800])
+def create_solid_opacity_function():
+    """Create an Opacity Transfer Function that makes everything solid (fully opaque)."""
+    otf = PiecewiseFunction()
+    otf.add_point(0.0, 1.0)  # Fully opaque at minimum value
+    otf.add_point(1.0, 1.0)  # Fully opaque at maximum value
+    return otf
 
-    # Add volume rendering
-    plotter.add_volume(grid, opacity=opacity, cmap="viridis")
 
-    # Show the visualization in an external interactive window
-    plotter.show()
+def create_fade_opacity_function(vmin, vmax):
+    """Smoothly fade low-intensity values instead of hard transparency."""
+    otf = PiecewiseFunction()
+    
+    otf.add_point(vmin, 0.0)   # Fully transparent at zero
+    otf.add_point(vmin + (vmax - vmin) * 0.05, 0.2)  # Slightly visible
+    otf.add_point(vmin + (vmax - vmin) * 0.2, 0.6)  # More visible
+    otf.add_point(vmax, 1.0)   # Fully opaque at max intensity
+    
+    return otf
 
-# Example usage
-if __name__ == "__main__":
-    size = (64, 64, 64)
-    volume = np.zeros(size, dtype=int)
+def create_binary_opacity_function(threshold):
+    """Creates an opacity function where values below `threshold` are transparent, 
+    and values above it are fully opaque."""
+    otf = PiecewiseFunction()
 
-    np.random.seed(42)
-    num_points = 10
-    seed_points = [(np.random.randint(0, size[0]), np.random.randint(0, size[1]), np.random.randint(0, size[2])) for _ in range(num_points)]
-    create_voronoi_3d(volume, seed_points)
+    otf.add_point(threshold - 1e-6, 0.0)  # Just before the threshold → fully transparent
+    otf.add_point(threshold, 1.0)  # At threshold → fully opaque
+    otf.add_point(1.0, 1.0)  # Everything else remains fully visible
 
-    render_volume_pyvista(volume, opacity=0.6)
+    return otf
 
+def showvol(vol, vlim=None, colormap="jet", show_axes=True, show_colorbar=True):
+    '''
+    Volume rendering using Mayavi mlab with customization options.
+    
+    Parameters:
+        vol (np.ndarray): 3D volume data.
+        vlim (tuple): (vmin, vmax) for intensity scaling.
+        colormap (str): Colormap to use (e.g., "jet", "viridis", "gray").
+        show_axes (bool): Whether to display the coordinate axes.
+        show_colorbar (bool): Whether to show a colorbar.
+    '''
+    if vlim is None:
+        vmin = 0
+        vmax = np.max(vol)
+    else:
+        vmin, vmax = vlim
+    
+    # ✅ Ensure the figure is managed by mlab
+    fig = mlab.gcf()  # Get the current figure
+
+    # ✅ Create volume rendering explicitly linked to the figure
+    src = mlab.pipeline.scalar_field(vol, figure=fig)
+    volume = mlab.pipeline.volume(src, vmin=vmin, vmax=vmax, figure=fig)
+    # volume._volume_property.interpolation_type = 'nearest'  # Try 'linear' or 'nearest'
+    # volume._volume_mapper.sample_distance = 0.5  # Reduce sample distance
+
+    # ✅ Convert colormap to ColorTransferFunction and apply it
+    ctf = cmap_to_ctf(colormap, vmin, vmax)
+    volume._volume_property.set_color(ctf)
+    volume._ctf = ctf
+    volume.update_ctf = True  # ✅ Force update
+
+    # # ✅ Apply Adaptive Opacity Transfer Function
+    # # otf = create_binary_opacity_function(0.05)
+    # # otf = create_fade_opacity_function(vmin, vmax)
+    otf = create_adaptive_opacity_function(vol, vmin, vmax)
+    volume._volume_property.set_scalar_opacity(otf)
+    volume._otf = otf
+    volume.update_ctf = True  # ✅ Force update again
+
+    # ✅ Extract and apply the same LUT to the colorbar
+    lut_manager = volume.module_manager.scalar_lut_manager
+    lut_manager.lut_mode = colormap  # Ensure the colorbar follows the colormap
+
+    # ✅ Show colorbar
+    if show_colorbar:
+        mlab.colorbar(orientation="vertical", title="Intensity")
+
+    # ✅ Toggle axes visibility
+    if show_axes:
+        mlab.orientation_axes()
+    else:
+        mlab.axes(visible=False)
+
+    # return volume
+
+# Define angles and output directory
+angles = np.linspace(0, 360, 25)  # 60 frames (for example)
+output_dir = "C:\\Users\\Antony\\Documents\\test\\"
+os.makedirs(output_dir, exist_ok=True)
+
+# Volume data (example)
+shape = (64, 64, 64)
+vol = np.zeros(shape, dtype='float32')
+optimal_distance = max(shape) * 3  # ✅ Set a fixed distance instead of "auto"
+# Compute the center of the volume
+cx, cy, cz = np.array(shape) / 2  # ✅ Compute focal point
+
+# vol = np.random.rand(*shape)  # Replace with your actual 3D volume
+# # vol[:,:, 30:40] = 0
+# vol[:,:, 30:40] = 0.01
+
+num_points = 20
+seed_points = [(np.random.randint(0, shape[0]), np.random.randint(0, shape[1]), np.random.randint(0, shape[2])) for _ in range(num_points)]
+# Generate 3D Voronoi diagram
+start = time.time()
+vol = create_voronoi_3d(vol, seed_points)
+print(f"Time taken: {time.time() - start:.2f} seconds")
+vol = vol - np.min(vol)
+vol = (vol/np.max(vol))
+vol[:1, :, :] = 0
+vol[-1:, :, :] = 0
+vol[:, :1, :] = 0
+vol[:, -1:, :] = 0
+
+
+# Initialize a single Mayavi figure
+mlab.figure(bgcolor=(1, 1, 1))
+
+# Loop through angles
+for i, angle in enumerate(angles):
+
+    print(angle)
+
+    # Open new figure, render volume
+    # fig = showvol(vol)
+    showvol(vol, colormap="viridis", show_axes=True, show_colorbar=True)
+
+    # ✅ Apply rotation (fix for freezing issue)
+    mlab.view(azimuth=angle, elevation=90, distance=optimal_distance, focalpoint=(cx, cy, cz))
+
+    # Save screenshot
+    screenshot_path = os.path.join(output_dir, f"frame_{i:03d}.png")
+    mlab.savefig(screenshot_path)
+    print(f"Saved: {screenshot_path}")
+
+# Close the figure to avoid multiple windows
+mlab.close()
