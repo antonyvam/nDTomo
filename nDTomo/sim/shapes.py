@@ -8,7 +8,13 @@ Methods for creating shapes in 2D and 3D
 #%%
 
 import numpy as np
+import matplotlib.pyplot as plt
+# %matplotlib qt
+from nDTomo.utils.hyperexpl import ImageSpectrumGUI
+from nDTomo.utils.misc3D import showvol
+import time
 
+#%%
 
 def create_circle(arr, center, radius, fill_value=1):
     """
@@ -517,47 +523,7 @@ def create_voronoi(arr, seed_points, fill_values=None):
 
     return arr
 
-#%%
-
-import matplotlib.pyplot as plt
-%matplotlib qt
-
-#%%
-
-# im = np.zeros((256, 256), dtype='float32')
-# imn = create_circle(im, center=(50,50), radius=10, fill_value=2)
-# imn = create_circle(imn, center=(25,25), radius=20, fill_value=1)
-# imn = create_circle_hollow(im, center=(100,100), outer_radius=20, thickness=4, fill_value=2)
-# imn = create_rectangle_corner(im, corner=(50,50), width=10, height=30, fill_value=2)
-# imn = create_rectangle_corner_hollow(im, corner=(50,50), width=10, height=30, thickness=2, fill_value=2)
-# imn = create_triangle(im, p1=(100,100), p2=(120,125), p3=(65,110), fill_value=1)
-# imn = create_triangle_hollow(im, p1=(100,100), p2=(120,125), p3=(65,110), thickness=2, fill_value=1)
-# imn = create_equilateral_triangle(im, p1=(100,100), side=50, fill_value=1, orientation='random')
-# imn = create_ellipse(im, center=(100,100), axes_radii=(20, 10), fill_value=1)
-# imn = create_ellipse_hollow(im, center=(100,100), outer_axes_radii=(20, 10), thickness=1, fill_value=1)
-# imn = create_star(im, center=(100,100), n_points=7, r_outer=26, r_inner=12, 
-#                   fill_value=1, angle_offset=0.0)
-
-
-# Define random seed points
-size = (256, 256)
-img = np.zeros(size, dtype=int)
-np.random.seed(42)
-num_points = 30
-seed_points = [(np.random.randint(0, size[0]), np.random.randint(0, size[1])) for _ in range(num_points)]
-
-# Generate Voronoi diagram
-imn = create_voronoi(img, seed_points)
-
-plt.figure(1);plt.clf()
-plt.imshow(imn, cmap='gray', interpolation='None')
-plt.colorbar()
-plt.show()
-
-
-
-#%%
-
+####################### 3D Shapes #######################
 
 def create_sphere(arr, center, radius, fill_value=1):
     """
@@ -1212,10 +1178,49 @@ def create_voronoi_3d(arr, seed_points, fill_values=None):
 
     return arr
 
+
 #%%
 
-from nDTomo.utils.hyperexpl import ImageSpectrumGUI
-from nDTomo.utils.misc3D import showvol
+
+
+# im = np.zeros((256, 256), dtype='float32')
+# imn = create_circle(im, center=(50,50), radius=10, fill_value=2)
+# imn = create_circle(imn, center=(25,25), radius=20, fill_value=1)
+# imn = create_circle_hollow(im, center=(100,100), outer_radius=20, thickness=4, fill_value=2)
+# imn = create_rectangle_corner(im, corner=(50,50), width=10, height=30, fill_value=2)
+# imn = create_rectangle_corner_hollow(im, corner=(50,50), width=10, height=30, thickness=2, fill_value=2)
+# imn = create_triangle(im, p1=(100,100), p2=(120,125), p3=(65,110), fill_value=1)
+# imn = create_triangle_hollow(im, p1=(100,100), p2=(120,125), p3=(65,110), thickness=2, fill_value=1)
+# imn = create_equilateral_triangle(im, p1=(100,100), side=50, fill_value=1, orientation='random')
+# imn = create_ellipse(im, center=(100,100), axes_radii=(20, 10), fill_value=1)
+# imn = create_ellipse_hollow(im, center=(100,100), outer_axes_radii=(20, 10), thickness=1, fill_value=1)
+# imn = create_star(im, center=(100,100), n_points=7, r_outer=26, r_inner=12, 
+#                   fill_value=1, angle_offset=0.0)
+
+
+# Define random seed points
+size = (256, 256)
+img = np.zeros(size, dtype=int)
+np.random.seed(42)
+num_points = 30
+seed_points = [(np.random.randint(0, size[0]), np.random.randint(0, size[1])) for _ in range(num_points)]
+
+# Generate Voronoi diagram
+imn = create_voronoi(img, seed_points)
+
+plt.figure(1);plt.clf()
+plt.imshow(imn, cmap='gray', interpolation='None')
+plt.colorbar()
+plt.show()
+
+
+
+#%%
+
+
+#%%
+
+
 
 #%%
 
@@ -1223,7 +1228,7 @@ from nDTomo.utils.misc3D import showvol
 shape = (256, 256, 256)  # (x, y, z)
 vol = np.zeros(shape, dtype='float32')
 
-# vol = create_sphere(vol, center=(100,100,100), radius=50, fill_value=1)
+vol = create_sphere(vol, center=(100,100,100), radius=50, fill_value=1)
 # vol = create_sphere_hollow(vol, center=(100,100,100), outer_radius=50, thickness = 5, fill_value=1)
 # vol = create_cylinder(vol, center_xy=(99, 99), z_range = (40, 161), radius=50, fill_value=1)
 # vol = create_cylinder_hollow(vol, center_xy=(99, 99), z_range=(40, 161), 
@@ -1243,12 +1248,64 @@ vol = np.zeros(shape, dtype='float32')
 # vol = create_menger_sponge(vol, center=(100,100,100), size=100, depth=3, fill_value=1)
 
 
-# Define random seed points
-np.random.seed(100)
-num_points = 50
-seed_points = [(np.random.randint(0, shape[0]), np.random.randint(0, shape[1]), np.random.randint(0, shape[2])) for _ in range(num_points)]
+# num_points = 250
+# seed_points = [(np.random.randint(0, shape[0]), np.random.randint(0, shape[1]), np.random.randint(0, shape[2])) for _ in range(num_points)]
 
-# Generate 3D Voronoi diagram
-vol = create_voronoi_3d(vol, seed_points)
+# # Generate 3D Voronoi diagram
+# start = time.time()
+# vol = create_voronoi_3d(vol, seed_points)
+# print(f"Time taken: {time.time() - start:.2f} seconds")
 
-ImageSpectrumGUI(vol)
+# ImageSpectrumGUI(vol)
+# showvol(vol)
+
+
+#%%
+
+import pyvista as pv
+
+
+# **FORCE EXTERNAL RENDERING** (Disable Jupyter Backend)
+pv.OFF_SCREEN = False  # Ensure interactive rendering
+pv.set_jupyter_backend(None)  # Force PyVista to use the system's native VTK window
+pv.global_theme.jupyter_backend = "static"  # Prevents PyVista from using Trame
+
+def render_volume_pyvista(volume, opacity=0.5):
+    """
+    Renders a 3D volume using PyVista in an external interactive window.
+
+    Parameters
+    ----------
+    volume : np.ndarray
+        3D NumPy array where nonzero values represent volumetric data.
+    opacity : float, optional
+        Opacity of the volume rendering (default: 0.5).
+    """
+
+    # Convert volume to float to avoid PyVista treating it as categorical
+    volume = volume.astype(np.float32)
+
+    # Convert NumPy array to PyVista grid
+    grid = pv.wrap(volume)
+
+    # Create a plotter with interactive mode
+    plotter = pv.Plotter(off_screen=False, window_size=[800, 800])
+
+    # Add volume rendering
+    plotter.add_volume(grid, opacity=opacity, cmap="viridis")
+
+    # Show the visualization in an external interactive window
+    plotter.show()
+
+# Example usage
+if __name__ == "__main__":
+    size = (64, 64, 64)
+    volume = np.zeros(size, dtype=int)
+
+    np.random.seed(42)
+    num_points = 10
+    seed_points = [(np.random.randint(0, size[0]), np.random.randint(0, size[1]), np.random.randint(0, size[2])) for _ in range(num_points)]
+    create_voronoi_3d(volume, seed_points)
+
+    render_volume_pyvista(volume, opacity=0.6)
+
