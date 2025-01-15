@@ -1372,29 +1372,28 @@ plt.show()
 
 #%%
 
-
 # Create a 3D array of zeros
 shape = (256, 256, 256)  # (x, y, z)
 vol = np.zeros(shape, dtype='float32')
 
-# vol = create_sphere(vol, center=(100,100,100), radius=50, fill_value=1)
+vol = create_sphere(vol, center=(150,150,100), radius=25, fill_value=1)
 # vol = create_sphere_hollow(vol, center=(100,100,100), outer_radius=50, thickness = 5, fill_value=1)
-vol = create_cylinder(vol, center_xy=(99, 99), z_range = (40, 161), radius=50, fill_value=1)
+vol = create_cylinder(vol, center_xy=(200, 25), z_range = (40, 65), radius=50, fill_value=2)
 # vol = create_cylinder_hollow(vol, center_xy=(99, 99), z_range=(40, 161), 
 #                              outer_radius=50, thickness=5, fill_value=1, caps=True)
 
-# vol = create_cone(vol, tip=(50,50,50), height=75, base_radius=100, fill_value=1)
+vol = create_cone(vol, tip=(50,50,50), height=75, base_radius=100, fill_value=3)
 # vol = create_cone_hollow(vol, tip=(100,100,50), height=75, outer_radius=100, thickness = 10, 
                         #  fill_value=1, caps=True)
-# vol = create_pyramid(vol, tip=(100,100,50), height=75, base_size=100, fill_value=1)
+vol = create_pyramid(vol, tip=(0,100,200), height=75, base_size=100, fill_value=4)
 # vol = create_pyramid_hollow(vol, tip=(100,100,50), height=75, base_size=100, fill_value=1)
 
-# vol = create_torus(vol, center=(100,100,100), major_radius=75, minor_radius=24, fill_value=1, hollow_thickness=5)
-# vol = create_ellipsoid(vol, center=(100,100,100), radii=(50, 90, 75), fill_value=1, hollow_thickness=0)
-
-# vol = create_hexagonal_prism(vol, center_xy=(100,100), z_range=(40,160), outer_radius=10, fill_value=1)
-# vol = create_mobius_strip(vol, center=(100,100,100), major_radius=100, width=100, num_points=10000, fill_value=1)
-# vol = create_menger_sponge(vol, center=(100,100,100), size=100, depth=3, fill_value=1)
+vol = create_torus(vol, center=(100,100,150), major_radius=50, minor_radius=20, fill_value=5, hollow_thickness=5)
+vol = create_ellipsoid(vol, center=(100,100,50), radii=(50, 90, 15), fill_value=6, hollow_thickness=0)
+vol = create_hexagonal_prism(vol, center_xy=(100,100), z_range=(180,240), outer_radius=10, fill_value=7)
+# vol = create_mobius_strip(vol, center=(100,100,200), major_radius=100, width=20, num_points=10000, fill_value=8)
+vol = create_menger_sponge(vol, center=(100,100,0), size=100, depth=3, fill_value=8)
+vol = create_cube(vol, center=(250,0,240), size=50, fill_value=9)
 
 # num_points = 250
 # seed_points = [(np.random.randint(0, shape[0]), np.random.randint(0, shape[1]), np.random.randint(0, shape[2])) for _ in range(num_points)]
@@ -1405,12 +1404,67 @@ vol = create_cylinder(vol, center_xy=(99, 99), z_range = (40, 161), radius=50, f
 # print(f"Time taken: {time.time() - start:.2f} seconds")
 
 
+vol = vol/np.max(vol)
+vol[0,:,:] = 0
+vol[-1,:,:] = 0
+vol[:,0,:] = 0
+vol[:,-1,:] = 0
+vol[:,:,0] = 0
+vol[:,:,-1] = 0
+
+optimal_distance = max(shape) * 3 
+cx, cy, cz = np.array(shape) / 2  # ✅ Compute focal point
+
+
+from mayavi import mlab
+
+mlab.figure(bgcolor=(1, 1, 1))
+showvol(vol, opacity_mode = 'binary', thr = 0.1, interp = 'nearest')
+# mlab.view(elevation=90, distance=optimal_distance, focalpoint=(cx, cy, cz))
+
+
+#%%
+from tqdm import tqdm
+
+nshapes = 50
+ofs = 10
+shape = (256, 256, 512)  # (x, y, z)
+
+vol = np.zeros(shape, dtype='float32')
+
+for ii in tqdm(range(nshapes)):
+
+    xi = np.random.randint(0 + ofs, shape[0] - ofs)
+    yi = np.random.randint(0 + ofs, shape[1] - ofs)
+    zi = np.random.randint(0 + ofs, shape[2] - ofs)
+    val = np.random.rand(1)[0]
+
+    vol = create_pyramid(vol, tip=(xi,yi,zi), height=30, base_size=30, fill_value=val)
+
+    xi = np.random.randint(0 + ofs, shape[0] - ofs)
+    yi = np.random.randint(0 + ofs, shape[1] - ofs)
+    zi = np.random.randint(0 + ofs, shape[2] - ofs)
+    val = np.random.rand(1)[0]
+
+    vol = create_sphere(vol, center=(xi,yi,zi), radius=20, fill_value=val)
+
+    xi = np.random.randint(0 + ofs, shape[0] - ofs)
+    yi = np.random.randint(0 + ofs, shape[1] - ofs)
+    zi = np.random.randint(0 + ofs, shape[2] - ofs)
+    val = np.random.rand(1)[0]
+
+    vol = create_cube(vol, center=(xi,yi,zi), size=15, fill_value=val)
+    
+mlab.figure(bgcolor=(1, 1, 1))
+showvol(vol, opacity_mode = 'binary', thr = 0.1, interp = 'nearest')
+
 #%%
 
-from nDTomo.utils.misc3D import showvol
+import h5py
 
-# ImageSpectrumGUI(vol)
-showvol(vol, opacity_mode = 'binary', thr = 0.1)
+fn = 'C:\\Users\\Antony\\Documents\\test\\shapes.h5'
+with h5py.File(fn, 'w') as f:
+    f.create_dataset('vol', data=vol)
 
 
 #%%
@@ -1731,6 +1785,7 @@ def showvol(vol, vlim=None, colormap="jet", show_axes=True, show_colorbar=True,
     # Create volume rendering explicitly linked to the figure
     src = mlab.pipeline.scalar_field(vol, figure=fig)
     volume = mlab.pipeline.volume(src, vmin=vmin, vmax=vmax, figure=fig)
+    volume._volume_property.interpolation_type = 'nearest'  # Options: 'nearest', 'linear'
     # volume._volume_mapper.sample_distance = 0.01
 
     # Convert colormap to ColorTransferFunction and apply it
