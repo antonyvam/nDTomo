@@ -1377,9 +1377,9 @@ plt.show()
 shape = (256, 256, 256)  # (x, y, z)
 vol = np.zeros(shape, dtype='float32')
 
-vol = create_sphere(vol, center=(100,100,100), radius=50, fill_value=1)
+# vol = create_sphere(vol, center=(100,100,100), radius=50, fill_value=1)
 # vol = create_sphere_hollow(vol, center=(100,100,100), outer_radius=50, thickness = 5, fill_value=1)
-# vol = create_cylinder(vol, center_xy=(99, 99), z_range = (40, 161), radius=50, fill_value=1)
+vol = create_cylinder(vol, center_xy=(99, 99), z_range = (40, 161), radius=50, fill_value=1)
 # vol = create_cylinder_hollow(vol, center_xy=(99, 99), z_range=(40, 161), 
 #                              outer_radius=50, thickness=5, fill_value=1, caps=True)
 
@@ -1410,7 +1410,7 @@ vol = create_sphere(vol, center=(100,100,100), radius=50, fill_value=1)
 from nDTomo.utils.misc3D import showvol
 
 # ImageSpectrumGUI(vol)
-showvol(vol)
+showvol(vol, opacity_mode = 'binary', thr = 0.1)
 
 
 #%%
@@ -1441,6 +1441,7 @@ def create_opacity_transfer_function(vmin, vmax):
     otf.add_point(vmin + (vmax - vmin) * 0.8, 0.8)
     otf.add_point(vmax, 1.0)   # Fully opaque at max value
     return otf
+
 def create_adaptive_opacity_function(vol, vmin, vmax):
     """Create an adaptive Opacity Transfer Function based on volume intensity distribution."""
     otf = PiecewiseFunction()
@@ -1629,3 +1630,178 @@ for i, angle in enumerate(angles):
 
 # Close the figure to avoid multiple windows
 mlab.close()
+
+
+#%%
+
+from numpy import max, linspace, histogram
+from mayavi import mlab
+from tvtk.util.ctf import ColorTransferFunction, PiecewiseFunction
+import matplotlib.pyplot as plt
+
+def cmap_to_ctf(cmap_name, vmin=0, vmax=1):
+    """Convert a Matplotlib colormap to a Mayavi ColorTransferFunction."""
+    values = linspace(vmin, vmax, 256)
+    cmap = plt.colormaps.get_cmap(cmap_name)(values)  # Updated for Matplotlib 3.7+
+    ctf = ColorTransferFunction()
+    for i, v in enumerate(values):
+        ctf.add_rgb_point(v, cmap[i, 0], cmap[i, 1], cmap[i, 2])
+    return ctf
+	
+
+def create_adaptive_opacity_function(vol, vmin, vmax):
+    """Create an adaptive Opacity Transfer Function based on volume intensity distribution."""
+    otf = PiecewiseFunction()
+    
+    # Compute histogram to understand intensity distribution
+    hist, bin_edges = histogram(vol, bins=10, range=(vmin, vmax), density=True)
+    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2  # Midpoints of bins
+
+    # Define opacity dynamically based on intensity distribution
+    for i, bin_value in enumerate(bin_centers):
+        opacity = min(0.2 + hist[i] * 5, 1.0)  # Scale by histogram density
+        otf.add_point(bin_value, opacity)
+
+    return otf
+	
+	
+def create_balanced_opacity_function(vmin, vmax):
+    """Create a more uniform Opacity Transfer Function to prevent full transparency in regions."""
+    otf = PiecewiseFunction()
+    
+    otf.add_point(vmin, 0.05)   # Almost transparent at min value
+    otf.add_point(vmin + (vmax - vmin) * 0.25, 0.2)
+    otf.add_point(vmin + (vmax - vmin) * 0.5, 0.4)
+    otf.add_point(vmin + (vmax - vmin) * 0.75, 0.7)
+    otf.add_point(vmax, 1.0)   # Fully opaque at max value
+    
+    return otf
+
+
+def create_solid_opacity_function():
+    """Create an Opacity Transfer Function that makes everything solid (fully opaque)."""
+    otf = PiecewiseFunction()
+    otf.add_point(0.0, 1.0)  # Fully opaque at minimum value
+    otf.add_point(1.0, 1.0)  # Fully opaque at maximum value
+    return otf
+
+def create_fade_opacity_function(vmin, vmax):
+    """Smoothly fade low-intensity values instead of hard transparency."""
+    otf = PiecewiseFunction()
+    
+    otf.add_point(vmin, 0.0)   # Fully transparent at zero
+    otf.add_point(vmin + (vmax - vmin) * 0.05, 0.2)  # Slightly visible
+    otf.add_point(vmin + (vmax - vmin) * 0.2, 0.6)  # More visible
+    otf.add_point(vmax, 1.0)   # Fully opaque at max intensity
+    
+    return otf
+
+def create_binary_opacity_function(threshold):
+    """Creates an opacity function where values below `threshold` are transparent, 
+    and values above it are fully opaque."""
+    otf = PiecewiseFunction()
+
+    otf.add_point(threshold - 1e-6, 0.0)  # Just before the threshold → fully transparent
+    otf.add_point(threshold, 1.0)  # At threshold → fully opaque
+    otf.add_point(1.0, 1.0)  # Everything else remains fully visible
+
+    return otf
+	
+def showvol(vol, vlim=None, colormap="jet", show_axes=True, show_colorbar=True,
+			opacity_mode = 'adaptive', thr = 0.05):
+    '''
+    Volume rendering using Mayavi mlab with customization options.
+    
+    Parameters:
+        vol (np.ndarray): 3D volume data.
+        vlim (tuple): (vmin, vmax) for intensity scaling.
+        colormap (str): Colormap to use (e.g., "jet", "viridis", "gray").
+        show_axes (bool): Whether to display the coordinate axes.
+        show_colorbar (bool): Whether to show a colorbar.
+    '''
+    if vlim is None:
+        vmin = 0
+        vmax = max(vol)
+    else:
+        vmin, vmax = vlim
+    
+    # Ensure the figure is managed by mlab
+    fig = mlab.gcf()  # Get the current figure
+
+    # Create volume rendering explicitly linked to the figure
+    src = mlab.pipeline.scalar_field(vol, figure=fig)
+    volume = mlab.pipeline.volume(src, vmin=vmin, vmax=vmax, figure=fig)
+    # volume._volume_mapper.sample_distance = 0.01
+
+    # Convert colormap to ColorTransferFunction and apply it
+    ctf = cmap_to_ctf(colormap, vmin, vmax)
+    volume._volume_property.set_color(ctf)
+    volume._ctf = ctf
+    volume.update_ctf = True
+
+    # # Apply Adaptive Opacity Transfer Function
+    if opacity_mode == 'binary':
+        otf = create_binary_opacity_function(thr)
+    elif opacity_mode == 'fade':
+        otf = create_fade_opacity_function(vmin, vmax)
+    elif opacity_mode == 'adaptive':
+        otf = create_adaptive_opacity_function(vol, vmin, vmax)
+    elif opacity_mode == 'solid':
+        otf = create_solid_opacity_function()
+		
+    volume._volume_property.set_scalar_opacity(otf)
+    volume._otf = otf
+    volume.update_ctf = True 
+
+    # Extract and apply the same LUT to the colorbar
+    lut_manager = volume.module_manager.scalar_lut_manager
+    lut_manager.lut_mode = colormap  # Ensure the colorbar follows the colormap
+
+    # Show colorbar
+    if show_colorbar:
+        mlab.colorbar(orientation="vertical", title="Intensity")
+
+    # Toggle axes visibility
+    if show_axes:
+        mlab.orientation_axes()
+    else:
+        mlab.axes(visible=False)
+
+
+# Create a 3D array of zeros
+shape = (256, 256, 256)  # (x, y, z)
+vol = np.zeros(shape, dtype='float32')
+
+# vol = create_sphere(vol, center=(100,100,100), radius=50, fill_value=1)
+# vol = create_sphere_hollow(vol, center=(100,100,100), outer_radius=50, thickness = 5, fill_value=1)
+vol = create_cylinder(vol, center_xy=(99, 99), z_range = (40, 161), radius=50, fill_value=1)
+# vol = create_cylinder_hollow(vol, center_xy=(99, 99), z_range=(40, 161), 
+#                              outer_radius=50, thickness=5, fill_value=1, caps=True)
+
+# vol = create_cone(vol, tip=(50,50,50), height=75, base_radius=100, fill_value=1)
+# vol = create_cone_hollow(vol, tip=(100,100,50), height=75, outer_radius=100, thickness = 10, 
+                        #  fill_value=1, caps=True)
+# vol = create_pyramid(vol, tip=(100,100,50), height=75, base_size=100, fill_value=1)
+# vol = create_pyramid_hollow(vol, tip=(100,100,50), height=75, base_size=100, fill_value=1)
+
+# vol = create_torus(vol, center=(100,100,100), major_radius=75, minor_radius=24, fill_value=1, hollow_thickness=5)
+# vol = create_ellipsoid(vol, center=(100,100,100), radii=(50, 90, 75), fill_value=1, hollow_thickness=0)
+
+# vol = create_hexagonal_prism(vol, center_xy=(100,100), z_range=(40,160), outer_radius=10, fill_value=1)
+# vol = create_mobius_strip(vol, center=(100,100,100), major_radius=100, width=100, num_points=10000, fill_value=1)
+# vol = create_menger_sponge(vol, center=(100,100,100), size=100, depth=3, fill_value=1)
+
+# num_points = 250
+# seed_points = [(np.random.randint(0, shape[0]), np.random.randint(0, shape[1]), np.random.randint(0, shape[2])) for _ in range(num_points)]
+
+# # Generate 3D Voronoi diagram
+# start = time.time()
+# vol = create_voronoi_3d(vol, seed_points)
+# print(f"Time taken: {time.time() - start:.2f} seconds")
+
+optimal_distance = max(shape) * 3 
+cx, cy, cz = np.array(shape) / 2  # ✅ Compute focal point
+mlab.figure(bgcolor=(1, 1, 1))
+showvol(vol, opacity_mode = 'binary', thr = 0.1)
+mlab.view(elevation=90, distance=optimal_distance, focalpoint=(cx, cy, cz))
+# mlab.close()
