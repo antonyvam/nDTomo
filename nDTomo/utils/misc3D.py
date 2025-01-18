@@ -147,5 +147,3 @@ def showvol(vol, vlim=None, colormap="jet", show_axes=True, show_colorbar=True,
     # Toggle axes visibility
     if show_axes:
         mlab.orientation_axes()
-    else:
-        mlab.axes(visible=False)
