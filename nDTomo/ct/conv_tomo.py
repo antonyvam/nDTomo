@@ -975,3 +975,36 @@ def concatenate_csc_matrices_by_columns(matrix1, matrix2):
     new_ind_ptr = np.concatenate((matrix1.indptr, new_ind_ptr))
 
     return csc_matrix((new_data, new_indices, new_ind_ptr))
+	
+	
+def correct_sick_pixels_image(img, sick_pixels_cols, sick_pixels_rows):
+
+    # Handle "sick" pixels from column differences
+    n_sick_cols = len(sick_pixels_cols[0])
+    for ii in range(n_sick_cols):
+        row = sick_pixels_cols[0][ii]       # Row index
+        col = sick_pixels_cols[1][ii] + 1  # Adjust column index by +1 for `diff_cols`
+        
+        # Handle column border cases
+        if col - 1 >= 0 and col + 1 < img.shape[1]:  # Not at the left or right border
+            img[row, col] = np.mean([img[row, col - 1], img[row, col + 1]])
+        elif col - 1 < 0:  # At the left border, take only the right neighbor
+            img[row, col] = img[row, col + 1]
+        elif col + 1 >= img.shape[1]:  # At the right border, take only the left neighbor
+            img[row, col] = img[row, col - 1]
+
+    # Handle "sick" pixels from row differences
+    n_sick_rows = len(sick_pixels_rows[0])
+    for ii in range(n_sick_rows):
+        row = sick_pixels_rows[0][ii] + 1  # Adjust row index by +1 for `diff_rows`
+        col = sick_pixels_rows[1][ii]     # Column index
+        
+        # Handle row border cases
+        if row - 1 >= 0 and row + 1 < img.shape[0]:  # Not at the top or bottom border
+            img[row, col] = np.mean([img[row - 1, col], img[row + 1, col]])
+        elif row - 1 < 0:  # At the top border, take only the bottom neighbor
+            img[row, col] = img[row + 1, col]
+        elif row + 1 >= img.shape[0]:  # At the bottom border, take only the top neighbor
+            img[row, col] = img[row - 1, col]
+
+    return img
