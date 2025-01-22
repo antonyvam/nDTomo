@@ -185,13 +185,59 @@ def sinocomcor(sinograms):
 def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pbar=True):
             
     """
-    Method for centering sinograms by flipping the projection at 180 deg and comparing it with the one at 0 deg
-    Sinogram can be a 2D or 3D matrix (stack of sinograms)
-    Dimensions: translation steps (detector elements), projections, z (spectral)
-    """   
+    Centers sinograms by calculating and applying the center of rotation (COR) correction.
+
+    This function identifies the center of rotation by comparing projections at 0° and 180°. 
+    It adjusts the sinograms accordingly to align the projections. It supports both 2D and 
+    3D sinograms, where 3D sinograms include spectral (Z) channels.
+
+    Parameters:
+    ----------
+    sinograms : numpy.ndarray
+        Input sinogram(s). 
+        - 2D array: A single sinogram with shape (detector elements, projections).
+        - 3D array: A stack of sinograms with shape (detector elements, projections, Z/spectral channels).
+
+    crsr : float, optional (default=5)
+        Range for searching the center of rotation, expressed in detector element units.
+        The search is conducted in the range [s.shape[0]/2 - crsr, s.shape[0]/2 + crsr].
+
+    interp : bool, optional (default=True)
+        Specifies whether to use linear interpolation to adjust the sinogram for COR correction:
+        - True: Use linear interpolation for smoother adjustments.
+        - False: Use linear interpolation with edge extrapolation set to 0.
+
+    scan : int, optional (default=180)
+        The scanning range of the projection angles:
+        - 180: Use only the first half of the sinogram for COR determination.
+        - 360: Use the entire sinogram for COR determination.
+
+    channels : list or None, optional (default=None)
+        Specifies the spectral (Z) channels to consider when summing along the Z-axis:
+        - None: Sum across all spectral channels.
+        - List of indices: Use only the specified channels for the summation.
+
+    pbar : bool, optional (default=True)
+        If True, display progress bars during the COR calculation and correction steps.
+        If False, suppress progress bar output.
+
+    Returns:
+    -------
+    numpy.ndarray
+        Corrected sinogram(s) after applying the calculated COR correction. 
+        The shape of the returned array matches the input array, except for adjustments 
+        in the detector elements due to the calculated COR shift.
+
+    Notes:
+    -----
+    - The center of rotation (COR) is determined by minimizing the standard deviation 
+      of differences between the flipped projection at 180° and the projection at 0°.
+    - For 3D sinograms, the COR correction is applied to each spectral channel individually.
+    - The function uses the numpy.interp function for linear interpolation.
+
+    """
     
     di = sinograms.shape
-
     if len(di)>2:
         if channels is None:
             s = np.sum(sinograms, axis = 2)
@@ -199,63 +245,46 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pba
             s = np.sum(sinograms[:,:,channels[0]:channels[-1]], axis = 2)
     else:
         s = np.copy(sinograms)
-        
     if scan==360:
-        
         s = s[:,0:int(np.round(s.shape[1]/2))]
-    
     cr =  np.arange(s.shape[0]/2 - crsr, s.shape[0]/2 + crsr, 0.1)
-    
     xold = np.arange(0,s.shape[0])
-    
-    st = []; ind = [];
-    
-    print('Calculating the COR')
-    
+    st = []; ind = []
+    if pbar:
+        print('Calculating the COR')
     loop_range = tqdm(range(len(cr))) if pbar else range(len(cr))
-
     for kk in loop_range:
-        
         xnew = cr[kk] + np.arange(-np.ceil(s.shape[0]/2), np.ceil(s.shape[0]/2)-1)
         sn = np.zeros((len(xnew),s.shape[1]), dtype='float32')
-        
         for ii in range(s.shape[1]):
-            
             if interp==True:
-                
                 sn[:,ii] = np.interp(xnew, xold, s[:,ii])
             else:
-                
                 sn[:,ii] = np.interp(xnew, xold, s[:,ii], left=0 , right=0)
-
         re = sn[::-1,-1]
         st.append((np.std((sn[:,0]-re)))); ind.append(kk)
-
     m = np.argmin(st)
-    print(cr[m])
-    
+    if pbar:
+        print(cr[m])
     xnew = cr[m] + np.arange(-np.ceil(s.shape[0]/2), np.ceil(s.shape[0]/2)-1)
-    
-    print('Applying the COR correction')
-
-    
+    if pbar:
+        print('Applying the COR correction')
     if len(di)>2:
         loop_range = tqdm(range(sinograms.shape[2])) if pbar else range(sinograms.shape[2])
         sn = np.zeros((len(xnew), sinograms.shape[1], sinograms.shape[2]), dtype='float32')  
         for ll in loop_range:
             for ii in range(sinograms.shape[1]):
-                
                 if interp==True:
                     sn[:,ii,ll] = np.interp(xnew, xold, sinograms[:,ii,ll])    
                 else:
                     sn[:,ii,ll] = np.interp(xnew, xold, sinograms[:,ii,ll], left=0 , right=0) 
-            
     elif len(di)==2:
-        
         sn = np.zeros((len(xnew),sinograms.shape[1]), dtype='float32')    
         for ii in range(sinograms.shape[1]):
-            sn[:,ii] = np.interp(xnew, xold, sinograms[:,ii], left=0 , right=0)
-        
+            if interp==True:
+                sn[:,ii] = np.interp(xnew, xold, sinograms[:,ii])    
+            else:               
+                sn[:,ii] = np.interp(xnew, xold, sinograms[:,ii], left=0 , right=0)
     return(sn)
 
 def zigzag(s):
