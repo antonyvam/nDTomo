@@ -6,7 +6,7 @@ Various tensorflow functions
 """
 
 from nDTomo.nn.tomo_tf import tf_tomo_transf
-from nDTomo.sim.shapes.phantoms import SheppLogan
+from nDTomo.sim.phantoms import SheppLogan
 
 from tqdm import tqdm
 
