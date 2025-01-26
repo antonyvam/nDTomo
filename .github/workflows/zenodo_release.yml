@@ -10,62 +10,10 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v3
-
-    - name: Create a new version of an existing deposition
-      id: create_new_version
-      env:
-        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
+    - name: Test Zenodo API Key
       run: |
-        echo "Creating a new version of deposition ID 7139214..."
-        response=$(curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
-          -X POST https://zenodo.org/api/deposit/depositions/7139214/actions/newversion)
-        echo $response > new_version_response.json
-        deposition_url=$(jq -r '.links.latest_draft' new_version_response.json)
-        deposition_id=$(jq -r '.id' new_version_response.json)
-        echo $deposition_url
-        echo "::set-output name=deposition_id::$deposition_id"
-
-    - name: Update metadata for the new version
-      env:
-        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
-      run: |
-        echo "Updating metadata for the new version..."
-        deposition_id=${{ steps.create_new_version.outputs.deposition_id }}
-        curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
-          -H "Content-Type: application/json" \
-          -X PUT https://zenodo.org/api/deposit/depositions/$deposition_id \
-          -d '{
-                "metadata": {
-                  "title": "nDTomo - ${{ github.event.release.name }}",
-                  "upload_type": "software",
-                  "description": "${{ github.event.release.body }}",
-                  "creators": [
-                    {"name": "Antonis Vamvakeros", "affiliation": "Finden ltd"}
-                  ],
-                  "version": "${{ github.event.release.tag_name }}",
-                  "license": "GPL-3.0",
-                  "keywords": ["xrd-ct", "tomography", "software"]
-                }
-              }'
-
-    - name: Upload files to the new version
-      env:
-        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
-      run: |
-        echo "Uploading files to the new version..."
-        deposition_id=${{ steps.create_new_version.outputs.deposition_id }}
-        zip -r release.zip .  # Adjust this to include only desired files
-        curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
-             -F "file=@release.zip" \
-             https://zenodo.org/api/deposit/depositions/$deposition_id/files
-
-    - name: Publish the deposition
-      env:
-        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
-      run: |
-        echo "Publishing the deposition on Zenodo..."
-        deposition_id=${{ steps.create_new_version.outputs.deposition_id }}
-        curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
-          -X POST https://zenodo.org/api/deposit/depositions/$deposition_id/actions/publish
+        echo "Testing Zenodo API key..."
+        response=$(curl -H "Authorization: Bearer ${{ secrets.ZENODO_API_TOKEN }}" \
+                     https://zenodo.org/api/deposit/depositions)
+        echo "Response from Zenodo API:"
+        echo $response
