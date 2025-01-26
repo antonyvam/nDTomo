@@ -61,7 +61,13 @@ jobs:
               --arg title "nDTomo Release - ${RELEASE_TAG}" \
               --arg description "${RELEASE_BODY}" \
               --arg date "$(date +%Y-%m-%d)" \
-              --arg license "gpl-3.0" \
+              --arg license " { \
+                            "spdx_id": "GPL-3.0",  \
+                            "url": "https://api.github.com/licenses/gpl-3.0",  \
+                            "node_id": "MDc6TGljZW5zZTk=",  \
+                            "name": "GNU General Public License v3.0",  \
+                            "key": "gpl-3.0" \
+                        }" \
               '{
                 metadata: {
                   title: $title,
