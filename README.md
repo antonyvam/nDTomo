@@ -5,6 +5,9 @@ The code includes both conventional algorithms as well as artifical neural netwo
 
 Documentation for the GUIs is provided at (needs to be updated): https://ndtomo.readthedocs.io
 
+
+![nDTomo](assets/ndtomo_logo.png)
+
 Current status
 --------------
 Simulation code for creating phantoms (2D-4D)
