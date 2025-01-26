@@ -1,86 +1,84 @@
-name: Publish to Zenodo
+name: Release to Zenodo
 
 on:
   release:
     types:
-      - published  # Trigger when a new release is published
+      - published
 
 jobs:
-  publish_to_zenodo:
+  upload-to-zenodo:
+    name: Publish Release on Zenodo
     runs-on: ubuntu-latest
 
     steps:
-    - name: Check out code
-      uses: actions/checkout@v3
+      # Step 1: Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
 
-    - name: Create a new version of an existing deposition
-      id: create_new_version
-      env:
-        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
-      run: |
-        echo "Creating a new version of deposition ID 7139214..."
-        response=$(curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
-          -X POST https://zenodo.org/api/deposit/depositions/7139214/actions/newversion)
-        echo $response > new_version_response.json
-        deposition_url=$(jq -r '.links.latest_draft' new_version_response.json)
-        deposition_id=$(jq -r '.id' new_version_response.json)
-        echo "Deposition URL: $deposition_url"
-        echo "::set-output name=deposition_id::$deposition_id"
+      # Step 2: Compress the release files if needed
+      - name: Prepare Release Files
+        run: |
+          zip -r release_files.zip .
 
-    - name: Debug New Version Response
-      run: |
-        echo "Response from 'newversion' endpoint:"
-        cat new_version_response.json
+      # Step 3: Create a new version on Zenodo and update metadata
+      - name: Create new Zenodo version
+        id: zenodo-create
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
+          ZENODO_CONCEPT_ID: 6344269
+        run: |
+          # Create a new version on Zenodo
+          RESPONSE=$(curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
+            -X POST "https://zenodo.org/api/deposit/depositions/$ZENODO_CONCEPT_ID/actions/newversion")
 
-    - name: Update metadata for the new version
-      id: update_metadata
-      env:
-        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
-      run: |
-        echo "Updating metadata for deposition..."
-        deposition_id=${{ steps.create_new_version.outputs.deposition_id }}
-        curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
-             -H "Content-Type: application/json" \
-             -X PUT \
-             -d '{
-                   "metadata": {
-                     "title": "nDTomo - ${{ github.event.release.tag_name }}",
-                     "upload_type": "software",
-                     "description": "Last version before removing TensorFlow support.",
-                     "creators": [
-                       {"name": "Antony Vamvakeros", "affiliation": "Finden ltd"}
-                     ],
-                     "version": "${{ github.event.release.tag_name }}",
-                     "license": "GPL-3.0",
-                     "keywords": ["xrd-ct", "tomography", "software"]
-                   }
-                 }' \
-             https://zenodo.org/api/deposit/depositions/$deposition_id
+          # Extract new deposition ID
+          NEW_DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.links.latest_draft' | sed 's/.*\///')
+          if [ -z "$NEW_DEPOSITION_ID" ] || [ "$NEW_DEPOSITION_ID" = "null" ]; then
+            echo "Error: Failed to create a new Zenodo version. Response: $RESPONSE"
+            exit 1
+          fi
 
-    - name: Debug Metadata Update Response
-      run: |
-        echo "Retrieving metadata for deposition..."
-        deposition_id=${{ steps.create_new_version.outputs.deposition_id }}
-        curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
-             -H "Content-Type: application/json" \
-             -X GET https://zenodo.org/api/deposit/depositions/$deposition_id
+          # Update metadata for the new deposition
+          curl -H "Authorization: Bearer $ZENODO_TOKEN" \
+            -H "Content-Type: application/json" \
+            -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID" \
+            -d '{
+              "metadata": {
+                "title": "New Release of nDTomo",
+                "description": "This release contains the latest updates and improvements for the nDTomo software.",
+                "creators": [
+                  {
+                    "name": "Vamvakeros, Antonis",
+                    "affiliation": "Finden Ltd / Imperial College London"
+                  }
+                ],
+                "version": "'${{ github.event.release.tag_name }}'"
+              }
+            }'
 
-    - name: Upload files to the new version
-      env:
-        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
-      run: |
-        echo "Uploading files to the new version..."
-        deposition_id=${{ steps.create_new_version.outputs.deposition_id }}
-        zip -r release.zip .  # Adjust this to include only desired files
-        curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
-             -F "file=@release.zip" \
-             https://zenodo.org/api/deposit/depositions/$deposition_id/files
+          echo "New deposition ID: $NEW_DEPOSITION_ID"
+          echo "deposition_id=$NEW_DEPOSITION_ID" >> $GITHUB_ENV
 
-    - name: Publish the deposition
-      env:
-        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
-      run: |
-        echo "Publishing the deposition..."
-        deposition_id=${{ steps.create_new_version.outputs.deposition_id }}
-        curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
-             -X POST https://zenodo.org/api/deposit/depositions/$deposition_id/actions/publish
+      # Step 4: Upload the release files to Zenodo
+      - name: Upload Files to Zenodo
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
+          NEW_DEPOSITION_ID: ${{ env.deposition_id }}
+        run: |
+          curl -H "Authorization: Bearer $ZENODO_TOKEN" \
+            -F "file=@release_files.zip" \
+            "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID/files"
+
+      # Step 5: Publish the new deposition
+      - name: Publish Zenodo Release
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
+          NEW_DEPOSITION_ID: ${{ env.deposition_id }}
+        run: |
+          RESPONSE=$(curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
+            -X POST "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID/actions/publish")
+          if [[ $(echo "$RESPONSE" | jq -r '.state') != "done" ]]; then
+            echo "Error: Failed to publish the deposition. Response: $RESPONSE"
+            exit 1
+          fi
+          echo "Zenodo release successfully published."
