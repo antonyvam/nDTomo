@@ -1,0 +1,13 @@
+version: v2019.01
+
+build:
+  os: windows 8
+  tools:
+    python: "3.8"  # Use your project's Python version
+
+sphinx:
+  configuration: docs/source/conf.py  # Path to your conf.py file
+
+python:
+  install:
+    - requirements: docs/requirements.txt
