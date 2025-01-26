@@ -57,25 +57,30 @@ jobs:
         run: |
           RESPONSE=$(curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
             -H "Content-Type: application/json" \
-            -d "{
-                  \"metadata\": {
-                    \"title\": \"nDTomo Release - ${RELEASE_TAG}\",
-                    \"description\": \"${RELEASE_BODY}\",
-                    \"upload_type\": \"software\",
-                    \"publication_date\": \"$(date +%Y-%m-%d)\",
-                    \"creators\": [
-                      {
-                        \"name\": \"Vamvakeros, Antonis\",
-                        \"affiliation\": \"Finden Ltd / Imperial College London\",
-                        \"orcid\": \"0000-0002-4745-0602\"
-                      }
-                    ],
-                    \"access_right\": \"open\",
-                    \"license\": \"gpl-3.0-or-later\",
-                    \"resource_type\": {\"type\": \"software\"}
-                  }
-                }" \
-            -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID")
+            -d "$(jq -n \
+              --arg title "nDTomo Release - ${RELEASE_TAG}" \
+              --arg description "${RELEASE_BODY}" \
+              --arg date "$(date +%Y-%m-%d)" \
+              --arg license "gpl-3.0-or-later" \
+              '{
+                metadata: {
+                  title: $title,
+                  description: $description,
+                  upload_type: "software",
+                  publication_date: $date,
+                  creators: [
+                    {
+                      name: "Vamvakeros, Antonis",
+                      affiliation: "Finden Ltd / Imperial College London",
+                      orcid: "0000-0002-4745-0602"
+                    }
+                  ],
+                  access_right: "open",
+                  license: $license,
+                  resource_type: {type: "software"}
+                }
+              }')" \
+            -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID")            
 
           if [[ $(echo "$RESPONSE" | jq -r '.message') == "A validation error occurred." ]]; then
             echo "Error: Metadata update failed. Response: $RESPONSE"
