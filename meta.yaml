@@ -1,46 +1,44 @@
 package:
   name: ndtomo
+  version: "2025.02"
 source:
   path: .
 channels:
   - conda-forge
   - anaconda
   - astra-toolbox/label/dev
-  - ccpi
 requirements:
   build:
     - python
-    - setuptools
     - pip
   run:
-    - python >=3.7
-    - ase
-    - tifffile
-    - pyfai ==0.19
+    - python
+    - pyfai
+    - fabio
     - silx
     - tqdm 
     - h5py
-    - pystackreg
-    - pyqtgraph
-    - fabio
+    - ipython
+    - nb_conda_kernels 
     - scikit-image 
     - scikit-learn
-    - xdesign 
-    - cached_property 
-    - periodictable  
-    - pymcr 
     - pyopencl 
-    - ipython
+    - numpy
     - matplotlib
-    - astra-toolbox
-    - tomopy 
-    - tigre
+    - scipy
     - mayavi
+    - napari
+    - jupyterlab
+    - tifffile 
+    - pillow 
+    - algotom 
+    - astra-toolbox
+    - pystackreg
   script: python setup.py install --single-version-externally-managed --record=record.txt
 about:
   home: https://github.com/antonyvam/nDTomo
   summary: "nDTomo software suite"
-  license: GNU
+  license: General Public License v3.0
   dev_url: https://github.com/antonyvam/nDTomo
   doc_url: https://ndtomo.readthedocs.io
 extra:
