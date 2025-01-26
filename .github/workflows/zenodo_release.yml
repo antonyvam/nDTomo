@@ -62,8 +62,7 @@ jobs:
                       }
                     ],
                     "access_right": "open",
-                    "license": "GPL-3.0-or-later",
-                    "resource_type": {"type": "software"}
+                    "license": "GPL-3.0-or-later"
                   }
                 }' \
             -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID"
