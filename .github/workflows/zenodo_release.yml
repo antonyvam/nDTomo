@@ -20,23 +20,22 @@ jobs:
 
       - name: Split Large Files if Needed
         run: |
-          split -b 100M release_files.zip release_part_
+          split -b 50M release_files.zip release_part_
 
       - name: Create New Zenodo Version
         id: zenodo-create
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
-          ZENODO_CONCEPT_ID: 6344269
+          ZENODO_CONCEPT_ID: 6344270
         run: |
           RESPONSE=$(curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
             -H "Content-Type: application/json" \
             -d '{
                   "metadata": {
                     "title": "New Release of nDTomo",
-                    "publication_date": "2025-01-26",
                     "description": "This release contains the latest updates and improvements for the nDTomo software.",
                     "creators": [{"name": "Vamvakeros, Antonis", "affiliation": "Finden Ltd / Imperial College London"}],
-                    "license": "cc-by-4.0",
+                    "license": "GPL-3.0",
                     "resource_type": {"type": "software"}
                   }
                 }' \
