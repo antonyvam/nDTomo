@@ -61,7 +61,7 @@ jobs:
               --arg title "nDTomo Release - ${RELEASE_TAG}" \
               --arg description "${RELEASE_BODY}" \
               --arg date "$(date +%Y-%m-%d)" \
-              --arg license "gpl-3.0-or-later" \
+              --arg license "gpl-3.0" \
               '{
                 metadata: {
                   title: $title,
@@ -76,8 +76,7 @@ jobs:
                     }
                   ],
                   access_right: "open",
-                  license: $license,
-                  resource_type: "software"
+                  license: $license
                 }
               }')" \
             -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID")
