@@ -1,0 +1,13 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: Vamvakeros
+    given-names: Antonos
+    affiliation: Finden ltd, UK
+    orcid: https://orcid.org/0000-0002-4745-0602
+title: "nDTomo: Software for X-ray chemical tomography analysis"
+version: v2024.12
+date-released: 2024-12-01
+url: https://github.com/antonyvam/nDTomo
+repository-code: https://github.com/antonyvam/nDTomo
+doi: 10.5281/zenodo.7139214
