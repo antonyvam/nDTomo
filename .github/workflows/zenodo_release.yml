@@ -25,7 +25,7 @@ jobs:
         id: metadata
         run: |
           echo "RELEASE_TAG=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
-          echo "RELEASE_BODY=${{ github.event.release.body }}" >> $GITHUB_ENV
+          printf "RELEASE_BODY=%s" "${{ github.event.release.body }}" | tr '\n' ' ' >> $GITHUB_ENV
 
       # Step 4: Create a new Zenodo version
       - name: Create new Zenodo version
