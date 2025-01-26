@@ -1,0 +1,26 @@
+name: Publish to Zenodo
+
+on:
+  push:
+    tags:
+      - "v*"  # Trigger the workflow on version tags, e.g., v1.0.0
+
+jobs:
+  publish_to_zenodo:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v3
+
+    - name: Upload Release to Zenodo
+      env:
+        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
+      run: |
+        echo "Zipping release files..."
+        zip -r release.zip .  # Adjust this to include only the files you want to upload
+
+        echo "Uploading release to Zenodo..."
+        curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
+             -F "file=@release.zip" \
+             https://zenodo.org/api/deposit/depositions/7139214/files
