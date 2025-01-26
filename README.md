@@ -121,9 +121,9 @@ Tensorflow is not included in the conda package so one has to install it using p
 
 Citation
 --------
-Please cite using the following:
+If you use parts of the nDTomo code, please cite the work using the following:
 
-Vamvakeros, A. et al., nDTomo software suite, 2019, DOI: https://doi.org/10.5281/zenodo.6344269, url: https://github.com/antonyvam/nDTomo
+Vamvakeros, A. et al., nDTomo software suite, 2019, DOI: https://doi.org/10.5281/zenodo.6344270, url: https://github.com/antonyvam/nDTomo
 
 
 References
