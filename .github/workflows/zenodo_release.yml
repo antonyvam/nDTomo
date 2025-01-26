@@ -52,14 +52,18 @@ jobs:
                   "metadata": {
                     "title": "New Release of nDTomo",
                     "description": "This release contains the latest updates and improvements for the nDTomo software.",
+                    "upload_type": "software",
+                    "publication_date": "2025-01-26",
                     "creators": [
                       {
                         "name": "Vamvakeros, Antonis",
-                        "affiliation": "Finden Ltd / Imperial College London"
+                        "affiliation": "Finden Ltd / Imperial College London",
+                        "orcid": "0000-0002-4745-0602"
                       }
                     ],
-                    "license": "GPL-3.0",
-                    "upload_type": "software"
+                    "access_right": "open",
+                    "license": "GPL-3.0-or-later",
+                    "resource_type": {"type": "software"}
                   }
                 }' \
             -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID"
