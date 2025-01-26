@@ -1,4 +1,4 @@
-![nDTomo](assets/ndtomo_logo.png)
+![nDTomo](assets/ndtomo_logo_small.png)
 
 nDTomo software suite
 =====================
