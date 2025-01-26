@@ -77,7 +77,7 @@ jobs:
                   ],
                   access_right: "open",
                   license: $license,
-                  resource_type: {"type": "software"}
+                  resource_type: "software"
                 }
               }')" \
             -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID")
