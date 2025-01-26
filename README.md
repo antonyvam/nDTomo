@@ -7,6 +7,8 @@ The code includes both conventional algorithms as well as artifical neural netwo
 
 Documentation for the GUIs is provided at (needs to be updated): https://ndtomo.readthedocs.io
 
+![XRD-CT](assets/xrdct.png)
+
 Current status
 --------------
 Simulation code for creating phantoms (2D-4D)
