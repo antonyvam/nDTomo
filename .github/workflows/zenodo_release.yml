@@ -15,12 +15,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # Step 2: Compress the release files if needed
+      # Step 2: Compress the release files
       - name: Prepare Release Files
         run: |
           zip -r release_files.zip .
 
-      # Step 3: Create a new Zenodo version
+      # Step 3: Extract Metadata from GitHub Release
+      - name: Extract Metadata
+        id: metadata
+        run: |
+          echo "RELEASE_TAG=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+          echo "RELEASE_BODY=${{ github.event.release.body }}" >> $GITHUB_ENV
+
+      # Step 4: Create a new Zenodo version
       - name: Create new Zenodo version
         id: zenodo-create
         env:
@@ -40,30 +47,42 @@ jobs:
           echo "New deposition ID: $NEW_DEPOSITION_ID"
           echo "deposition_id=$NEW_DEPOSITION_ID" >> $GITHUB_ENV
 
-      # Step 4: Update metadata for the new deposition
+      # Step 5: Update Zenodo Metadata
       - name: Update Zenodo Metadata
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
           NEW_DEPOSITION_ID: ${{ env.deposition_id }}
+          RELEASE_TAG: ${{ env.RELEASE_TAG }}
+          RELEASE_BODY: ${{ env.RELEASE_BODY }}
         run: |
-          curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
+          RESPONSE=$(curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
             -H "Content-Type: application/json" \
-            -d '{
-                  "metadata": {
-                    "description": "This release contains the latest updates and improvements for the nDTomo software.",
-                    "upload_type": "software",
-                    "creators": [
+            -d "{
+                  \"metadata\": {
+                    \"title\": \"nDTomo Release - ${RELEASE_TAG}\",
+                    \"description\": \"${RELEASE_BODY}\",
+                    \"upload_type\": \"software\",
+                    \"publication_date\": \"$(date +%Y-%m-%d)\",
+                    \"creators\": [
                       {
-                        "name": "Vamvakeros, Antonis",
-                        "affiliation": "Finden Ltd / Imperial College London",
-                        "orcid": "0000-0002-4745-0602"
+                        \"name\": \"Vamvakeros, Antonis\",
+                        \"affiliation\": \"Finden Ltd / Imperial College London\",
+                        \"orcid\": \"0000-0002-4745-0602\"
                       }
-                    ]
+                    ],
+                    \"access_right\": \"open\",
+                    \"license\": \"gpl-3.0-or-later\",
+                    \"resource_type\": {\"type\": \"software\"}
                   }
-                }' \
-            -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID"
+                }" \
+            -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID")
 
-      # Step 5: Upload the release files to Zenodo
+          if [[ $(echo "$RESPONSE" | jq -r '.message') == "A validation error occurred." ]]; then
+            echo "Error: Metadata update failed. Response: $RESPONSE"
+            exit 1
+          fi
+
+      # Step 6: Upload Files to Zenodo
       - name: Upload Files to Zenodo
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
@@ -73,7 +92,7 @@ jobs:
             -F "file=@release_files.zip" \
             "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID/files"
 
-      # Step 6: Publish the new deposition
+      # Step 7: Publish the new deposition
       - name: Publish Zenodo Release
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
@@ -88,4 +107,3 @@ jobs:
           fi
 
           echo "Zenodo release successfully published."
-          
