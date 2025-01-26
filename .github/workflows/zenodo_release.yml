@@ -25,7 +25,7 @@ jobs:
         id: zenodo-create
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
-          ZENODO_CONCEPT_ID: 6344269
+          ZENODO_CONCEPT_ID: 6344270
         run: |
           # Create a new version on Zenodo
           RESPONSE=$(curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
