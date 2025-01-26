@@ -77,11 +77,11 @@ jobs:
                   ],
                   access_right: "open",
                   license: $license,
-                  resource_type: {type: "software"}
+                  resource_type: {"type": "software"}
                 }
               }')" \
-            -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID")            
-
+            -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID")
+          
           if [[ $(echo "$RESPONSE" | jq -r '.message') == "A validation error occurred." ]]; then
             echo "Error: Metadata update failed. Response: $RESPONSE"
             exit 1
