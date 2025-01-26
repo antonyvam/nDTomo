@@ -8,6 +8,7 @@ The code includes both conventional algorithms as well as artifical neural netwo
 Documentation for the GUIs is provided at (needs to be updated): https://ndtomo.readthedocs.io
 
 ![XRD-CT](assets/xrdct.png)
+Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray diffraction CT (XRD-CT or Powder diffraction CT) data acquired from an NMC532 Li ion battery. For more details see ref
 
 Current status
 --------------
@@ -124,3 +125,8 @@ Please cite using the following:
 
 Vamvakeros, A. et al., nDTomo software suite, 2019, DOI: https://doi.org/10.5281/zenodo.6344269, url: https://github.com/antonyvam/nDTomo
 
+
+References
+----------
+
+A. Vamvakeros, D. Matras, T.E. Ashton, A.A. Coelho, H. Dong, D. Bauer, Y. Odarchenko, S.W.T. Price, K.T. Butler, O. Gutowski, A.‐C. Dippel, M. von Zimmerman, J.A. Darr, S.D.M. Jacques, A.M. Beale, Small Methods, 2100512, 2021
