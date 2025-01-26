@@ -11,50 +11,70 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Compress Release Files
+      # Step 2: Compress the release files if needed
+      - name: Prepare Release Files
         run: |
           zip -r release_files.zip .
 
-      - name: Split Large Files if Needed
-        run: |
-          split -b 50M release_files.zip release_part_
-
-      - name: Create New Zenodo Version
+      # Step 3: Create a new Zenodo version
+      - name: Create new Zenodo version
         id: zenodo-create
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
           ZENODO_CONCEPT_ID: 6344270
         run: |
           RESPONSE=$(curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
+            -X POST "https://zenodo.org/api/deposit/depositions/$ZENODO_CONCEPT_ID/actions/newversion")
+
+          NEW_DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.links.latest_draft' | sed 's/.*\///')
+
+          if [ -z "$NEW_DEPOSITION_ID" ] || [ "$NEW_DEPOSITION_ID" = "null" ]; then
+            echo "Error: Failed to create a new Zenodo version. Response: $RESPONSE"
+            exit 1
+          fi
+
+          echo "New deposition ID: $NEW_DEPOSITION_ID"
+          echo "deposition_id=$NEW_DEPOSITION_ID" >> $GITHUB_ENV
+
+      # Step 4: Update metadata for the new deposition
+      - name: Update Zenodo Metadata
+        env:
+          ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
+          NEW_DEPOSITION_ID: ${{ env.deposition_id }}
+        run: |
+          curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
             -H "Content-Type: application/json" \
             -d '{
                   "metadata": {
                     "title": "New Release of nDTomo",
                     "description": "This release contains the latest updates and improvements for the nDTomo software.",
-                    "creators": [{"name": "Vamvakeros, Antonis", "affiliation": "Finden Ltd / Imperial College London"}],
+                    "creators": [
+                      {
+                        "name": "Vamvakeros, Antonis",
+                        "affiliation": "Finden Ltd / Imperial College London"
+                      }
+                    ],
                     "license": "GPL-3.0",
                     "resource_type": {"type": "software"}
                   }
                 }' \
-            -X POST "https://zenodo.org/api/deposit/depositions/$ZENODO_CONCEPT_ID/actions/newversion")
+            -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID"
 
-          NEW_DEPOSITION_ID=$(echo "$RESPONSE" | jq -r '.links.latest_draft' | sed 's/.*\///')
-          echo "deposition_id=$NEW_DEPOSITION_ID" >> $GITHUB_ENV
-
+      # Step 5: Upload the release files to Zenodo
       - name: Upload Files to Zenodo
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
           NEW_DEPOSITION_ID: ${{ env.deposition_id }}
         run: |
-          for part in release_part_*; do
-            curl -H "Authorization: Bearer $ZENODO_TOKEN" \
-              -F "file=@$part" \
-              "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID/files"
-          done
+          curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
+            -F "file=@release_files.zip" \
+            "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID/files"
 
+      # Step 6: Publish the new deposition
       - name: Publish Zenodo Release
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
@@ -62,8 +82,11 @@ jobs:
         run: |
           RESPONSE=$(curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
             -X POST "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID/actions/publish")
+
           if [[ $(echo "$RESPONSE" | jq -r '.status') != "published" ]]; then
             echo "Error: Failed to publish the deposition. Response: $RESPONSE"
             exit 1
           fi
+
           echo "Zenodo release successfully published."
+          
