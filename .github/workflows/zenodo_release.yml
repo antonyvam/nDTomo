@@ -50,19 +50,15 @@ jobs:
             -H "Content-Type: application/json" \
             -d '{
                   "metadata": {
-                    "title": "New Release of nDTomo",
                     "description": "This release contains the latest updates and improvements for the nDTomo software.",
                     "upload_type": "software",
-                    "publication_date": "2025-01-26",
                     "creators": [
                       {
                         "name": "Vamvakeros, Antonis",
                         "affiliation": "Finden Ltd / Imperial College London",
                         "orcid": "0000-0002-4745-0602"
                       }
-                    ],
-                    "access_right": "open",
-                    "license": "GPL-3.0-or-later"
+                    ]
                   }
                 }' \
             -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID"
