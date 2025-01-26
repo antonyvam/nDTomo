@@ -35,7 +35,7 @@ def astra_Amatrix(ntr, ang):
 
     return(A)
 
-def astra_rec_single(sino, theta=None, scanrange = '180', method='FBP_CUDA', filt='Ram-Lak', nits = None):
+def astra_rec_single(sino, theta=None, scanrange = '180', method='FBP_CUDA', filt='Ram-Lak', nits = None, timing=False):
     
     '''
     2D ct reconstruction using the astra-toolbox
@@ -86,7 +86,8 @@ def astra_rec_single(sino, theta=None, scanrange = '180', method='FBP_CUDA', fil
     # Create the algorithm object from the configuration structure
     alg_id = astra.algorithm.create(cfg)
 
-    start=time.time()
+    if timing:
+        start=time.time()
 
     if method == 'FBP' or method == 'FBP_CUDA':
         rec = astra.algorithm.run(alg_id)
@@ -96,8 +97,8 @@ def astra_rec_single(sino, theta=None, scanrange = '180', method='FBP_CUDA', fil
     # Get the result
     
     rec = astra.data2d.get(rec_id)
-    
-    print((time.time()-start))
+    if timing:
+        print((time.time()-start))
         
     astra.data2d.delete(sinogram_id)
     astra.projector.delete(proj_id)
