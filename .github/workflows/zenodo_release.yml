@@ -3,7 +3,10 @@ name: Publish to Zenodo
 on:
   push:
     tags:
-      - "v*"  # Trigger the workflow on version tags, e.g., v1.0.0
+      - "v*"  # Trigger on tags starting with 'v', e.g., v1.0.0
+  release:
+    types: 
+      - published  # Trigger when a new release is published
 
 jobs:
   publish_to_zenodo:
