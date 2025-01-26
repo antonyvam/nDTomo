@@ -2,10 +2,10 @@
 
 nDTomo software suite
 =====================
-The nDTomo software suite contains python scripts and GUIs for the simulation, visualisation and analysis of X-ray chemical imaging and tomography data.
-The code includes both conventional algorithms as well as artifical neural networks developed primarily using Tensorflow v2.
+The nDTomo software suite contains a graphical user interface (GUI) and python scripts for the simulation, visualisation and analysis of X-ray chemical imaging and tomography data.
+The code includes both conventional algorithms as well as artifical neural networks developed using pytorch.
 
-Documentation for the GUIs is provided at (needs to be updated): https://ndtomo.readthedocs.io
+Documentation for the GUI will be provided at (under construction): https://ndtomo.readthedocs.io
 
 ![XRD-CT](assets/xrdct.png)
 Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray diffraction CT (XRD-CT or Powder diffraction CT) data acquired from an NMC532 Li ion battery. For more details regarding this study see [1].
@@ -16,15 +16,13 @@ Simulation code for creating phantoms (2D-4D)
 
 Scripts for handling tomography data
 
-Tensorflow neural network models and related functions for various applications
-
 Clustering and dimensionality reduction methods (scikit-learn and autoencoders)
 
 nDVis GUI for visualising chemical imaging and tomography data
 
 To do
 -----
-Modernise the GUIs and update the documentation
+Modernise the nDTomo GUI and update the documentation
 
 
 Installation instructions from sources
@@ -61,44 +59,6 @@ git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
 module load python/3
 python setup.py install --user
 ```
-
-To install astra-toolbox:
-
-```conda install -c astra-toolbox/label/dev astra-toolbox```
-
-To install tomopy:
-
-```conda install -c conda-forge tomopy```
-
-The GUIs require PyQt5 but I have removed it from the setup.py because it breaks the spyder IDE. If you don't use anaconda/spyder (PyQt5 is included in anaconda), then you can install it with pip: 
-
-```
-pip install PyQt5
-```
-
-PyFAI
------
-The pyFAI version used in the nDTomo is 0.19
-
-To run with GPU, you need to install pyopencl
-
-For Windows, try installing Christoph Gohlke's repository: http://www.lfd.uci.edu/~gohlke/pythonlibs/
-
-For example: 
-
-```
-pip install pyopencl-2021.2.10-cp38-cp38-win_amd64.whl
-```
-
-PyFAI installation instructions can be found here: http://www.silx.org/doc/pyFAI/dev/operations/index.html
-
-Extra packages to be installed (not essential)
-----------------------------------------------
-
-Neural networks were built/tested using Tensorflow; make sure to follow these instruction for GPU support: https://www.tensorflow.org/install/gpu. As an example:
-
-```pip install tensorflow==2.7 tensorflow-addons==0.15```
-
 
 Installation instructions using conda (Windows only)
 ----------------------------------------------------
