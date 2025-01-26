@@ -1,11 +1,8 @@
 name: Publish to Zenodo
 
 on:
-  push:
-    tags:
-      - "v*"  # Trigger on tags starting with 'v', e.g., v1.0.0
   release:
-    types: 
+    types:
       - published  # Trigger when a new release is published
 
 jobs:
@@ -16,14 +13,28 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v3
 
+    - name: Create a new deposition on Zenodo
+      id: create_deposition
+      env:
+        ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
+      run: |
+        echo "Creating a new deposition on Zenodo..."
+        response=$(curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
+          -X POST https://zenodo.org/api/deposit/depositions \
+          -H "Content-Type: application/json" \
+          -d '{"metadata": {"title": "nDTomo", "upload_type": "software", "description": "Release of nDTomo", "creators": [{"name": "Antonis Vamvakeros", "affiliation": "Finden ltd"}]}}')
+        echo $response > response.json
+        cat response.json
+        deposition_id=$(jq -r '.id' response.json)
+        echo "::set-output name=deposition_id::$deposition_id"
+
     - name: Upload Release to Zenodo
       env:
         ZENODO_API_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
       run: |
-        echo "Zipping release files..."
-        zip -r release.zip .  # Adjust this to include only the files you want to upload
-
-        echo "Uploading release to Zenodo..."
+        echo "Uploading files to the deposition..."
+        deposition_id=${{ steps.create_deposition.outputs.deposition_id }}
+        zip -r release.zip .
         curl -H "Authorization: Bearer $ZENODO_API_TOKEN" \
              -F "file=@release.zip" \
-             https://zenodo.org/api/deposit/depositions/7139214/files
+             https://zenodo.org/api/deposit/depositions/$deposition_id/files
