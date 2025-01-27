@@ -16,24 +16,8 @@ The aim of this library is to generate tools for the following:
 4. **Application of computed tomography reconstruction algorithms** from basic principles to practical applications
 5. **Dimensionality reduction of chemical imaging data and data analysis through multi-peak fitting**
 
-
 ![XRD-CT](assets/xrdct.png)
 Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray diffraction CT (XRD-CT or Powder diffraction CT) data acquired from an NMC532 Li ion battery. For more details regarding this study see [1].
-
-Current status
---------------
-Simulation code for creating phantoms (2D-4D)
-
-Scripts for handling tomography data
-
-Clustering and dimensionality reduction methods (scikit-learn and autoencoders)
-
-nDVis GUI for visualising chemical imaging and tomography data
-
-To do
------
-Modernise the nDTomo GUI and update the documentation
-
 
 Installation instructions from sources
 --------------------------------------
