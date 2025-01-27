@@ -1,12 +1,15 @@
 package:
   name: ndtomo
   version: "2025.02"
+  
 source:
   path: .
+  
 channels:
   - conda-forge
   - anaconda
   - astra-toolbox/label/dev
+  
 requirements:
   build:
     - python
@@ -34,13 +37,19 @@ requirements:
     - algotom 
     - astra-toolbox
     - pystackreg
+    
+build:
   script: python setup.py install --single-version-externally-managed --record=record.txt
+  entry_points:
+    - nDTomoGUI = nDTomo.GUI.nDTomoGUI:main
+    
 about:
   home: https://github.com/antonyvam/nDTomo
   summary: "nDTomo software suite"
   license: General Public License v3.0
   dev_url: https://github.com/antonyvam/nDTomo
   doc_url: https://ndtomo.readthedocs.io
+  
 extra:
   maintainers:
    - antonyvam
