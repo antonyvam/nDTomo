@@ -10,8 +10,8 @@ The aim of this library is to generate tools for the following:
 1. **Generation of multi-modal and multi-dimensional phantoms**
 2. **Simulation of various computed tomography data acquisition strategies**
 3. **Creation of demonstration scripts** for:
-   - (a) Integration of XRD-CT data
-   - (b) Processing and correcting sinograms and radiographs for X-ray computed tomography data for various artefacts
+   - Integration of XRD-CT data
+   - Processing and correcting sinograms and radiographs for X-ray computed tomography data for various artefacts
 4. **Application of computed tomography reconstruction algorithms** from basic principles to practical applications
 5. **Dimensionality reduction of chemical imaging data and data analysis through multi-peak fitting**
 
