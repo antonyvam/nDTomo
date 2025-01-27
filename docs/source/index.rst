@@ -1,6 +1,8 @@
+.. image:: images/ndtomo_logo_small.png 
+
 nDTomo's documentation
 **********************
-The nDTomo software contains GUIs for the acquisition, pre-processing and analysis of X-ray chemical tomography data
+The nDTomo software suite contains a graphical user interface (GUI) and python scripts for the simulation, visualisation, preprocessing and analysis of X-ray chemical imaging and tomography data.
 
 Contents
 ========
@@ -10,6 +12,5 @@ Contents
    
    intro
    req
-   tut_Integrator
-   tut_MultiTool
+   tutorial_nDTomo_GUI
    sites

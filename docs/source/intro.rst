@@ -1,30 +1,20 @@
+.. image:: images/ndtomo_logo_small.png 
+
 nDTomo software suite
 =====================
-The nDTomo software suite contains scripts/GUIs for the simulation, visualisation and analysis of X-ray chemical tomography data.
+The nDTomo software suite contains a graphical user interface (GUI) and python scripts for the simulation, visualisation, preprocessing and analysis of X-ray chemical imaging and tomography data.
 
-Integrator
-----------
-The Integrator GUI is designed to assist the user to integrate X-ray scattering data. 
-The data integration is performed with pyFAI. 
-The integration of the diffraction data can be performed in several ways:
+Documentation for the GUI will be provided at (under construction): https://ndtomo.readthedocs.io
 
-* Standard azimuthal integration
-* Using a trimmed mean filter: the user specifies the % for trimming
-* Using a new standard deviation based adaptive filter: the user specifies the number of standard deviations to be used
+The aim of this library is to generate tools for the following:
+1. **Generation of multi-modal and multi-dimensional phantoms**
+2. **Simulation of various computed tomography data acquisition strategies**
+3. **Creation of demonstration scripts** for:
+   - (a) Integration of XRD-CT data
+   - (b) Processing and correcting sinograms and radiographs for X-ray computed tomography data for various artefacts
+4. **Application of computed tomography reconstruction algorithms** from basic principles to practical applications
+5. **Dimensionality reduction of chemical imaging data and data analysis through multi-peak fitting**
 
-MultiTool
----------
-The MultiTool GUI allows for the processing and analysis of chemical tomography data. For example:
+.. image:: images/xrdct.png 
+Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray diffraction CT (XRD-CT or Powder diffraction CT) data acquired from an NMC532 Li ion battery. For more details regarding this study see [1].
 
-1. It allows for the visualization of 3d matrices. These are typically grid maps (e.g. XRD map) or tomographic images (e.g. XRD-CT data) 
-2. It has the ability to:
-
-	* Centre sinogram volumes (raw chemical tomography data), 
-	* Remove backround signal,
-	* Normalise sinogram assuming constant total scattering intensity per projection (diffaction/scattering tomography data)
-	* Reconstruct a diffaction/scattering tomography dataset
-	* Reconstruct multiple diffaction/scattering tomography datasets simultaneously (batch reconstruction)
-
-3. It can load, normalise (flat/dark images) and reconstruction of X-ray absorption computed tomography data (abs-CT)
-4. It can perform a zero-order absorption correction on diffaction/scattering tomography data using an abs-CT image
-5. It can perform batch single peak fitting of chemical imaging/tomography data
