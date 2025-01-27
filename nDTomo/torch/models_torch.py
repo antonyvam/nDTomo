@@ -236,41 +236,101 @@ class CNN1D(nn.Module):
         return out
     
 class CNN2D(nn.Module):
-    
+    """
+    A configurable 2D Convolutional Neural Network (CNN) for image processing tasks.
+
+    Parameters
+    ----------
+    npix : int
+        The spatial size (height and width) of the input images.
+    nch_in : int, optional, default=1
+        Number of input channels (e.g., 1 for grayscale images, 3 for RGB).
+    nch_out : int, optional, default=1
+        Number of output channels.
+    nfilts : int, optional, default=32
+        Number of filters (channels) in the intermediate convolutional layers.
+    nlayers : int, optional, default=4
+        Number of intermediate convolutional layers.
+    norm_type : str or None, optional, default='layer'
+        Normalization type to apply after convolutions:
+        - 'batch': Batch normalization.
+        - 'layer': Layer normalization.
+        - None: No normalization.
+    activation : str, optional, default='Linear'
+        Final activation function to apply:
+        - 'Sigmoid': Applies a sigmoid activation.
+        - 'Linear': No activation applied.
+
+    Methods
+    -------
+    forward(x, residual=False):
+        Performs a forward pass through the network.
+        - `residual`: If True, adds the input `x` to the output.
+
+    """
     def __init__(self, npix, nch_in=1, nch_out=1, nfilts=32, nlayers=4, norm_type='layer', activation='Linear'):
-        
         super(CNN2D, self).__init__()
-        
+
         self.npix = npix
-        
         layers = []
-        layers.append(nn.Conv2d(nch_in, nfilts, kernel_size=3, stride=1, padding=1))  # 'same' padding in PyTorch is usually done by manually specifying the padding
-        if norm_type is not None:
+
+        # Input convolutional layer
+        layers.append(nn.Conv2d(nch_in, nfilts, kernel_size=3, stride=1, padding=1))  # Same padding
+        if norm_type:
             self.add_norm_layer(layers, nfilts, norm_type)
         layers.append(nn.ReLU())
-        
-        for layer in range(nlayers):
+
+        # Intermediate convolutional layers
+        for _ in range(nlayers):
             layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding=1))
-            if norm_type is not None:
+            if norm_type:
                 self.add_norm_layer(layers, nfilts, norm_type)
             layers.append(nn.ReLU())
 
+        # Output convolutional layer
         layers.append(nn.Conv2d(nfilts, nch_out, kernel_size=3, stride=1, padding=1))
-        
         if activation == 'Sigmoid':
             layers.append(nn.Sigmoid())
-        
+
+        # Combine all layers into a sequential model
         self.cnn2d = nn.Sequential(*layers)
 
     def add_norm_layer(self, layers, nfilts, norm_type):
+        """
+        Adds a normalization layer to the list of layers.
+
+        Parameters
+        ----------
+        layers : list
+            List of layers to which the normalization layer is appended.
+        nfilts : int
+            Number of channels for normalization.
+        norm_type : str
+            Type of normalization ('batch' or 'layer').
+        """
         if norm_type == 'batch':
             layers.append(nn.BatchNorm2d(nfilts))
         elif norm_type == 'layer':
             layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))
         else:
-            raise ValueError('Invalid normalization type')
-            
+            raise ValueError(f"Invalid normalization type: {norm_type}. Choose 'batch', 'layer', or None.")
+
     def forward(self, x, residual=False):
+        """
+        Performs a forward pass through the network.
+
+        Parameters
+        ----------
+        x : torch.Tensor
+            Input tensor of shape (batch_size, nch_in, npix, npix).
+        residual : bool, optional, default=False
+            If True, adds the input `x` to the output.
+
+        Returns
+        -------
+        torch.Tensor
+            Output tensor of shape (batch_size, nch_out, npix, npix).
+        """
         if residual:
             out = self.cnn2d(x) + x
         else:
