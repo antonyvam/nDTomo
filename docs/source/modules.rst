@@ -1,12 +1,7 @@
 Available Modules
 =================
 
-.. automodule:: nDTomo.test_module
+.. automodule:: nDTomo.analysis.peaks
    :members:
    :undoc-members:
    :show-inheritance:
-   
-.. automodule:: nDTomo.test_module
-   :members:
-   :undoc-members:
-   :show-inheritance:   

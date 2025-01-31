@@ -9,10 +9,10 @@ Methods for creating shapes in 2D and 3D
 
 import numpy as np
 import matplotlib.pyplot as plt
-%matplotlib qt
 from nDTomo.utils.hyperexpl import ImageSpectrumGUI
 from nDTomo.utils.misc3D import showvol
 import time
+%matplotlib qt
 
 #%%
 

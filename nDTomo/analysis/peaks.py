@@ -2,7 +2,7 @@
 """
 Models for peak fitting
 
-@author: Antony
+@author: Dr A. Vamvakeros
 """
 
 import numpy as np
