@@ -5,3 +5,4 @@ Available Modules
    :maxdepth: 2
 
    simulations/index
+   analysis/index

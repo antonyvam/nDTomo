@@ -1,9 +1,10 @@
-Analysis Module
-===============
+Simulations Module
+==================
 
-The `analysis` module contains functions for processing tomography data.
+The `sim` module contains functions for processing tomography data.
 
 .. toctree::
    :maxdepth: 2
 
    shapes2D
+   shapes3D   
