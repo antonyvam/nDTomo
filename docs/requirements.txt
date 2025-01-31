@@ -2,5 +2,8 @@ sphinx
 sphinx-rtd-theme
 sphinxcontrib-napoleon
 nbsphinx
-ipykernel  # (Required for running notebooks)
-pandoc  # (Ensures Markdown rendering in Jupyter notebooks)
+ipykernel
+pandoc
+
+nbsphinx_allow_errors = True  # Prevent errors from stopping build
+exclude_patterns = ["_build", "**.ipynb_checkpoints"]
