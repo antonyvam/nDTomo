@@ -59,6 +59,7 @@ extensions = [
 	'sphinx.ext.autosummary',
 ]
 nbsphinx_allow_errors = True
+autosummary_generate = True  # Auto-generate function/method summary
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
