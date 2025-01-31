@@ -4,6 +4,3 @@ sphinxcontrib-napoleon
 nbsphinx
 ipykernel
 pandoc
-
-nbsphinx_allow_errors = True  # Prevent errors from stopping build
-exclude_patterns = ["_build", "**.ipynb_checkpoints"]

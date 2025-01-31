@@ -15,7 +15,6 @@
 import os
 import sys
 
-sys.path.insert(0, os.path.abspath("../nDTomo/examples/notebooks/"))
 sys.path.insert(0, os.path.abspath('../..'))
 sys.setrecursionlimit(1500)
 
