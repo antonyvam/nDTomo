@@ -8,13 +8,9 @@ nDAacq to simulate an XRD-CT dataset with 2D diffraction patterns from 1D diffra
 
 #%%
 
-from nDTomo.utils.misc import ndtomopath
-from nDTomo.utils.h5data import h5read_data, h5write_data
-from nDTomo.utils.plots import closefigs, showplot, showspectra, showim
-from nDTomo.utils.noise import addpnoise1D, addpnoise2D
-from nDTomo.utils.xrays import KeVtoAng
+from nDTomo.utils.noise import addpnoise2D
 from nDTomo.sim.shapes.phantoms import load_example_patterns, nDphantom_2D, nDphantom_3D
-from nDTomo.ct.astra_tomo import astra_create_geo, astra_rec_vol, astra_rec_alg, astra_create_sino_geo, astra_create_sino
+from nDTomo.ct.astra_tomo import astra_create_sino
 
 from tqdm import tqdm
 import time, fabio, h5py
