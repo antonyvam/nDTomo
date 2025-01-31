@@ -15,5 +15,4 @@ Contents
    tutorial_nDTomo_GUI
    examples
    sites
-   notebooks/example_tomo_tf_01
    
