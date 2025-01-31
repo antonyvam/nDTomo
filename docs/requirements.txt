@@ -4,3 +4,4 @@ sphinxcontrib-napoleon
 nbsphinx
 ipykernel
 pandoc
+numpy
