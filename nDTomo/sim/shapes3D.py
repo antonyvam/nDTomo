@@ -390,34 +390,6 @@ def create_cone(arr, tip, height, outer_radius, thickness=1, fill_value=1, caps=
         return arr
 
 
-
-def create_pyramid(arr, tip, height, base_size, fill_value=1):
-    """
-    Creates a solid pyramid in `arr`, oriented along +Z.
-
-    The tip is at `(x0, y0, z0)`, and the base is a square 
-    centered at `(x0, y0)` with width `base_size` at `z0 + height`.
-
-    Parameters
-    ----------
-    arr : np.ndarray
-        3D array of shape (X, Y, Z) where the pyramid will be created.
-    tip : tuple (x0, y0, z0)
-        Coordinates of the tip of the pyramid.
-    height : int
-        Height of the pyramid along the +Z axis.
-    base_size : int
-        The width of the pyramid's base at `z0 + height` (square base).
-    fill_value : int or float, optional (default=1)
-        The value used to fill the pyramid.
-
-    Returns
-    -------
-    arr : np.ndarray
-        The same array, modified in-place.
-    """
-
-
 def create_pyramid_hollow(arr, tip, height, base_size, thickness=1, fill_value=1):
     """
     Creates a solid or hollow pyramid in a 3D NumPy array, oriented along the Z-axis.
