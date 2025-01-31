@@ -13,4 +13,5 @@ Contents
    intro
    req
    tutorial_nDTomo_GUI
+   examples
    sites
