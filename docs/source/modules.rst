@@ -1,7 +1,7 @@
 Available Modules
 =================
 
-.. automodule:: nDTomo.analysis.peaks
+.. automodule:: nDTomo.analysis
    :members:
    :undoc-members:
    :show-inheritance:
