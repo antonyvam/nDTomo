@@ -1,11 +1,25 @@
 # -*- coding: utf-8 -*-
 """
-Create phantoms (2D-4D) for image processing and analysis experiments.
+Create phantoms (2D-5D) for image processing, tomography, and spectral imaging experiments.
 
 This module provides functions for generating synthetic image phantoms 
-for testing and validating image processing algorithms.
+to support the development, testing, and validation of image processing, 
+computer vision, and tomography algorithms. The generated datasets can 
+simulate various spatial, spectral, and temporal patterns for use in 
+machine learning, reconstruction, and segmentation studies.
 
-@author: Antony Vamvakeros
+Phantom types include:
+- **2D phantoms:** Geometric shapes, random patterns, Shepp-Logan phantom, and structured test patterns.
+- **3D phantoms:** Volumetric datasets with controlled spatial distributions.
+- **4D phantoms:** Datasets with an additional spectral or temporal dimension.
+- **5D phantoms:** Fully dynamic datasets with spatial, spectral, and temporal variations.
+
+The module includes utilities for defining spatial distributions, 
+assigning spectral signatures, and simulating motion across multiple 
+dimensions. It also provides options for randomization, normalization, 
+and controlled placement of features.
+
+@author: Dr A. Vamvakeros
 """
 
 from nDTomo.methods.misc import ndtomopath, cirmask
