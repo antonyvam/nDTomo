@@ -390,7 +390,7 @@ def create_cone(arr, tip, height, outer_radius, thickness=1, fill_value=1, caps=
         return arr
 
 
-def create_pyramid_hollow(arr, tip, height, base_size, thickness=1, fill_value=1):
+def create_pyramid(arr, tip, height, base_size, thickness=1, fill_value=1):
     """
     Creates a solid or hollow pyramid in a 3D NumPy array, oriented along the Z-axis.
 
