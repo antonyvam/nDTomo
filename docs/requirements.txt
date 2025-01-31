@@ -4,5 +4,3 @@ sphinxcontrib-napoleon
 nbsphinx
 ipykernel
 pandoc
-sphinx.ext.autodoc
-sphinx.ext.viewcode
