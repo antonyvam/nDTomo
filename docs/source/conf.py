@@ -18,6 +18,13 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 sys.setrecursionlimit(1500)
 
+notebooks_src = os.path.abspath("./notebooks/")
+notebooks_dest = os.path.abspath("./_build/html/notebooks/")
+
+if os.path.exists(notebooks_src):
+    if not os.path.exists(notebooks_dest):
+        shutil.copytree(notebooks_src, notebooks_dest)
+		
 # -- Project information -----------------------------------------------------
 
 project = u'nDTomo'
