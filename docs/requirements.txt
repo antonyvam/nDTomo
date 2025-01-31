@@ -1,3 +1,6 @@
 sphinx
 sphinx-rtd-theme
 sphinxcontrib-napoleon
+nbsphinx
+ipykernel  # (Required for running notebooks)
+pandoc  # (Ensures Markdown rendering in Jupyter notebooks)
