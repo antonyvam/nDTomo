@@ -24,7 +24,7 @@ if os.path.exists(notebooks_src):
     if not os.path.exists(notebooks_dest):
         shutil.copytree(notebooks_src, notebooks_dest)
 
-sys.path.insert(0, os.path.abspath("../nDTomo")) 
+sys.path.insert(0, os.path.abspath("../../nDTomo")) 
 		
 # -- Project information -----------------------------------------------------
 
@@ -54,8 +54,9 @@ extensions = [
     'sphinx.ext.intersphinx',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    "sphinx.ext.napoleon",  # For Google/NumPy style docstrings	
+    'sphinx.ext.napoleon',  # For Google/NumPy style docstrings	
     'sphinx.ext.githubpages',
+	'sphinx.ext.autosummary',
 ]
 nbsphinx_allow_errors = True
 
