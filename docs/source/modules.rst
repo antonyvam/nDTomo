@@ -1,7 +1,8 @@
 Available Modules
 =================
 
-.. automodule:: nDTomo.test_module
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. toctree::
+   :maxdepth: 2
+
+   nDTomo.test_module
+   
