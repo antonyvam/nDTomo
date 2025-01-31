@@ -4,6 +4,7 @@ Simulations module for nDTomo.
 This package contains modules for simulating tomography data, including:
 - `shapes2D`: methods related to simulating 2D shapes
 - `shapes3D`: methods related to simulating 3D shapes
+- `phantoms`: methods for creating multi-dimensional phantoms
 """
 
 import importlib
@@ -11,7 +12,7 @@ import sys
 
 # List of submodules
 __all__ = []
-modules = ["shapes2D", "shapes3D"]
+modules = ["shapes2D", "shapes3D", "phantoms"]
 
 # Import all functions dynamically
 for module in modules:
