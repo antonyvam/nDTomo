@@ -24,7 +24,7 @@ if os.path.exists(notebooks_src):
     if not os.path.exists(notebooks_dest):
         shutil.copytree(notebooks_src, notebooks_dest)
 
-sys.path.insert(0, os.path.abspath("../../nDTomo"))  # ✅ Adjust if needed
+sys.path.insert(0, os.path.abspath("../nDTomo")) 
 		
 # -- Project information -----------------------------------------------------
 
