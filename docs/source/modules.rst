@@ -1,7 +1,7 @@
 Available Modules
 =================
 
-.. toctree::
-   :maxdepth: 2
-
-   nDTomo.methods
+.. automodule:: nDTomo.methods
+   :members:
+   :undoc-members:
+   :show-inheritance:
