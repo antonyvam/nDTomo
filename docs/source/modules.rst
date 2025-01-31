@@ -1,7 +1,7 @@
 Available Modules
 =================
 
-.. automodule:: nDTomo.methods
+.. automodule:: nDTomo.test_module
    :members:
    :undoc-members:
    :show-inheritance:
