@@ -1,8 +1,8 @@
 Available Modules
 =================
 
-.. automodule:: nDTomo.analysis
-   :members:
-   :undoc-members:
-   :show-inheritance:
+.. toctree::
+   :maxdepth: 2
 
+   analysis/index
+#   methods/index
