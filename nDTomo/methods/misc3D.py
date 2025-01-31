@@ -11,7 +11,23 @@ from tvtk.util.ctf import ColorTransferFunction, PiecewiseFunction
 import matplotlib.pyplot as plt
 
 def cmap_to_ctf(cmap_name, vmin=0, vmax=1):
-    """Convert a Matplotlib colormap to a Mayavi ColorTransferFunction."""
+    """
+    Converts a Matplotlib colormap into a Mayavi ColorTransferFunction.
+
+    Parameters
+    ----------
+    cmap_name : str
+        The name of the Matplotlib colormap to be converted.
+    vmin : float, optional (default=0)
+        The minimum value for the colormap range.
+    vmax : float, optional (default=1)
+        The maximum value for the colormap range.
+
+    Returns
+    -------
+    ColorTransferFunction
+        A Mayavi ColorTransferFunction representing the specified colormap.
+    """
     values = linspace(vmin, vmax, 256)
     cmap = plt.colormaps.get_cmap(cmap_name)(values)  # Updated for Matplotlib 3.7+
     ctf = ColorTransferFunction()
@@ -21,7 +37,23 @@ def cmap_to_ctf(cmap_name, vmin=0, vmax=1):
 	
 
 def create_adaptive_opacity_function(vol, vmin, vmax):
-    """Create an adaptive Opacity Transfer Function based on volume intensity distribution."""
+    """
+    Creates an adaptive Opacity Transfer Function based on the volume's intensity distribution.
+
+    Parameters
+    ----------
+    vol : np.ndarray
+        3D volume data used to compute intensity distribution.
+    vmin : float
+        The minimum intensity value in the volume.
+    vmax : float
+        The maximum intensity value in the volume.
+
+    Returns
+    -------
+    PiecewiseFunction
+        A Mayavi PiecewiseFunction defining the opacity transfer function.
+    """
     otf = PiecewiseFunction()
     
     # Compute histogram to understand intensity distribution
@@ -37,7 +69,21 @@ def create_adaptive_opacity_function(vol, vmin, vmax):
 	
 	
 def create_balanced_opacity_function(vmin, vmax):
-    """Create a more uniform Opacity Transfer Function to prevent full transparency in regions."""
+    """
+    Creates a balanced Opacity Transfer Function to provide smooth transparency transitions.
+
+    Parameters
+    ----------
+    vmin : float
+        The minimum intensity value for opacity scaling.
+    vmax : float
+        The maximum intensity value for opacity scaling.
+
+    Returns
+    -------
+    PiecewiseFunction
+        A Mayavi PiecewiseFunction with balanced opacity values.
+    """
     otf = PiecewiseFunction()
     
     otf.add_point(vmin, 0.05)   # Almost transparent at min value
@@ -50,14 +96,35 @@ def create_balanced_opacity_function(vmin, vmax):
 
 
 def create_solid_opacity_function():
-    """Create an Opacity Transfer Function that makes everything solid (fully opaque)."""
+    """
+    Creates an Opacity Transfer Function that makes all values fully opaque.
+
+    Returns
+    -------
+    PiecewiseFunction
+        A Mayavi PiecewiseFunction where all intensities are fully opaque.
+    """
     otf = PiecewiseFunction()
     otf.add_point(0.0, 1.0)  # Fully opaque at minimum value
     otf.add_point(1.0, 1.0)  # Fully opaque at maximum value
     return otf
 
 def create_fade_opacity_function(vmin, vmax):
-    """Smoothly fade low-intensity values instead of hard transparency."""
+    """
+    Creates an Opacity Transfer Function that smoothly fades low-intensity values.
+
+    Parameters
+    ----------
+    vmin : float
+        The minimum intensity value for the opacity function.
+    vmax : float
+        The maximum intensity value for the opacity function.
+
+    Returns
+    -------
+    PiecewiseFunction
+        A Mayavi PiecewiseFunction where low values gradually fade in opacity.
+    """
     otf = PiecewiseFunction()
     
     otf.add_point(vmin, 0.0)   # Fully transparent at zero
@@ -68,8 +135,20 @@ def create_fade_opacity_function(vmin, vmax):
     return otf
 
 def create_binary_opacity_function(threshold):
-    """Creates an opacity function where values below `threshold` are transparent, 
-    and values above it are fully opaque."""
+    """
+    Creates an Opacity Transfer Function with a binary threshold.
+
+    Parameters
+    ----------
+    threshold : float
+        The intensity threshold where values below are fully transparent 
+        and values above are fully opaque.
+
+    Returns
+    -------
+    PiecewiseFunction
+        A Mayavi PiecewiseFunction implementing a binary opacity step.
+    """
     otf = PiecewiseFunction()
 
     otf.add_point(threshold - 1e-6, 0.0)  # Just before the threshold → fully transparent
@@ -80,27 +159,42 @@ def create_binary_opacity_function(threshold):
 	
 def showvol(vol, vlim=None, colormap="jet", show_axes=True, show_colorbar=True,
 			interp = 'linear', opacity_mode = 'adaptive', thr = 0.05):
-    '''
-    Volume rendering using Mayavi mlab with customization options.
-    
-    Parameters:
-        vol (np.ndarray): 3D volume data.
-        vlim (tuple): (vmin, vmax) for intensity scaling. Default is (0, max(vol)).
-        colormap (str): Colormap to use (e.g., "jet", "viridis", "gray").
-        show_axes (bool): Whether to display the coordinate axes. Default is True.
-        show_colorbar (bool): Whether to show a colorbar. Default is True.
-        interp (str): Interpolation type for rendering. Options are "linear", 
-                      "nearest", or "cubic". Default is "linear".
-        opacity_mode (str): Mode for opacity transfer function. Options are:
-            - 'binary': Apply a binary threshold-based opacity function.
-            - 'fade': Apply a smooth fading opacity function.
-            - 'adaptive': Apply an adaptive opacity function based on volume statistics.
-            - 'solid': Make the entire volume fully opaque.
-            Default is 'adaptive'.
-        thr (float): Threshold for the binary opacity mode. Values below `thr` 
-                     are transparent, and values above `thr` are fully opaque. 
-                     Default is 0.05.
-    '''
+    """
+    Performs volume rendering of a 3D dataset using Mayavi's mlab with various customization options.
+
+    Parameters
+    ----------
+    vol : np.ndarray
+        3D volume data to be visualized.
+    vlim : tuple, optional
+        (vmin, vmax) for intensity scaling. If None, it defaults to (0, max(vol)).
+    colormap : str, optional
+        The colormap used for visualization (e.g., "jet", "viridis", "gray").
+    show_axes : bool, optional
+        Whether to display the coordinate axes in the visualization. Default is True.
+    show_colorbar : bool, optional
+        Whether to display a colorbar corresponding to intensity values. Default is True.
+    interp : str, optional
+        The interpolation type for rendering. Available options:
+        - "linear" (default)
+        - "nearest"
+        - "cubic"
+    opacity_mode : str, optional
+        The opacity transfer function mode. Options include:
+        - 'binary'   : Applies a binary threshold-based opacity function.
+        - 'fade'     : Applies a smoothly fading opacity function.
+        - 'adaptive' : Uses an adaptive opacity function based on volume statistics.
+        - 'solid'    : Renders the volume as fully opaque.
+        Default is 'adaptive'.
+    thr : float, optional
+        The threshold value for the binary opacity mode. Values below `thr` are 
+        rendered as transparent, while values above are fully opaque. Default is 0.05.
+
+    Returns
+    -------
+    None
+        The function renders the volume but does not return any objects.
+    """
 	
     if vlim is None:
         vmin = 0
