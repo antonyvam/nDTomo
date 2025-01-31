@@ -7,7 +7,7 @@ pandoc
 numpy
 h5py
 xdesign
-skimage
+scikit-image
 scipy
 tqdm
 pkgutil
