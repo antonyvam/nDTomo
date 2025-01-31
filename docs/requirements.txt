@@ -6,3 +6,9 @@ ipykernel
 pandoc
 numpy
 h5py
+xdesign
+skimage
+scipy
+tqdm
+pkgutil
+matplotlib
