@@ -10,7 +10,7 @@ import sys
 
 # List of submodules
 __all__ = []
-modules = ["test"]
+modules = ["peaks"]
 
 # Import all functions dynamically
 for module in modules:
