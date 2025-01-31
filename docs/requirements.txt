@@ -10,5 +10,4 @@ xdesign
 scikit-image
 scipy
 tqdm
-pkgutil
 matplotlib
