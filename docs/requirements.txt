@@ -23,5 +23,5 @@ napari
 pystackreg
 algotom
 xdesign
-setuptools<60.0  # Prevent issues with numpy.distutils
+setuptools
 wheel

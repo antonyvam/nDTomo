@@ -21,7 +21,6 @@ XRD-CT reconstruction algorithms and processing workflows.
 #%
 
 from nDTomo.methods.noise import addpnoise2D
-from nDTomo.sim.phantoms import load_example_patterns, nDphantom_2D, nDphantom_3D
 
 from tqdm import tqdm
 import time, fabio, h5py
