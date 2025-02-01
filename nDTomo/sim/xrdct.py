@@ -24,7 +24,7 @@ from nDTomo.methods.noise import addpnoise2D
 
 from tqdm import tqdm
 import time, fabio, h5py
-from pyFAI.azimuthalIntegrator import AzimuthalIntegrator
+from pyFAI.integrator.azimuthal import AzimuthalIntegrator
 import pyFAI.detectors
 from pyFAI.calibrant import get_calibrant
 import numpy as np

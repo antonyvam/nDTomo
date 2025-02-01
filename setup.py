@@ -33,7 +33,7 @@ setup(
 	author="A. Vamvakeros",
 	author_email="antonyvam@gmail.com",
 	install_requires=[
-		"h5py", "matplotlib", "numpy",  "scipy",
+		"h5py", "matplotlib", "numpy",  "scipy", "siphash24",
 		"pyqtgraph", "scikit-image", "scikit-learn", "xdesign", "tqdm", "ipykernel",
 		"pystackreg", "pyopencl", "tifffile", "jupyterlab", 
 		"mayavi", "algotom", "fabio","pyFAI>=2025.01", "napari",
