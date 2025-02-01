@@ -2,7 +2,7 @@ name: ndtomo-docs
 channels:
   - conda-forge
   - defaults
-  - astra-toolbox/label/dev
+  - astra-toolbox/label/dev  
 dependencies:
   - python=3.9
   - pip
@@ -12,8 +12,27 @@ dependencies:
   - sphinx-autodoc-typehints
   - pyfai
   - fabio
+  - silx
+  - tqdm 
+  - h5py
+  - ipython
+  - scikit-image 
+  - scikit-learn
+  - pyopencl 
+  - numpy
+  - matplotlib
+  - scipy
+  - mayavi
+  - napari
+  - jupyterlab
+  - tifffile 
+  - pillow 
+  - algotom 
+  - astra-toolbox
+  - pystackreg
+  - xdesign
   - pip:
-    - sphinx
-    - sphinx-rtd-theme
-    - nbsphinx
-    - sphinx-autodoc-typehints
+      - sphinx
+      - sphinx-rtd-theme
+      - nbsphinx
+      - sphinx-autodoc-typehints
