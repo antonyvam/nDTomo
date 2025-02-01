@@ -4,7 +4,8 @@ sphinxcontrib-napoleon
 nbsphinx
 ipykernel
 pandoc
-numpy<1.23
+pyFAI>=2025.01
+numpy
 h5py
 xdesign
 scikit-image
@@ -12,7 +13,6 @@ scipy
 tqdm
 matplotlib
 fabio
-pyfai==0.19
 silx
 scikit-learn
 pyopencl
