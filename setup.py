@@ -2,7 +2,7 @@
 # coding: utf8
 # /*##########################################################################
 #
-# Copyright (c) 2021 Finden
+# Copyright (c) 2019 Dr A. Vamvakeros
 #
 # This package is free software; you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,23 +31,23 @@ with open("README.md", "r") as fh:
 
 setup(
 	name="nDTomo",
-	version="2022.05",
+	version="2024.02",
 	description="nDTomo software suite",
 	url="http://github.com/antonyvam/nDTomo",
 	author="A. Vamvakeros",
 	author_email="antonyvam@gmail.com",
 	install_requires=[
-		"fabio", "h5py", "matplotlib", "numpy", "pyFAI==0.19", "scipy>1.5.2",
-		"pyqtgraph", "scikit-image",  "xdesign", "cached_property", "tqdm",
-		"periodictable", "ase", "scikit-learn", "pystackreg",
-		"mayavi", "pyMCR", "algotom",
+		"fabio", "h5py", "matplotlib", "numpy", "pyFAI>=2025.01", "scipy",
+		"pyqtgraph", "scikit-image",  "xdesign", "tqdm",
+		"scikit-learn", "pystackreg", "pyopencl", "tifffile", 
+		"mayavi", "algotom", "napari"
 	],
 	packages=find_packages(),
     package_data={
         '': ['*.txt', '*.rst'],
     },
     entry_points={
-        'gui_scripts': ['Integrator = nDTomo.vis.Integrator.Integrator:main', 'MultiTool = nDTomo.vis.MultiTool.MultiTool:main', 'nDVis = nDTomo.vis.nDVis.nDVis:main']
+        'gui_scripts': ['nDTomoGUI = nDTomo.gui.nDTomoGUI.nDTomoGUI:main']
     },		
 	license="LICENSE.txt",
 	classifiers=[
