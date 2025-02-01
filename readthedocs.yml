@@ -11,10 +11,6 @@ conda:
 sphinx:
   configuration: docs/source/conf.py
 
-conda:
-  environment: docs/environment.yml  # Ensure this file exists
-
-
 python:
   install: []  # **Prevents Read the Docs from using virtualenv**  
   
