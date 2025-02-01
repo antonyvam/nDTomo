@@ -1,13 +1,12 @@
 version: 2
 
 build:
-  os: ubuntu-22.04
+  os: ubuntu-latest
   tools:
-    python: "3.8"  # Use your project's Python version
+    python: "3.9"  # Use your project's Python version
 
 sphinx:
   configuration: docs/source/conf.py  # Path to your conf.py file
 
-python:
-  install:
-    - requirements: docs/requirements.txt
+conda:
+  environment: docs/environment.yml   # Use a Conda environment for docs
