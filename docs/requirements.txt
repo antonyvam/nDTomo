@@ -11,3 +11,15 @@ scikit-image
 scipy
 tqdm
 matplotlib
+fabio
+pyfai
+silx
+scikit-learn
+pyopencl
+pillow
+tifffile
+mayavi
+napari
+pystackreg
+algotom
+xdesign
