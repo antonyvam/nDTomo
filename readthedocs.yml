@@ -10,11 +10,9 @@ python:
     - method: pip
       path: .
       
-features:
-  use_system_packages: true  # Ensures venv is used instead of virtualenv
+conda:
+  environment: docs/environment.yml   # Use a Conda environment for docs
   
 sphinx:
   configuration: docs/source/conf.py  # Path to your conf.py file
 
-conda:
-  environment: docs/environment.yml   # Use a Conda environment for docs
