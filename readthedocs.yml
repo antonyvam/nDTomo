@@ -1,15 +1,10 @@
 version: 2
 
 build:
-  os: ubuntu-22.04
-  tools:
-    python: "3.9"  # Use your project's Python version
+  image: latest  # Use the latest build image that supports Conda
 
 conda:
   environment: docs/environment.yml  # Ensure this file exists
 
-build:
-  image: latest  # Use the latest build image that supports Conda
-
 python:
-  install: []  # **Prevents Read the Docs from using virtualenv**
+  install: []  # Prevents Read the Docs from using virtualenv
