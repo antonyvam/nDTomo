@@ -5,6 +5,7 @@ This package contains modules for simulating tomography data, including:
 - `shapes2D`: methods related to simulating 2D shapes
 - `shapes3D`: methods related to simulating 3D shapes
 - `phantoms`: methods for creating multi-dimensional phantoms
+- `xrdct`: class for simulating a 2D xrd-ct dataset with 2D diffraction patterns from an xrd-ct sinogram dataset containing 1D diffraction patterns
 """
 
 import importlib
@@ -12,7 +13,7 @@ import sys
 
 # List of submodules
 __all__ = []
-modules = ["shapes2D", "shapes3D", "phantoms"]
+modules = ["shapes2D", "shapes3D", "phantoms", "xrdct"]
 
 # Import all functions dynamically
 for module in modules:
