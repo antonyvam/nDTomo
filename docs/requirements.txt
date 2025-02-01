@@ -12,7 +12,7 @@ scipy
 tqdm
 matplotlib
 fabio
-pyfai
+pyfai==0.19
 silx
 scikit-learn
 pyopencl
@@ -23,3 +23,5 @@ napari
 pystackreg
 algotom
 xdesign
+setuptools<60.0  # Prevent issues with numpy.distutils
+wheel

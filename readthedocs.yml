@@ -7,8 +7,7 @@ build:
 
 python:
   install:
-    - method: pip
-      path: .
+    - requirements: docs/requirements.txt
 
 sphinx:
   configuration: docs/source/conf.py  # Path to your Sphinx conf.py
