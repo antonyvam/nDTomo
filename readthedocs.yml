@@ -16,3 +16,6 @@ conda:
 sphinx:
   configuration: docs/source/conf.py  # Path to your conf.py file
 
+commands:
+  - conda env update --file docs/environment.yml --name base
+  - conda activate base
