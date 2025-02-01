@@ -23,5 +23,6 @@ napari
 pystackreg
 algotom
 xdesign
+siphash24
 setuptools
 wheel
