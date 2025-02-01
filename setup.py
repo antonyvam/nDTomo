@@ -37,10 +37,10 @@ setup(
 	author="A. Vamvakeros",
 	author_email="antonyvam@gmail.com",
 	install_requires=[
-		"fabio", "h5py", "matplotlib", "numpy",  "scipy",
+		"h5py", "matplotlib", "numpy",  "scipy",
 		"pyqtgraph", "scikit-image", "scikit-learn", "xdesign", "tqdm", "ipykernel", "nb_conda_kernels"
 		"pystackreg", "pyopencl", "tifffile", "jupyterlab", 
-		"mayavi", "algotom", "pyFAI>=2025.01", "napari",
+		"mayavi", "algotom", "fabio","pyFAI>=2025.01", "napari",
 	],
 	packages=find_packages(),
     package_data={
