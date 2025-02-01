@@ -22,7 +22,6 @@ XRD-CT reconstruction algorithms and processing workflows.
 
 from nDTomo.methods.noise import addpnoise2D
 from nDTomo.sim.phantoms import load_example_patterns, nDphantom_2D, nDphantom_3D
-from nDTomo.ct.astra_tomo import astra_create_sino
 
 from tqdm import tqdm
 import time, fabio, h5py
@@ -413,37 +412,3 @@ class nDVAcq():
             
             f.close()
         
-
-    def create_nDTomo_phantom(self, npix = 100, nproj = 110):
-        """
-        Creates a synthetic XRD-CT dataset using nDTomo phantom generators.
-
-        This function generates a 3D chemical tomography dataset and simulates 
-        the corresponding sinograms for each spectral channel.
-
-        Parameters
-        ----------
-        npix : int, optional
-            Number of pixels per image (default is 100).
-        nproj : int, optional
-            Number of projection angles (default is 110).
-        """    
-        dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
-        spectra = [dpAl, dpCu, dpFe, dpPt, dpZn]
-        
-        self.xaxis = q
-        
-        iml = nDphantom_2D(npix, nim = 'Multiple')
-        
-        imAl, imCu, imFe, imPt, imZn = iml
-        
-        chemct = nDphantom_3D(npix, use_spectra = 'Yes', spectra = spectra, imgs = iml, indices = 'All',  norm = 'No')    
-    
-        self.data = np.zeros((chemct.shape[0], nproj, chemct.shape[2]))
-        
-        for ii in tqdm(range(chemct.shape[2])):
-                        
-            self.data[:,:,ii] = astra_create_sino(chemct[:,:,ii], theta=np.deg2rad(np.arange(0, 180, 180/nproj))).transpose()
-            
-        self.ntrans = self.data.shape[0]; self.nproj = self.data.shape[1]; 
-
