@@ -10,6 +10,9 @@ python:
     - method: pip
       path: .
       
+features:
+  use_system_packages: true  # Ensures venv is used instead of virtualenv
+  
 sphinx:
   configuration: docs/source/conf.py  # Path to your conf.py file
 
