@@ -38,6 +38,9 @@ setup(
 		"pystackreg", "pyopencl", "tifffile", "jupyterlab", 
 		"mayavi", "algotom", "fabio","pyFAI>=2025.01", "napari",
 	],
+    extras_require={
+        "torch": ["torch", "torchvision", "torchaudio"]
+    },
 	packages=find_packages(),
     package_data={
         '': ['*.txt', '*.rst'],
