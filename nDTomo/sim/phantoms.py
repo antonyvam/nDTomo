@@ -440,7 +440,7 @@ def nDTomophantom_3D(npix, use_spectra = False, spectra = None, nz = 100, imgs =
     Parameters
     ----------
     npix : int
-        Number of pixels for each generated image (resulting in a square image of shape `npix x npix`).
+    Number of pixels for each generated image (resulting in a square image of shape `npix x npix`).
     use_spectra : bool, optional
         If `True`, generates a 2D + spectral dataset.
         If `False` (default), creates a purely spatial 3D volume.
@@ -465,34 +465,34 @@ def nDTomophantom_3D(npix, use_spectra = False, spectra = None, nz = 100, imgs =
     norm : str, optional
         Defines how normalization is applied to the dataset. Options:
         - 'Volume' (default): Normalizes the entire 3D dataset with respect to the 
-          highest intensity.
+        highest intensity.
         - 'Images': Normalizes each image separately across the third dimension.
 
     Returns
     -------
     np.ndarray
-        A 3D phantom volume with dimensions `(npix, npix, nz/nch)`, where `nz` is the 
-        number of Z-slices or `nch` is the number of spectral channels.
+    A 3D phantom volume with dimensions `(npix, npix, nz/nch)`, where `nz` is the 
+    number of Z-slices or `nch` is the number of spectral channels.
 
     Raises
     ------
     ValueError
-        If `indices='Custom'` is selected but `inds` is not provided.
+    If `indices='Custom'` is selected but `inds` is not provided.
 
     Notes
     -----
     - If `use_spectra=True`, the function returns a 2D chemical dataset where 
-      each spectral component is multiplied by a spatial mask.
+    each spectral component is multiplied by a spatial mask.
     - If `use_spectra=False`, a purely spatial 3D volume is created with randomized or 
-      custom placement of images.
+    custom placement of images.
 
     Examples
     --------
     To create a 2D chemical dataset:
-        vol = nDTomophantom_3D(npix=256, use_spectra='Yes', indices='All', norm='No')
+    vol = nDTomophantom_3D(npix=256, use_spectra='Yes', indices='All', norm='No')
 
     To create a 3D volume dataset with random placement:
-        vol = nDTomophantom_3D(npix=256, nz=100, indices='Random', norm='Volume')
+    vol = nDTomophantom_3D(npix=256, nz=100, indices='Random', norm='Volume')
     """
     
     if imgs is None:
@@ -620,32 +620,32 @@ def nDTomophantom_4D(npix, nzt, vtype = 'Spectral', imgs = None, indices = 'Rand
     norm : str, optional
         Defines how normalization is applied to the dataset. Options:
         - 'Volume' (default): Normalizes the entire 4D dataset with respect to the 
-          highest intensity.
+        highest intensity.
 
     Returns
     -------
     np.ndarray
-        - Shape `(npix, npix, nzt, nch)` if `vtype='Spectral'` (3D spatial + 1D spectral).
-        - Shape `(npix, npix, nch, nzt)` if `vtype='Temporal'` (3D spatial + 1D temporal).
+    - Shape `(npix, npix, nzt, nch)` if `vtype='Spectral'` (3D spatial + 1D spectral).
+    - Shape `(npix, npix, nch, nzt)` if `vtype='Temporal'` (3D spatial + 1D temporal).
 
     Raises
     ------
     ValueError
-        If `indices='Custom'` is selected but `inds` is not provided.
+    If `indices='Custom'` is selected but `inds` is not provided.
 
     Notes
     -----
     - If `vtype='Spectral'`, the function returns a 3D spatial dataset with a spectral dimension.
     - If `vtype='Temporal'`, the function returns a 3D spatial dataset with a temporal evolution 
-      where spectral components change over time.
+    where spectral components change over time.
 
     Examples
     --------
     To create a 4D spectral dataset:
-        vol4D = nDphantom_4D(npix=256, nzt=100, vtype='Spectral', indices='All')
+    vol4D = nDphantom_4D(npix=256, nzt=100, vtype='Spectral', indices='All')
 
     To create a 4D temporal dataset with dynamic spectra:
-        vol4D = nDphantom_4D(npix=256, nzt=50, vtype='Temporal', indices='Random')
+    vol4D = nDphantom_4D(npix=256, nzt=50, vtype='Temporal', indices='Random')
     """
 
 
