@@ -25,10 +25,6 @@
 
 from setuptools import setup, find_packages
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
-
-
 setup(
 	name="nDTomo",
 	version="2024.02",
@@ -38,7 +34,7 @@ setup(
 	author_email="antonyvam@gmail.com",
 	install_requires=[
 		"h5py", "matplotlib", "numpy",  "scipy",
-		"pyqtgraph", "scikit-image", "scikit-learn", "xdesign", "tqdm", "ipykernel", "nb_conda_kernels"
+		"pyqtgraph", "scikit-image", "scikit-learn", "xdesign", "tqdm", "ipykernel",
 		"pystackreg", "pyopencl", "tifffile", "jupyterlab", 
 		"mayavi", "algotom", "fabio","pyFAI>=2025.01", "napari",
 	],
@@ -47,7 +43,7 @@ setup(
         '': ['*.txt', '*.rst'],
     },
     entry_points={
-        'gui_scripts': ['nDTomoGUI = nDTomo.gui.nDTomoGUI.nDTomoGUI:main']
+        'gui_scripts': ['nDTomoGUI = nDTomo.gui.nDTomoGUI:main']
     },		
 	license="LICENSE.txt",
 	classifiers=[
