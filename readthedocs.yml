@@ -5,6 +5,11 @@ build:
   tools:
     python: "3.9"  # Use your project's Python version
 
+python:
+  install:
+    - method: pip
+      path: .
+      
 sphinx:
   configuration: docs/source/conf.py  # Path to your conf.py file
 
