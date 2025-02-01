@@ -6,7 +6,7 @@ The nDTomo software suite contains a graphical user interface (GUI) and python s
 
 Documentation for the GUI will be provided at (under construction): https://ndtomo.readthedocs.io
 
-The aim of this library is to generate tools for the following:
+The aim of this library, among others, is to generate tools for the following:
 1. **Generation of multi-dimensional phantoms**
 2. **Simulation of various pencil beam computed tomography data acquisition strategies**
 3. **Creation of demonstration scripts** for:
