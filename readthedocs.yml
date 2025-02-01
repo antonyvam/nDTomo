@@ -12,7 +12,5 @@ python:
 
 sphinx:
   configuration: docs/source/conf.py  # Path to your Sphinx conf.py
-  
-conda:
-  environment: docs/environment.yml
+
   
