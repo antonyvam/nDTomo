@@ -1,10 +1,31 @@
 # -*- coding: utf-8 -*-
 """
 
-nDTomoGUI for chemical imaging data visualization
+nDTomoGUI: A GUI for Chemical Imaging Data Visualization and Analysis
 
-This script provides a GUI for handling and visualizing chemical imaging data.
-It uses PyQt5 for the GUI and matplotlib for the visualization.
+This application provides a PyQt5-based graphical user interface (GUI) 
+for handling and visualizing chemical imaging data. It includes tools 
+for exploring hyperspectral data, defining regions of interest (ROI), 
+extracting local patterns, and performing peak fitting.
+
+Features:
+---------
+- **Image and Spectrum Visualization:** 
+  Display hyperspectral images and spectra interactively.
+  
+- **ROI Selection and Export:**
+  Select regions of interest and export extracted images or spectra.
+
+- **Segmentation and Pattern Extraction:** 
+  Apply thresholding to segment images and extract local diffraction patterns.
+
+- **Peak Fitting Module:**
+  Perform single peak fitting (Gaussian, Lorentzian, or Pseudo-Voigt profiles) 
+  across datasets.
+
+- **File Handling:**
+  Supports reading and writing `.hdf5` and `.h5` files, along with export to 
+  `.asc` and `.xy` formats.
 
 @author: Dr Antony Vamvakeros
 
@@ -28,10 +49,31 @@ import scipy.optimize as sciopt
 class nDTomoGUI(QtWidgets.QMainWindow):
     
     """
-    The main GUI window for the application.
-    
-    This class provides the main application window, with a menu for file operations and help.
-    It also initializes various parameters and data structures used in the application.
+    The main GUI for handling and visualizing chemical imaging data.
+
+    This PyQt5-based interface allows users to load, explore, and analyze 
+    chemical imaging datasets. It supports multiple views, including 
+    spatial images and spectral plots, and provides functionalities 
+    for exporting processed data.
+
+    Attributes
+    ----------
+    volume : np.ndarray
+        3D array representing the hyperspectral dataset.
+    xaxis : np.ndarray
+        1D array storing spectral axis values.
+    image : np.ndarray
+        2D array of the currently displayed spatial image.
+    spectrum : np.ndarray
+        1D array of the currently displayed spectrum.
+    hdf_fileName : str
+        Path to the currently loaded HDF5 file.
+    cmap : str
+        Current colormap for visualization.
+    xaxislabel : str
+        Label for the spectral axis.
+    chi, chf : int
+        Initial and final channel indices for ROI selection
     """    
     
     def __init__(self):
@@ -287,6 +329,22 @@ class nDTomoGUI(QtWidgets.QMainWindow):
      
             
     def explore(self):
+
+        """
+        Compute and display the mean image and spectrum from the dataset.
+
+        This function calculates the mean spatial image and spectral 
+        response across all data slices, updating the respective plots.
+        It also enables interactive exploration via mouse events.
+
+        Raises
+        ------
+        ValueError
+            If the dataset is empty or improperly formatted.
+        """
+        if self.volume.size == 0:
+            raise ValueError("No data loaded. Please load an HDF5 file first.")
+
         # Calculate mean image and mean spectrum
         mean_image = np.mean(self.volume, axis=2)
         mean_spectrum = np.mean(self.volume, axis=(0, 1))
@@ -516,26 +574,48 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                         
     def loadchemvol(self):
         
+        """
+        Load chemical imaging data from an HDF5 file.
+
+        This function reads an HDF5 file containing hyperspectral imaging data, 
+        attempts to identify the correct dataset structure, and updates the GUI.
+
+        Raises
+        ------
+        FileNotFoundError
+            If the specified file does not exist.
+        KeyError
+            If the required dataset ('/data') is not found in the HDF5 file.
+        """
+                
         xaxis_labels = ['/d', '/q', '/twotheta', '/Energy', '/tth', '/energy']
         
-        if len(self.hdf_fileName)>0:
+        if not self.hdf_fileName:
+            raise FileNotFoundError("No file selected. Please choose an HDF5 file.")
 
-            with h5py.File(self.hdf_fileName,'r') as f:
-                try:
-                    print(f.keys())
-                    self.volume = f['/data'][:]
-                    self.check_and_transpose()
-                    self.image_width, self.image_height, self.nbins = self.volume.shape
-                    self.xaxis = np.arange(0, self.volume.shape[2])
-                    self.crspinbox1.setMaximum(self.nbins - 1)
-                    self.crspinbox2.setMaximum(self.nbins)
-                except:
-                    print('Seems like there is a problem accessing the data')
-                for xaxis_label in xaxis_labels:
-                    if xaxis_label in f and len(f[xaxis_label][:])==self.volume.shape[2]:
-                        self.xaxis = f[xaxis_label][:]
-                        self.xaxislabel = xaxis_label.lstrip('/')                         
-        print(self.volume.shape)
+        with h5py.File(self.hdf_fileName,'r') as f:
+            try:
+                print("Available datasets:", list(f.keys()))
+                if '/data' not in f:
+                    raise KeyError("Dataset '/data' not found in HDF5 file.")                
+                self.volume = f['/data'][:]
+                self.check_and_transpose()
+                self.image_width, self.image_height, self.nbins = self.volume.shape
+                self.xaxis = np.arange(0, self.volume.shape[2])
+                self.crspinbox1.setMaximum(self.nbins - 1)
+                self.crspinbox2.setMaximum(self.nbins)
+
+            for xaxis_label in xaxis_labels:
+                if xaxis_label in f and len(f[xaxis_label][:])==self.volume.shape[2]:
+                    self.xaxis = f[xaxis_label][:]
+                    self.xaxislabel = xaxis_label.lstrip('/')            
+                    break  # Stop once we find a match             
+
+            except KeyError as e:
+                print("Error:", e)
+            except Exception as e:
+                print("Unexpected error:", e)                                
+        print("Loaded data shape:", self.volume.shape)
                         
     def check_and_transpose(self):
         dims = self.volume.shape
