@@ -1212,3 +1212,48 @@ def continuous_rot_trans_optimised(image, angles, num_trans_steps, interval=50, 
     plt.close(fig)
 
     return ani, ani.to_jshtml()
+
+
+def generate_interlaced_angles(nproj, subsets):
+    """
+    Generate interlaced scan angles for a given number of projections and subsets.
+    
+    Parameters
+    ----------
+    nproj : int
+        Total number of projections (must be a power of 2).
+    subsets : int
+        Number of subsets (must be a factor of nproj).
+    
+    Returns
+    -------
+    list of np.ndarray
+        A list where each element is an array containing the angles for one subset.
+
+    # Example usage:
+    nproj = 120
+    subsets = 8
+    interlaced_angles = generate_interlaced_angles(nproj, subsets)
+
+    # Print subset angles
+    for i, subset in enumerate(interlaced_angles):
+        print(f"Subset {i+1}: {subset}")
+    """
+    # Ensure subsets is a power of 2
+    if not (subsets & (subsets - 1)) == 0:
+        raise ValueError("nproj must be a power of 2.")
+    
+    # Ensure subsets is a valid divisor of nproj
+    if nproj % subsets != 0:
+        raise ValueError("subsets must be a factor of nproj.")
+    
+    # Generate full range of angles
+    angles = np.linspace(0, 180, nproj, endpoint=False)
+    
+    # Determine the correct interlaced order
+    subset_order = np.argsort([i % subsets + (i // subsets) * subsets for i in range(subsets)])
+    
+    # Create subsets based on interlaced ordering
+    interlaced_subsets = [angles[i::subsets] for i in subset_order]
+    
+    return interlaced_subsets
