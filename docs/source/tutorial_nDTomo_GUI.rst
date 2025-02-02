@@ -1,4 +1,4 @@
-nDTomo GUI tutorial
+nDTomoGUI tutorial
 *******************
 
-The nDTomo GUI can be used to process and analyse X-ray chemical imaging data. 
+The nDTomoGUI can be used to process and analyse X-ray chemical imaging data. 

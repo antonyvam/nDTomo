@@ -12,7 +12,7 @@ Contents
    
    intro
    req
-   tutorial_nDTomo_GUI
    examples
+   tutorial_nDTomo_GUI
    sites
    api   
