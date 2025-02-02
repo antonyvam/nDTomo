@@ -36,7 +36,7 @@ setup(
 		"h5py", "matplotlib", "numpy",  "scipy", "siphash24",
 		"pyqtgraph", "scikit-image", "scikit-learn", "xdesign", "tqdm", "ipykernel",
 		"pystackreg", "pyopencl", "tifffile", "jupyterlab", 
-		"algotom", "fabio","pyFAI>=2025.01", "napari", "pip install napari-skimage-regionprops",
+		"algotom", "fabio","pyFAI>=2025.01", "napari",
 		"mayavi", "configobj",
 	],
     extras_require={

@@ -9,4 +9,5 @@ The `sim` module contains functions for processing tomography data.
    shapes2D
    shapes3D   
    phantoms
-   xrdct
+   xrd-ct
+   pencil beam ct
