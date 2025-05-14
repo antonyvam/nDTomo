@@ -35,9 +35,9 @@ setup(
 	install_requires=[
 		"h5py", "matplotlib", "numpy",  "scipy", "siphash24",
 		"pyqtgraph", "scikit-image", "scikit-learn", "xdesign", "tqdm", "ipykernel",
-		"pystackreg", "pyopencl", "tifffile", "jupyterlab", 
+		"pystackreg", "tifffile", "jupyterlab", 
 		"algotom", "fabio","pyFAI>=2025.01", "napari",
-		"mayavi", "configobj",
+		"configobj",
 	],
     extras_require={
         "torch": ["torch", "torchvision", "torchaudio"]
