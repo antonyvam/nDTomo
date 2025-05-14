@@ -9,11 +9,9 @@ Documentation for the GUI will be provided at (under construction): https://ndto
 The aim of this library, among others, is to generate tools for the following:
 1. **Generation of multi-dimensional phantoms**
 2. **Simulation of various pencil beam computed tomography data acquisition strategies**
-3. **Creation of demonstration scripts** for:
-   - Integration of XRD-CT data
-   - Processing and correcting sinograms and radiographs for X-ray computed tomography data for various artefacts
+3. **Processing and correcting sinogram datafd**
 4. **Application of computed tomography reconstruction algorithms**
-5. **Dimensionality reduction of chemical imaging data and data analysis through multi-peak fitting**
+5. **Dimensionality reduction of chemical imaging data and data analysis through peak fitting**
 
 ![XRD-CT](assets/xrdct.png)
 Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray diffraction CT (XRD-CT or Powder diffraction CT) data acquired from an NMC532 Li ion battery. For more details regarding this study see [1].
