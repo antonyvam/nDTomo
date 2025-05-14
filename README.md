@@ -11,7 +11,7 @@ The aim of this library, among others, is to generate tools for the following:
 2. **Simulation of various pencil beam computed tomography data acquisition strategies**
 3. **Processing and correcting sinogram data**
 4. **Application of computed tomography reconstruction algorithms**
-5. **Dimensionality reduction of chemical imaging data and data analysis through peak fitting**
+5. **Data analysis of chemical imaging data through peak fitting**
 
 ![XRD-CT](assets/xrdct.png)
 Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray diffraction CT (XRD-CT or Powder diffraction CT) data acquired from an NMC532 Li ion battery. For more details regarding this study see [1].
