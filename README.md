@@ -9,7 +9,7 @@ Documentation for the GUI will be provided at (under construction): https://ndto
 The aim of this library, among others, is to generate tools for the following:
 1. **Generation of multi-dimensional phantoms**
 2. **Simulation of various pencil beam computed tomography data acquisition strategies**
-3. **Processing and correcting sinogram datafd**
+3. **Processing and correcting sinogram data**
 4. **Application of computed tomography reconstruction algorithms**
 5. **Dimensionality reduction of chemical imaging data and data analysis through peak fitting**
 
