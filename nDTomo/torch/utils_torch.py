@@ -45,12 +45,10 @@ def tv_spatial(x, isotropic=True, epsilon=1e-6):
     div_y = torch.cat((grad_y[:, :, :1, :], 
                         grad_y[:, :, 1:, :] - grad_y[:, :, :-1, :], 
                         -grad_y[:, :, -1:, :]), dim=2)
-    div_y = div_y[:, :, :199, :]  # Trim to match original size
 
     div_x = torch.cat((grad_x[:, :, :, :1], 
                         grad_x[:, :, :, 1:] - grad_x[:, :, :, :-1], 
                         -grad_x[:, :, :, -1:]), dim=3)
-    div_x = div_x[:, :, :, :199]  # Trim to match original size
 
     # Total variation gradient
     tv_grad = div_y + div_x
