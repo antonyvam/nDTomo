@@ -8,12 +8,11 @@ Tomography tools for nDTomo
 
 import numpy as np
 from skimage.transform import iradon, radon
-from scipy.sparse import csr_matrix
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from scipy.fft import fft, ifft, fftfreq
 from scipy.ndimage import rotate
-
+from scipy.sparse import csr_matrix, diags
 
     
 def filter_sinogram(sinogram, filter_type='Ramp'):
@@ -54,7 +53,51 @@ def filter_sinogram(sinogram, filter_type='Ramp'):
 
     return filtered_sinogram
 
-def backproject(sinogram, angles, output_size=None, scan=180):
+def forwardproject(image, angles, num_detectors=None):
+    """
+    Simulates a forward projection (Radon transform) of a 2D image.
+
+    Parameters
+    ----------
+    image : ndarray
+        2D input image (square or rectangular).
+    angles : ndarray
+        1D array of projection angles in degrees.
+    num_detectors : int, optional
+        Number of detectors in the output sinogram. If None, uses image height.
+
+    Returns
+    -------
+    sinogram : ndarray
+        2D sinogram of shape (num_detectors, num_angles).
+    """
+    image = np.asarray(image)
+    img_size = image.shape[0]
+    if num_detectors is None:
+        num_detectors = img_size
+
+    sinogram = np.zeros((num_detectors, len(angles)), dtype=np.float32)
+
+    for i, theta in enumerate(angles):
+        # Rotate the image to simulate the projection direction
+        rotated = rotate(image, angle=-theta, reshape=False, order=3)
+
+        # Sum along columns to simulate detector response
+        projection = np.sum(rotated, axis=0)
+
+        # Center crop or pad to match desired number of detectors
+        if len(projection) == num_detectors:
+            sinogram[:, i] = projection
+        elif len(projection) > num_detectors:
+            offset = (len(projection) - num_detectors) // 2
+            sinogram[:, i] = projection[offset:offset + num_detectors]
+        else:
+            pad = (num_detectors - len(projection)) // 2
+            sinogram[:, i] = np.pad(projection, (pad, num_detectors - len(projection) - pad), mode='constant')
+
+    return sinogram
+
+def backproject(sinogram, angles, output_size=None):
     """
     Performs filtered or unfiltered backprojection of a sinogram.
 
@@ -305,82 +348,128 @@ def paralleltomo(N, theta, p, w):
     return A
 
         
-def cgls(A, b, K = 25, plot=False):
+def sirt(A, b, x0=None, n_iter=20, relax=1.0):
     """
-    Conjugate Gradient Least Squares (CGLS) method for solving linear systems.
+    Simultaneous Iterative Reconstruction Technique (SIRT) with row and column normalization.
 
-    This function solves the least squares problem `Ax ≈ b` using the iterative 
-    Conjugate Gradient Least Squares (CGLS) method. It also includes an option 
-    to plot intermediate results during the iterations.
+    This function implements a general version of SIRT using matrix-based normalization
+    inspired by Cimmino/CAV-style scaling. It solves the linear system A @ x ≈ b iteratively.
+
+    Each iteration computes the global residual and applies a normalized correction:
+        x ← x + relax * D * A.T * M * (b - A @ x)
 
     Parameters
     ----------
-    A : scipy.sparse.csr_matrix
-        Sparse matrix representing the system matrix.
-    b : numpy.ndarray
-        Right-hand side vector of the system, with shape (m, 1).
-    K : int, optional, default=25
-        Maximum number of iterations for the CGLS method.
-    plot : bool, optional, default=False
-        If True, plots the reconstructed solution after each iteration.
+    A : scipy.sparse matrix (CSR or CSC), shape (m, n)
+        The system matrix, typically sparse and non-negative. Rows represent projection rays;
+        columns represent image pixels.
+    b : ndarray, shape (m,)
+        The measured projection data (sinogram flattened to 1D).
+    x0 : ndarray or None, shape (n,), optional
+        Initial guess for the solution. Defaults to zeros if None.
+    n_iter : int, optional
+        Number of SIRT iterations to perform. More iterations yield smoother convergence.
+    relax : float, optional
+        Relaxation parameter controlling update magnitude. Values between 0.5–1.0 are typical.
 
     Returns
     -------
-    numpy.ndarray
-        Reconstructed solution `x` as a 2D array with shape `(sqrt(n), sqrt(n))`, 
-        where `n` is the number of columns in `A`.
+    x : ndarray, shape (n,)
+        The reconstructed solution vector (flattened image).
 
     Notes
     -----
-    - The function assumes that `A` represents a square domain, and the solution 
-      is reshaped into a square image.
-    - Negative values in the solution are clipped to zero, and the result is 
-      normalized to have a maximum value of 1.
-
+    - The row normalization matrix M scales residual contributions by the inverse of row energy:
+        M[i, i] = 1 / ||A[i, :]||²
+    - The column normalization matrix D scales the updates to balance pixel sensitivity:
+        D[j, j] = 1 / ||A[:, j]||²
+    - This global scheme is slower than CGLS but more stable for noisy or incomplete data.
+    - Particularly useful in tomographic reconstruction where balancing ray coverage is critical.
     """
-    # Ensure K is an integer
-    k = int(K)
+    A = A.tocsr()
+    m, n = A.shape
 
-    # Number of pixels in the solution
-    n = A.shape[1]
-    npix = int(np.sqrt(n))
+    if x0 is None:
+        x = np.zeros(n)
+    else:
+        x = x0.copy()
 
-    # Initialization
-    x = np.zeros((n, 1))  # Initial guess
-    r = b.copy()
-    d = csr_matrix.dot(A.T, r)  # Initial residual
-    normr2 = np.dot(d.T, d)
+    # Row normalization: M = diag(1 / ||a_i||^2)
+    row_norms = np.array(A.power(2).sum(axis=1)).flatten()
+    row_norms[row_norms == 0] = 1
+    M_inv = 1.0 / row_norms  # shape (m,)
 
-    if plot:
-        plt.figure()
-        plt.clf()
+    # Column normalization: D = diag(1 / ||a_j||^2)
+    col_norms = np.array(A.power(2).sum(axis=0)).flatten()
+    col_norms[col_norms == 0] = 1
+    D_inv = 1.0 / col_norms  # shape (n,)
 
-    # CGLS iterations
-    for j in range(k):
-        # Update x and r vectors
-        Ad = csr_matrix.dot(A, d)
-        alpha = normr2 / (np.dot(Ad.T, Ad) + 1e-10)  # Avoid division by zero
-        x += d * alpha
-        r -= Ad * alpha
+    D = diags(D_inv)
+    M = diags(M_inv)
 
-        # Update s and d vectors
-        s = csr_matrix.dot(A.T, r)
-        normr2_new = np.dot(s.T, s)
-        beta = normr2_new / (normr2 + 1e-10)  # Avoid division by zero
-        normr2 = normr2_new
-        d = s + d * beta
+    for _ in range(n_iter):
+        r = b - A @ x                      # residual
+        x += relax * D @ (A.T @ (M @ r))   # apply normalized update
 
-        # Reshape and normalize for visualization
-        xn = x.reshape((npix, npix))
-        xn = np.clip(xn, 0, None)  # Set negative values to 0
-        xn /= np.max(xn) if np.max(xn) > 0 else 1  # Normalize
+    return x
 
-        # Plot intermediate results if requested
-        if plot:
-            plt.imshow(xn, cmap='jet')
-            plt.title(f"Iteration {j+1}")
-            plt.colorbar()
-            plt.pause(0.5)
 
-    return xn
+def cgls(A, b, x0=None, n_iter=10):
+    """
+    Conjugate Gradient Least Squares (CGLS) algorithm for solving Ax = b.
+
+    This method minimizes the least-squares objective:
+        ||Ax - b||^2
+
+    It is equivalent to applying the Conjugate Gradient method to the 
+    normal equations:
+        AᵀA x = Aᵀb
+
+    Parameters
+    ----------
+    A : ndarray or sparse matrix, shape (m, n)
+        The system matrix. Can be dense or sparse.
+    b : ndarray, shape (m,)
+        The right-hand side vector (e.g., sinogram or projection data).
+    x0 : ndarray or None, shape (n,), optional
+        Initial guess for the solution. If None, defaults to zeros.
+    n_iter : int, optional
+        Number of iterations to perform. Default is 10.
+
+    Returns
+    -------
+    x : ndarray, shape (n,)
+        The reconstructed solution vector.
+
+    Notes
+    -----
+    - CGLS converges faster than basic iterative methods like ART or SIRT,
+      especially for well-conditioned problems.
+    - It avoids explicitly forming AᵀA, which can be ill-conditioned or
+      expensive to compute.
+    - This implementation does not support stopping criteria based on tolerance.
+    """
+    
+    if x0 is None:
+        x = np.zeros(A.shape[1])
+    else:
+        x = x0.copy()
+
+    r = b - A @ x
+    p = A.T @ r
+    d = p.copy()
+    delta_new = np.dot(d, d)
+
+    for _ in range(n_iter):
+        q = A @ d
+        alpha = delta_new / np.dot(q, q)
+        x += alpha * d
+        r -= alpha * q
+        s = A.T @ r
+        delta_old = delta_new
+        delta_new = np.dot(s, s)
+        beta = delta_new / delta_old
+        d = s + beta * d
+
+    return x
 
