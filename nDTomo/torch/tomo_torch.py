@@ -66,18 +66,18 @@ def forwardproject_torch(vol, angles, Amat=None, grid_scaled=None, device='cuda'
             else:
                 s[:, :, i] = torch.sum(vol_rot, dim=4)[0, 0]
 
-    elif len(dims) == 2:
-        # 2D case: (X, Y)
-        npix = dims[0]
+	elif len(dims) == 2:
+		# 2D case: (H, W)
+		npix = dims[0]
 
-        if Amat is not None:
-            s = Amat @ vol.view(-1, 1)  # flattened projection
-        else:
-            s = torch.zeros((npix, len(angles)), device=device)
-            for i, theta in enumerate(angles):
-                vol_rot = rotate(vol, theta, interpolation=InterpolationMode.BILINEAR)
-                vol_rot = vol_rot.view(1, 1, npix, npix)
-                s[:, i] = torch.sum(vol_rot, dim=3)[0, 0]
+		if Amat is not None:
+			s = Amat @ vol.view(-1, 1)
+		else:
+			s = torch.zeros((npix, len(angles)), device=device)
+			for i, theta in enumerate(angles):
+				vol_in = vol.unsqueeze(0).unsqueeze(0)  # shape: (1, 1, H, W)
+				vol_rot = rotate(vol_in, theta, interpolation=InterpolationMode.BILINEAR)
+				s[:, i] = torch.sum(vol_rot, dim=3)[0, 0]
 
     else:
         raise ValueError("Input volume must be either 2D (H, W) or 3D (Z, H, W)")
