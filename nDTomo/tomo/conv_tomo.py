@@ -97,7 +97,7 @@ def forwardproject(image, angles, num_detectors=None):
 
     return sinogram
 
-def backproject(sinogram, angles, output_size=None):
+def backproject(sinogram, angles, output_size=None, normalize=True):
     """
     Performs filtered or unfiltered backprojection of a sinogram.
 
@@ -134,8 +134,9 @@ def backproject(sinogram, angles, output_size=None):
         # Accumulate into reconstruction
         reconstruction += rotated
 
-    # Normalize
-    reconstruction *= np.pi / (n_angles)
+    # Normalize#
+    if normalize:
+        reconstruction *= np.pi / (n_angles)
 
     return reconstruction
 
@@ -473,3 +474,103 @@ def cgls(A, b, x0=None, n_iter=10):
 
     return x
 
+
+
+def cgls_functional(sinogram, angles, x0=None, n_iter=10):
+    """
+    CGLS solver using forwardproject and backproject, matching the vectorized logic.
+
+    Parameters
+    ----------
+    sinogram : ndarray
+        Input sinogram of shape (num_detectors, num_angles).
+    angles : ndarray
+        1D array of projection angles in degrees.
+    x0 : ndarray or None
+        Initial image guess. If None, initialized to zeros.
+    n_iter : int
+        Number of CGLS iterations.
+
+    Returns
+    -------
+    image : ndarray
+        Reconstructed 2D image of shape (num_detectors, num_detectors).
+    """
+    N, n_angles = sinogram.shape
+
+    def forward(x):  # returns sinogram shape
+        return forwardproject(x.reshape((N, N)), angles).ravel()
+
+    def backward(y):  # y is flattened sinogram
+        y2d = y.reshape((N, n_angles))
+        return backproject(y2d, angles, output_size=N, normalize=False).ravel()
+
+    b = sinogram.ravel()
+
+    if x0 is None:
+        x = np.zeros(N * N, dtype=np.float32)
+    else:
+        x = x0.ravel().copy()
+
+    r = b - forward(x)
+    p = backward(r)
+    d = p.copy()
+    delta_new = np.dot(d, d)
+
+    for _ in range(n_iter):
+        q = forward(d)
+        alpha = delta_new / np.dot(q, q)
+        x += alpha * d
+        r -= alpha * q
+        s = backward(r)
+        delta_old = delta_new
+        delta_new = np.dot(s, s)
+        beta = delta_new / delta_old
+        d = s + beta * d
+
+    return x.reshape((N, N))
+
+
+def sirt_functional(sinogram, angles, x0=None, n_iter=20, relax=1.0, epsilon=1e-6):
+    """
+    SIRT solver using forwardproject and backproject, with image size inferred from sinogram.
+
+    Parameters
+    ----------
+    sinogram : ndarray
+        Input sinogram of shape (num_detectors, num_angles).
+    angles : ndarray
+        1D array of projection angles in degrees.
+    x0 : ndarray or None
+        Initial guess for the image. If None, initialized to zeros.
+    n_iter : int
+        Number of SIRT iterations.
+    relax : float
+        Relaxation factor.
+    epsilon : float
+        Small constant to avoid division by zero.
+
+    Returns
+    -------
+    image : ndarray
+        Reconstructed 2D image.
+    """
+    N = sinogram.shape[0]
+
+    def forward(x): return forwardproject(x.reshape((N, N)), angles)
+    def backward(y): return backproject(y, angles, output_size=N, normalize=False)
+
+    b = sinogram
+    W_voxel = backward(forward(np.ones((N, N), dtype=np.float32)))
+
+    if x0 is None:
+        x = np.zeros((N, N), dtype=np.float32)
+    else:
+        x = x0.copy()
+
+    for _ in range(n_iter):
+        residual = b - forward(x)
+        correction = backward(residual) / (W_voxel + epsilon)
+        x += relax * correction
+
+    return x
