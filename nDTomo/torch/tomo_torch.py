@@ -14,224 +14,192 @@ from torchvision.transforms import InterpolationMode
 from numpy import vstack
 import numpy as np
 
+def forward_project_3D(vol, angles, npix, nch, device='cuda'):
 
-def forwardproject_torch(vol, angles, Amat=None, grid_scaled=None, device='cuda'):
     """
-    Forward projection (Radon transform) in PyTorch for 2D or 3D input volumes.
-
-    This function supports both:
-    - 2D inputs: performs projection via image rotation and summation.
-    - 3D volumes: assumes shape (z, x, y) and performs slice-wise projection for each angle.
+    Perform forward projection (Radon transform) of a 3D volume using PyTorch.
 
     Parameters
     ----------
     vol : torch.Tensor
-        Input tensor representing the volume:
-        - Shape (H, W) for 2D projection.
-        - Shape (Z, H, W) for 3D projection (multiple slices).
-        Assumes square images for simplicity in rotation logic.
-    angles : array-like
-        Sequence of projection angles in degrees.
-    Amat : torch.sparse.Tensor or None, optional
-        Optional sparse matrix for projection in 2D case. If provided, it overrides the geometric simulation.
-    grid_scaled : torch.Tensor or None, optional
-        If provided (for 3D), uses this grid for sampling via F.grid_sample.
-        Should match shape and spacing of input for distortion correction or alignment.
+        Input volume of shape (1, nch, npix, npix), where:
+        - 1 is the batch dimension,
+        - nch is the number of channels or slices (e.g., spectral bins or time steps),
+        - npix x npix is the spatial resolution of each slice.
+    angles : list or ndarray
+        List of projection angles in degrees.
+    npix : int
+        Number of pixels along each projection axis (image size).
+    nch : int
+        Number of slices or channels in the volume.
     device : str, optional
-        Device to run the computation on. Default is 'cuda'.
+        PyTorch device string (default: 'cuda').
 
     Returns
     -------
-    s : torch.Tensor
-        Forward projected sinogram:
-        - Shape (npix, n_angles) for 2D.
-        - Shape (nbins, npix, n_angles) for 3D.
+    sinos : torch.Tensor
+        Simulated sinogram of shape (nch, npix, len(angles)), where each slice
+        corresponds to a different channel/slice and each column is a projection.
     """
-    vol = vol.to(device)
-    dims = vol.shape
-    angles = [float(a) for a in angles]  # ensure float angles
 
-    if len(dims) == 3:
-        # 3D case: (Z, X, Y)
-        nbins, npix, _ = dims
-        s = torch.zeros((nbins, npix, len(angles)), device=device)
+    sinos = torch.zeros((nch, npix, len(angles)), device=device)
+    for angle in range(len(angles)):
+        vol_rot = rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
+        sinos[:,:,angle] = torch.sum(vol_rot, dim=3)[0,:,:]
+    return sinos
 
-        for i, theta in enumerate(angles):
-            vol_rot = rotate(vol, theta, interpolation=InterpolationMode.BILINEAR)
-            vol_rot = vol_rot.view(1, 1, nbins, npix, npix)
+def back_project_3D(sinos, angles, npix, nch, device='cuda'):
 
-            if grid_scaled is not None:
-                voli = F.grid_sample(vol_rot, grid_scaled, mode='bilinear', align_corners=True)
-                s[:, :, i] = torch.sum(voli, dim=4)[0, 0]
-            else:
-                s[:, :, i] = torch.sum(vol_rot, dim=4)[0, 0]
-
-    elif len(dims) == 2:
-        # 2D case: (H, W)
-        npix = dims[0]
-
-        if Amat is not None:
-            s = Amat @ vol.view(-1, 1)
-        else:
-            s = torch.zeros((npix, len(angles)), device=device)
-            for i, theta in enumerate(angles):
-                vol_in = vol.unsqueeze(0).unsqueeze(0)  # shape: (1, 1, H, W)
-                vol_rot = rotate(vol_in, theta, interpolation=InterpolationMode.BILINEAR)
-                s[:, i] = torch.sum(vol_rot, dim=3)[0, 0]
-    else:
-        raise ValueError("Input volume must be either 2D (H, W) or 3D (Z, H, W)")
-
-    return s
-
-
-def backproject_torch(sinogram, angles, output_size, grid_scaled=None, normalize=False, device='cuda'):
     """
-    Backprojection (inverse Radon transform) in PyTorch for 2D or 3D sinograms.
-
-    This function supports both:
-    - 2D sinograms: shape (num_detectors, num_angles)
-    - 3D sinograms: shape (nbins, num_detectors, num_angles)
+    Perform backprojection (inverse Radon transform) of a 3D sinogram using PyTorch.
 
     Parameters
     ----------
-    sinogram : torch.Tensor
-        Input sinogram tensor:
-        - Shape (num_detectors, num_angles) for 2D.
-        - Shape (nbins, num_detectors, num_angles) for 3D.
-    angles : array-like
-        Sequence of projection angles in degrees.
-    output_size : int
-        Desired side length of the output image or volume (assumes square).
-    grid_scaled : torch.Tensor or None, optional
-        Grid for resampling during backprojection (only for 3D).
-        If provided, used with F.grid_sample.
-    normalize : bool, optional
-        If True, scale output by π / num_angles.
+    sinos : torch.Tensor
+        Input sinogram of shape (nch, npix, len(angles)), where:
+        - nch is the number of slices or channels,
+        - npix is the number of detector elements,
+        - len(angles) is the number of projection angles.
+    angles : list or ndarray
+        List of projection angles in degrees.
+    npix : int
+        Number of pixels in the output reconstructed image.
+    nch : int
+        Number of slices or channels in the volume.
     device : str, optional
-        Target device (default is 'cuda').
+        PyTorch device string (default: 'cuda').
 
     Returns
     -------
-    recon : torch.Tensor
-        Reconstructed image or volume:
-        - Shape (1, 1, H, W) for 2D.
-        - Shape (1, nbins, H, W) for 3D.
+    vol : torch.Tensor
+        Reconstructed 3D volume of shape (nch, npix, npix). Each channel corresponds to
+        a separate slice, reconstructed via filtered or unfiltered backprojection.
     """
-    sinogram = sinogram.to(device)
-    angles = [float(a) for a in angles]
+    vol = torch.zeros((1, nch, npix, npix), device=device)
+    for angle in range(len(angles)):
+        vol_rot = sinos[:,:,angle].unsqueeze(0).unsqueeze(0)
+        vol_rot = torch.transpose(vol_rot, 2, 1)
+        vol_rot = vol_rot.repeat(1, 1, npix, 1)
+        vol_rot = torch.transpose(vol_rot, 3, 2)
+        vol_rot = rotate(vol_rot, 
+                         -float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
+        vol += vol_rot
+    return vol[0, :, :, :]
 
-    if sinogram.ndim == 2:
-        # 2D case
-        num_detectors, n_angles = sinogram.shape
-        recon = torch.zeros((1, 1, output_size, output_size), device=device)
 
-        for i, theta in enumerate(angles):
-            proj = sinogram[:, i]
-            proj_2d = proj.view(num_detectors, 1).repeat(1, output_size).unsqueeze(0).unsqueeze(0)
-            rotated = rotate(proj_2d, angle=theta + 90, interpolation=InterpolationMode.BILINEAR)
-            recon += rotated
+# Compute W_ray for SIRT
+def compute_W_ray(angles, npix, nch, device='cuda'):
+    """
+    Compute ray normalization weights for each voxel via forward projection of a constant volume.
 
-    elif sinogram.ndim == 3:
-        # 3D case
-        nbins, num_detectors, n_angles = sinogram.shape
-        recon = torch.zeros((1, nbins, output_size, output_size), device=device)
+    This function simulates the accumulation of contributions each detector sees from a
+    uniform volume, useful for SIRT or SART-type normalization.
 
-        for i, theta in enumerate(angles):
-            proj = sinogram[:, :, i]  # shape: (nbins, num_detectors)
-            proj = proj.unsqueeze(1)  # shape: (nbins, 1, num_detectors)
+    Parameters
+    ----------
+    angles : list or ndarray
+        List of projection angles in degrees.
+    npix : int
+        Number of pixels in each dimension of the image (image size).
+    nch : int
+        Number of slices or channels in the 3D volume.
+    device : str, optional
+        PyTorch device string (default: 'cuda').
 
-            # Expand along width
-            proj_2d = proj.repeat(1, output_size, 1)  # (nbins, output_size, num_detectors)
-            proj_2d = proj_2d.permute(0, 2, 1)        # (nbins, num_detectors, output_size)
-            proj_2d = proj_2d.unsqueeze(1)            # (nbins, 1, H, W)
+    Returns
+    -------
+    W_ray : torch.Tensor
+        Weighting map of shape (nch, npix, len(angles)) representing forward projection of ones.
+    """    
+    vol = torch.ones((1, nch, npix, npix), dtype=torch.float32, device=device)
+    W_ray = forward_project_3D(vol, angles, npix, nch, device)
+    return W_ray
 
-            # Rotate to backproject
-            proj_rot = rotate(proj_2d, angle=theta + 90, interpolation=InterpolationMode.BILINEAR)
 
-            if grid_scaled is not None:
-                proj_rot = proj_rot.unsqueeze(0)
-                proj_rot = F.grid_sample(proj_rot, grid_scaled, mode='bilinear', align_corners=True)
-                recon += proj_rot[0]
-            else:
-                recon += proj_rot
-
-    else:
-        raise ValueError("sinogram must be 2D or 3D (nbins, n_detectors, n_angles)")
-
-    if normalize:
-        recon *= torch.pi / len(angles)
-
-    return recon
-
-def sirt_pytorch(sinogram, angles, output_size, n_iter=20, relax=1.0, epsilon=1e-6, device='cuda'):
+def sirt_pytorch_functional(sinos, angles, npix, nch=1, n_iter=20, relax=0.01, epsilon=1e-6, device='cuda'):
     """
     SIRT reconstruction using PyTorch with function-based forward and backward projectors.
 
     Parameters
     ----------
-    sinogram : torch.Tensor
-        Input sinogram of shape (num_detectors, num_angles), on GPU.
-    angles : array-like
-        Projection angles in degrees.
-    output_size : int
-        Output image size (assumed square).
+    sinos : torch.Tensor
+        Input sinogram tensor of shape (nch, npix, n_angles), e.g. (1, 151, 180).
+    angles : list or ndarray
+        List of projection angles in degrees.
+    npix : int
+        Width/height of the reconstructed image.
+    nch : int
+        Number of slices or channels in the volume (default = 1).
     n_iter : int
         Number of SIRT iterations.
     relax : float
-        Relaxation parameter.
+        Relaxation factor (typically small, e.g., 0.01).
     epsilon : float
-        Small constant to avoid division by zero.
+        Small number to avoid division by zero.
     device : str
-        CUDA device string, e.g., 'cuda'.
+        Computation device, e.g. 'cuda'.
 
     Returns
     -------
-    x : torch.Tensor
-        Reconstructed image of shape (1, 1, output_size, output_size)
+    torch.Tensor
+        Reconstructed volume of shape (nch, npix, npix).
     """
-    # Sensitivity map
-    W_voxel = backproject_torch(
-        forwardproject_torch(torch.ones((output_size, output_size), device=device), angles, device=device),
-        angles, output_size, normalize=False, device=device
-    )
+    sinos = sinos.to(device)
+    W_ray = compute_W_ray(angles, npix, nch, device=device)
 
-    # Initial guess
-    x = torch.zeros((1, 1, output_size, output_size), device=device)
+    vol = torch.zeros((1, nch, npix, npix), dtype=torch.float32, device=device)
 
     for _ in range(n_iter):
-        residual = sinogram - forwardproject_torch(x[0, 0], angles, device=device)
-        correction = backproject_torch(residual, angles, output_size, normalize=False, device=device)
-        x += relax * correction / (W_voxel + epsilon)
+        sim = forward_project_3D(vol, angles, npix, nch, device)
+        residual = sinos - sim
+        correction = back_project_3D(residual / (W_ray + epsilon), angles, npix, nch, device)
+        vol += relax * correction
 
-    return x
+    if device == 'cuda':
+        vol = vol.cpu() 
 
-def cgls_pytorch(sinogram, angles, output_size, n_iter=10, device='cuda'):
+    vol = vol.squeeze().numpy()
+    vol = np.transpose(vol)
+
+    return vol  # shape: (nch, npix, npix)
+
+
+def cgls_pytorch_functional(sinos, angles, npix, nch=1, n_iter=10, device='cuda'):
     """
-    CGLS solver using PyTorch and functional forward/back projectors.
+    CGLS reconstruction using PyTorch with functional forward and back projectors.
 
     Parameters
     ----------
-    sinogram : torch.Tensor
-        Input sinogram of shape (num_detectors, num_angles), on GPU.
-    angles : array-like
-        Projection angles in degrees.
-    output_size : int
-        Size of the reconstructed image (assumed square).
+    sinos : torch.Tensor
+        Input sinogram tensor of shape (nch, npix, n_angles), e.g., (1, 151, 180).
+    angles : list or ndarray
+        List of projection angles in degrees.
+    npix : int
+        Width/height of the reconstructed image.
+    nch : int
+        Number of slices or channels in the volume (default = 1).
     n_iter : int
         Number of CGLS iterations.
     device : str
-        CUDA device string.
+        Computation device, e.g., 'cuda'.
 
     Returns
     -------
-    x : torch.Tensor
-        Reconstructed image of shape (1, 1, output_size, output_size)
+    torch.Tensor
+        Reconstructed volume of shape (nch, npix, npix).
     """
-    def forward(x): return forwardproject_torch(x[0, 0], angles, device=device)
-    def backward(y): return backproject_torch(y, angles, output_size, normalize=False, device=device)
+    sinos = sinos.to(device)
 
-    x = torch.zeros((1, 1, output_size, output_size), device=device)
-    b = sinogram
+    def forward(x):
+        x_batched = x.unsqueeze(0)  # (1, nch, npix, npix)
+        return forward_project_3D(x_batched, angles, npix, nch, device)
+
+    def backward(y):
+        return back_project_3D(y, angles, npix, nch, device)
+
+    x = torch.zeros((nch, npix, npix), dtype=torch.float32, device=device)
+
+    b = sinos
     r = b - forward(x)
     p = backward(r)
     d = p.clone()
@@ -248,9 +216,13 @@ def cgls_pytorch(sinogram, angles, output_size, n_iter=10, device='cuda'):
         beta = delta_new / delta_old
         d = s + beta * d
 
+    if device == 'cuda':
+        x = x.cpu() 
+
+    x = x.squeeze().numpy()
+    x = np.transpose(x)
+
     return x
-
-
 
 def Amatrix_torch(A, gpu=True):
     """
