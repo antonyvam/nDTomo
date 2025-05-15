@@ -10,3 +10,4 @@ This section contains Jupyter notebook examples demonstrating how to use nDTomo.
    notebooks/tutorial_3D_shapes.ipynb
    notebooks/tutorial_pencil_beam.ipynb
    notebooks/tutorial_sinogram_handling.ipynb
+   notebooks/tutorial_ct_recon_demo.ipynb
