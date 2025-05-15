@@ -3,23 +3,19 @@
 nDTomo software suite
 =====================
 
-The nDTomo software suite contains a graphical user interface (GUI) and python scripts for the simulation, visualisation, preprocessing and analysis of X-ray chemical imaging and tomography data.
-
-Documentation for the GUI will be provided at (under construction): https://ndtomo.readthedocs.io
+The nDTomo software suite contains python scripts for the simulation, visualisation, preprocessing and analysis of X-ray chemical imaging and tomography data as well as a graphical user interface (GUI) for analysis of chemical imaging data.
 
 The aim of this library is to generate tools for the following:
 
-1. **Generation of multi-modal and multi-dimensional phantoms**
+1. **Generation of multi-dimensional phantoms**
 
-2. **Simulation of various computed tomography data acquisition strategies**
+2. **Simulation of various pencil beam computed tomography data acquisition strategies**
 
-3. **Creation of demonstration scripts** for:
-   - (a) Integration of XRD-CT data
-   - (b) Processing and correcting sinograms and radiographs for X-ray computed tomography data for various artefacts
+3. **Processing and correcting sinogram data**
 
-4. **Application of computed tomography reconstruction algorithms** from basic principles to practical applications
+4. **Application of computed tomography reconstruction algorithms**
 
-5. **Dimensionality reduction of chemical imaging data and data analysis through multi-peak fitting**
+5. **Data analysis of chemical imaging data through peak fitting**
 
 
 .. image:: images/xrdct.png 
