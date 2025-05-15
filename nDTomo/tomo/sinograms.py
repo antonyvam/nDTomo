@@ -7,6 +7,8 @@ Tomography tools for nDTomo
 
 import numpy as np
 from scipy.ndimage import center_of_mass
+from scipy.optimize import curve_fit
+import matplotlib.pyplot as plt
 from tqdm import tqdm
 import algotom.util.utility as util
 import algotom.prep.removal as remo
@@ -59,35 +61,42 @@ def airrem(sinograms, ofs=1, pbar=True, method="both", coli=0, colf=None):
       along the z-axis (or spectral dimension).
     """
     di = sinograms.shape
-    loop_range = tqdm(range(sinograms.shape[1])) if pbar else range(sinograms.shape[1])
+    
+    if len(di) == 3:
+        loop_range = tqdm(range(sinograms.shape[2])) if pbar else range(sinograms.shape[2])
 
     if colf is None:
         colf = sinograms.shape[1]  # Use all columns if colf is not specified
     
-    if len(di) > 2:  # 3D sinograms
+    if len(di) == 3:  # 3D sinograms
+
+        if method == "both":
+            air = (
+                np.mean(sinograms[0:ofs, coli:colf, :], axis=(0, 1)) +
+                np.mean(sinograms[-ofs:, coli:colf, :], axis=(0, 1))
+            ) / 2
+        elif method == "top":
+            air = np.mean(sinograms[0:ofs, coli:colf, :], axis=(0, 1))
+        elif method == "bottom":
+            air = np.mean(sinograms[-ofs:, coli:colf, :], axis=(0, 1))
+
         for ii in loop_range:
-            if method == "both":
-                air = (
-                    np.mean(sinograms[0:ofs, ii, coli:colf], axis=(0, 1)) +
-                    np.mean(sinograms[-ofs:, ii, coli:colf], axis=(0, 1))
-                ) / 2
-            elif method == "top":
-                air = np.mean(sinograms[0:ofs, ii, coli:colf], axis=(0, 1))
-            elif method == "bottom":
-                air = np.mean(sinograms[-ofs:, ii, coli:colf], axis=(0, 1))
-            sinograms[:, ii, :] -= air
+            sinograms[:, :, ii] -= air[ii]
 
     elif len(di) == 2:  # 2D sinograms
+
+        if method == "both":
+            air = (
+                np.mean(sinograms[0:ofs, coli:colf], axis=(0, 1)) +
+                np.mean(sinograms[-ofs:, coli:colf], axis=(0, 1))
+            ) / 2
+        elif method == "top":
+            air = np.mean(sinograms[0:ofs, coli:colf], axis=(0, 1))
+        elif method == "bottom":
+            air = np.mean(sinograms[-ofs:, coli:colf], axis=(0, 1))
+            
         for ii in range(sinograms.shape[1]):
-            if method == "both":
-                air = (
-                    np.mean(sinograms[0:ofs, coli:colf], axis=0) +
-                    np.mean(sinograms[-ofs:, coli:colf], axis=0)
-                ) / 2
-            elif method == "top":
-                air = np.mean(sinograms[0:ofs, coli:colf], axis=0)
-            elif method == "bottom":
-                air = np.mean(sinograms[-ofs:, coli:colf], axis=0)
+
             sinograms[:, ii] -= air
 
     return sinograms
@@ -153,40 +162,60 @@ def scalesinos(sinograms, pbar=False):
     return sinograms
 
 
-def sinocomcor(sinograms, interp=True):
+def sinocomcor(sinograms, interp=False, sine_wave=False, sine_wave_plot=False, pbar=False):
     """
-    Corrects sinograms for motor jitter by aligning them based on their center of mass.
+    Corrects sinograms for motor jitter by aligning each projection based on its center of mass (COM).
     
-    This method adjusts the sinograms to correct for translation misalignments 
-    (motor jitter) by interpolating each projection to align its center of mass. 
-    It supports both 2D and 3D sinograms, where the third dimension in the 3D case 
-    represents the z-axis or spectral dimension.
+    This function mitigates translation misalignments in sinograms (commonly due to motor jitter) by 
+    shifting each projection so that its center of mass aligns with that of the first projection. The 
+    method supports both 2D and 3D sinograms, where the third dimension (in the 3D case) typically 
+    represents the spectral or z-axis.
+
+    Optionally, the COM offsets can be fitted to a sine wave model, and this fitted model used for 
+    correction instead of the raw COM offsets. This is useful in setups where jitter has a periodic 
+    component (e.g. sinusoidal drift of a stage or motor).
 
     Parameters
     ----------
     sinograms : ndarray
-        Input sinograms. Can be either:
-        - A 2D array (translations x projections) for a single sinogram.
-        - A 3D array (translations x projections x z) for a stack of sinograms.
+        The input sinograms to correct. Can be:
+        - A 2D array of shape (translations, projections), or
+        - A 3D array of shape (translations, projections, z/spectral).
+    
     interp : bool, optional
-        If True, linear interpolation is performed with no extrapolation.
-        If False, extrapolated values outside the original range are set to 0.
-        Default is True.
+        Whether to use interpolation for shifts. If True, extrapolated values outside the original 
+        data range are not clipped (default linear interpolation). If False, extrapolated values 
+        are set to 0. Default is False.
+
+    sine_wave : bool, optional
+        If True, a sine wave will be fitted to the COM offsets, and the fitted curve used for 
+        correction instead of the raw COM values. This assumes periodic jitter. Default is False.
+
+    sine_wave_plot : bool, optional
+        If True and `sine_wave` is enabled, the fitted sine curve will be plotted alongside the 
+        raw COM offsets for visual inspection. Default is False.
+
+    pbar : bool, optional
+        If True, displays a progress bar during the correction process (useful for large datasets). 
+        Default is False.
 
     Returns
     -------
     ndarray
-        Sinograms corrected for motor jitter. The output has the same shape as the input.
+        Sinograms with corrected projection alignment. Output has the same shape as the input.
 
     Notes
     -----
-    - The correction is based on the center of mass (COM) of each projection, calculated 
-      using `scipy.ndimage.center_of_mass`.
+    - Center of mass is computed using `scipy.ndimage.center_of_mass` on each projection.
     - The first projection is used as the reference for alignment.
-    - Linear interpolation (`np.interp`) is used to shift each projection based on 
-      its COM. Extrapolation behavior depends on the `interp` parameter.
+    - Corrections are performed via linear interpolation (`np.interp`) along the translation axis.
+    - If `sine_wave` is True, the center of mass offset is modeled as:
+          A * sin(2π f x + phi) + C
+      and this model is fitted using `scipy.optimize.curve_fit`.
+    - If using `interp=False`, values beyond the data range are filled with zeros (hard shift).
 
     """
+    
     di = sinograms.shape
 
     # Sum along the spectral axis if sinograms are 3D
@@ -202,29 +231,69 @@ def sinocomcor(sinograms, interp=True):
 
     # Adjust COM relative to the first projection
     com = com - com[0]
+    com = com[:,0]
+    
+    if sine_wave:   
+        def sine_model(x, A, f, phi, C):
+            """
+            Sine wave model: A * sin(2π f x + phi) + C
+            """
+            return A * np.sin(2 * np.pi * f * x + phi) + C
+    
+        xold = np.arange(ss.shape[0])
+        
+        # Initial guess for parameters: A, f, phi, C
+        initial_guess = [1, 1, 0, 0]
+
+        # Fit the model
+        params, _ = curve_fit(sine_model, xold, com, p0=initial_guess)
+
+        # Extract fitted parameters
+        A_fit, f_fit, phi_fit, C_fit = params
+
+        # Generate fitted curve
+        y_fit = sine_model(xold, A_fit, f_fit, phi_fit, C_fit)
+
+        if sine_wave_plot:
+            
+            plt.figure(1);plt.clf()
+            plt.plot(xold, com, label="Observed", alpha=0.6)
+            plt.plot(xold, y_fit, label="Fitted Sine", linewidth=2)
+            plt.legend()
+            plt.title(f"Fitted: A={A_fit:.2f}, f={f_fit:.2f}, phi={phi_fit:.2f}, C={C_fit:.2f}")
+            plt.xlabel("x")
 
     # Create an empty array for corrected sinograms
     sn = np.zeros_like(sinograms)
     xold = np.arange(sn.shape[0])
 
+    loop_range = tqdm(range(sinograms.shape[1])) if pbar else range(sinograms.shape[1])
+    
     if len(di) == 2:  # For 2D sinograms
-        for ii in tqdm(range(sn.shape[1]), desc="Correcting 2D sinograms"):
-            xnew = xold + com[ii, :]
+        for ii in loop_range:
+            if sine_wave:
+                xnew = xold - (y_fit[ii] - com[ii])
+            else:
+                xnew = xold + com[ii]
             if interp:
                 sn[:, ii] = np.interp(xnew, xold, sinograms[:, ii])
             else:
                 sn[:, ii] = np.interp(xnew, xold, sinograms[:, ii], left=0, right=0)
 
-    elif len(di) > 2:  # For 3D sinograms
-        for ll in tqdm(range(sinograms.shape[2]), desc="Correcting 3D sinograms"):
+    elif len(di) == 3:  # For 3D sinograms
+        for ll in loop_range:
             for ii in range(sinograms.shape[1]):
-                xnew = xold + com[ii, :]
+                if sine_wave:
+                    xnew = xold - (y_fit[ii] - com[ii])
+                else:
+                    xnew = xold + com[ii]
                 if interp:
                     sn[:, ii, ll] = np.interp(xnew, xold, sinograms[:, ii, ll])
                 else:
                     sn[:, ii, ll] = np.interp(xnew, xold, sinograms[:, ii, ll], left=0, right=0)
 
     return sn
+
 
 def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pbar=True):
     """
