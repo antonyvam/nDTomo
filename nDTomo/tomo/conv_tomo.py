@@ -9,13 +9,93 @@ Tomography tools for nDTomo
 import numpy as np
 from skimage.transform import iradon, radon
 from scipy.sparse import csr_matrix
-from scipy.ndimage import center_of_mass
 from tqdm import tqdm
-from scipy.fft import rfft
 import matplotlib.pyplot as plt
-from scipy.sparse import csc_matrix
-import algotom.util.utility as util
-import algotom.prep.removal as remo
+from scipy.fft import fft, ifft, fftfreq
+from scipy.ndimage import rotate
+
+
+    
+def filter_sinogram(sinogram, filter_type='Ramp'):
+    """
+    Applies a frequency domain filter to a sinogram.
+
+    Parameters
+    ----------
+    sinogram : ndarray
+        2D array of shape (num_detectors, num_angles).
+    filter_type : str
+        Type of filter to apply. Options:
+        - 'Ramp' : standard Ram-Lak filter
+        - 'Shepp-Logan' : Ramp * sinc
+
+    Returns
+    -------
+    filtered_sinogram : ndarray
+        The filtered sinogram with the same shape as input.
+    """
+    n, n_theta = sinogram.shape
+    f = fftfreq(n).reshape(-1, 1)
+
+    # Ramp filter
+    ramp = np.abs(f)
+
+    if filter_type == 'Ramp':
+        filt = ramp
+    elif filter_type == 'Shepp-Logan':
+        filt = ramp * np.sinc(f / (2 * f.max()))
+    else:
+        raise ValueError("Unsupported filter_type. Choose 'Ramp' or 'Shepp-Logan'.")
+
+    # FFT along detector axis (rows)
+    sino_fft = fft(sinogram, axis=0)
+    sino_fft_filtered = sino_fft * filt
+    filtered_sinogram = np.real(ifft(sino_fft_filtered, axis=0))
+
+    return filtered_sinogram
+
+def backproject(sinogram, angles, output_size=None, scan=180):
+    """
+    Performs filtered or unfiltered backprojection of a sinogram.
+
+    Parameters
+    ----------
+    sinogram : ndarray
+        2D array of shape (num_detectors, num_angles).
+    angles : ndarray
+        1D array of projection angles in degrees.
+    output_size : int, optional
+        Size (width and height) of the reconstructed image.
+        If None, use num_detectors from sinogram.
+
+    Returns
+    -------
+    reconstruction : ndarray
+        2D reconstructed image.
+    """
+    n_detectors, n_angles = sinogram.shape
+    if output_size is None:
+        output_size = n_detectors
+
+    reconstruction = np.zeros((output_size, output_size), dtype=np.float32)
+
+    for i, theta in enumerate(angles):
+        projection = sinogram[:, i]
+
+        # Expand the 1D projection to a 2D image (replicate across columns)
+        projection_2d = np.tile(projection[:, np.newaxis], (1, output_size))
+
+        # Rotate the 2D projection to the current angle
+        rotated = rotate(projection_2d, angle= theta + 90, reshape=False, order=3)
+
+        # Accumulate into reconstruction
+        reconstruction += rotated
+
+    # Normalize
+    reconstruction *= np.pi / (n_angles)
+
+    return reconstruction
+
 
 def radonvol(vol, scan = 180, theta=None):
     
@@ -132,74 +212,6 @@ def fbpvol(svol, scan = 180, theta=None, nt = None):
     print('The dimensions of the reconstructed volume are ', vol.shape)
         
     return(vol)
-
-    
-def create_ramp_filter(s, ang):
-    """
-    Creates a ramp filter for the sinograms based on the detector width and angles.
-
-    This function computes a 2D ramp filter, where the frequency components are 
-    scaled by their absolute values. The filter is designed for the input sinograms 
-    and repeated for each angle in the projection.
-
-    Parameters
-    ----------
-    s : numpy.ndarray
-        Input sinograms with shape (detector elements, projections).
-    ang : numpy.ndarray or list
-        Array or list of projection angles.
-
-    Returns
-    -------
-    numpy.ndarray
-        A 2D ramp filter with shape (len(ang), detector elements).
-
-    Notes
-    -----
-    - The ramp filter is calculated using a frequency-domain approach.
-    - The filter is repeated along the angle dimension to match the input sinograms.
-
-    """
-    N1 = s.shape[1]  # Number of detector elements
-    freqs = np.linspace(-1, 1, N1)  # Normalized frequency range
-    myFilter = np.abs(freqs)  # Ramp filter in frequency domain
-    myFilter = np.tile(myFilter, (len(ang), 1))  # Repeat filter for all angles
-    return myFilter
-
-def ramp(detector_width):
-    """
-    Computes a 1D ramp filter in the frequency domain.
-
-    This function generates a ramp filter for a given detector width using 
-    frequency components. The filter is symmetric and designed for use in 
-    reconstruction algorithms such as filtered backprojection.
-
-    Parameters
-    ----------
-    detector_width : int
-        Number of detector elements.
-
-    Returns
-    -------
-    numpy.ndarray
-        A 1D ramp filter with length equal to the detector width.
-
-    Notes
-    -----
-    - The filter is constructed by linearly scaling frequencies up to the Nyquist 
-      frequency and symmetrically decreasing beyond it.
-    - The output is a float32 array for numerical efficiency.
-
-    """    
-    filter_array = np.zeros(detector_width)
-    frequency_spacing = 0.5 / (detector_width / 2.0)
-    for i in range(0, filter_array.shape[0]):
-        if i <= filter_array.shape[0] / 2.0:
-            filter_array[i] = i * frequency_spacing
-        elif i > filter_array.shape[0] / 2.0:
-            filter_array[i] = 0.5 - (((i - filter_array.shape[0] / 2.0)) * frequency_spacing)
-    return filter_array.astype(np.float32)
-
 
 def paralleltomo(N, theta, p, w):
     """

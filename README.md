@@ -16,13 +16,24 @@ The aim of this library, among others, is to generate tools for the following:
 ![XRD-CT](assets/xrdct.png)
 Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray diffraction CT (XRD-CT or Powder diffraction CT) data acquired from an NMC532 Li ion battery. For more details regarding this study see [1].
 
-Installation instructions from sources
---------------------------------------
+Installation instructions
+-------------------------
 An important part of the code is based on astra-toolbox (and tomopy) which is currently available through conda so to make your life easier please install anaconda. It is possible to install astra-toolbox/tomopy from sources (i.e. if one wants to avoid using conda) but it is not a trivial task. I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and make sure to install first the IDEs (Jupyter lab, Spyder etc) before installing the nDTomo.
+
+1. **Install nDTomo from GitHub**
+
+Create a new environment:
+
+```
+conda create --name ndtomo python=3.9
+conda activate ndtomo
+```
 
 To install from git:
 
-```pip install git+https://github.com/antonyvam/nDTomo.git```
+```
+pip install git+https://github.com/antonyvam/nDTomo.git
+```
 
 For development work:
 
@@ -51,21 +62,18 @@ module load python/3
 python setup.py install --user
 ```
 
-Installation instructions using conda (Windows only)
-----------------------------------------------------
-The conda package of nDTomo might not be up to date so try installing from sources. The nDTomo is currently being developed using python v3.8
+2. **Install pytorch**
 
-I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and then simply run the following:
+For Windows/Linux with CUDA 11.8:
+```
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
 
-Make sure that you have added the following channels:
+3. **Install astra-toolbox**
 
-```conda config --add channels conda-forge```
-
-```conda config --add channels astra-toolbox/label/dev```
-
-Next install nDTomo:
-
-```conda install -c antonyvam ndtomo```
+```
+conda install -c astra-toolbox -c nvidia astra-toolbox
+```
 
 
 Citation
