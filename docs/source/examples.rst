@@ -12,3 +12,4 @@ This section contains Jupyter notebook examples demonstrating how to use nDTomo.
    notebooks/tutorial_sinogram_handling.ipynb
    notebooks/tutorial_ct_recon_demo.ipynb
    notebooks/Detector_calibration_Integration_of_2D_powder_diffraction.ipynb
+   notebooks/Texture_2D_powder_diffraction_patterns.ipynb
