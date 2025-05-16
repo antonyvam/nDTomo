@@ -76,6 +76,16 @@ conda install -c astra-toolbox -c nvidia astra-toolbox
 ```
 
 
+## Launching the GUI
+
+After installing `nDTomo`, the graphical user interface can be launched directly from the terminal:
+
+```bash
+conda activate ndtomo
+nDTomoGUI
+```
+
+
 Citation
 --------
 If you use parts of the nDTomo code, please cite the work using the following:
