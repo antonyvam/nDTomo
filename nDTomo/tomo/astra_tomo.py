@@ -7,11 +7,38 @@ Functions for tomography using astra-toolbox library
 
 #%%
 
-import scipy, astra, time
+import os
+import types
+import scipy
+import time
 from numpy import deg2rad, arange, linspace, pi, zeros, mean, where, floor, log, inf, exp, vstack
 from numpy.random import rand
 from tqdm import tqdm
 
+try:
+    import astra
+except ImportError:
+    if os.environ.get("READTHEDOCS") == "True":
+        # Mock astra module for ReadTheDocs
+        astra = types.SimpleNamespace()
+
+        def dummy(*args, **kwargs): return None
+        astra.create_vol_geom = dummy
+        astra.create_proj_geom = dummy
+        astra.create_projector = dummy
+        astra.projector = types.SimpleNamespace(matrix=dummy, delete=dummy)
+        astra.data2d = types.SimpleNamespace(create=dummy, get=dummy, delete=dummy)
+        astra.data3d = types.SimpleNamespace(create=dummy, get=dummy, delete=dummy)
+        astra.algorithm = types.SimpleNamespace(create=dummy, run=dummy, delete=dummy)
+        astra.astra_dict = dummy
+        astra.astra = types.SimpleNamespace(set_gpu_index=dummy, delete=dummy)
+        astra.geom_postalignment = dummy
+        astra.creators = types.SimpleNamespace(create_vol_geom=dummy)
+        astra.create_sino = lambda x, y: (None, x)
+        astra.create_sino3d_gpu = lambda x, y, z: (None, x)
+    else:
+        raise
+    
 def astra_Amatrix(ntr, ang):
 
     '''
