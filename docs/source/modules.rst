@@ -5,4 +5,5 @@ Available Modules
    :maxdepth: 2
 
    simulations/index
+   tomo/index
    analysis/index
