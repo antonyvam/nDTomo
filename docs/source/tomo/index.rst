@@ -8,4 +8,4 @@ The `tomo` module contains functions for processing tomography data.
 
    sinograms
    cpu tomo   
-   astra toolbox wrappers
+   astra toolbox
