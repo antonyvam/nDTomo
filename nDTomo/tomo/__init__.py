@@ -5,7 +5,6 @@ This package contains modules for simulating tomography data, including:
 - `sinograms`: methods related to preprocessing and handling sinograms
 - `conv_tomo`: methods related to reconstructing CT images using numpy and scipy
 - `astra_tomo`: methods related to reconstructing CT images using the astra-toolbox
-
 """
 
 import importlib

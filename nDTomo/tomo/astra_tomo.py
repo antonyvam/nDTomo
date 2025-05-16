@@ -5,6 +5,7 @@ Functions for tomography using astra-toolbox library
 @author: Antony Vamvakeros
 """
 
+#%%
 
 import scipy, astra, time
 from numpy import deg2rad, arange, linspace, pi, zeros, mean, where, floor, log, inf, exp, vstack

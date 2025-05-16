@@ -1,5 +1,5 @@
-Sinograms Module
-================
+CPU Tomography Module
+=====================
 
 .. automodule:: nDTomo.tomo.conv_tomo
    :members:

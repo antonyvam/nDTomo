@@ -1,5 +1,5 @@
-Sinograms Module
-================
+Astra-toolbox Module
+====================
 
 .. automodule:: nDTomo.tomo.astra_tomo
    :members:

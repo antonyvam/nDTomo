@@ -1,7 +1,7 @@
-Simulations Module
-==================
+Tomography Module
+=================
 
-The `sim` module contains functions for processing tomography data.
+The `tomo` module contains functions for processing tomography data.
 
 .. toctree::
    :maxdepth: 2
