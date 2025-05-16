@@ -37,7 +37,7 @@ setup(
 		"pyqtgraph", "scikit-image", "scikit-learn", "xdesign", "tqdm", "ipykernel",
 		"pystackreg", "tifffile", "jupyterlab", 
 		"algotom", "fabio","pyFAI>=2025.01", "napari",
-		"configobj",
+		"configobj", "ipympl",
 	],
     extras_require={
         "torch": ["torch", "torchvision", "torchaudio"]
