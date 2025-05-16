@@ -25,7 +25,7 @@ and controlled placement of features.
 from nDTomo.methods.misc import ndtomopath, cirmask
 from xdesign import Mesh, SiemensStar, Circle, Triangle, DogaCircles, Phantom, Point, SimpleMaterial, discrete_phantom, SlantedSquares
 import numpy as np
-import h5py
+import h5py, os
 from skimage.data import shepp_logan_phantom
 from skimage.transform import rescale
 from skimage.draw import random_shapes
@@ -320,7 +320,7 @@ def load_example_xanes():
         - E: Energy values associated with the spectra.
     """
 
-    fn = '%s\examples\patterns\AllSpectra.h5' %(ndtomopath())
+    fn = os.path.join(ndtomopath(), 'examples', 'patterns', 'AllSpectra.h5')
 
     with h5py.File(fn, 'r') as f:
         
@@ -357,8 +357,8 @@ def load_example_patterns():
         - q: Momentum transfer values associated with the diffraction patterns.
     """  
     
-    fn = '%s\examples\patterns\patterns.h5' %(ndtomopath())
-
+    fn = os.path.join(ndtomopath(), 'examples', 'patterns', 'Patterns.h5')
+    
     with h5py.File(fn, 'r') as f:
         
         print(f.keys())

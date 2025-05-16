@@ -5,6 +5,8 @@ Misc tools for nDTomo
 @author: Antony Vamvakeros
 """
 
+import importlib.util
+import os
 import numpy as np
 import matplotlib.pyplot as plt
 import pkgutil
@@ -16,19 +18,23 @@ from skimage.segmentation import flood, flood_fill
 from scipy.optimize import minimize
    
 def ndtomopath():
-    
     """
-    Finds the absolute path of the nDTomo software.
+    Finds the absolute path of the nDTomo root directory (one level above the package).
 
     Returns:
-        str: The absolute path of the nDTomo software.
+        str: The absolute path of the nDTomo root directory.
     """
+    spec = importlib.util.find_spec('nDTomo')
+    if spec is None or spec.origin is None:
+        raise ImportError("nDTomo package not found.")
     
-    package = pkgutil.get_loader('nDTomo')
-    ndtomo_path = package.get_filename('nDTomo')
-    ndtomo_path = ndtomo_path.split('nDTomo\__init__.py')[0]
-            
-    return(ndtomo_path)
+    # Path to the package folder
+    package_dir = os.path.dirname(spec.origin)
+
+    # One level up: the root of the nDTomo project
+    ndtomo_root = os.path.dirname(package_dir)
+
+    return ndtomo_root
 
 def create_circle(npix_im=512, r0=128):
     

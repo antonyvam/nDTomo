@@ -633,3 +633,4 @@ class ImageSpectrumFitGUI:
                 self.image_real_time_update = not self.image_real_time_update
             elif event.inaxes == self.ax_spectrum:
                 self.spectrum_real_time_update = not self.spectrum_real_time_update
+                
