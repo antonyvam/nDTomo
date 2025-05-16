@@ -634,3 +634,107 @@ class ImageSpectrumFitGUI:
             elif event.inaxes == self.ax_spectrum:
                 self.spectrum_real_time_update = not self.spectrum_real_time_update
                 
+class chemimexplorer:
+    
+    def __init__(self, volume, fitted=None):
+        """
+        Initialize the chemimexplorer.
+
+        Args:
+            volume (ndarray): 3D array representing the volume data.
+        """
+        self.volume = volume
+        self.fitted = fitted
+
+        # Create main figure and subplots
+        self.fig, (self.ax_image, self.ax_spectrum) = plt.subplots(1, 2, figsize=(10, 5))
+
+        # Initialize with mean image and mean spectrum
+        mean_image = np.mean(volume, axis=2)
+        mean_spectrum = np.mean(volume, axis=(0, 1))
+        if self.fitted is not None:
+            mean_spectrum_fitted = np.mean(self.fitted, axis=(0, 1))
+
+        # Plot the mean image and mean spectrum
+        self.image = self.ax_image.imshow(mean_image.T, cmap='gray')
+        if self.fitted is not None:
+            self.spectrum, = self.ax_spectrum.plot(mean_spectrum, 'b+')
+            self.spectrum_fitted, = self.ax_spectrum.plot(mean_spectrum_fitted, color='r')
+        else:
+            self.spectrum, = self.ax_spectrum.plot(mean_spectrum, color='b')
+
+        # Set titles for image and spectrum
+        self.ax_image.set_title('Image')
+        self.ax_spectrum.set_title('Histogram')
+
+        # Connect mouse hover events
+        self.fig.canvas.mpl_connect('motion_notify_event', self.update_plots)
+        self.fig.canvas.mpl_connect('button_press_event', self.toggle_real_time)
+
+        # Initialize real-time update flags
+        self.image_real_time_update = True
+        self.spectrum_real_time_update = True
+
+    def update_plots(self, event):
+        """
+        Update the image and spectrum plots based on the mouse hover event.
+
+        Args:
+            event (matplotlib.backend_bases.MouseEvent): Mouse hover event.
+        """
+        if event.inaxes == self.ax_image:
+            if not self.image_real_time_update:
+                return
+            x, y = int(event.xdata), int(event.ydata)
+
+            # Check if the mouse position is within the image dimensions
+            image_width, image_height, _ = self.volume.shape
+            if x >= 0 and x < image_width and y >= 0 and y < image_height:
+                # Get the spectrum from the volume
+                spectrum = self.volume[x, y, :]
+
+                # Update the spectrum plot
+                self.spectrum.set_ydata(spectrum)
+                if self.fitted is not None:
+                    spectrum_fitted = self.fitted[x, y, :]
+                    self.spectrum_fitted.set_ydata(spectrum_fitted)
+
+                self.ax_spectrum.relim()
+                self.ax_spectrum.autoscale_view()
+
+                # Set title with coordinates
+                self.ax_spectrum.set_title(f'Histogram (x={x}, y={y})')
+
+        elif event.inaxes == self.ax_spectrum:
+            if not self.spectrum_real_time_update:
+                return
+            index = int(event.xdata)
+
+            # Get the image from the volume
+            image = self.volume[:, :, index]
+
+            # Update the image display
+            self.image.set_data(image.T)
+            self.ax_image.relim()
+            self.ax_image.autoscale_view()
+
+            # Set title with bin
+            self.ax_image.set_title(f'Image (Bin={index})')
+
+            # Set color limits based on the current image
+            self.image.set_clim(np.min(image), np.max(image))
+
+        self.fig.canvas.draw()
+
+    def toggle_real_time(self, event):
+        """
+        Toggle real-time update for image and spectrum plots on right-click.
+
+        Args:
+            event (matplotlib.backend_bases.MouseEvent): Mouse button press event.
+        """
+        if event.button == 3:
+            if event.inaxes == self.ax_image:
+                self.image_real_time_update = not self.image_real_time_update
+            elif event.inaxes == self.ax_spectrum:
+                self.spectrum_real_time_update = not self.spectrum_real_time_update
