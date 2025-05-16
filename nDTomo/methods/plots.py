@@ -41,11 +41,35 @@ def showim(im, fignum = 1, clim=None, cmap='jet'):
         plt.clim(clim)
     plt.show()
     
-def showspectra(spectra, fignum = 1):
-    
-    plt.figure(fignum);plt.clf()
-    for ii in range(len(spectra)):
-        plt.plot(spectra[ii])
+
+def showspectra(spectra, labels=None, fig_num=1):
+    """
+    Display multiple spectra on a single plot.
+
+    Parameters
+    ----------
+    spectra : list of np.ndarray
+        List of 1D arrays representing the spectra to be plotted.
+    labels : list of str, optional
+        Labels for each spectrum. If None, no legend is shown.
+    fig_num : int, optional
+        Figure number to use for the plot.
+    """
+    plt.figure(fig_num)
+    plt.clf()
+
+    for i, spec in enumerate(spectra):
+        if labels is not None and i < len(labels):
+            plt.plot(spec, label=labels[i])
+        else:
+            plt.plot(spec)
+
+    if labels is not None:
+        plt.legend()
+    plt.xlabel('Channel')
+    plt.ylabel('Intensity')
+    plt.title('Spectral Overlay')
+    plt.tight_layout()
     plt.show()
        
 def closefigs():
