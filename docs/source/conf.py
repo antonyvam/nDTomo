@@ -35,7 +35,7 @@ author = u'A. Vamvakeros'
 # The short X.Y version
 version = u''
 # The full version, including alpha/beta/rc tags
-release = u'2025.02'
+release = u'2025.01'
 
 
 # -- General configuration ---------------------------------------------------
@@ -199,3 +199,15 @@ epub_exclude_files = ['search.html']
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'python': ('https://docs.python.org/3/', None)}
+
+
+
+nbsphinx_prolog = r"""
+.. raw:: html
+
+    <style>
+        .cell.tag_hide-input .input {
+            display: none;
+        }
+    </style>
+"""
