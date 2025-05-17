@@ -149,7 +149,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.fig_spectrum = Figure()
         self.ax_spectrum = self.fig_spectrum.add_subplot(111)
         self.canvas_spectrum = FigureCanvas(self.fig_spectrum)
-        self.ax_spectrum.set_title("Spectrum")
+        self.ax_spectrum.set_title("Histogram")
 
         # set up the mapper
         self.mapperWidget = QtWidgets.QWidget(self)
@@ -215,7 +215,8 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.crspinbox1 = QtWidgets.QSpinBox(self)
         self.crspinbox1.valueChanged.connect(self.channel_initial)
         self.crspinbox1.setMinimum(1)
-        self.tab2.layout.addWidget(self.crspinbox1,1,1)              
+        self.tab2.layout.addWidget(self.crspinbox1,1,1)    
+        self.crspinbox1.valueChanged.connect(self.sync_peak_position_from_roi)
         
         self.Channel2 = QtWidgets.QLabel(self)
         self.Channel2.setText('Final channel')
@@ -224,7 +225,8 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.crspinbox2 = QtWidgets.QSpinBox(self)
         self.crspinbox2.valueChanged.connect(self.channel_final)
         self.crspinbox2.setMinimum(1)
-        self.tab2.layout.addWidget(self.crspinbox2,1,3)           
+        self.tab2.layout.addWidget(self.crspinbox2,1,3)        
+        self.crspinbox2.valueChanged.connect(self.sync_peak_position_from_roi)   
         
         self.pbutton1 = QtWidgets.QPushButton("Plot mean image", self)
         self.pbutton1.clicked.connect(self.plot_mean_image)
@@ -289,6 +291,95 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.ChooseFunction.setEnabled(True)
         self.tab4.layout.addWidget(self.ChooseFunction,1,1)   
 
+        # Peak Area controls
+        self.label_area = QtWidgets.QLabel("Area")
+        self.tab4.layout.addWidget(self.label_area, 2, 0)
+        self.area_spin = QtWidgets.QDoubleSpinBox()
+        self.area_spin.setRange(0.0, 100.0)
+        self.area_spin.setValue(self.Area)
+        self.area_spin.setSingleStep(0.1)
+        self.tab4.layout.addWidget(self.area_spin, 2, 1)
+        
+        self.label_area_min = QtWidgets.QLabel("Min")
+        self.tab4.layout.addWidget(self.label_area_min, 2, 2)
+        self.area_min_spin = QtWidgets.QDoubleSpinBox()
+        self.area_min_spin.setRange(0.0, 100.0)
+        self.area_min_spin.setValue(self.Areamin)
+        self.tab4.layout.addWidget(self.area_min_spin, 2, 3)
+
+        self.label_area_max = QtWidgets.QLabel("Max")
+        self.tab4.layout.addWidget(self.label_area_max, 2, 4)
+        self.area_max_spin = QtWidgets.QDoubleSpinBox()
+        self.area_max_spin.setRange(0.0, 100.0)
+        self.area_max_spin.setValue(self.Areamax)
+        self.tab4.layout.addWidget(self.area_max_spin, 2, 5)
+
+        # FWHM controls
+        self.label_fwhm = QtWidgets.QLabel("FWHM")
+        self.tab4.layout.addWidget(self.label_fwhm, 3, 0)
+        self.fwhm_spin = QtWidgets.QDoubleSpinBox()
+        self.fwhm_spin.setRange(0.01, 20.0)
+        self.fwhm_spin.setValue(self.FWHM)
+        self.fwhm_spin.setSingleStep(0.1)
+        self.tab4.layout.addWidget(self.fwhm_spin, 3, 1)
+        
+        self.label_fwhm_min = QtWidgets.QLabel("Min")
+        self.tab4.layout.addWidget(self.label_fwhm_min, 3, 2)
+        self.fwhm_min_spin = QtWidgets.QDoubleSpinBox()
+        self.fwhm_min_spin.setRange(0.01, 20.0)
+        self.fwhm_min_spin.setValue(self.FWHMmin)
+        self.tab4.layout.addWidget(self.fwhm_min_spin, 3, 3)
+
+        self.label_fwhm_max = QtWidgets.QLabel("Max")
+        self.tab4.layout.addWidget(self.label_fwhm_max, 3, 4)
+        self.fwhm_max_spin = QtWidgets.QDoubleSpinBox()
+        self.fwhm_max_spin.setRange(0.01, 20.0)
+        self.fwhm_max_spin.setValue(self.FWHMmax)
+        self.tab4.layout.addWidget(self.fwhm_max_spin, 3, 5)        
+        
+        # Central position
+        self.label_pos = QtWidgets.QLabel("Position")
+        self.tab4.layout.addWidget(self.label_pos, 4, 0)
+        self.pos_spin = QtWidgets.QDoubleSpinBox()
+        self.pos_spin.setDecimals(2)
+        self.pos_spin.setRange(0.0, 1e6)
+        self.pos_spin.setSingleStep(0.1)
+        self.tab4.layout.addWidget(self.pos_spin, 4, 1)
+
+        # Position min
+        self.label_pos_min = QtWidgets.QLabel("Min")
+        self.tab4.layout.addWidget(self.label_pos_min, 4, 2)
+        self.pos_min_spin = QtWidgets.QDoubleSpinBox()
+        self.pos_min_spin.setDecimals(2)
+        self.pos_min_spin.setRange(0.0, 1e6)
+        self.tab4.layout.addWidget(self.pos_min_spin, 4, 3)
+
+        # Position max
+        self.label_pos_max = QtWidgets.QLabel("Max")
+        self.tab4.layout.addWidget(self.label_pos_max, 4, 4)
+        self.pos_max_spin = QtWidgets.QDoubleSpinBox()
+        self.pos_max_spin.setDecimals(2)
+        self.pos_max_spin.setRange(0.0, 1e6)
+        self.tab4.layout.addWidget(self.pos_max_spin, 4, 5)
+
+        # Pseudo-Voigt mixing parameter (gamma)
+        self.label_fraction = QtWidgets.QLabel("Mixing γ")
+        self.tab4.layout.addWidget(self.label_fraction, 5, 0)
+        self.fraction_spin = QtWidgets.QDoubleSpinBox()
+        self.fraction_spin.setRange(0.0, 1.0)
+        self.fraction_spin.setSingleStep(0.05)
+        self.fraction_spin.setValue(0.5)
+        self.tab4.layout.addWidget(self.fraction_spin, 5, 1)
+        self.label_fraction.setVisible(False)
+        self.fraction_spin.setVisible(False)
+        
+        self.area_spin.setToolTip("Initial guess for peak area")
+        self.fraction_spin.setToolTip("Mixing fraction between Gaussian (0) and Lorentzian (1)")
+        
+        self.label_area.setToolTip("Initial guess for peak area")
+        self.label_area_min.setToolTip("Minimum allowed peak area")
+        self.label_area_max.setToolTip("Maximum allowed peak area")
+        
         self.pbutton_fit = QtWidgets.QPushButton("Perform batch peak fitting",self)
         self.pbutton_fit.clicked.connect(self.batchpeakfit)
         self.tab4.layout.addWidget(self.pbutton_fit,1,2)
@@ -302,18 +393,18 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         
         self.LabelRes = QtWidgets.QLabel(self)
         self.LabelRes.setText('Display peak fitting results')
-        self.tab4.layout.addWidget(self.LabelRes,2,0)
+        self.tab4.layout.addWidget(self.LabelRes,2,6)
         
         self.ChooseRes = QtWidgets.QComboBox(self)
         self.ChooseRes.addItems(['Area','Position', 'FWHM', 'Slope', 'Intercept'])
         self.ChooseRes.currentIndexChanged.connect(self.plot_fit_results)
         self.ChooseRes.setEnabled(False)
-        self.tab4.layout.addWidget(self.ChooseRes,2,1)   
+        self.tab4.layout.addWidget(self.ChooseRes,2,7)   
         
         self.pbutton_expfit = QtWidgets.QPushButton("Export fit results",self)
         self.pbutton_expfit.clicked.connect(self.savefitresults)
         self.pbutton_expfit.setEnabled(False)
-        self.tab4.layout.addWidget(self.pbutton_expfit,2,2)
+        self.tab4.layout.addWidget(self.pbutton_expfit,2,8)
 
         ############
 
@@ -673,7 +764,19 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def plot_mean_image(self):
 
         roi = np.arange(self.chi,self.chf)
-        self.xroi = np.arange(0, len(roi))
+
+        # Compute central position as float
+        pos = 0.5 * (self.chi + self.chf)
+
+        # Set Tab 4 controls automatically
+        self.pos_spin.setValue(pos)
+        self.pos_min_spin.setValue(max(0.0, pos - 5.0))
+        self.pos_max_spin.setValue(pos + 5.0)
+        
+        self.volroi = self.volume[:,:,roi]
+        self.volroi = self.volroi/np.max(self.volroi)
+        
+        self.xroi = np.arange(self.chi, self.chf)
         if self.chf<self.chi:
             self.chf = self.chi + 1
             self.crspinbox2.setValue(self.chf)
@@ -696,7 +799,18 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         # Update the image display
         self.ax_image.clear()
         roi = np.arange(self.chi,self.chf)
-        self.xroi = np.arange(0, len(roi))
+        # Compute central position as float
+        pos = 0.5 * (self.chi + self.chf)
+
+        # Set Tab 4 controls automatically
+        self.pos_spin.setValue(pos)
+        self.pos_min_spin.setValue(max(0.0, pos - 5.0))
+        self.pos_max_spin.setValue(pos + 5.0)
+
+        self.volroi = self.volume[:,:,roi]
+        self.volroi = self.volroi/np.max(self.volroi)
+        
+        self.xroi = np.arange(self.chi, self.chf)
         self.image = np.sum(self.volume[:,:,roi],axis=2)-len(roi)*np.mean(self.volume[:,:,[self.chi,self.chf]],axis=2)
         self.image[self.image<0] = 0
         self.image = 100*(self.image/np.max(self.image))
@@ -715,7 +829,16 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         # Update the image display
         self.ax_image.clear()
         roi = np.arange(self.chi,self.chf)
-        self.xroi = np.arange(0, len(roi))
+        
+        # Compute central position as float
+        pos = 0.5 * (self.chi + self.chf)
+
+        # Set Tab 4 controls automatically
+        self.pos_spin.setValue(pos)
+        self.pos_min_spin.setValue(max(0.0, pos - 5.0))
+        self.pos_max_spin.setValue(pos + 5.0)        
+        
+        self.xroi = np.arange(self.chi, self.chf)
         self.volroi = self.volume[:,:,roi]
         slope = (self.volroi[:,:,-1] - self.volroi[:,:,0])/len(roi)
         slope = np.reshape(slope, (self.image_width*self.image_height,1))
@@ -813,50 +936,106 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
     ####################### Peak fitting #######################
 
-    def profile_function(self,ind):
+    def sync_peak_position_from_roi(self):
+        chi = self.crspinbox1.value()
+        chf = self.crspinbox2.value()
+        if chf <= chi:
+            return
+        pos = 0.5 * (chi + chf)
+        self.pos_spin.setValue(pos)
+        self.pos_min_spin.setValue(max(0.0, pos - 5.0))
+        self.pos_max_spin.setValue(pos + 5.0)
+        
+    def profile_function(self, ind):
         if ind == 0:
             self.peaktype = "Gaussian"
             print("Gaussian profile")
+            self.label_fraction.setVisible(False)
+            self.fraction_spin.setVisible(False)
         elif ind == 1:
             self.peaktype = "Lorentzian"
             print("Lorentzian profile")
+            self.label_fraction.setVisible(False)
+            self.fraction_spin.setVisible(False)
         elif ind == 2:
             self.peaktype = "Pseudo-Voigt"
             print("Pseudo-Voigt profile")
+            self.label_fraction.setVisible(True)
+            self.fraction_spin.setVisible(True)
 
     def batchpeakfit(self):
-
         self.pbutton_fit.setEnabled(False)
-        self.Pos = (int(self.volroi.shape[2]/2))
-        self.Posmin = (int(self.volroi.shape[2]/2) - 5)
-        self.Posmax = (int(self.volroi.shape[2]/2) + 5)
+
+        # Read GUI values
+        self.Area = self.area_spin.value()
+        self.Areamin = self.area_min_spin.value()
+        self.Areamax = self.area_max_spin.value()
+
+        self.FWHM = self.fwhm_spin.value()
+        self.FWHMmin = self.fwhm_min_spin.value()
+        self.FWHMmax = self.fwhm_max_spin.value()
+
+        self.Pos = self.pos_spin.value()
+        self.Posmin = self.pos_min_spin.value()
+        self.Posmax = self.pos_max_spin.value()
+
+        # Override Posmin/Posmax if custom set
+        if self.pos_min_spin.value() < self.pos_max_spin.value():
+            self.Posmin = self.pos_min_spin.value()
+            self.Posmax = self.pos_max_spin.value()
         
         for ii in range(self.volroi.shape[2]):
             self.volroi[:,:,ii] = self.volroi[:,:,ii]*self.mask
-            
+        
+        fraction = self.fraction_spin.value() if self.peaktype == "Pseudo-Voigt" else None
+    
         self.PeakFitData = FitData(self.peaktype, self.volroi, self.xroi,
-                                   self.Area, self.Areamin, self.Areamax,
-                                   self.Pos, self.Posmin, self.Posmax,
-                                   self.FWHM, self.FWHMmin, self.FWHMmax)
+                                self.Area, self.Areamin, self.Areamax,
+                                self.Pos, self.Posmin, self.Posmax,
+                                self.FWHM, self.FWHMmin, self.FWHMmax)
+
+        if self.peaktype == "Pseudo-Voigt":
+            self.PeakFitData.fraction_init = fraction
         self.PeakFitData.start()            
         self.PeakFitData.progress_fit.connect(self.progressbar_fit.setValue)
-        self.PeakFitData.fitdone.connect(self.updatefitdata)
+        self.PeakFitData.result_partial.connect(self.update_live_fit_image)
+        self.PeakFitData.fitdone.connect(self.updatefitdata)        
+
+    def update_live_fit_image(self, live_data):
+        self.ax_image.clear()
+        self.ax_image.imshow(live_data, cmap='jet')
+        self.ax_image.set_title("Live peak area")
+        self.canvas_image.draw()
         
     def updatefitdata(self):
-        
-        self.res = self.PeakFitData.res #### need to think about this
+        # Check if results exist (i.e., fitting was not stopped early)
+        if not hasattr(self.PeakFitData, 'res'):
+            print("Peak fitting was stopped before completion.")
+            return
+
+        # Safely disconnect partial update signal
+        try:
+            self.PeakFitData.result_partial.disconnect()
+        except TypeError:
+            pass  # Already disconnected or never connected
+
+        self.res = self.PeakFitData.res
         self.pbutton_fit.setEnabled(True)
         self.ChooseRes.setEnabled(True)
         self.pbutton_expfit.setEnabled(True)
-        
-        self.ax_image.clear()
-        self.ax_image.imshow(self.res['Area'].T,cmap='jet')
-        self.ax_image.set_title("Peak area")
 
+        self.ax_image.clear()
+        self.ax_image.imshow(self.res['Area'].T, cmap='jet')
+        self.ax_image.set_title("Peak area")
+        self.canvas_image.draw()
+        
+        
+        
     def stopfit(self):
-        self.PeakFitData.terminate()
+        if hasattr(self, 'PeakFitData'):
+            self.PeakFitData.request_stop()
         self.progressbar_fit.setValue(0)
-        self.pbutton_fit.setEnabled(True)
+        self.pbutton_fit.setEnabled(True)        
         
     def plot_fit_results(self,ind):
         
@@ -930,9 +1109,11 @@ class FitData(QThread):
     
     fitdone = pyqtSignal()
     progress_fit = pyqtSignal(int)
+    result_partial = pyqtSignal(np.ndarray)
     
     def __init__(self, peaktype, data, x, Area, Areamin, Areamax, Pos, Posmin, Posmax, FWHM, FWHMmin, FWHMmax):
         QThread.__init__(self)
+        self._stop_requested = False
         
         self.peaktype = peaktype
         self.fitdata = data  
@@ -951,6 +1132,9 @@ class FitData(QThread):
         msk[msk>0] = 1
         self.i, self.j = np.where(msk > 0)
 
+    def request_stop(self):
+        self._stop_requested = True
+    
     def run(self):
         
         """
@@ -972,34 +1156,53 @@ class FitData(QThread):
             param_bounds=([float(self.Areamin),float(self.Posmin),float(self.FWHMmin),-0.5,-1.0],
                           [float(self.Areamax),float(self.Posmax),float(self.FWHMmax),0.5,1.0])
         
-        for ind in np.arange(0,len(self.i)):
+        rows = np.unique(self.i)
+
+        if len(rows) == 0:
+            print("No data to fit (mask may be empty)")
+            self.progress_fit.emit(0)
+            return
+
+        for irow, row in enumerate(rows):
+            
+            if self._stop_requested:
+                break                
+            cols = self.j[self.i == row]
+
+            for jj in cols:
                 
-                ii = self.i[ind]
-                jj = self.j[ind]
-                dp = self.fitdata[ii,jj,:]
+                if self._stop_requested:
+                    break                
+                dp = self.fitdata[row, jj, :]
+                
                 try:
                     if self.peaktype == "Gaussian":
-                        params, params_covariance = sciopt.curve_fit(self.gmodel, self.xroi, dp[self.xroi], p0=x0, bounds=param_bounds)
+                        params, _ = sciopt.curve_fit(self.gmodel, self.xroi, dp, p0=x0, bounds=param_bounds)
                     elif self.peaktype == "Lorentzian":
-                        params, params_covariance = sciopt.curve_fit(self.lmodel, self.xroi, dp[self.xroi], p0=x0, bounds=param_bounds)
+                        params, _ = sciopt.curve_fit(self.lmodel, self.xroi, dp, p0=x0, bounds=param_bounds)
                     elif self.peaktype == "Pseudo-Voigt":
-                        params, params_covariance = sciopt.curve_fit(self.pvmodel, self.xroi, dp[self.xroi], p0=x0, bounds=param_bounds)
-                    
-                    self.phase[ii,jj] = params[0]
-                    self.cen[ii,jj] = params[1]
-                    self.wid[ii,jj] = params[2]         
-                    self.bkg1[ii,jj] = params[3]   
-                    self.bkg2[ii,jj] = params[4]      
+                        params, _ = sciopt.curve_fit(self.pvmodel, self.xroi, dp, p0=x0, bounds=param_bounds)
+
+                    self.phase[row, jj] = params[0]
+                    self.cen[row, jj] = params[1]
+                    self.wid[row, jj] = params[2]
+                    self.bkg1[row, jj] = params[3]
+                    self.bkg2[row, jj] = params[4]
                     if self.peaktype == "Pseudo-Voigt":
-                        self.fr[ii,jj] = params[5]  
-           
-                except: 
-                    self.cen[ii,jj] = (param_bounds[0][1] + param_bounds[1][1])/2
-                    self.wid[ii,jj] = (param_bounds[0][2] + param_bounds[1][2])/2     
-                        
-                v = (100.*(ind+1))/(len(self.i))
-                self.progress_fit.emit(v)
-                
+                        self.fr[row, jj] = params[5]
+
+                except Exception:
+                    self.cen[row, jj] = (param_bounds[0][1] + param_bounds[1][1]) / 2
+                    self.wid[row, jj] = (param_bounds[0][2] + param_bounds[1][2]) / 2
+
+            # Emit the current partial result image after this row
+            self.result_partial.emit(self.phase.T.copy())
+
+            # Progress bar update
+            progress = int(100 * (irow + 1) / len(rows))
+            self.progress_fit.emit(progress)
+        
+
         self.phase = np.where(self.phase<0,0,self.phase)
         
         if self.peaktype == "Pseudo-Voigt":
@@ -1036,7 +1239,6 @@ def main():
     aw = nDTomoGUI()
     aw.show()
     sys.exit(qApp.exec_())
-    qApp.exec_()
    
 if __name__ == "__main__":
     main()
