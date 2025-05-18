@@ -46,6 +46,10 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import scipy.optimize as sciopt
 
+
+from qtconsole.rich_jupyter_widget import RichJupyterWidget
+from qtconsole.inprocess import QtInProcessKernelManager
+
 class nDTomoGUI(QtWidgets.QMainWindow):
     
     """
@@ -114,6 +118,11 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.file_menu.addAction('&Quit', self.fileQuit, QtCore.Qt.CTRL + QtCore.Qt.Key_Q)
         self.menuBar().addMenu(self.file_menu)
 
+        # Advanced menu
+        self.advanced_menu = QtWidgets.QMenu('&Advanced', self)
+        self.advanced_menu.addAction('Open IPython Console', self.init_console)
+        self.menuBar().addMenu(self.advanced_menu)
+        
         self.help_menu = QtWidgets.QMenu('&Help', self)
         self.help_menu.addAction('&About', self.about)        
         self.menuBar().addSeparator()
@@ -533,46 +542,43 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             self.index = event.xdata
 
             if self.index >= 0 and self.index < self.nbins:
-                
                 try:
-
                     if self.xaxislabel == 'd':
                         self.index = len(self.xaxis) - np.searchsorted(self.xaxisd, [self.index])[0]
                     else:
-                        self.index = np.searchsorted(self.xaxis.flatten(), [self.index])[0] -1
-                    
-                    if self.index<0:
-                        self.index = 0
-                    elif self.index>len(self.xaxis):
-                        self.index = len(self.xaxis)-1                
-    
-                    # Get the image from the volume
+                        self.index = np.searchsorted(self.xaxis.flatten(), [self.index])[0] - 1
+
+                    self.index = max(0, min(self.index, len(self.xaxis) - 1))
+
+                    # Get image at selected index
                     self.image = self.volume[:, :, self.index]
-        
-                    if hasattr(self, 'im'):
+
+                    # Ensure the image object exists
+                    if hasattr(self, 'im') and self.im is not None:
                         self.im.set_data(self.image.T)
                         self.im.set_clim(np.min(self.image), np.max(self.image))
                     else:
                         self.im = self.ax_image.imshow(self.image.T, cmap=self.cmap)
+                        self.cbar = self.fig_image.colorbar(self.im, ax=self.ax_image, fraction=0.046, pad=0.04)
 
-                    if hasattr(self, 'cbar'):
+                    if hasattr(self, 'cbar') and self.cbar is not None:
                         self.cbar.update_normal(self.im)
-                    
+
                     if self.xaxislabel == 'Channel':
                         self.ax_image.set_title(f"Image: Channel {self.index}")
                     else:
-                        self.ax_image.set_title("Image: Channel %d, %s %.3f" %(self.index, self.xaxislabel, self.xaxis[self.index]))
-    
-                    # Update vertical line
+                        self.ax_image.set_title("Image: Channel %d, %s %.3f" %
+                                                (self.index, self.xaxislabel, self.xaxis[self.index]))
+
+                    # Move vertical line on spectrum plot
                     if hasattr(self, 'vline'):
                         self.vline.set_xdata(self.xaxis[self.index])
                         self.canvas_spectrum.draw()
-        
-    
+
                     self.canvas_image.draw()
-                    
-                except:
-                    pass
+
+                except Exception as e:
+                    print(f"Error in update_image: {e}")
 
     def toggle_real_time_spectrum(self, event):
         """
@@ -1032,43 +1038,71 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.PeakFitData.fitdone.connect(self.updatefitdata)        
 
     def update_live_fit_image(self, live_data):
-        self.ax_image.clear()
         param = self.ChooseLive.currentText()
+
         if param == "Area":
             img = self.PeakFitData.phase
+            vmin, vmax = None, None  # autoscale
         elif param == "Position":
             img = self.PeakFitData.cen
+            vmin, vmax = self.Posmin, self.Posmax
         elif param == "FWHM":
             img = self.PeakFitData.wid
+            vmin, vmax = None, None  # autoscale
         else:
-            img = live_data  # fallback
+            img = live_data
+            vmin, vmax = np.nanmin(img), np.nanmax(img)
 
-        self.ax_image.imshow(img.T, cmap='jet')
-        self.ax_image.set_title(f"Live fit: {param}")       
+        # Recreate the figure to avoid layout shrinking
+        self.fig_image.clear()
+        self.ax_image = self.fig_image.add_subplot(111)
+
+        if vmin is not None and vmax is not None:
+            self.im = self.ax_image.imshow(img.T, cmap='jet', vmin=vmin, vmax=vmax)
+        else:
+            self.im = self.ax_image.imshow(img.T, cmap='jet')
+
+        self.ax_image.set_title(f"Live fit: {param}")
+        self.cbar = self.fig_image.colorbar(self.im, ax=self.ax_image, fraction=0.046, pad=0.04)
+
+        # IMPORTANT: reconnect interactions here to restore hover after each update
+        self.canvas_image.mpl_connect('motion_notify_event', self.update_spectrum)
+        self.canvas_image.mpl_connect('button_press_event', self.toggle_real_time_spectrum)
+        self.canvas_image.mpl_connect('scroll_event', self.on_canvas_scroll)
+
         self.canvas_image.draw()
         
     def updatefitdata(self):
-        # Check if results exist (i.e., fitting was not stopped early)
         if not hasattr(self.PeakFitData, 'res'):
             print("Peak fitting was stopped before completion.")
             return
 
-        # Safely disconnect partial update signal
         try:
             self.PeakFitData.result_partial.disconnect()
         except TypeError:
-            pass  # Already disconnected or never connected
+            pass
 
         self.res = self.PeakFitData.res
         self.pbutton_fit.setEnabled(True)
         self.ChooseRes.setEnabled(True)
         self.pbutton_expfit.setEnabled(True)
 
-        self.ax_image.clear()
-        self.ax_image.imshow(self.res['Area'].T, cmap='jet')
+        # Recreate figure and axis
+        self.fig_image.clear()
+        self.ax_image = self.fig_image.add_subplot(111)
+
+        img = self.res['Area']
+        self.im = self.ax_image.imshow(img.T, cmap='jet', vmin=self.Areamin, vmax=self.Areamax)
         self.ax_image.set_title("Peak area")
+
+        self.cbar = self.fig_image.colorbar(self.im, ax=self.ax_image, fraction=0.046, pad=0.04)
+
+        # Reconnect event handlers (so update_image still works)
+        self.canvas_image.mpl_connect('motion_notify_event', self.update_spectrum)
+        self.canvas_image.mpl_connect('button_press_event', self.toggle_real_time_spectrum)
+        self.canvas_image.mpl_connect('scroll_event', self.on_canvas_scroll)
+
         self.canvas_image.draw()
-        
         
         
     def stopfit(self):
@@ -1077,26 +1111,43 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.progressbar_fit.setValue(0)
         self.pbutton_fit.setEnabled(True)        
         
-    def plot_fit_results(self,ind):
-        
-        self.ax_image.clear()
+    def plot_fit_results(self, ind):
+        self.fig_image.clear()
+        self.ax_image = self.fig_image.add_subplot(111)
+
+        # Map selection to data and optional bounds
         if ind == 0:
-            self.ax_image.imshow(self.res['Area'].T,cmap='jet')
-            self.ax_image.set_title("Peak area")
+            label, data = "Area", self.res['Area']
+            vmin, vmax = None, None  # autoscale
         elif ind == 1:
-            self.ax_image.imshow(self.res['Position'].T,cmap='jet')
-            self.ax_image.set_title("Peak position")        
+            label, data = "Position", self.res['Position']
+            vmin, vmax = self.Posmin, self.Posmax  # fixed
         elif ind == 2:
-            self.ax_image.imshow(self.res['FWHM'].T,cmap='jet')
-            self.ax_image.set_title("FWHM")  
+            label, data = "FWHM", self.res['FWHM']
+            vmin, vmax = None, None  # autoscale
         elif ind == 3:
-            self.ax_image.imshow(self.res['Background1'].T,cmap='jet')
-            self.ax_image.set_title("Background 1")  
+            label, data = "Background 1", self.res['Background1']
+            vmin, vmax = None, None  # autoscale
         elif ind == 4:
-            self.ax_image.imshow(self.res['Background2'].T,cmap='jet')
-            self.ax_image.set_title("Background 2")  
-        self.canvas_image.draw()       
- 
+            label, data = "Background 2", self.res['Background2']
+            vmin, vmax = None, None  # autoscale
+
+        # Plot with optional scaling
+        if vmin is not None and vmax is not None:
+            self.im = self.ax_image.imshow(data.T, cmap='jet', vmin=vmin, vmax=vmax)
+        else:
+            self.im = self.ax_image.imshow(data.T, cmap='jet')
+
+        self.ax_image.set_title(label)
+
+        self.cbar = self.fig_image.colorbar(self.im, ax=self.ax_image, fraction=0.046, pad=0.04)
+
+        # Reconnect interactivity
+        self.canvas_image.mpl_connect('motion_notify_event', self.update_spectrum)
+        self.canvas_image.mpl_connect('button_press_event', self.toggle_real_time_spectrum)
+        self.canvas_image.mpl_connect('scroll_event', self.on_canvas_scroll)
+
+        self.canvas_image.draw()
         
     def savefitresults(self):
         
@@ -1117,6 +1168,46 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         else:
             print("Something is wrong with the data")
                     
+
+    ######################## IPython console #######################
+    
+    def init_console(self):
+        if hasattr(self, 'console_dock') and self.console_dock is not None:
+            self.console_dock.show()
+            return
+
+        self.console_dock = QtWidgets.QDockWidget("IPython Console", self)
+        self.console_dock.setAllowedAreas(QtCore.Qt.BottomDockWidgetArea | QtCore.Qt.RightDockWidgetArea)
+
+        self.console_widget = RichJupyterWidget()
+        self.kernel_manager = QtInProcessKernelManager()
+        self.kernel_manager.start_kernel()
+        self.kernel = self.kernel_manager.kernel
+        self.kernel.gui = 'qt'
+        self.kernel_client = self.kernel_manager.client()
+        self.kernel_client.start_channels()
+
+        self.kernel.shell.push({
+            'gui': self,
+            'volume': self.volume,
+            'image': self.image,
+            'spectrum': self.spectrum,
+            'xaxis': self.xaxis,
+            'np': np,
+            'plt': plt
+        })
+
+        self.console_widget.kernel_manager = self.kernel_manager
+        self.console_widget.kernel_client = self.kernel_client
+        self.console_widget.exit_requested.connect(self.stop_console)
+
+        self.console_dock.setWidget(self.console_widget)
+        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.console_dock)
+
+    def stop_console(self):
+        self.kernel_client.stop_channels()
+        self.kernel_manager.shutdown_kernel()        
+
 
 class FileDialog(QtWidgets.QFileDialog):
         def __init__(self, *args):
