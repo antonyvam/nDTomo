@@ -8,71 +8,270 @@ nDTomo GUI
 Overview
 --------
 
-The `nDTomoGUI` provides a PyQt5-based graphical user interface (GUI) for interactive exploration and analysis of chemical imaging datasets. It is especially useful for viewing, segmenting, and analyzing hyperspectral X-ray tomography data, such as XRD-CT volumes.
+The `nDTomoGUI` provides a feature-rich, PyQt5-based graphical user interface for the visualization, inspection, and analysis of chemical imaging data, with a particular focus on **hyperspectral X-ray computed tomography (CT)** datasets, such as **XRD-CT** volumes. 
 
-The interface supports interactive ROI selection, segmentation, batch peak fitting using common profile models (Gaussian, Lorentzian, Pseudo-Voigt), and export of processed results.
+It is designed to be accessible to users from various scientific domains, allowing non-programmers to perform complex data operations such as region selection, pattern extraction, segmentation, and pixel-wise peak fitting — all from a structured tabbed interface.
+
+With full support for `.h5` and `.hdf5` files containing 3D arrays (X, Y, spectral channels), users can explore datasets interactively, generate ROI maps, export patterns, and fit peak models with minimal setup.
 
 Launching the GUI
 -----------------
 
-Once `nDTomo` is installed and the environment is activated, you can launch the GUI directly from the terminal:
+To start the GUI:
 
-.. code-block:: bash
+1. Ensure `nDTomo` is installed and your environment is activated.
+2. Launch the GUI from a terminal:
 
-    conda activate ndtomo
-    nDTomoGUI
+   .. code-block:: bash
 
-This command starts the GUI without needing to navigate to the code or run Python manually.
+      conda activate ndtomo
+      nDTomoGUI
+
+The interface will open in a standalone window. No coding or scripting is required beyond this point.
 
 Tabs and Features
 -----------------
 
-The GUI consists of four main tabs, each designed to guide users through a different stage of the analysis workflow:
+The GUI is organized into **four main tabs**, each representing a logical stage in the data exploration and analysis pipeline.
 
-1. **Chemical imaging data**
-   - Load `.hdf5` or `.h5` files
-   - Explore spatial images and corresponding spectra
-   - Change colormaps
-   - Export local diffraction patterns and 2D images
+### 1. Chemical imaging data
 
-2. **ROI image**
-   - Define a region of interest (ROI) by selecting a channel range
-   - Apply background subtraction (none, mean, linear)
-   - Export the resulting ROI image
+This tab is the main interface for loading chemical imaging datasets and exploring their spatial and spectral content interactively. It is composed of two panels:
 
-3. **ROI pattern**
-   - Segment the ROI image using a threshold
-   - Use the mask to extract the corresponding spectrum
-   - Export the extracted ROI pattern
+- The **top image panel** shows a 2D slice of the dataset (e.g. a mean image or a slice at a selected spectral index).
+- The **lower spectrum panel** displays a 1D spectrum (e.g. a mean spectrum or the local spectrum at a selected pixel).
 
-4. **Peak fitting**
-   - Perform batch single-peak fitting using Gaussian, Lorentzian, or Pseudo-Voigt profiles
-   - Monitor progress with a real-time progress bar
-   - Visualize results (e.g., area, position, FWHM)
-   - Export fit results as HDF5
+When a file is loaded, the software computes and displays the average image and average spectrum across the dataset. The panels are linked: moving the mouse over one panel dynamically updates the other. This enables intuitive inspection of the correlation between image regions and local spectral features.
+
+**How to use:**
+
+- Click **"File > Open Chemical imaging data"** to load a `.hdf5` or `.h5` file.
+- The software automatically looks for a dataset under `/data`, and for a corresponding spectral axis (`/tth`, `/q`, `/d`, or `/energy`). If not found, a default integer index is used.
+- The main image panel shows the **mean image** over all spectral channels.
+- The lower plot displays the **mean spectrum** over all spatial pixels.
+- Hover over the image to update the spectrum dynamically for a given (x, y) pixel.
+- Hover over the spectrum to explore corresponding image slices at specific channels.
+- Use **mouse scroll** to zoom and drag to pan both plots.
+- **Left-click** enables real-time spectrum updates; **right-click** disables it.
+
+**Additional features:**
+
+- Change the colormap using the dropdown labeled **"Choose colormap"**.
+- Click **"Export local diffraction pattern"** to save the current pixel's spectrum as `.asc`, `.xy`, and `.h5`.
+- Click **"Export image of interest"** to save the current image slice as `.png` and `.h5`.
+
+This tab enables intuitive, interactive exploration of your chemical imaging dataset without the need for scripting.
+
+---
+
+### 2. ROI image
+
+This tab enables users to define a **region of interest (ROI)** by selecting a range of spectral channels (i.e. bins). A 2D projection image is generated by summing or processing data across that range. This image can be used for segmentation or peak fitting later in the workflow. The layout includes input controls for channel selection, buttons to apply background subtraction strategies, and export options.
+
+**How to use:**
+
+- Use the **"Initial channel"** and **"Final channel"** spinboxes to set the spectral range of interest.
+- Click **"Plot mean image"** to generate an image by summing intensities across the selected channels.
+- Alternatively, apply background correction:
+  - **"Plot mean image with mean bkg subtraction"** subtracts the mean of the endpoints.
+  - **"Plot mean image with linear bkg subtraction"** fits a linear background voxel-wise and subtracts it.
+- A thresholded mask is automatically generated where pixel values > 5% are retained (used in the next tab).
+- Click **"Export image"** to save the ROI image as `.png` and `.h5`.
+
+**Note:** Selecting a new channel range also updates the default initial guess for peak fitting in Tab 4.
+
+---
+
+### 3. ROI pattern
+
+This tab provides tools to perform **segmentation** of the ROI image and **extract a characteristic spectrum** from a selected region. It includes controls to apply a threshold, preview the binary mask, and sum the dataset only over masked regions to generate a representative spectrum. Peak suggestion tools are also provided.
+
+**How to use:**
+
+- Set a **threshold** using the spinbox (range: 0–100).
+- Click **"Apply the threshold"** to segment the image. Pixels below the threshold are masked out.
+- Click **"Use mask to extract ROI pattern from the volume"** to compute a spectrum by summing all voxels within the mask across spectral channels.
+- The resulting spectrum is plotted and normalized.
+- Click **"Suggest peak positions"** to use `scipy.signal.find_peaks()` to detect peak locations. These are overlaid as vertical lines on the spectrum.
+- The GUI automatically updates the image view to show the slice corresponding to the first detected peak.
+- Click **"Export ROI pattern"** to save the spectrum as `.asc`, `.xy`, and `.h5`.
+
+This tab bridges the spatial and spectral domains by allowing pixel-level filtering and extraction of chemically significant signals.
+
+---
+
+### 4. Peak fitting
+
+This tab enables **batch peak fitting** of a single peak across the dataset. You can choose a model (Gaussian, Lorentzian, or Pseudo-Voigt), configure initial guesses and parameter bounds, and run the fitting process interactively. The layout includes parameter input boxes, model selector, fit range controls, progress indicators, and live result visualization.
+
+Supported peak models:
+- **Gaussian**
+- **Lorentzian**
+- **Pseudo-Voigt** (with adjustable Gaussian/Lorentzian mixing)
+
+**How to use:**
+
+1. **Define fitting range:**
+   - Set **Fit range (channels)** via the two spinboxes.
+   - Click **"Set fit range"** to confirm and apply the selection.
+
+2. **Choose model:**
+   - Use the **Function** dropdown to select the desired peak profile.
+   - For Pseudo-Voigt, the **Mixing γ** (0 = Gaussian, 1 = Lorentzian) parameter appears.
+
+3. **Set initial values and bounds:**
+   - Adjust initial guess and min/max for:
+     - **Area** (peak amplitude × width)
+     - **Position** (peak center)
+     - **FWHM** (width)
+     - **γ** (mixing fraction, if applicable)
+
+4. **Start fitting:**
+   - Click **"Perform batch peak fitting"**.
+   - The progress bar will update as each row is completed.
+   - A live parameter map (e.g., Area, Position, FWHM) is shown during fitting.
+   - Change **Live view** dropdown to switch which parameter is shown live.
+
+5. **After fitting completes:**
+   - Use the **"Display peak fitting results"** dropdown to view specific parameter maps.
+   - Optionally, enable **"Inspect Fit Diagnostics"** to overlay raw, fitted, and residual spectra interactively.
+   - Click **"Export fit results"** to save all fitting outputs to an `.h5` file.
+
+**Outputs saved:**
+- Area, Position, FWHM, Background1 (slope), Background2 (intercept)
+- Fraction (if Pseudo-Voigt was used)
+
+This tab turns raw imaging data into quantifiable chemical maps using robust curve fitting.
+
+---
+
+Additional Features
+-------------------
+
+In addition to the four core tabs, `nDTomoGUI` includes several advanced tools accessible via the top menu bar under **Advanced**. These features provide power users and developers with additional capabilities for **simulation**, **testing**, **debugging**, and **interactive exploration**.
+
+### Synthetic Phantom Generator
+
+Accessed via **Advanced > Create Phantom Dataset**
+
+The Synthetic Phantom Generator allows users to instantly generate a chemically realistic, hyperspectral dataset without relying on experimental data. This is ideal for:
+
+- Benchmarking fitting and segmentation methods
+- Teaching hyperspectral imaging concepts
+- Testing downstream tools or algorithms
+- Verifying new features without the need for a beamline dataset
+
+**How it works:**
+
+- Internally, the GUI loads five example diffraction patterns (`dpAl`, `dpCu`, `dpFe`, `dpPt`, `dpZn`) corresponding to aluminum, copper, iron, platinum, and zinc.
+- These are combined with spatial image templates (phantoms) using functions from `nDTomo.sim.phantoms`.
+- Users do not need to configure anything — clicking the menu option will automatically create a 3D dataset with:
+  - A shape of `(X, Y, Channels)` where X = Y = 200 pixels
+  - Five chemically distinct regions, each corresponding to one of the reference spectra
+  - A synthetic spectral axis (e.g., `2theta`) used for plotting and fitting
+
+**After creation:**
+
+- The synthetic volume is loaded into the GUI just like a normal dataset.
+- Users can explore, segment, and fit the phantom using all other GUI tools.
+- The current dataset label will update to **"Synthetic Phantom"**.
+- No external files are written unless the user explicitly exports the volume or results.
+
+This is especially helpful for verifying that peak fitting models behave as expected and that segmentation pipelines produce the correct spatial maps.
+
+---
+
+### Embedded IPython Console
+
+Accessed via **Advanced > Open IPython Console**
+
+The embedded IPython console provides an **interactive Python shell** inside the GUI, allowing advanced users to inspect, modify, and visualize data during any stage of analysis.
+
+This feature is particularly valuable for:
+
+- Debugging complex workflows
+- Manually inspecting specific values, slices, or spectra
+- Testing small script snippets against live GUI data
+- Custom plotting beyond the standard GUI capabilities
+
+**Console features:**
+
+- Full IPython support, including tab completion, history, and inline plotting
+- Immediate access to key internal variables, such as:
+
+  .. code-block:: python
+
+     volume      # 3D hyperspectral dataset (np.ndarray)
+     image       # Currently viewed 2D slice
+     spectrum    # Current spectrum (e.g., from hover or ROI)
+     xaxis       # Spectral axis (e.g., 2theta, q, or energy)
+     np, plt     # NumPy and Matplotlib available by default
+     gui         # Reference to the main nDTomoGUI object
+
+**Example uses:**
+
+- Plot a custom spectrum:
+
+  .. code-block:: python
+
+     plt.plot(xaxis, spectrum)
+     plt.title("Current spectrum")
+     plt.xlabel("2θ")
+     plt.ylabel("Intensity")
+     plt.show()
+
+- Check the shape of the loaded dataset:
+
+  .. code-block:: python
+
+     volume.shape
+
+- Manually export a slice or spectrum:
+
+  .. code-block:: python
+
+     np.savetxt("myspectrum.txt", np.column_stack((xaxis, spectrum)))
+
+**Exit instructions:**
+
+- The console runs in-process and is fully integrated with the GUI event loop.
+- To close the console, use the menu option again or click the `x` on the console dock.
+- Console variables will persist as long as the GUI session is active.
+
+This console transforms `nDTomoGUI` from a fixed-function viewer into a **flexible chemical imaging workbench**, enabling hybrid GUI-code workflows ideal for advanced users.
+
+---
+
+File Handling and Export
+------------------------
+
+- Supports `.h5` / `.hdf5` formats only.
+- Click **File > Append Chemical imaging data** to concatenate a second volume (x-axis append).
+- Use **File > Save Chemical imaging data** to export the current volume and x-axis.
+- Exported `.h5` files follow a consistent structure for downstream analysis.
 
 Limitations and Notes
 ---------------------
 
-- This version supports **single-peak fitting** only.
-- GPU acceleration for fitting is not yet implemented.
-- Only `.h5`/`.hdf5` datasets are supported for loading and saving.
-- For large datasets, operations such as batch fitting may be slow — GPU-based or parallelized implementations are under consideration.
+- Currently supports **single-peak models** only — multi-peak or Rietveld fitting is not implemented.
+- Fitting is done on CPU using `scipy.optimize.curve_fit`, which may be slow for large volumes.
+- GPU acceleration or parallel execution is under consideration for future releases.
+- Only 3D volumes with shape `(X, Y, Channels)` are supported; time-resolved or higher-D datasets are not yet compatible.
 
 Developer Notes
 ---------------
 
-The GUI is implemented as a single PyQt5-based script with the main class:
+- Main GUI class:
 
-.. autoclass:: nDTomo.gui.nDTomoGUI.nDTomoGUI
-    :members:
-    :undoc-members:
-    :show-inheritance:
+  .. autoclass:: nDTomo.gui.nDTomoGUI.nDTomoGUI
+     :members:
+     :undoc-members:
+     :show-inheritance:
 
-Fitting is executed in a separate thread using:
+- Background peak fitting is threaded to avoid freezing the UI:
 
-.. autoclass:: nDTomo.gui.nDTomoGUI.FitData
-    :members:
-    :undoc-members:
+  .. autoclass:: nDTomo.gui.nDTomoGUI.FitData
+     :members:
+     :undoc-members:
 
-The GUI entry point is declared in `setup.py` using `gui_scripts`, which creates the `nDTomoGUI` command on install.
+- The GUI is installed via `setup.py` using `entry_points['gui_scripts']` to expose the `nDTomoGUI` terminal command.
