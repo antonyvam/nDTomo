@@ -53,32 +53,36 @@ from qtconsole.inprocess import QtInProcessKernelManager
 class nDTomoGUI(QtWidgets.QMainWindow):
     
     """
-    The main GUI for handling and visualizing chemical imaging data.
+    A PyQt5 GUI for visualizing and analyzing chemical imaging datasets.
 
-    This PyQt5-based interface allows users to load, explore, and analyze 
-    chemical imaging datasets. It supports multiple views, including 
-    spatial images and spectral plots, and provides functionalities 
-    for exporting processed data.
+    This interface enables interaction with hyperspectral or diffraction tomography data.
+    Users can load datasets, explore image/spectrum slices, extract ROIs, perform peak fitting,
+    and export results. Features include segmentation, dynamic cursor inspection, batch fitting,
+    and in-GUI IPython console support.
 
     Attributes
     ----------
     volume : np.ndarray
-        3D array representing the hyperspectral dataset.
+        The loaded 3D data volume (X, Y, Channels).
     xaxis : np.ndarray
-        1D array storing spectral axis values.
+        The 1D array for the spectral or scattering axis.
     image : np.ndarray
-        2D array of the currently displayed spatial image.
+        2D image slice shown in the main display.
     spectrum : np.ndarray
-        1D array of the currently displayed spectrum.
-    hdf_fileName : str
-        Path to the currently loaded HDF5 file.
+        1D spectrum shown in the spectral viewer.
     cmap : str
-        Current colormap for visualization.
+        The active colormap for image display.
     xaxislabel : str
-        Label for the spectral axis.
+        Label for the x-axis of the spectrum (e.g. 'Channel', '2theta').
     chi, chf : int
-        Initial and final channel indices for ROI selection
-    """    
+        Start and end channel indices for ROI selection.
+    res : dict
+        Dictionary storing the latest peak fitting results.
+    mask : np.ndarray
+        Binary mask (same XY shape as image) used for ROI operations.
+    peaktype : str
+        Type of peak profile used ('Gaussian', 'Lorentzian', or 'Pseudo-Voigt').
+    """   
     
     def __init__(self):
 
@@ -469,8 +473,12 @@ class nDTomoGUI(QtWidgets.QMainWindow):
      
             
     def explore(self):
+        
         """
-        Compute and display the mean image and spectrum from the dataset.
+        Compute and display the mean image and mean spectrum from the loaded dataset.
+
+        This method plots the average projection across all channels and overlays the
+        average spectrum on the spectrum panel. Enables interactive mouse-based inspection.
         """
 
         if self.volume.size == 0:
@@ -793,6 +801,13 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                 
     def fileOpen(self):
         
+        """
+        Open and load a chemical imaging dataset from an HDF5 file.
+
+        Launches a file dialog, reads the dataset and axis from the selected file,
+        updates internal data structures, and triggers the initial visualization.
+        """
+                
         self.hdf_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Chemical imaging data', "", "*.hdf5 *.h5")
 
         if len(self.hdf_fileName) > 0:
@@ -956,6 +971,13 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         
     def plot_mean_image(self):
 
+        """
+        Compute a mean ROI image with linear background subtraction.
+
+        Subtracts a pixel-wise linear estimate of background (based on start and end channels)
+        before summing over the ROI range. Applies masking and displays the result.
+        """
+        
         roi = np.arange(self.chi,self.chf)
 
         # Compute central position as float
@@ -1502,33 +1524,54 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
 
 class FileDialog(QtWidgets.QFileDialog):
-        def __init__(self, *args):
-            QtWidgets.QFileDialog.__init__(self, *args)
-            self.setOption(self.DontUseNativeDialog, True)
-#            self.setFileMode(self.DirectoryOnly)
-            for view in self.findChildren((QtWidgets.QListView, QtWidgets.QTreeView)):
-                if isinstance(view.model(), QtWidgets.QFileSystemModel):
-                    view.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
+    
+    """
+    A custom file dialog that supports multi-file selection.
+
+    This overrides the default QFileDialog to use a non-native dialog with multi-selection enabled
+    for QListView and QTreeView widgets.
+    """
+
+    def __init__(self, *args):
+        QtWidgets.QFileDialog.__init__(self, *args)
+        self.setOption(self.DontUseNativeDialog, True)
+        for view in self.findChildren((QtWidgets.QListView, QtWidgets.QTreeView)):
+            if isinstance(view.model(), QtWidgets.QFileSystemModel):
+                view.setSelectionMode(QtWidgets.QAbstractItemView.MultiSelection)
 
 
 class FitData(QThread):
     
-    '''
-    Single peak batch fitting class   
-    
-    :data: the spectral/scattering data
-    :roi: bin number of interest
-    :Area: initial value for peak area
-    :Areamin: minimum value for peak area
-    :Areamax: maximum value for peak area
-    :Pos: initial value for peak position
-    :Posmin: minimum value for peak position
-    :Posmax: maximum value for peak position
-    :FWHM: initial value for peak full width at half maximum (FWHM)
-    :FWHMmin: minimum value for peak FWHM
-    :FWHMmax: maximum value for peak FWHM
+    """
+    Worker thread for batch single-peak fitting on hyperspectral data.
 
-    '''
+    This class performs pixel-wise non-linear fitting of a single peak model (with linear background)
+    using SciPy's curve_fit. Runs asynchronously and emits progress and results.
+
+    Parameters
+    ----------
+    peaktype : str
+        Type of peak profile to fit ('Gaussian', 'Lorentzian', 'Pseudo-Voigt').
+    data : np.ndarray
+        3D hyperspectral data to fit (X, Y, Channels).
+    x : np.ndarray
+        1D array of x-axis values corresponding to spectral channels.
+    Area, Areamin, Areamax : float
+        Initial, minimum, and maximum values for peak area.
+    Pos, Posmin, Posmax : float
+        Initial, minimum, and maximum values for peak position.
+    FWHM, FWHMmin, FWHMmax : float
+        Initial, minimum, and maximum values for full width at half maximum.
+
+    Signals
+    -------
+    fitdone : pyqtSignal
+        Emitted when the fitting is complete.
+    progress_fit : pyqtSignal(int)
+        Emits fitting progress (0–100).
+    result_partial : pyqtSignal(np.ndarray)
+        Emits a partial result image (area) during processing.
+    """
     
     fitdone = pyqtSignal()
     progress_fit = pyqtSignal(int)
