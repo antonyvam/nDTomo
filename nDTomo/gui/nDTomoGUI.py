@@ -45,7 +45,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as Navigatio
 from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import scipy.optimize as sciopt
-
+from scipy.signal import find_peaks
 
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtconsole.inprocess import QtInProcessKernelManager
@@ -103,10 +103,12 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
             'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg', 'hsv',
             'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar']
-        
+        self.loaded_dataset_names = []
+        self.mask = None
         self.peaktype = 'Gaussian'
         self.Area = 0.5; self.Areamin = 0.; self.Areamax = 10.
         self.FWHM = 1.; self.FWHMmin = 0.1; self.FWHMmax = 5.
+
         
         QtWidgets.QMainWindow.__init__(self)
         self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
@@ -114,6 +116,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
         self.file_menu = QtWidgets.QMenu('&File', self)
         self.file_menu.addAction('&Open Chemical imaging data', self.fileOpen, QtCore.Qt.CTRL + QtCore.Qt.Key_O)
+        self.file_menu.addAction('&Append Chemical imaging data', self.append_file)
         self.file_menu.addAction('&Save Chemical imaging data', self.savechemvol)
         self.file_menu.addAction('&Quit', self.fileQuit, QtCore.Qt.CTRL + QtCore.Qt.Key_Q)
         self.menuBar().addMenu(self.file_menu)
@@ -284,12 +287,35 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.exppatroi.clicked.connect(self.export_roi_pattern)
         self.tab3.layout.addWidget(self.exppatroi,2,3)  
 
+        self.pbutton_suggest_peaks = QtWidgets.QPushButton("Suggest peak positions", self)
+        self.pbutton_suggest_peaks.clicked.connect(self.suggest_peak_positions)
+        self.tab3.layout.addWidget(self.pbutton_suggest_peaks, 3, 0)
 
         ############ Tab4 - Peak fitting ############
 
         self.Labelbkg = QtWidgets.QLabel(self)
         self.Labelbkg.setText('Single peak fitting')
         self.tab4.layout.addWidget(self.Labelbkg,0,0)
+        
+        # Define x-axis channel range for fitting
+        self.label_range = QtWidgets.QLabel("Fit range (channels):")
+        self.tab4.layout.addWidget(self.label_range, 0, 1)
+
+        self.xfit_min_spin = QtWidgets.QSpinBox()
+        self.xfit_min_spin.setMinimum(0)
+        self.xfit_min_spin.setMaximum(1)  # will be updated after data load
+        self.xfit_min_spin.setValue(0)
+        self.tab4.layout.addWidget(self.xfit_min_spin, 0, 2)
+
+        self.xfit_max_spin = QtWidgets.QSpinBox()
+        self.xfit_max_spin.setMinimum(0)
+        self.xfit_max_spin.setMaximum(1)  # will be updated after data load
+        self.xfit_max_spin.setValue(1)
+        self.tab4.layout.addWidget(self.xfit_max_spin, 0, 3)
+
+        self.set_xfit_button = QtWidgets.QPushButton("Set fit range", self)
+        self.set_xfit_button.clicked.connect(self.set_fit_range)
+        self.tab4.layout.addWidget(self.set_xfit_button, 0, 4)
         
         self.LabelTypePeak = QtWidgets.QLabel(self)
         self.LabelTypePeak.setText('Function')
@@ -425,6 +451,10 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.pbutton_expfit.setEnabled(False)
         self.tab4.layout.addWidget(self.pbutton_expfit,2,8)
 
+        self.check_diag_mode = QtWidgets.QCheckBox("Inspect Fit Diagnostics (live overlay)", self)
+        self.check_diag_mode.setChecked(False)
+        self.tab4.layout.addWidget(self.check_diag_mode, 3, 6)
+
         ############
 
         self.tabs.setFocus()        
@@ -512,29 +542,103 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                                       event.ydata + zoom_factor * (self.ax_spectrum.get_ylim()[1] - event.ydata))
             self.canvas_spectrum.draw()
 
+    # def update_spectrum(self, event):
+    #     """
+    #     Update the spectrum plot based on the mouse hover event on the image plot.
+    #     """
+    #     if self.real_time_update_spectrum and event.inaxes == self.ax_image:
+    #         self.x, self.y = int(event.xdata), int(event.ydata)
+
+    #         # Check if the mouse position is within the image dimensions
+    #         if self.x >= 0 and self.x < self.image_width and self.y >= 0 and self.y < self.image_height:
+    #             # Get the spectrum from the volume
+    #             self.spectrum = self.volume[self.x, self.y, :]
+
+    #             # Remove existing non-vline lines
+    #             for line in self.ax_spectrum.get_lines():
+    #                 if line != self.vline:
+    #                     line.remove()
+
+    #             # Plot the new spectrum
+    #             self.ax_spectrum.plot(self.xaxis, self.spectrum, color='b')
+    #             self.ax_spectrum.set_title(f"Histogram: ({self.x}, {self.y})")
+    #             self.ax_spectrum.set_xlabel(self.xaxislabel)
+    #             self.canvas_spectrum.draw()
+
     def update_spectrum(self, event):
         """
         Update the spectrum plot based on the mouse hover event on the image plot.
+        Overlay fitted peak and residual if diagnostic mode is enabled.
         """
         if self.real_time_update_spectrum and event.inaxes == self.ax_image:
             self.x, self.y = int(event.xdata), int(event.ydata)
 
-            # Check if the mouse position is within the image dimensions
-            if self.x >= 0 and self.x < self.image_width and self.y >= 0 and self.y < self.image_height:
-                # Get the spectrum from the volume
+            if 0 <= self.x < self.image_width and 0 <= self.y < self.image_height:
                 self.spectrum = self.volume[self.x, self.y, :]
 
-                # Remove existing non-vline lines
+                # Clear all lines except the vertical cursor
                 for line in self.ax_spectrum.get_lines():
                     if line != self.vline:
                         line.remove()
 
-                # Plot the new spectrum
-                self.ax_spectrum.plot(self.xaxis, self.spectrum, color='b')
-                self.ax_spectrum.set_title(f"Histogram: ({self.x}, {self.y})")
+                # Decide raw plot style
+                show_diag = hasattr(self, 'check_diag_mode') and self.check_diag_mode.isChecked()
+                has_fit = hasattr(self, 'res')
+
+
+                # Overlay fit and residuals if diagnostics are on and fit exists
+                if show_diag and has_fit and self.mask[self.x, self.y] > 0:
+                    try:
+                        ch_min = self.xfit_min_spin.value()
+                        ch_max = self.xfit_max_spin.value()
+                        fit_x_ch = np.arange(ch_min, ch_max)
+                        fit_x_native = self.xaxis[ch_min:ch_max]
+                        raw_subset = self.spectrum[ch_min:ch_max]
+
+                        area = self.res['Area'][self.x, self.y]
+                        pos = self.res['Position'][self.x, self.y]
+                        fwhm = self.res['FWHM'][self.x, self.y]
+                        bkg1 = self.res['Background1'][self.x, self.y]
+                        bkg2 = self.res['Background2'][self.x, self.y]
+
+                        if self.peaktype == "Gaussian":
+                            fit_y = self.PeakFitData.gmodel(fit_x_ch, area, pos, fwhm, bkg1, bkg2)
+                        elif self.peaktype == "Lorentzian":
+                            fit_y = self.PeakFitData.lmodel(fit_x_ch, area, pos, fwhm, bkg1, bkg2)
+                        elif self.peaktype == "Pseudo-Voigt":
+                            frac = self.res['Fraction'][self.x, self.y]
+                            fit_y = self.PeakFitData.pvmodel(fit_x_ch, area, pos, fwhm, bkg1, bkg2, frac)
+                        else:
+                            fit_y = None
+
+                        if fit_y is not None:
+                            self.ax_spectrum.plot(self.xaxis, self.spectrum, 'b--', label='Raw')
+                            self.ax_spectrum.plot(fit_x_native, fit_y, 'r', label='Fit')
+                            residual = raw_subset - fit_y
+                            self.ax_spectrum.plot(fit_x_native, residual, 'g', label='Residual')
+
+                    except Exception as e:
+                        print(f"[Diagnostic overlay error]: {e}")
+                        
+                else:
+                    self.ax_spectrum.plot(self.xaxis, self.spectrum, 'b', label='Raw')
+                
+                self.ax_spectrum.set_title(f"Spectrum at ({self.x}, {self.y})")
                 self.ax_spectrum.set_xlabel(self.xaxislabel)
+                self.ax_spectrum.legend()
                 self.canvas_spectrum.draw()
 
+    def valid_fit_for_pixel(self, x, y):
+        try:
+            return (
+                np.isfinite(self.res['Area'][x, y]) and
+                np.isfinite(self.res['Position'][x, y]) and
+                np.isfinite(self.res['FWHM'][x, y]) and
+                self.res['FWHM'][x, y] > 0
+            )
+        except:
+            return False
+        
     def update_image(self, event):
         """
         Update the image plot based on the mouse hover event on the spectrum plot.
@@ -690,15 +794,13 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def fileOpen(self):
         
         self.hdf_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Chemical imaging data', "", "*.hdf5 *.h5")
-        
-        if len(self.hdf_fileName)>0:
-            
+
+        if len(self.hdf_fileName) > 0:
             self.loadchemvol()
-       
-            datasetname = self.hdf_fileName.split("/")
-            self.datasetname = datasetname[-1]
-            self.DatasetNameLabel.setText(self.datasetname)
-            self.explore()
+            self.loaded_dataset_names = [self.hdf_fileName.split("/")[-1]]  # <-- track dataset name
+            self.DatasetNameLabel.setText(" + ".join(self.loaded_dataset_names))
+            self.explore()            
+            
                         
     def loadchemvol(self):
         
@@ -739,12 +841,66 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                         self.xaxislabel = xaxis_label.lstrip('/')            
                         break  # Stop once we find a match             
 
+
+                self.xfit_min_spin.setMaximum(self.volume.shape[2] - 1)
+                self.xfit_max_spin.setMaximum(self.volume.shape[2])
+                self.xfit_max_spin.setValue(self.volume.shape[2])       
+                
             except KeyError as e:
                 print("Error:", e)
             except Exception as e:
                 print("Unexpected error:", e)                                
         print("Loaded data shape:", self.volume.shape)
+        
+ 
                         
+    def append_file(self):
+        """
+        Appends another dataset to the currently loaded volume along axis=1 (column-wise),
+        ensuring minimal memory usage and displaying combined dataset names.
+        """
+        append_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Append Chemical imaging data', "", "*.hdf5 *.h5")
+
+        if not append_fileName or self.volume.size == 0:
+            QtWidgets.QMessageBox.warning(self, "Append Error", "No file selected or no dataset loaded yet.")
+            return
+
+        try:
+            with h5py.File(append_fileName, 'r') as f:
+                if '/data' not in f:
+                    raise KeyError("Dataset '/data' not found in file.")
+                
+                # Only check dimension 1 and 2 (height and spectral)
+                shape_new = f['/data'].shape
+                if shape_new[1] != self.volume.shape[1] or shape_new[2] != self.volume.shape[2]:
+                    raise ValueError("Cannot append: mismatch in height or spectral dimension.")
+
+                # Read and transpose only if necessary
+                vol_new = f['/data'][:]
+                if vol_new.shape[0] != vol_new.shape[1] and vol_new.shape[0] == vol_new.shape[2]:
+                    vol_new = np.transpose(vol_new, (0, 2, 1))
+                elif vol_new.shape[0] != vol_new.shape[1] and vol_new.shape[1] == vol_new.shape[2]:
+                    vol_new = np.transpose(vol_new, (1, 2, 0))
+
+            # Append column-wise (axis=1)
+            self.volume = np.concatenate((self.volume, vol_new), axis=0)
+            del vol_new  # free memory
+
+            # Update GUI
+            self.image_width, self.image_height, self.nbins = self.volume.shape
+            self.crspinbox1.setMaximum(self.nbins - 1)
+            self.crspinbox2.setMaximum(self.nbins)
+
+            # Track and show appended filename
+            appended_name = append_fileName.split("/")[-1]
+            self.loaded_dataset_names.append(appended_name)
+            self.DatasetNameLabel.setText(" + ".join(self.loaded_dataset_names))
+
+            self.explore()
+
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Append Failed", f"Error appending dataset:\n{e}")
+
     def check_and_transpose(self):
         dims = self.volume.shape
         if dims[0] != dims[1] and dims[0] == dims[2]:
@@ -971,8 +1127,102 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         else:
             print("Something is wrong with the data")
 
-    ####################### Peak fitting #######################
+    def suggest_peak_positions(self):
+        """
+        Suggest initial peak positions using scipy.signal.find_peaks
+        on the currently loaded ROI pattern, and overlay vertical lines.
+        Also updates the left image panel to match the first suggested peak.
+        """
+        if self.spectrum is None or len(self.spectrum) == 0:
+            QtWidgets.QMessageBox.warning(self, "No Spectrum", "Please extract the ROI pattern first.")
+            return
 
+        from scipy.signal import find_peaks
+
+        # Detect peaks
+        peaks, _ = find_peaks(self.spectrum, height=0.1 * np.max(self.spectrum), distance=3)
+
+        if len(peaks) == 0:
+            QtWidgets.QMessageBox.information(self, "No Peaks Found", "No peaks could be detected in the spectrum.")
+            return
+
+        # Display peak list
+        msg = "Suggested peak positions:\n"
+        for p in peaks:
+            msg += f"  {self.xaxis[p]:.2f}\n"
+        QtWidgets.QMessageBox.information(self, "Peak Suggestions", msg)
+
+        # Rebuild spectrum figure
+        self.fig_spectrum.clear()
+        self.ax_spectrum = self.fig_spectrum.add_subplot(111)
+        self.ax_spectrum.plot(self.xaxis, self.spectrum, color='b')
+        self.ax_spectrum.set_title("ROI pattern with suggested peaks")
+        self.ax_spectrum.set_xlabel(self.xaxislabel)
+
+        # Add red vline (first peak)
+        self.vline = self.ax_spectrum.axvline(self.xaxis[peaks[0]], color='r', linestyle='--', lw=1)
+
+        # Add green lines for all peaks
+        for p in peaks:
+            self.ax_spectrum.axvline(x=self.xaxis[p], color='g', linestyle='--', lw=1.2)
+
+        # Reconnect spectrum panel interactivity
+        self.canvas_spectrum.mpl_connect('motion_notify_event', self.update_image)
+        self.canvas_spectrum.mpl_connect('button_press_event', self.toggle_real_time_image)
+        self.canvas_spectrum.mpl_connect('scroll_event', self.on_canvas_scroll)
+        self.canvas_spectrum.draw()
+
+        # Force image update to match first peak
+        self.index = peaks[0]
+        self.image = self.volume[:, :, self.index]
+
+        # Recreate image plot fully to ensure canvas update
+        self.fig_image.clear()
+        self.ax_image = self.fig_image.add_subplot(111)
+
+        self.im = self.ax_image.imshow(self.image.T, cmap=self.cmap)
+        self.ax_image.set_title(f"Image: Channel {self.index}")
+        self.cbar = self.fig_image.colorbar(self.im, ax=self.ax_image, fraction=0.046, pad=0.04)
+
+        self.canvas_image.mpl_connect('motion_notify_event', self.update_spectrum)
+        self.canvas_image.mpl_connect('button_press_event', self.toggle_real_time_spectrum)
+        self.canvas_image.mpl_connect('scroll_event', self.on_canvas_scroll)
+
+        self.canvas_image.draw()
+
+        # Store peaks for future use
+        self.detected_peaks = peaks
+        
+    ####################### Peak fitting #######################
+    
+    def set_fit_range(self):
+        """
+        Sets xroi and volroi based on selected channel range (integer indices).
+        Also updates peak position spinboxes based on this range.
+        """
+        ch_min = self.xfit_min_spin.value()
+        ch_max = self.xfit_max_spin.value()
+
+        if ch_max <= ch_min:
+            QtWidgets.QMessageBox.warning(self, "Invalid Range", "Final channel must be greater than initial channel.")
+            return
+
+        self.xroi = np.arange(ch_min, ch_max)
+        self.volroi = self.volume[:, :, ch_min:ch_max]
+        self.volroi = self.volroi / np.max(self.volroi)
+
+        # Set peak position controls based on the range
+        pos = 0.5 * (ch_min + ch_max)
+        pos_min = ch_min
+        pos_max = ch_max
+
+        self.pos_spin.setValue(pos)
+        self.pos_min_spin.setValue(pos_min)
+        self.pos_max_spin.setValue(pos_max)
+
+        print(f"Fitting range set to channels {ch_min} to {ch_max} ({ch_max - ch_min} channels)")
+        print(f"Updated peak position guess: {pos:.2f} [{pos_min:.2f}, {pos_max:.2f}]")
+        
     def sync_peak_position_from_roi(self):
         chi = self.crspinbox1.value()
         chf = self.crspinbox2.value()
@@ -1000,7 +1250,10 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             self.label_fraction.setVisible(True)
             self.fraction_spin.setVisible(True)
 
-    def batchpeakfit(self):
+    def batchpeakfit(self):     
+
+        self.check_diag_mode.setEnabled(False)
+        
         self.pbutton_fit.setEnabled(False)
 
         # Read GUI values
@@ -1020,7 +1273,11 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         if self.pos_min_spin.value() < self.pos_max_spin.value():
             self.Posmin = self.pos_min_spin.value()
             self.Posmax = self.pos_max_spin.value()
-        
+
+        if self.mask is None or not isinstance(self.mask, np.ndarray):
+            print("No mask found, using default mask (all 1s)")
+            self.mask = np.ones((self.volume.shape[0], self.volume.shape[1]))   
+                    
         for ii in range(self.volroi.shape[2]):
             self.volroi[:,:,ii] = self.volroi[:,:,ii]*self.mask
         
@@ -1104,7 +1361,8 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.canvas_image.mpl_connect('scroll_event', self.on_canvas_scroll)
 
         self.canvas_image.draw()
-        
+
+        self.check_diag_mode.setEnabled(True)
         
     def stopfit(self):
         if hasattr(self, 'PeakFitData'):
@@ -1282,16 +1540,19 @@ class FitData(QThread):
         
         self.peaktype = peaktype
         self.fitdata = data  
-        self.phase = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
-        self.cen = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
-        self.wid = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
-        self.bkg1 = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
-        self.bkg2 = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
-        self.fr = np.zeros((self.fitdata.shape[0],self.fitdata.shape[1]))
+        
+        shape = (self.fitdata.shape[0], self.fitdata.shape[1])
+        self.phase = np.full(shape, Area, dtype='float32')
+        self.cen = np.full(shape, Pos, dtype='float32')
+        self.wid = np.full(shape, FWHM, dtype='float32')
+        self.bkg1 = np.zeros(shape, dtype='float32')
+        self.bkg2 = np.zeros(shape, dtype='float32')
+        self.fr = np.full(shape, 0.5, dtype='float32')     
+        
         self.xroi = x
-        self.Area = Area; self.Areamin = Areamin; self.Areamax = Areamax; 
-        self.Pos = Pos; self.Posmin = Posmin; self.Posmax = Posmax; 
-        self.FWHM = FWHM; self.FWHMmin = FWHMmin; self.FWHMmax = FWHMmax;
+        self.Area = Area; self.Areamin = Areamin; self.Areamax = Areamax
+        self.Pos = Pos; self.Posmin = Posmin; self.Posmax = Posmax
+        self.FWHM = FWHM; self.FWHMmin = FWHMmin; self.FWHMmax = FWHMmax
         
         msk = np.sum(self.fitdata,axis = 2)
         msk[msk>0] = 1
@@ -1382,22 +1643,23 @@ class FitData(QThread):
         """
         Gaussian model with linear background: (A/(sqrt(2*pi)*w) )* exp( - (x-m)**2 / (2*w**2)) + a*x + b
         """
-        return (A/(np.sqrt(2*np.pi)*w) )* np.exp( - (x-m)**2 / (2*w**2)) + a*x + b
+        return (A / (np.sqrt(2 * np.pi) * w)) * np.exp(- (x - m)**2 / (2 * w**2)) + a * x + b    
     
     def lmodel(self, x, A, m, w, a, b):
         
         """
         Lorentzian model with linear background: (A/(1 + ((1.0*x-m)/w)**2)) / (pi*w) + a*x + b   
         """
-        return (A/(1 + ((x-m)/w)**2)) / (np.pi*w) + a*x + b    
-
+        return (A / (1 + ((x - m) / w)**2)) / (np.pi * w) + a * x + b
+    
     def pvmodel(self, x, A, m, w, a, b, fr):
         
         """
         pseudo-Voigt model with linear background: ((1-fr)*gaumodel(x, A, m, s) + fr*lormodel(x, A, m, s))
         """
-        return ((1-fr)*(A/(np.sqrt(2*np.pi)*w) )*np.exp( - (x-m)**2 / (2*w**2)) + fr*(A/(1 + ((x-m)/w)**2)) / (np.pi*w) + a*x + b)
-
+        gauss = (A / (np.sqrt(2 * np.pi) * w)) * np.exp(- (x - m)**2 / (2 * w**2))
+        lorentz = (A / (1 + ((x - m) / w)**2)) / (np.pi * w)
+        return (1 - fr) * gauss + fr * lorentz + a * x + b
 
 def main():
     qApp = QtWidgets.QApplication(sys.argv)
