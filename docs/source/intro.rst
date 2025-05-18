@@ -37,26 +37,6 @@ Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray d
 
 ---
 
-Included Tutorials
-------------------
-
-The repository includes several **example notebooks** to help users learn the API and workflows:
-
-| Notebook Filename                                   | Topic                                                                 |
-|-----------------------------------------------------|------------------------------------------------------------------------|
-| `tutorial_2D_shapes.ipynb`                          | Generating and visualizing 2D phantom shapes                          |
-| `tutorial_3D_shapes.ipynb`                          | Building synthetic 3D chemical imaging datasets                       |
-| `tutorial_pencil_beam.ipynb`                        | Simulating pencil beam CT data with different acquisition schemes     |
-| `tutorial_sinogram_handling.ipynb`                  | Pre-processing, normalization, and correction of sinograms            |
-| `tutorial_ct_recon_demo.ipynb`                      | CT image reconstruction from sinograms using analytical and iterative methods |
-| `tutorial_peak_fitting.ipynb`                       | Peak fitting in synthetic XRD-CT datasets                             |
-| `tutorial_dimensionality_reduction.ipynb`           | Unsupervised learning for phase identification in tomography          |
-| `Detector_calibration_Integration_of_2D_powder_diffraction.ipynb` | Calibrating detectors and integrating 2D powder diffraction patterns using pyFAI |
-| `Texture_2D_powder_diffraction_patterns.ipynb`      | Investigating the effects of texture on 2D powder patterns            |
-
-Each notebook is designed to be **standalone and executable**, with detailed inline comments and example outputs.
-
----
 
 Graphical User Interface (nDTomoGUI)
 ------------------------------------
@@ -73,12 +53,6 @@ The `nDTomoGUI` provides a complete graphical environment for:
 
 The GUI is described in more detail in the [online documentation](https://ndtomo.readthedocs.io) and supports both novice and expert workflows.
 
-Launch with:
-
-```bash
-conda activate ndtomo
-nDTomoGUI
-```
 
 References
 ^^^^^^^^^^
