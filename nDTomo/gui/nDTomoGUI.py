@@ -391,6 +391,15 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.pbutton_stop.clicked.connect(self.stopfit)
         self.tab4.layout.addWidget(self.pbutton_stop,1,4)
         
+        
+        self.LabelLive = QtWidgets.QLabel("Live view:")
+        self.tab4.layout.addWidget(self.LabelLive, 1, 5)
+
+        self.ChooseLive = QtWidgets.QComboBox(self)
+        self.ChooseLive.addItems(['Area','Position','FWHM'])
+        self.ChooseLive.setEnabled(True)
+        self.tab4.layout.addWidget(self.ChooseLive, 1, 6)        
+        
         self.LabelRes = QtWidgets.QLabel(self)
         self.LabelRes.setText('Display peak fitting results')
         self.tab4.layout.addWidget(self.LabelRes,2,6)
@@ -420,42 +429,48 @@ class nDTomoGUI(QtWidgets.QMainWindow):
      
             
     def explore(self):
-
         """
         Compute and display the mean image and spectrum from the dataset.
-
-        This function calculates the mean spatial image and spectral 
-        response across all data slices, updating the respective plots.
-        It also enables interactive exploration via mouse events.
-
-        Raises
-        ------
-        ValueError
-            If the dataset is empty or improperly formatted.
         """
+
         if self.volume.size == 0:
             raise ValueError("No data loaded. Please load an HDF5 file first.")
 
-        # Calculate mean image and mean spectrum
+        # Calculate mean image and spectrum
         mean_image = np.mean(self.volume, axis=2)
         mean_spectrum = np.mean(self.volume, axis=(0, 1))
 
-        # Update the image display and spectrum plot
-        self.ax_image.imshow(mean_image.T, cmap=self.cmap)
+        self.fig_image.clear()
+        self.ax_image = self.fig_image.add_subplot(111)
+        self.im = self.ax_image.imshow(mean_image.T, cmap=self.cmap)
+
+        # Add colorbar (or update if it already exists)
+        try:
+            if self.cbar and self.cbar.ax:
+                self.cbar.remove()
+                self.cbar = None
+        except Exception as e:
+            print("Warning: Failed to remove colorbar:", e)
+            self.cbar = None
+        self.cbar = self.fig_image.colorbar(self.im, ax=self.ax_image, fraction=0.046, pad=0.04)
+
+        self.ax_spectrum.clear()
         self.ax_spectrum.plot(self.xaxis, mean_spectrum, color='b')
         self.ax_spectrum.set_xlabel(self.xaxislabel)
 
-        # Connect mouse hover events
+        # Add vertical line for spectrum cursor
+        self.vline = self.ax_spectrum.axvline(x=self.xaxis[0], color='r', linestyle='--', lw=1)
+
+        # Connect events
         self.canvas_image.mpl_connect('motion_notify_event', self.update_spectrum)
         self.canvas_spectrum.mpl_connect('motion_notify_event', self.update_image)
         self.canvas_image.mpl_connect('button_press_event', self.toggle_real_time_spectrum)
         self.canvas_spectrum.mpl_connect('button_press_event', self.toggle_real_time_image)
-        # Connect mouse scroll events for zooming
         self.canvas_image.mpl_connect('scroll_event', self.on_canvas_scroll)
         self.canvas_spectrum.mpl_connect('scroll_event', self.on_canvas_scroll)
 
-        self.real_time_update_image = True  # Flag to enable real-time update for image
-        self.real_time_update_spectrum = True  # Flag to enable real-time update for spectrum
+        self.real_time_update_image = True
+        self.real_time_update_spectrum = True
 
         self.canvas_image.draw()
         self.canvas_spectrum.draw()
@@ -499,10 +514,14 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                 # Get the spectrum from the volume
                 self.spectrum = self.volume[self.x, self.y, :]
 
-                # Update the spectrum plot
-                self.ax_spectrum.clear()
+                # Remove existing non-vline lines
+                for line in self.ax_spectrum.get_lines():
+                    if line != self.vline:
+                        line.remove()
+
+                # Plot the new spectrum
                 self.ax_spectrum.plot(self.xaxis, self.spectrum, color='b')
-                self.ax_spectrum.set_title(f"Spectrum: ({self.x}, {self.y})")
+                self.ax_spectrum.set_title(f"Histogram: ({self.x}, {self.y})")
                 self.ax_spectrum.set_xlabel(self.xaxislabel)
                 self.canvas_spectrum.draw()
 
@@ -530,14 +549,25 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                     # Get the image from the volume
                     self.image = self.volume[:, :, self.index]
         
-                    # Update the image display
-                    self.ax_image.clear()
-                    self.ax_image.imshow(self.image.T, cmap=self.cmap)
+                    if hasattr(self, 'im'):
+                        self.im.set_data(self.image.T)
+                        self.im.set_clim(np.min(self.image), np.max(self.image))
+                    else:
+                        self.im = self.ax_image.imshow(self.image.T, cmap=self.cmap)
+
+                    if hasattr(self, 'cbar'):
+                        self.cbar.update_normal(self.im)
                     
                     if self.xaxislabel == 'Channel':
                         self.ax_image.set_title(f"Image: Channel {self.index}")
                     else:
                         self.ax_image.set_title("Image: Channel %d, %s %.3f" %(self.index, self.xaxislabel, self.xaxis[self.index]))
+    
+                    # Update vertical line
+                    if hasattr(self, 'vline'):
+                        self.vline.set_xdata(self.xaxis[self.index])
+                        self.canvas_spectrum.draw()
+        
     
                     self.canvas_image.draw()
                     
@@ -1003,8 +1033,18 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
     def update_live_fit_image(self, live_data):
         self.ax_image.clear()
-        self.ax_image.imshow(live_data, cmap='jet')
-        self.ax_image.set_title("Live peak area")
+        param = self.ChooseLive.currentText()
+        if param == "Area":
+            img = self.PeakFitData.phase
+        elif param == "Position":
+            img = self.PeakFitData.cen
+        elif param == "FWHM":
+            img = self.PeakFitData.wid
+        else:
+            img = live_data  # fallback
+
+        self.ax_image.imshow(img.T, cmap='jet')
+        self.ax_image.set_title(f"Live fit: {param}")       
         self.canvas_image.draw()
         
     def updatefitdata(self):
