@@ -120,6 +120,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
         # Advanced menu
         self.advanced_menu = QtWidgets.QMenu('&Advanced', self)
+        self.advanced_menu.addAction('Create Phantom Dataset', self.create_phantom)
         self.advanced_menu.addAction('Open IPython Console', self.init_console)
         self.menuBar().addMenu(self.advanced_menu)
         
@@ -1169,6 +1170,39 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             print("Something is wrong with the data")
                     
 
+    ####################### Create synthetic phantom #######################
+
+    def create_phantom(self):
+        try:
+            from nDTomo.sim.phantoms import load_example_patterns, nDTomophantom_2D, nDTomophantom_3D
+            from nDTomo.methods.plots import showspectra, showim
+
+            # Load example patterns
+            dpAl, dpCu, dpFe, dpPt, dpZn, tth, q = load_example_patterns()
+            spectra = [dpAl, dpCu, dpFe, dpPt, dpZn]
+
+            # Generate 2D images
+            npix = 200
+            imAl, imCu, imFe, imPt, imZn = nDTomophantom_2D(npix, nim='Multiple')
+            iml = [imAl, imCu, imFe, imPt, imZn]
+
+            # Create synthetic 3D dataset
+            chemct = nDTomophantom_3D(npix, use_spectra='Yes', spectra=spectra, imgs=iml, indices='All', norm='No')
+
+            self.volume = chemct
+            self.xaxis = tth
+            self.xaxislabel = '2theta'
+            self.image_width, self.image_height, self.nbins = chemct.shape
+            self.DatasetNameLabel.setText("Synthetic Phantom")
+            self.crspinbox1.setMaximum(self.nbins - 1)
+            self.crspinbox2.setMaximum(self.nbins)
+            self.explore()
+
+            QtWidgets.QMessageBox.information(self, "Phantom Created", "Synthetic phantom XRD-CT dataset has been created.")
+            
+        except Exception as e:
+            QtWidgets.QMessageBox.critical(self, "Error", f"Failed to create phantom:\n{e}")
+            
     ######################## IPython console #######################
     
     def init_console(self):
