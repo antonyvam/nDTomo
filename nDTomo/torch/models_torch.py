@@ -10,193 +10,265 @@ Neural networks models
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 import numpy as np
 
-
-class UNet(nn.Module):
-
-    def __init__(self):
-        
-        super(UNet, self).__init__()
-        
-        self.conv2d_initial = nn.Sequential(nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    )
-
-        self.conv2d_down = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    )
-
-        self.up = nn.Sequential(nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
-                                nn.Conv2d(64, 64, kernel_size=2, stride=1, padding=1, bias=False),
-                                nn.BatchNorm2d(64),
-                                nn.ReLU(),
-                                )
-            
-        self.conv2d_dual = nn.Sequential(nn.Conv2d(128, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    )
-
-        self.out = nn.Conv2d(64, 1, kernel_size=1)
+class PeakFitCNN(nn.Module):
     
-    def crop(self, x1, x2):
+    """
+    A 2D convolutional neural network designed for upsampling and refining spectral or spatial peak data,
+    optionally doubling or quadrupling the input resolution using bilinear interpolation and CNN blocks.
 
-        '''
-        Taken from https://github.com/milesial/Pytorch-UNet/blob/master/unet/unet_parts.py
-        '''
+    Parameters
+    ----------
+    nch_in : int
+        Number of input channels.
+    nch_out : int
+        Number of output channels.
+    nfilts : int
+        Number of filters in the intermediate convolution layers.
+    upscale_factor : int
+        Upscaling factor for the input. Supported values: 2 or 4.
+    norm_type : str
+        Type of normalization to apply: 'instance', 'batch', or 'layer'.
+    activation : str
+        Final activation function: 'Linear', 'ReLU', 'Sigmoid', or 'LeakyReLU'.
+    padding : str
+        Padding mode for convolutions ('same' or 'valid').
+    npix : int
+        Number of pixels in the input (required for LayerNorm).
 
-        # input is CHW
-        diffY = x2.size()[2] - x1.size()[2]
-        diffX = x2.size()[3] - x1.size()[3]
+    Forward
+    -------
+    x : torch.Tensor
+        Input tensor of shape (batch_size, nch_in, H, W).
 
-        xn = F.pad(x1, [diffX // 2, diffX - diffX // 2,
-                        diffY // 2, diffY - diffY // 2])
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape (batch_size, nch_out, H * upscale_factor, W * upscale_factor).
+    """
         
-        return(xn)
-        
-    def forward(self, x):
-        
-        x1 = self.conv2d_initial(x)
-        x2 = self.conv2d_down(x1)
-        x3 = self.conv2d_down(x2)
-        x4 = self.conv2d_down(x3)
-        x5 = self.conv2d_down(x4)
+    def __init__(self, nch_in=1, nch_out=1, nfilts=32, upscale_factor = 4,
+                 norm_type='instance', activation='Linear', padding='same', npix=None):
+        super(PeakFitCNN, self).__init__()
 
-        x6 = self.up(x5)
-        x6 = self.crop(x6, x4)
-        x6 = torch.cat([x6, x4], dim=1)
-        x6 = self.conv2d_dual(x6)
+        self.npix = npix
+        self.upscale_factor = upscale_factor
+        # Initial feature extraction
+        self.input = nn.Conv2d(nch_in, nfilts, kernel_size=3, stride=1, padding=padding, bias=True)
 
-        x7 = self.up(x6)
-        x7 = self.crop(x7, x3)
-        x7 = torch.cat([x7, x3], dim=1)
-        x7 = self.conv2d_dual(x7)
+        layers = []
+        layers.append(nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False))
+        layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding=padding, bias=True))
+        # Add normalization based on norm_type
+        if norm_type == "instance":
+            layers.append(nn.InstanceNorm2d(nfilts, affine=True))
+        elif norm_type == "batch":
+            layers.append(nn.BatchNorm2d(nfilts))
+        elif norm_type == "layer":
+            layers.append(nn.LayerNorm([nfilts, 2*self.npix, 2*self.npix]))
 
-        x8 = self.up(x7)
-        x8 = self.crop(x8, x2)
-        x8 = torch.cat([x8, x2], dim=1)
-        x8 = self.conv2d_dual(x8)
-        
-        x9 = self.up(x8)
-        x9 = self.crop(x9, x1)
-        x9 = torch.cat([x9, x1], dim=1)
-        x9 = self.conv2d_dual(x9)
-        
-        x = self.out(x9)
+        # Add activation function
+        layers.append(nn.ReLU(inplace=True))
 
-        return(x)
+        self.upsample1 = nn.Sequential(*layers)
 
+        if self.upscale_factor == 4:
+            layers = []
+            layers.append(nn.Upsample(scale_factor=2, mode="bilinear", align_corners=False))
+            layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding=padding, bias=True))
+            # Add normalization based on norm_type
+            if norm_type == "instance":
+                layers.append(nn.InstanceNorm2d(nfilts, affine=True))
+            elif norm_type == "batch":
+                layers.append(nn.BatchNorm2d(nfilts))
+            elif norm_type == "layer":
+                layers.append(nn.LayerNorm([nfilts, 4*self.npix, 4*self.npix]))
+            # Add activation function
+            layers.append(nn.ReLU(inplace=True))
 
+            self.upsample2 = nn.Sequential(*layers)
 
-class Autoencoder(nn.Module):
+        # Final output layer
+        self.xrdct = nn.Conv2d(nfilts, nch_out, kernel_size=3, stride=1, padding=padding, bias=True)
 
-    def __init__(self):
-        
-        super(Autoencoder, self).__init__()
-        
-        self.conv2d_initial = nn.Sequential(nn.Conv2d(1, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    )
+        # Final activation
+        self.final_activation = None
+        if activation == "ReLU":
+            self.final_activation = nn.ReLU()
+        elif activation == "Sigmoid":
+            self.final_activation = nn.Sigmoid()
+        elif activation == "LeakyReLU":
+            self.final_activation = nn.LeakyReLU(0.2, inplace=True)
 
-        self.conv2d_down = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, stride=2, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    )
+    def forward(self, x):  # Feature maps from autoencoder2D are passed
 
-        self.up = nn.Sequential(nn.Upsample(scale_factor=2, mode='bilinear', align_corners=True),
-                                nn.Conv2d(64, 64, kernel_size=2, stride=1, padding=1, bias=False),
-                                nn.BatchNorm2d(64),
-                                nn.ReLU(),
-                                )
-            
-        self.conv2d_dual = nn.Sequential(nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    nn.Conv2d(64, 64, kernel_size=3, stride=1, padding=1, bias=False),
-                                    nn.BatchNorm2d(64),
-                                    nn.ReLU(),
-                                    )
+        x = self.input(x)
 
-        self.out = nn.Conv2d(64, 1, kernel_size=1)
+        # Upsampling 1
+        x = self.upsample1(x)
+
+        if self.upscale_factor == 4:
+            # Upsampling 2
+            x = self.upsample2(x)
+
+        # Output layer
+        x = self.xrdct(x)
+
+        if self.final_activation is not None:
+            x = self.final_activation(x)
+
+        return x
     
-    def crop(self, x1, x2):
+class PrmCNN2D(nn.Module):
+    
+    """
+    A flexible 2D model that combines a trainable tensor (image parameterization) with an optional CNN-based
+    processing module. Can operate in three modes:
+    - Pure parameterization (learned image).
+    - CNN only (applies CNN to input).
+    - Parameterization + CNN (CNN applied to learned image).
 
-        '''
-        Taken from https://github.com/milesial/Pytorch-UNet/blob/master/unet/unet_parts.py
-        '''
+    Parameters
+    ----------
+    npix : int
+        Image resolution (assumes square images).
+    nch_in : int
+        Number of input channels.
+    nch_out : int
+        Number of output channels.
+    nfilts : int
+        Number of filters in CNN layers.
+    nlayers : int
+        Number of intermediate CNN blocks (excluding first and last layers).
+    norm_type : str
+        Type of normalization: 'layer', 'instance', or 'batchnorm'.
+    prms_layer : bool
+        If True, a learnable tensor is used as input.
+    cnn_layer : bool
+        If True, a CNN processes the input or parameter tensor.
+    tensor_vals : str
+        Initialization mode for the learned tensor: 'random', 'zeros', 'ones', 'mean', 'random_positive', or 'custom'.
+    tensor_initial : torch.Tensor or None
+        Custom tensor to use if tensor_vals == 'custom'.
+    padding : str
+        Padding mode for convolutions ('same' or 'valid').
 
-        # input is CHW
-        diffY = x2.size()[2] - x1.size()[2]
-        diffX = x2.size()[3] - x1.size()[3]
+    Forward
+    -------
+    x : torch.Tensor
+        Input tensor if cnn_layer=True and prms_layer=False. Ignored otherwise.
 
-        xn = F.pad(x1, [diffX // 2, diffX - diffX // 2,
-                        diffY // 2, diffY - diffY // 2])
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape (1, nch_out, npix, npix).
+    """
         
-        return(xn)
-        
+    def __init__(self, npix, nch_in=1, nch_out=1, nfilts=32, nlayers=4, norm_type='layer', 
+                 prms_layer=True, cnn_layer=True, tensor_vals = 'random', tensor_initial = None,
+                 padding='same'):
+        super(PrmCNN2D, self).__init__()
+        self.npix = npix
+        self.prms_layer = prms_layer
+        self.cnn_layer = cnn_layer
+
+        if self.prms_layer:
+            if tensor_vals == 'random':
+                self.initial_tensor = nn.Parameter(2*torch.randn(1, nch_in, npix, npix)-1)
+            elif tensor_vals == 'zeros':
+                self.initial_tensor = nn.Parameter(torch.zeros(1, nch_in, npix, npix))
+            elif tensor_vals == 'ones':
+                self.initial_tensor = nn.Parameter(torch.ones(1, nch_in, npix, npix))
+            elif tensor_vals == 'mean':
+                self.initial_tensor = nn.Parameter(0.5*torch.ones(1, nch_in, npix, npix))
+            elif tensor_vals == 'random_positive':
+                self.initial_tensor = nn.Parameter(torch.randn(1, nch_in, npix, npix))
+            elif tensor_vals == 'custom':
+                try:
+                    self.initial_tensor = nn.Parameter(tensor_initial)
+                except:
+                    print('Custom tensor not provided. Using random tensor instead')
+                    self.initial_tensor = nn.Parameter(torch.randn(1, nch_in, npix, npix))
+        if self.cnn_layer:
+            layers = []
+            layers.append(nn.Conv2d(nch_in, nfilts, kernel_size=3, stride=1, padding=padding))  # 'same' padding in PyTorch is usually done by manually specifying the padding
+            if norm_type=='layer':
+                if padding=='valid':
+                    layers.append(nn.LayerNorm([nfilts, self.npix -2, self.npix -2]))
+                else:
+                    layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))
+            elif norm_type=='instance':
+                layers.append(nn.InstanceNorm2d(nfilts, affine = True))
+            elif norm_type=='batchnorm':            
+                layers.append(nn.BatchNorm2d(nfilts))
+
+            layers.append(nn.ReLU())
+
+            for layer in range(nlayers):
+                
+                layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding=padding))
+                if norm_type=='layer':
+                    if padding=='valid':
+                        layers.append(nn.LayerNorm([nfilts, self.npix -2*(layer + 2), self.npix -2*(layer + 2)]))
+                    else:
+                        layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))
+                elif norm_type=='instance':
+                    layers.append(nn.InstanceNorm2d(nfilts, affine = True))            
+                elif norm_type=='batchnorm':            
+                    layers.append(nn.BatchNorm2d(nfilts))
+
+                layers.append(nn.ReLU())
+
+            layers.append(nn.Conv2d(nfilts, nch_out, kernel_size=3, stride=1, padding=padding))
+            layers.append(nn.Sigmoid())
+            self.cnn2d = nn.Sequential(*layers)
+
     def forward(self, x):
-        
-        x1 = self.conv2d_initial(x)
-        x2 = self.conv2d_down(x1)
-        x3 = self.conv2d_down(x2)
-        x4 = self.conv2d_down(x3)
-        x5 = self.conv2d_down(x4)
+        if self.prms_layer and self.cnn_layer:
+            out = self.cnn2d(torch.sigmoid(self.initial_tensor))
+        elif self.cnn_layer and not self.prms_layer:
+            out = self.cnn2d(x)
+        elif self.prms_layer and not self.cnn_layer:
+            out = torch.sigmoid(self.initial_tensor)
+        return out
 
-        x6 = self.up(x5)
-        x6 = self.crop(x6, x4)
-        x6 = self.conv2d_dual(x6)
-
-        x7 = self.up(x6)
-        x7 = self.crop(x7, x3)
-        x7 = self.conv2d_dual(x7)
-
-        x8 = self.up(x7)
-        x8 = self.crop(x8, x2)
-        x8 = self.conv2d_dual(x8)
-        
-        x9 = self.up(x8)
-        x9 = self.crop(x9, x1)
-        x9 = self.conv2d_dual(x9)
-        
-        x = self.out(x9)
-
-        return(x)
 
 
 class CNN1D(nn.Module):
     
+    """
+    A 1D convolutional neural network for sequential or spectral data processing with optional normalization 
+    and residual connections.
+
+    Parameters
+    ----------
+    nch_in : int
+        Number of input channels.
+    nch_out : int
+        Number of output channels.
+    nfilts : int
+        Number of filters in the convolutional layers.
+    nlayers : int
+        Number of intermediate convolutional blocks.
+    norm_type : str or None
+        Type of normalization: 'batch', 'layer', or None.
+    activation : str
+        Final activation type. If 'Sigmoid', a Sigmoid activation is appended after the last layer.
+
+    Forward
+    -------
+    x : torch.Tensor
+        Input tensor of shape (batch_size, nch_in, sequence_length).
+    residual : bool
+        If True, adds input x to the output (residual connection).
+
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape (batch_size, nch_out, sequence_length).
+    """
+        
     def __init__(self, nch_in=1, nch_out=1, nfilts=32, nlayers=4, norm_type='layer', activation='Linear'):
         
         super(CNN1D, self).__init__()
@@ -340,6 +412,40 @@ class CNN2D(nn.Module):
 
 class CNN3D(nn.Module):
     
+    """
+    A 3D convolutional neural network for volumetric data processing with optional normalization and 
+    configurable depth.
+
+    Parameters
+    ----------
+    npix : int
+        Size of the 3D cube (assumes cube of shape npix x npix x npix).
+    nch_in : int
+        Number of input channels.
+    nch_out : int
+        Number of output channels.
+    nfilts : int
+        Number of filters in convolutional layers.
+    nlayers : int
+        Number of intermediate convolutional blocks.
+    norm_type : str or None
+        Type of normalization: 'batch', 'layer', or None.
+    activation : str
+        Final activation type. If 'Sigmoid', a Sigmoid activation is appended.
+
+    Forward
+    -------
+    x : torch.Tensor
+        Input tensor of shape (batch_size, nch_in, D, H, W).
+    residual : bool
+        If True, adds the input x to the output (residual connection).
+
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape (batch_size, nch_out, D, H, W).
+    """    
+    
     def __init__(self, npix, nch_in=1, nch_out=1, nfilts=32, nlayers=4, norm_type='layer', activation='Linear'):
         
         super(CNN3D, self).__init__()
@@ -381,6 +487,42 @@ class CNN3D(nn.Module):
         return out
     
 class SD2I(nn.Module):
+    
+    """
+    The SD2I model combines dense layers and 2D convolutions to generate high-resolution 2D images from a single input.
+    It uses progressive upsampling and deep feature refinement and is suitable for inverse problems or image synthesis.
+
+    Parameters
+    ----------
+    npix : int
+        Target image size (npix x npix).
+    factor : int
+        Latent channel factor to expand dense output into feature maps.
+    nims : int
+        Number of output images (channels).
+    nfilts : int
+        Number of filters in convolutional blocks.
+    ndense : int
+        Width of fully connected layers before reshaping into feature maps.
+    dropout : bool
+        Whether to use dropout in dense layers.
+    norm_type : str or None
+        Normalization type: 'batch', 'layer', or None.
+    upsampling : int
+        Number of upsampling steps (1, 2, or 4).
+    act_layer : str
+        Final activation function: 'Sigmoid' or None.
+
+    Forward
+    -------
+    x : torch.Tensor
+        Input tensor of shape (batch_size, 1) — a single scalar per sample.
+
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape (batch_size, nims, npix, npix).
+    """
     
     def __init__(self, npix, factor=8, nims=5, nfilts = 32, ndense = 64, dropout=True, norm_type='layer', upsampling = 4, act_layer='Sigmoid'):
         
@@ -468,9 +610,34 @@ class SD2I(nn.Module):
 
 class VolumeModel(nn.Module):
     
-    '''
-    Requires npix and num_slices
-    '''
+    """
+    A simple learnable 3D volume model where each slice in the volume is trainable.
+    Supports differential updates or direct use of the internal volume.
+
+    Parameters
+    ----------
+    npix : int
+        Number of pixels in each spatial dimension (assumes square slices).
+    num_slices : int
+        Number of slices along the depth axis.
+    vol : torch.Tensor or None
+        Optional initial volume of shape (num_slices, npix, npix). If None, initializes to zeros.
+    device : str
+        Device to place the model parameters on ('cuda' or 'cpu').
+
+    Forward
+    -------
+    input_volume : torch.Tensor
+        External volume to add to the internal volume (shape: num_slices, npix, npix).
+    diff : bool
+        If True, output is input_volume + self.volume. If False, output is self.volume only.
+
+    Returns
+    -------
+    torch.Tensor
+        Transformed volume of shape (num_slices, npix, npix).
+    """
+    
     def __init__(self, npix, num_slices, vol=None, device='cuda'):
         super(VolumeModel, self).__init__()
         self.num_slices = num_slices
@@ -489,13 +656,36 @@ class VolumeModel(nn.Module):
         return transformed_volume
     
     
-
-
 class PeakModel(nn.Module):
     
-    '''
-    Requires npix and num_slices
-    '''
+    """
+    A peak fitting model that represents parameterized 1D functions (e.g. Gaussian or Pseudo-Voigt)
+    using learnable normalized parameters constrained to [0, 1]. Converts normalized parameters 
+    to their physical range before evaluating the function.
+
+    Parameters
+    ----------
+    prms : dict
+        Dictionary containing:
+        - 'val': torch.Tensor of shape (n_params, npix, npix), the initial normalized parameters.
+        - 'min': dict of minimum values for each parameter.
+        - 'max': dict of maximum values for each parameter.
+    device : str
+        Device to place parameters on ('cuda' or 'cpu').
+
+    Forward
+    -------
+    x : torch.Tensor
+        Input tensor of shape (N, 1) representing the x-axis values for function evaluation.
+    model : str
+        Peak function model to use: 'Gaussian' or 'PseudoVoigt'.
+
+    Returns
+    -------
+    y : torch.Tensor
+        Output tensor of shape (N, 1), the evaluated function for each pixel.
+    """
+    
     def __init__(self, prms, device='cuda'):
 
         super(PeakModel, self).__init__()  # Call the parent class's constructor first
@@ -538,8 +728,33 @@ class PeakModel(nn.Module):
         return y
     
     
-    
 class ResNetBlock(nn.Module):
+    
+    """
+    A basic 2D residual block consisting of two convolutional layers with optional normalization
+    and ReLU activation, followed by a skip connection.
+
+    Parameters
+    ----------
+    nfilts : int
+        Number of filters in the convolutional layers.
+    npix : int
+        Spatial dimension (assumes square input for LayerNorm).
+    kernel_size : int
+        Size of convolutional kernel.
+    stride : int
+        Stride for the convolution.
+    padding : int
+        Padding to apply to convolution.
+    norm_type : str or None
+        Type of normalization: 'batch', 'layer', or None.
+
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of same shape as input.
+    """
+        
     def __init__(self, nfilts, npix, kernel_size=3, stride=1, padding=1, norm_type=None):
         super(ResNetBlock, self).__init__()
         self.conv1 = nn.Conv2d(nfilts, nfilts, kernel_size, stride, padding)
@@ -572,6 +787,35 @@ class ResNetBlock(nn.Module):
         return out
 
 class ResNet2D(nn.Module):
+    
+    
+    """
+    A 2D ResNet-style convolutional network for image processing tasks with configurable residual blocks
+    and optional normalization.
+
+    Parameters
+    ----------
+    npix : int
+        Spatial size of the input (assumed square).
+    nch_in : int
+        Number of input channels.
+    nch_out : int
+        Number of output channels.
+    nfilts : int
+        Number of filters in convolutional layers.
+    n_res_blocks : int
+        Number of ResNet blocks in the model.
+    norm_type : str or None
+        Type of normalization: 'batch', 'layer', or None.
+    activation : str
+        Final activation function: 'Linear' or 'Sigmoid'.
+
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape (batch_size, nch_out, npix, npix).
+    """
+        
     def __init__(self, npix, nch_in=1, nch_out=1, nfilts=32, n_res_blocks=4, norm_type='layer', activation='Linear'):
         super(ResNet2D, self).__init__()
 
@@ -604,10 +848,29 @@ class ResNet2D(nn.Module):
             out += x
         return out  
     
-    
-    
 
 class ConvBlock(nn.Module):
+    
+    """
+    A basic convolutional block with two Conv2D layers, LayerNorm (by default), and ReLU activation.
+
+    Parameters
+    ----------
+    in_channels : int
+        Number of input channels.
+    out_channels : int
+        Number of output channels.
+    spatial_dims : tuple[int, int]
+        Spatial dimensions of the input (height, width).
+    norm_type : str
+        Normalization type: 'layer' (default) or 'batch'.
+
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape (batch_size, out_channels, H, W).
+    """
+        
     def __init__(self, in_channels, out_channels, spatial_dims, norm_type='layer'):
         super(ConvBlock, self).__init__()
         self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1)
@@ -628,6 +891,27 @@ class ConvBlock(nn.Module):
         return x
 
 class DownBlock(nn.Module):
+    
+    """
+    A downsampling block consisting of a Conv2D with stride=2 followed by a ConvBlock.
+
+    Parameters
+    ----------
+    in_channels : int
+        Number of input channels.
+    out_channels : int
+        Number of output channels.
+    spatial_dims : tuple[int, int]
+        Spatial dimensions after downsampling.
+    norm_type : str or None
+        Type of normalization to use in the ConvBlock.
+
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape (batch_size, out_channels, H/2, W/2).
+    """
+        
     def __init__(self, in_channels, out_channels, spatial_dims, norm_type=None):
         super(DownBlock, self).__init__()
         self.down_conv = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=2, padding=1)
@@ -639,6 +923,30 @@ class DownBlock(nn.Module):
 
 
 class UpBlock(nn.Module):
+    
+    """
+    An upsampling block with transposed convolution and concatenation with a skip connection (bridge),
+    followed by a ConvBlock.
+
+    Parameters
+    ----------
+    in_channels : int
+        Number of channels to upsample.
+    bridge_channels : int
+        Number of channels in the bridge tensor (from encoder).
+    out_channels : int
+        Number of output channels after convolution.
+    spatial_dims : tuple[int, int]
+        Spatial dimensions of the output.
+    norm_type : str
+        Normalization type to use in ConvBlock: 'layer' or 'batch'.
+
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape (batch_size, out_channels, H*2, W*2).
+    """
+        
     def __init__(self, in_channels, bridge_channels, out_channels, spatial_dims, norm_type='layer'):
         super(UpBlock, self).__init__()
         self.up = nn.ConvTranspose2d(in_channels, out_channels, kernel_size=2, stride=2)
@@ -658,6 +966,39 @@ class UpBlock(nn.Module):
 
     
 class UNet2D(nn.Module):
+    
+    """
+    A U-Net style 2D convolutional neural network with downsampling and upsampling paths and skip connections.
+    Supports configurable depth and normalization.
+
+    Parameters
+    ----------
+    nch_in : int
+        Number of input channels.
+    nch_out : int
+        Number of output channels.
+    npix : int
+        Input spatial dimension (assumes square input).
+    base_nfilts : int
+        Number of filters in the base layer.
+    num_blocks : int
+        Number of downsampling and upsampling blocks.
+    norm_type : str or None
+        Normalization type: 'batch', 'layer', or None.
+    activation : str
+        Final activation function: 'Sigmoid' or 'Linear'.
+
+    Forward
+    -------
+    x : torch.Tensor
+        Input tensor of shape (batch_size, nch_in, npix, npix).
+
+    Returns
+    -------
+    torch.Tensor
+        Output tensor of shape (batch_size, nch_out, npix, npix).
+    """
+        
     def __init__(self, nch_in, nch_out, npix, base_nfilts=64, num_blocks=4, norm_type=None, activation='Linear'):
         super(UNet2D, self).__init__()
 

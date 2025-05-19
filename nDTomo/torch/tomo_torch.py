@@ -1,10 +1,22 @@
 # -*- coding: utf-8 -*-
 """
-Pytorch functions for tomography
+PyTorch functions for 2D and 3D tomography and Radon transform simulation.
 
-Need to debug the angles for radon/iradon
+This module includes differentiable and non-differentiable implementations of:
+- Forward and back projection routines (Radon and inverse Radon transforms) in 2D and 3D.
+- Iterative reconstruction methods such as SIRT and CGLS using functional forward/back projectors.
+- Sparse matrix-based forward and backward operations (A-matrix formulation) using PyTorch sparse tensors.
+- Utility functions for constructing sparse system matrices, rotating images, and defining affine transforms.
 
-@author: Antony Vamvakeros
+Main features:
+--------------
+- Differentiable 3D forward and backward projectors using `torchvision.transforms.functional.rotate`.
+- Support for iterative solvers: SIRT (with normalization) and CGLS.
+- Conversion utilities for using SciPy sparse matrices in PyTorch (e.g., `Amatrix_torch`, `Sino_torch`, `Amatrix_rec`).
+- Grid-based rotation of images via affine transformation (`imrotate_torch`).
+- Compatible with both CPU and CUDA devices.
+
+Author: Antony Vamvakeros
 """
 
 import torch
