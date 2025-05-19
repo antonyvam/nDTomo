@@ -1,7 +1,7 @@
-Analysis Module
-===============
+Torch Module
+============
 
-The `analysis` module contains functions for processing tomography data.
+The `torch` module contains functions for handling computed tomography and chemical imaging data using Pytorch.
 
 .. toctree::
    :maxdepth: 2
