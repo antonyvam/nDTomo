@@ -14,10 +14,6 @@ It includes:
 
 The software is designed to be accessible to both researchers and students working in chemical imaging, materials science, catalysis, battery research, and synchrotron radiation applications.
 
-📘 Official documentation (in progress): https://ndtomo.readthedocs.io
-
----
-
 Key Capabilities
 ----------------
 
@@ -34,8 +30,6 @@ nDTomo provides tools for:
 .. image:: images/xrdct.png 
 
 Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray diffraction CT (XRD-CT or Powder diffraction CT) data acquired from an NMC532 Li ion battery. For more details regarding this study see [1].
-
----
 
 
 Graphical User Interface (nDTomoGUI)

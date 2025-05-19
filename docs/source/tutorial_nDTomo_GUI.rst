@@ -1,5 +1,5 @@
-nDTomo GUI
-==========
+nDTomoGUI
+=========
 
 .. contents::
    :local:
