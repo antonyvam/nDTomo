@@ -26,3 +26,4 @@ xdesign
 siphash24
 setuptools
 wheel
+torch
