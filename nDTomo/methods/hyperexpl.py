@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-HyperSliceExplorer
+Hyperspectral Imaging Explorers and GUI Tools
+
+This module provides several interactive classes for exploring hyperspectral or volumetric image data, particularly for chemical imaging datasets.
+It includes mouse-interactive tools for visualizing spectra, image slices, and intensity profiles. F
+
+Classes:
+    - HyperSliceExplorer: Explore hyperspectral imaging data
+    - ImageSpectrumGUI: Explore hyperspectral imaging data
+    - InteractiveProfileExtraction: Extract 1D intensity profiles along a line in a 2D image
+    - InteractiveHyperProfileExtraction: Extract 1D and spectral profiles along a line in a hyperspectral volume
+    - ImageSpectrumFitGUI: Compare raw and fitted spectra from voxel data interactively
+    - chemimexplorer: A version of ImageSpectrumGUI which is used as embedded in jupyter notebooks
 
 @author: Antony Vamvakeros
 """
@@ -13,13 +24,32 @@ from matplotlib.lines import Line2D
 class HyperSliceExplorer():
     
     
-    '''
-    HyperSliceExplorer is used to visualise hyperspectral imaging data
-    '''
+    """
+    Interactive explorer for hyperspectral or volumetric imaging data.
+
+    Allows the user to click and move the mouse over a mean image view 
+    to inspect voxel-level spectra and update an associated spectrum plot. 
+    Users can visualize individual channel images and view spectral changes dynamically.
+    Particularly useful for visual inspection of 3D chemical imaging datasets.
+    """
     
     def __init__(self, data, xaxis=None, xaxislabel='Channels'):
 
 
+        """
+        Initialize the HyperSliceExplorer.
+
+        Parameters
+        ----------
+        data : ndarray
+            3D hyperspectral data array with shape (rows, cols, channels).
+        xaxis : ndarray, optional
+            1D array specifying the x-axis (e.g., energy or wavelength) for the spectrum.
+            If None, defaults to a range array from 0 to number of channels.
+        xaxislabel : str, optional
+            Label to use for the x-axis in spectral plots. Default is 'Channels'.
+        """
+        
         self.data = data
         if xaxis is None:
             self.xaxis = np.arange(0,data.shape[2])
@@ -200,19 +230,27 @@ class HyperSliceExplorer():
         self.mapper.show()
         self.mapper.draw_all() 
 
-
-def nDvis(data, xaxis=None, xaxislabel='Channels'):
-    
-    hs = HyperSliceExplorer(data, xaxis, xaxislabel)
-    hs.explore()
-
 class ImageSpectrumGUI:
-    def __init__(self, volume):
-        """
-        Initialize the Image Spectrum GUI.
+    
+    """
+    A simple GUI to explore 2D hyperspectral imaging data.
 
-        Args:
-            volume (ndarray): 3D array representing the volume data.
+    Displays an image slice alongside the corresponding spectral data 
+    for the voxel under the mouse. Interaction allows switching between 
+    spectral bands and voxel positions. Ideal for quick exploratory analysis.
+    """    
+    
+    def __init__(self, volume):
+        
+        """
+        Initialize the ImageSpectrumGUI.
+
+        Parameters
+        ----------
+        volume : ndarray
+            2D hyperspectral imaging data with shape (rows, cols, channels).
+            The GUI will display mean images and spectra, and update them
+            interactively based on mouse position.
         """
         self.volume = volume
 
@@ -303,7 +341,27 @@ class ImageSpectrumGUI:
 
 
 class InteractiveProfileExtraction:
+    
+    """
+    Interactive tool for extracting 1D intensity profiles from 2D images.
+
+    Allows the user to draw a line on an image and automatically extracts 
+    the intensity profile along that line. Suitable for evaluating gradients, 
+    edges, or structure in a single image slice.
+    """
+        
     def __init__(self, image):
+        
+        """
+        Initialize the InteractiveProfileExtraction tool.
+
+        Parameters
+        ----------
+        image : ndarray
+            2D grayscale image from which intensity profiles will be interactively extracted.
+            The user defines a line on the image, and the corresponding intensity values are plotted.
+        """
+                
         self.image = image
         self.line = None
         self.profile = None
@@ -415,7 +473,28 @@ def bresenham(y0, x0, y1, x1):
 
 
 class InteractiveHyperProfileExtraction:
+    
+    """
+    Interactive profile extraction tool for 2D hyperspectral imaging data.
+
+    Enables users to draw a line on a 2D projection of the volume 
+    and extract both spatial intensity profiles and corresponding 
+    spectral information along the line. Useful for linking spatial and 
+    spectral variations in hyperspectral datasets.
+    """
+        
     def __init__(self, vol):
+        
+        """
+        Initialize the InteractiveHyperProfileExtraction tool.
+
+        Parameters
+        ----------
+        vol : ndarray
+            3D hyperspectral or volumetric image data with shape (rows, cols, channels).
+            The tool enables drawing a line on the projection to extract both spatial and spectral profiles.
+        """
+                
         self.vol = vol
         self.mean_image = np.sum(self.vol, axis=2)
         self.line = None
@@ -533,14 +612,29 @@ class InteractiveHyperProfileExtraction:
 
 
 class ImageSpectrumFitGUI:
-    def __init__(self, volume, volfit):
-        """
-        Initialize the Image Spectrum GUI.
+    
+    """
+    GUI for visual comparison between raw and fitted hyperspectral data.
 
-        Args:
-            volume (ndarray): 3D array representing the original volume data.
-            volfit (ndarray): 3D array representing the fitted volume data.
+    Displays original and fitted spectra from a 3D volume on a voxel-by-voxel basis.
+    Supports dynamic inspection by mouse interaction. Useful for verifying 
+    the quality of spectral fitting or peak decomposition across a sample.
+    """
+        
+    def __init__(self, volume, volfit):
+        
         """
+        Initialize the ImageSpectrumFitGUI for raw vs. fitted spectrum comparison.
+
+        Parameters
+        ----------
+        volume : ndarray
+            3D array of original hyperspectral data with shape (rows, cols, channels).
+        volfit : ndarray
+            3D array of fitted spectral data with the same shape as `volume`.
+            The GUI displays both raw and fitted spectra for user-selected voxels.
+        """
+        
         self.volume = volume
         self.volfit = volfit
 
@@ -636,13 +730,28 @@ class ImageSpectrumFitGUI:
                 
 class chemimexplorer:
     
-    def __init__(self, volume, fitted=None):
-        """
-        Initialize the chemimexplorer.
+    """
+    Lightweight GUI for Jupyter-based exploration of chemical imaging volumes.
 
-        Args:
-            volume (ndarray): 3D array representing the volume data.
+    Provides linked spatial and spectral views for both raw and optionally 
+    fitted datasets. Supports mouse-based interaction to inspect individual 
+    spectra. Optimized for use within notebook environments.
+    """
+        
+    def __init__(self, volume, fitted=None):
+        
         """
+        Initialize the chemimexplorer widget for use in notebooks.
+
+        Parameters
+        ----------
+        volume : ndarray
+            2D hyperspectral imaging dataset with shape (rows, cols, channels).
+        fitted : ndarray, optional
+            Optional 3D array of fitted spectral data with the same shape as `volume`.
+            If provided, fitted spectra are displayed alongside raw spectra.
+        """
+        
         self.volume = volume
         self.fitted = fitted
 
