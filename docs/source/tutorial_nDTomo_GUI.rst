@@ -55,7 +55,7 @@ When a file is loaded, the software computes and displays the average image and 
 - Use **mouse scroll** to zoom and drag to pan both plots.
 - **Left-click** enables real-time spectrum updates; **right-click** disables it.
 
-.. image:: _static/nDTomo_demo1.gif
+.. image:: _static/ndtomo_demo1.gif
    :alt: nDTomo GUI Demo
    :align: center
 
@@ -67,7 +67,6 @@ When a file is loaded, the software computes and displays the average image and 
 
 This tab enables intuitive, interactive exploration of your chemical imaging dataset without the need for scripting.
 
----
 
 2. ROI image
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -86,7 +85,10 @@ This tab enables users to define a **region of interest (ROI)** by selecting a r
 
 **Note:** Selecting a new channel range also updates the default initial guess for peak fitting in Tab 4.
 
----
+.. image:: _static/ndtomo_demo2.gif
+   :alt: nDTomo GUI Demo
+   :align: center
+
 
 3. ROI pattern
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -105,12 +107,19 @@ This tab provides tools to perform **segmentation** of the ROI image and **extra
 
 This tab bridges the spatial and spectral domains by allowing pixel-level filtering and extraction of chemically significant signals.
 
----
+.. image:: _static/ndtomo_demo3.gif
+   :alt: nDTomo GUI Demo
+   :align: center
+
 
 4. Peak fitting
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 This tab enables **batch peak fitting** of a single peak across the dataset. You can choose a model (Gaussian, Lorentzian, or Pseudo-Voigt), configure initial guesses and parameter bounds, and run the fitting process interactively. The layout includes parameter input boxes, model selector, fit range controls, progress indicators, and live result visualization.
+
+.. image:: _static/ndtomo_demo4.gif
+   :alt: nDTomo GUI Demo
+   :align: center
 
 Supported peak models:
 - **Gaussian**
@@ -151,7 +160,13 @@ Supported peak models:
 
 This tab turns raw imaging data into quantifiable chemical maps using robust curve fitting.
 
----
+.. image:: _static/ndtomo_demo5.gif
+   :alt: nDTomo GUI Demo
+   :align: center
+
+.. image:: _static/ndtomo_demo6.gif
+   :alt: nDTomo GUI Demo
+   :align: center
 
 Additional Features
 -------------------
@@ -188,7 +203,10 @@ The Synthetic Phantom Generator allows users to instantly generate a chemically 
 
 This is especially helpful for verifying that peak fitting models behave as expected and that segmentation pipelines produce the correct spatial maps.
 
----
+.. image:: _static/ndtomo_demo7.gif
+   :alt: nDTomo GUI Demo
+   :align: center
+
 
 Embedded IPython Console
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
