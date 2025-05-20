@@ -158,9 +158,9 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.setWindowTitle("nDTomoGUI")
 
         self.file_menu = QtWidgets.QMenu('&File', self)
-        self.file_menu.addAction('&Open Chemical imaging data', self.fileOpen, QtCore.Qt.CTRL + QtCore.Qt.Key_O)
-        self.file_menu.addAction('&Append Chemical imaging data', self.append_file)
-        self.file_menu.addAction('&Save Chemical imaging data', self.savechemvol)
+        self.file_menu.addAction('&Open data', self.fileOpen, QtCore.Qt.CTRL + QtCore.Qt.Key_O)
+        self.file_menu.addAction('&Append data', self.append_file)
+        self.file_menu.addAction('&Save data', self.savechemvol)
         self.file_menu.addAction('&Quit', self.fileQuit, QtCore.Qt.CTRL + QtCore.Qt.Key_Q)
         self.menuBar().addMenu(self.file_menu)
 
@@ -183,7 +183,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.tab4 = QtWidgets.QWidget()
         
         # Add tabs
-        self.tabs.addTab(self.tab1,"Chemical imaging data")        
+        self.tabs.addTab(self.tab1,"Hyperexplorer")        
         self.tabs.addTab(self.tab2,"ROI image")        
         self.tabs.addTab(self.tab3,"ROI pattern")        
         self.tabs.addTab(self.tab4,"Peak fitting")        
@@ -1076,7 +1076,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         ValueError
             If shape compatibility is not met (different height or spectral axis).
         """
-        append_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Append Chemical imaging data', "", "*.hdf5 *.h5")
+        append_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Append data', "", "*.hdf5 *.h5")
 
         if not append_fileName or self.volume.size == 0:
             QtWidgets.QMessageBox.warning(self, "Append Error", "No file selected or no dataset loaded yet.")
@@ -1151,7 +1151,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         - 'data': The 3D chemical imaging volume.
         - 'xaxis': The spectral or scattering axis used for plotting.
         """
-        self.fn, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Chemical imaging data', "", "*.h5")
+        self.fn, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save data', "", "*.h5")
 	
         if len(self.fn)>0:
     
@@ -2332,29 +2332,14 @@ class FitData(QThread):
         lorentz = (A / (1 + ((x - m) / w)**2)) / (np.pi * w)
         return (1 - fr) * gauss + fr * lorentz + a * x + b
 
+
 def main():
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Launch nDTomoGUI for chemical imaging analysis.")
-    parser.add_argument('--style', type=str, help='Qt style (e.g., Fusion, Windows, Mac)', default='Fusion')
-    args = parser.parse_args()
-
-    # Initialize QApplication
-    app = QtWidgets.QApplication(sys.argv)
-
-    # Optional: Set Qt style
-    if args.style:
-        QtWidgets.QApplication.setStyle(args.style)
-
-    # Launch main GUI
-    try:
-        window = nDTomoGUI()
-        window.show()
-        sys.exit(app.exec_())
-    except Exception as e:
-        print(f"Application failed to start: {e}")
-        sys.exit(1)
-   
+    qApp = QtWidgets.QApplication(sys.argv)
+    aw = nDTomoGUI()
+    aw.show()
+    sys.exit(qApp.exec_())
+    qApp.exec_()
+    
 if __name__ == "__main__":
     main()
     
