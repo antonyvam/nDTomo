@@ -31,7 +31,7 @@ nDTomo provides tools for:
 6. **Dimensionality reduction and clustering** for unsupervised chemical phase analysis
 7. **Pixel-wise peak fitting** using Gaussian, Lorentzian, and Pseudo-Voigt models
 
-**Quick Demo (Tomography Reconstruction)**: [![Tomography Reconstruction (GoogleColab)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/epapoutsellis/nDTomo/blob/gcolab/gcolab/tutorial_ct_recon_demo.ipynb)    
+**Quick Demo (Tomography Reconstruction)**: [![Tomography Reconstruction (GoogleColab)](https://colab.research.google.com/assets/colab-badge.svg)](https://github.com/epapoutsellis/nDTomo/blob/cloud_exs/gcolab/tutorial_ct_recon_demo.ipynb)    
 
 
 The aim of this library, among others, is to generate tools for the following:
