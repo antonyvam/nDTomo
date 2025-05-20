@@ -25,4 +25,4 @@ xdesign
 siphash24
 setuptools
 wheel
-
+pyqt5
