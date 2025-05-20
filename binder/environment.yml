@@ -6,8 +6,8 @@ dependencies:
   - astra-toolbox
   - pip
   - pip:
-      - git+https://github.com/antonyvam/nDTomo.git
-      --index-url https://download.pytorch.org/whl/cpu
+      --index-url https://download.pytorch.org/whl/cpu    
+      - git+https://github.com/antonyvam/nDTomo.git  
       - torch
       - torchvision
       - torchaudio
