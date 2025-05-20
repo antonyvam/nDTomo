@@ -46,7 +46,10 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import scipy.optimize as sciopt
 from scipy.signal import find_peaks
-
+import os
+if os.environ.get("READTHEDOCS") != "True":
+    import matplotlib
+    matplotlib.use("Qt5Agg")
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtconsole.inprocess import QtInProcessKernelManager
 
