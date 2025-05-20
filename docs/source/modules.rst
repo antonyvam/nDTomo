@@ -7,3 +7,6 @@ Available Modules
    simulations/index
    tomo/index
    analysis/index
+   pytorch/index
+   methods/index
+   gui/index

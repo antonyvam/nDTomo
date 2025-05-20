@@ -12,9 +12,14 @@ from matplotlib.colors import ListedColormap
 
 def nDTomo_colormap():
     
-    '''
-    Custom colormap: It is the jet colormap but 0 correponds to black
-    '''
+    """
+    Create a custom colormap based on 'jet' with zero value mapped to black.
+
+    Returns
+    -------
+    matplotlib.colors.ListedColormap
+        Modified jet colormap with the first color (zero value) set to black.
+    """
     
     jet = cm.get_cmap('jet', 256)
     newcolors = jet(linspace(0, 1, 256))
@@ -24,13 +29,38 @@ def nDTomo_colormap():
     return(newcmp)
 
 def showplot(spectrum, fignum = 1):
-    
+
+    """
+    Display a 1D spectrum using matplotlib.
+
+    Parameters
+    ----------
+    spectrum : array-like
+        1D array containing the spectrum to be plotted.
+    fignum : int, optional
+        Figure number for the matplotlib window (default is 1).
+    """
+        
     plt.figure(fignum);plt.clf()
     plt.plot(spectrum)
     plt.show()
     
 def showim(im, fignum = 1, clim=None, cmap='jet'):
     
+    """
+    Display a 2D image using matplotlib with optional colormap and color limits.
+
+    Parameters
+    ----------
+    im : array-like
+        2D array representing the image to display.
+    fignum : int, optional
+        Figure number for the matplotlib window (default is 1).
+    clim : tuple of float, optional
+        Tuple specifying the color limits (vmin, vmax). If None, uses data min/max.
+    cmap : str or Colormap, optional
+        Colormap to use for image display (default is 'jet').
+    """
     plt.figure(fignum);plt.clf()
     plt.imshow(im, cmap = cmap)
     plt.colorbar()
@@ -73,16 +103,33 @@ def showspectra(spectra, labels=None, fig_num=1):
     plt.show()
        
 def closefigs():
-    
+    """
+    Close all open matplotlib figures.
+    """    
     plt.close('all')
     
 def plotfigs_imgs(imagelist, legendlist=None, rows=1, cols=5, figsize=(20,3), cl=True, cmap = 'jet'):
     
-    '''
-    Create a collage of images without xticks/yticks
-    
-    @author: Antony Vamvakeros and Thanasis Giokaris
-    '''
+    """
+    Plot a grid of 2D images with optional legends, colorbars, and custom layout.
+
+    Parameters
+    ----------
+    imagelist : list of ndarray
+        List of 2D arrays to display as images.
+    legendlist : list of str, optional
+        List of titles for each subplot. If None, default labels like 'Component 1' will be used.
+    rows : int, optional
+        Number of subplot rows (default is 1).
+    cols : int, optional
+        Number of subplot columns (default is 5).
+    figsize : tuple, optional
+        Size of the entire figure in inches (default is (20, 3)).
+    cl : bool, optional
+        If True, display colorbar for each subplot (default is True).
+    cmap : str or Colormap, optional
+        Colormap used for displaying the images (default is 'jet').
+    """
     
     if legendlist is None:
         
@@ -125,6 +172,26 @@ def plotfigs_imgs(imagelist, legendlist=None, rows=1, cols=5, figsize=(20,3), cl
 
 def create_complist_imgs(components, xpix, ypix):     
 
+    """
+    Convert a 2D array of flattened components into a list of reshaped images and legend titles.
+
+    Parameters
+    ----------
+    components : ndarray
+        2D array where each row is a flattened image (n_components x n_pixels).
+    xpix : int
+        Width of each image in pixels.
+    ypix : int
+        Height of each image in pixels.
+
+    Returns
+    -------
+    tuple
+        A tuple (imagelist, legendlist) where:
+        - imagelist is a list of 2D arrays shaped as (xpix, ypix).
+        - legendlist is a list of string labels like 'Component 1', 'Component 2', etc.
+    """
+    
     imagelist = []; legendlist = []
     for ii in range(components.shape[0]):
         im = components[ii,:]
@@ -137,11 +204,24 @@ def create_complist_imgs(components, xpix, ypix):
     
 def plotfigs_spectra(spectralist, legendlist= None, xaxis=None, rows=1, cols=5, figsize=(20,3)):
     
-    '''
-    Create a collage of images without xticks/yticks
-    
-    @author: Antony Vamvakeros and Thanasis Giokaris
-    '''
+    """
+    Plot a grid of spectra in a subplot layout with optional legends and custom x-axis.
+
+    Parameters
+    ----------
+    spectralist : list of ndarray
+        List of 1D arrays representing spectra.
+    legendlist : list of str, optional
+        Titles for each subplot. If None, default labels like 'Component 1' will be used.
+    xaxis : ndarray, optional
+        Shared x-axis for all spectra. If None, the index of the spectrum is used.
+    rows : int, optional
+        Number of subplot rows (default is 1).
+    cols : int, optional
+        Number of subplot columns (default is 5).
+    figsize : tuple, optional
+        Size of the figure in inches (default is (20, 3)).
+    """
     
     if legendlist is None:
         
@@ -180,6 +260,22 @@ def plotfigs_spectra(spectralist, legendlist= None, xaxis=None, rows=1, cols=5, 
                     
 def create_complist_spectra(components):     
 
+    """
+    Convert a 2D array of spectral components into a list of 1D spectra and corresponding labels.
+
+    Parameters
+    ----------
+    components : ndarray
+        2D array where each row is a spectral component.
+
+    Returns
+    -------
+    tuple
+        A tuple (splist, legendlist) where:
+        - splist is a list of 1D spectral arrays.
+        - legendlist is a list of string labels like 'Component 1', 'Component 2', etc.
+    """
+    
     splist = []; legendlist = []
     for ii in range(components.shape[0]):
         splist.append(components[ii,:])

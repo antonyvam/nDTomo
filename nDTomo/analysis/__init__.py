@@ -1,7 +1,7 @@
 """
 Analysis module for nDTomo.
 
-This package contains modules for processing tomography data, including:
+This package contains modules for peak analysis, including:
 - `peaks`: methods related to peak models and peak fitting
 """
 
