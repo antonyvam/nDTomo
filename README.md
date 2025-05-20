@@ -122,13 +122,6 @@ or:
 python3 setup.py install --user
 ```
 
-For example, as a user at the Diamond Light Source:
-
-```
-git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
-module load python/3
-python setup.py install --user
-```
 
 2. **Install pytorch**
 
@@ -152,6 +145,18 @@ After installing `nDTomo`, the graphical user interface can be launched directly
 conda activate ndtomo
 nDTomoGUI
 ```
+
+Diamond Light Source
+--------------------
+
+As a user at the Diamond Light Source you can install nDTomo by doing:
+
+```
+git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
+module load python/3
+python setup.py install --user
+```
+
 
 Citation
 --------
