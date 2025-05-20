@@ -69,10 +69,10 @@ json5==0.12.0
 jsonpointer==3.0.0
 jsonschema==4.23.0
 jsonschema-specifications==2025.4.1
-jupyter-events==0.12.0
-jupyter-lsp==2.2.5
 jupyter_client==8.6.3
 jupyter_core==5.7.2
+jupyter-events==0.12.0
+jupyter-lsp==2.2.5
 jupyter_server==2.16.0
 jupyter_server_terminals==0.5.3
 jupyterlab==4.4.2
@@ -91,9 +91,9 @@ matplotlib==3.9.4
 matplotlib-inline==0.1.7
 mdurl==0.1.2
 mistune==3.1.3
+mkl_fft==1.3.11
+mkl_random==1.2.8
 mkl-service==2.4.0
-mkl_fft @ file:///C:/Users/dev-admin/mkl/mkl_fft_1730823082242/work
-mkl_random @ file:///C:/Users/dev-admin/mkl/mkl_random_1730822522280/work
 mpmath==1.3.0
 napari==0.5.6
 napari-console==0.1.3
@@ -102,14 +102,14 @@ napari-svg==0.2.1
 nbclient==0.10.2
 nbconvert==7.16.6
 nbformat==5.10.4
-# Editable install with no version control (nDTomo==2024.2)
+nDTomo==2024.2
 nest-asyncio==1.6.0
 networkx==3.2.1
 notebook_shim==0.2.4
 npe2==0.7.8
 numba==0.60.0
 numexpr==2.10.2
-numpy @ file:///C:/b/abs_c1ywpu18ar/croot/numpy_and_numpy_base_1708638681471/work/dist/numpy-1.26.4-cp39-cp39-win_amd64.whl#sha256=f284633067fde4bb078a09085a1c9e99a3218c129f5312b7b3d76c9340442a25
+numpy==1.26.4
 numpydoc==1.8.0
 overrides==7.7.0
 packaging==25.0
@@ -119,6 +119,7 @@ parso==0.8.4
 partd==1.4.2
 pillow==11.2.1
 Pint==0.24.4
+pip==25.1
 platformdirs==4.3.8
 pooch==1.8.2
 prometheus_client==0.22.0
@@ -159,8 +160,9 @@ rich==14.0.0
 rpds-py==0.25.0
 scikit-image==0.24.0
 scikit-learn==1.6.1
-scipy @ file:///C:/Users/dev-admin/cr_scipy-feedstock/scipy_1733774324044/work/dist/scipy-1.13.1-cp39-cp39-win_amd64.whl#sha256=f7218697f964ae4372cdcb6f20a05db0d338ccc574c96e9dbf235ed6547dd462
+scipy==1.13.1
 Send2Trash==1.8.3
+setuptools==78.1.1
 shellingham==1.5.4
 silx==2.2.2
 siphash24==1.7
@@ -194,8 +196,8 @@ tqdm==4.67.1
 traitlets==5.14.3
 typer==0.15.4
 types-python-dateutil==2.9.0.20250516
-typing-inspection==0.4.0
 typing_extensions==4.13.2
+typing-inspection==0.4.0
 tzdata==2025.2
 uri-template==1.3.0
 urllib3==2.4.0
@@ -204,6 +206,7 @@ wcwidth==0.2.13
 webcolors==24.11.1
 webencodings==0.5.1
 websocket-client==1.8.0
+wheel==0.45.1
 widgetsnbextension==4.0.14
 wrapt==1.17.2
 xdesign==0.5.5
