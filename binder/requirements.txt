@@ -102,7 +102,6 @@ napari-svg==0.2.1
 nbclient==0.10.2
 nbconvert==7.16.6
 nbformat==5.10.4
-nDTomo==2024.2
 nest-asyncio==1.6.0
 networkx==3.2.1
 notebook_shim==0.2.4
@@ -211,3 +210,5 @@ widgetsnbextension==4.0.14
 wrapt==1.17.2
 xdesign==0.5.5
 zipp==3.21.0
+
+git+https://github.com/antonyvam/nDTomo.git
