@@ -7,4 +7,7 @@ dependencies:
   - pip
   - pip:
       - git+https://github.com/antonyvam/nDTomo.git
+      - torch
+      - torchvision
+      - torchaudio
 
