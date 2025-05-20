@@ -4,7 +4,7 @@
 nDTomo Software Suite
 =====================
 
-**nDTomo** is a Python-based software suite for the **simulation, visualization, pre-processing, reconstruction, and analysis** of chemical imaging and X-ray tomography data — with a focus on hyperspectral datasets such as X-ray powder diffraction computed tomography or XRD-CT.
+**nDTomo** is a Python-based software suite for the **simulation, visualization, pre-processing, reconstruction, and analysis** of chemical imaging and X-ray tomography data, with a focus on hyperspectral datasets such as X-ray powder diffraction computed tomography or XRD-CT.
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/epapoutsellis/nDTomo/cloud_exs?urlpath=%2Fdoc%2Ftree%2Fdocs%2Fsource%2Fnotebooks) [![Tomography Reconstruction (GoogleColab)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/epapoutsellis/nDTomo/blob/cloud_exs/gcolab/tutorial_ct_recon_demo.ipynb)  
 
@@ -16,7 +16,7 @@ It includes:
 
 The software is designed to be accessible to both researchers and students working in chemical imaging, materials science, catalysis, battery research, and synchrotron radiation applications.
 
-📘 Official documentation (in progress): https://ndtomo.readthedocs.io
+📘 Official documentation: https://ndtomo.readthedocs.io
 
 ![XRD-CT](assets/ndtomo_demo1.gif)
 
@@ -59,6 +59,21 @@ The repository includes several **example notebooks** to help users learn the AP
 | `tutorial_3D_shapes.ipynb`                          | Building synthetic 3D chemical imaging datasets                               |
 | `tutorial_detector_calibration.ipynb`               | Calibrating detectors and integrating diffraction patterns using pyFAI        |
 | `tutorial_texture_2D_diffraction_patterns.ipynb`    | Investigating the effects of texture on 2D powder patterns                    |
+
+
+| Notebook Filename                                   | Topic                                                                         |
+|-----------------------------------------------------|-------------------------------------------------------------------------------|
+| [`tutorial_pencil_beam.ipynb`](examples/notebooks/tutorial_pencil_beam.ipynb) | Simulating pencil beam CT data with different acquisition schemes             |
+| [`tutorial_sinogram_handling.ipynb`](examples/notebooks/tutorial_sinogram_handling.ipynb) | Pre-processing, normalization, and correction of sinograms                    |
+| [`tutorial_ct_recon_demo.ipynb`](examples/notebooks/tutorial_ct_recon_demo.ipynb) | CT image reconstruction from sinograms using analytical and iterative methods |
+| [`tutorial_dimensionality_reduction.ipynb`](examples/notebooks/tutorial_dimensionality_reduction.ipynb) | Unsupervised learning for phase identification in tomography |
+| [`tutorial_peak_fitting.ipynb`](examples/notebooks/tutorial_peak_fitting.ipynb) | Peak fitting in synthetic XRD-CT datasets                                     |
+| [`tutorial_peak_fit_cnn.ipynb`](examples/notebooks/tutorial_peak_fit_cnn.ipynb) | Peak fitting in GPU using a self-supervised PeakFitCNN                        |
+| [`tutorial_DLSR.ipynb`](examples/notebooks/tutorial_DLSR.ipynb) | Simultaneous peak fitting and CT reconstruction in GPU using the DLSR method  |
+| [`tutorial_2D_shapes.ipynb`](examples/notebooks/tutorial_2D_shapes.ipynb) | Generating and visualizing 2D phantom shapes                                  |
+| [`tutorial_3D_shapes.ipynb`](examples/notebooks/tutorial_3D_shapes.ipynb) | Building synthetic 3D chemical imaging datasets                               |
+| [`tutorial_detector_calibration.ipynb`](examples/notebooks/tutorial_detector_calibration.ipynb) | Calibrating detectors and integrating diffraction patterns using pyFAI        |
+| [`tutorial_texture_2D_diffraction_patterns.ipynb`](examples/notebooks/tutorial_texture_2D_diffraction_patterns.ipynb) | Investigating the effects of texture on 2D powder patterns  |
 
 Each notebook is designed to be **standalone and executable**, with detailed inline comments and example outputs.
 
