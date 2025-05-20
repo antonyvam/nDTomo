@@ -210,3 +210,9 @@ nbsphinx_prolog = r"""
         }
     </style>
 """
+
+latex_engine = 'pdflatex'  # or xelatex/lualatex
+latex_documents = [
+    ('index', 'nDTomo.tex', 'nDTomo Documentation',
+     'Antonis Vamvakeros et al.', 'manual'),
+]
