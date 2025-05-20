@@ -35,14 +35,6 @@ nDTomo provides tools for:
 
 **Quick Demo (Tomography Reconstruction)**: [![Tomography Reconstruction (GoogleColab)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/epapoutsellis/nDTomo/blob/gcolab/gcolab/tutorial_ct_recon_demo.ipynb)
 
-
-The aim of this library, among others, is to generate tools for the following:
-1. **Generation of multi-dimensional phantoms**
-2. **Simulation of various pencil beam computed tomography data acquisition strategies**
-3. **Processing and correcting sinogram data**
-4. **Application of computed tomography reconstruction algorithms**
-5. **Data analysis of chemical imaging data through peak fitting**
-
 ![XRD-CT](assets/xrdct.png)
 Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray diffraction CT (XRD-CT or Powder diffraction CT) data acquired from an NMC532 Li ion battery. For more details regarding this study see [1].
 
