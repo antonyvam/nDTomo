@@ -35,7 +35,10 @@ Features:
 
 from __future__ import unicode_literals
 from matplotlib import use as u
-u('Qt5Agg')
+try:
+    u('Qt5Agg')
+except:
+    print("Warning: Failed to set backend to Qt5Agg. Ensure PyQt5 is installed.")
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import pyqtSignal, QThread
 import h5py, sys
