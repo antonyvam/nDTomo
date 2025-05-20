@@ -159,12 +159,14 @@ conda activate ndtomo
 nDTomoGUI
 ```
 
+![XRD-CT](assets/nDTomo_demo1.gif)
+
 
 Citation
 --------
 If you use parts of the nDTomo code, please cite the work using the following:
 
-Vamvakeros, A. et al., nDTomo software suite, 2019, DOI: https://doi.org/10.5281/zenodo.6344270, url: https://github.com/antonyvam/nDTomo
+Vamvakeros, A. et al., nDTomo software suite, 2019, url: https://github.com/antonyvam/nDTomo
 
 
 References
