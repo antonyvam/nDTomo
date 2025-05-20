@@ -27,7 +27,7 @@ from setuptools import setup, find_packages
 
 setup(
 	name="nDTomo",
-	version="2024.02",
+	version="2025.01",
 	description="nDTomo software suite",
 	url="http://github.com/antonyvam/nDTomo",
 	author="A. Vamvakeros",
@@ -37,7 +37,7 @@ setup(
 		"pyqtgraph", "scikit-image", "scikit-learn", "xdesign", "tqdm", "ipykernel",
 		"pystackreg", "tifffile", "jupyterlab", 
 		"algotom", "fabio","pyFAI>=2025.01", "napari",
-		"configobj", "ipympl", "pyqt5", "pyopencl",
+		"configobj", "ipympl", "pyqt5", "pyopencl", "jupyterlab_widgets",
 	],
     extras_require={
         "torch": ["torch", "torchvision", "torchaudio"]

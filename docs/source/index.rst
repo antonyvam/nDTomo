@@ -14,5 +14,6 @@ Contents
    req
    examples
    tutorial_nDTomo_GUI
+   acknowledgements
    sites
    api   
