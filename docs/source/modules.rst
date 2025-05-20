@@ -8,4 +8,5 @@ Available Modules
    tomo/index
    analysis/index
    pytorch/index
+   methods/index
    gui/index

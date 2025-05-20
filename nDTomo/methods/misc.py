@@ -1,6 +1,27 @@
 # -*- coding: utf-8 -*-
 """
-Misc tools for nDTomo
+nDTomo Utility Tools
+====================
+
+This module contains a broad collection of general-purpose functions and tools
+used across the nDTomo package. These include image and volume processing
+utilities, geometric transformations, interpolation routines, masking,
+thresholding, and auxiliary tools for rebinning, visualization, and user-guided
+input.
+
+Key functionalities:
+- Circular and binary masking for 2D/3D data
+- Coordinate transformations (Cartesian <-> Polar)
+- Cropping, normalization, and padding of images and volumes
+- Interpolation in 1D, 2D, and 3D
+- Image segmentation, thresholding, and morphological filling
+- Matrix size harmonization (even sizing, padding)
+- Spectral registration and rebinding
+- Interactive shape fitting (circle/ellipse)
+- Miscellaneous utility functions (e.g., RGB to grayscale)
+
+These tools serve as foundational operations for pre-processing, simulation,
+and reconstruction workflows in X-ray chemical tomography.
 
 @author: Antony Vamvakeros
 """
@@ -9,12 +30,10 @@ import importlib.util
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import pkgutil
 from scipy.interpolate import interp1d
 from tqdm import tqdm
 from scipy.interpolate import griddata
 from scipy.ndimage import binary_fill_holes, binary_dilation, generate_binary_structure
-from skimage.segmentation import flood, flood_fill
 from scipy.optimize import minimize
    
 def ndtomopath():
@@ -331,90 +350,6 @@ def compare_spectra(reference_spectrum, translated_spectrum, pixel_range, resolu
     translated_spectrum_aligned = interp1d(np.arange(len(translated_spectrum)), translated_spectrum, kind='cubic', fill_value=0.0, bounds_error=False)(np.arange(len(translated_spectrum)) + best_shift)
     
     return translated_spectrum_aligned
-
-def sinocom_correction(sinograms):
-
-    """
-    Correct the sinograms for any motor jitter.
-    
-    Args:
-        sinograms (numpy.ndarray): Input sinograms. Can be a 2D or 3D matrix (stack of sinograms).
-            Dimensions: translation steps (detector elements), projections, z (spectral).
-    
-    Returns:
-        numpy.ndarray: Corrected sinograms.
-    """
-    
-    di = sinograms.shape
-    if len(di)>2:
-        ss = np.sum(sinograms, axis = 2)
-    else:
-        ss = np.copy(sinograms)
-            
-    com = np.zeros((ss.shape[1],1))
-    
-    for ii in range(ss.shape[1]):
-        
-        com[ii,:] = calculate_center_of_mass(ss[:,ii])
-        
-    com = com - com[0]    
-    
-    sn = np.zeros_like(sinograms)
-    
-    xold = np.arange(sn.shape[0])
-
-
-    if len(di)==2:
-        
-        for ii in tqdm(range(sn.shape[1])):
-        
-            xnew =  xold + com[ii,:]
-                
-            sn[:,ii] = np.interp(xnew, xold, sinograms[:,ii])    
-        
-    elif len(di)>2:
-                
-        for ll in tqdm(range(sinograms.shape[2])):
-            
-            for ii in range(sinograms.shape[1]):        
-                        
-                xnew =  xold + com[ii,:]
-                    
-                sn[:,ii,ll] = np.interp(xnew, xold, sinograms[:,ii,ll])                    
-        
-        
-    return(sn)
-
-
-def matsum(mat, axes = [0,1], method = 'sum'):
-
-    """
-    Perform dimensionality reduction of a multidimensional array.
-    
-    Args:
-        mat (numpy.ndarray): The n-dimensional array.
-        axes (list): A list containing the axes along which the operation will take place.
-        method (str): The type of operation. Options are 'sum' and 'mean'.
-    
-    Returns:
-        numpy.ndarray: The dimensionality-reduced array.
-    """
-    
-    naxes = len(axes)
-    squeezed = np.copy(mat)
-    
-    for ii in range(naxes):
-        
-        if method == 'sum':
-        
-            squeezed = np.sum(squeezed, axis = axes[ii])
-            
-        elif method == 'mean':
-            
-            squeezed = np.mean(squeezed, axis = axes[ii])            
-    
-    return(squeezed)
-
 
 
 def cart2pol(x, y):
@@ -1251,10 +1186,40 @@ def rebinmat(array, factor = 2, axis=0):
 
 
 
-
-
 def rebin1d(x, y, x_new):
     
+    """
+    Rebin 1D data from original x-axis `x` to a new x-axis `x_new` using linear interpolation
+    with weighted averaging.
+
+    This function redistributes the values in `y` (defined on axis `x`) onto a new set of 
+    points `x_new` by performing distance-weighted averaging to the nearest two neighbors in `x_new`.
+
+    For points in `x` that lie outside the bounds of `x_new`, the value of `y` is assigned 
+    directly to the nearest boundary bin.
+
+    Parameters
+    ----------
+    x : array-like of shape (N,)
+        Original x-axis coordinates.
+    y : array-like of shape (N,)
+        Data values corresponding to `x`.
+    x_new : array-like of shape (M,)
+        New x-axis grid to which `y` values will be rebinned.
+
+    Returns
+    -------
+    rebin_data : ndarray of shape (M,)
+        Rebinned data values corresponding to `x_new`.
+
+    Notes
+    -----
+    - The method conserves total weight by proportionally distributing each `y[i]` value
+      between the two closest points in `x_new`.
+    - This approach is useful for spectral regridding or when combining datasets sampled
+      on different 1D grids.
+    """
+        
     # Arrays to store the sum of the weighted y values and the sum of the weights
     sum_weighted_y = np.zeros(len(x_new))
     sum_weights = np.zeros(len(x_new))
@@ -1322,26 +1287,6 @@ def rebin1d(x, y, x_new):
 
     return(rebin_data)
 
-
-
-def create_grid(npix, tres, sd, tth):
-        
-    Rs = sd/np.cos(np.deg2rad(tth))
-    
-    # p = np.polyfit(tth, Rs, 4)
-    # Rn = np.polyval(p, tth)
-        
-    grid = np.zeros((npix,len(tth)), dtype='float32')
-    
-    for ii in range(npix):
-        
-        xofs = ((np.round(npix/2) - (ii+1))*tres)
-        grid[ii,:] = tth + np.rad2deg(np.arcsin((np.sin(np.deg2rad(tth)) * xofs)/Rs))
-    
-    grid = np.expand_dims(grid, axis = 0)
-    grid = np.tile(grid, (npix, 1, 1))
-    
-    return(grid)
 
 
 

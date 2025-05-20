@@ -7,6 +7,7 @@ This package contains modules for peak analysis, including:
 - `noise`: methods related to noise models
 - `plots`: methods related to handling plots
 - `xrays`: methods related to X-ray science
+- `misc`: a broad collection of general-purpose functions and tools used across the nDTomo package
 """
 
 import importlib
@@ -14,7 +15,7 @@ import sys
 
 # List of submodules
 __all__ = []
-modules = ["hyperexpl", "metrics", "noise", "plots", "xrays"]
+modules = ["hyperexpl", "metrics", "noise", "plots", "xrays", "misc"]
 
 # Import all functions dynamically
 for module in modules:
