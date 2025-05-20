@@ -97,8 +97,7 @@ conda activate ndtomo
 ```bash
 pip install git+https://github.com/antonyvam/nDTomo.git
 ```
-
-#### For development work:
+For development work (editable install):
 
 ```bash
 git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
@@ -110,7 +109,7 @@ pip install -e .
 Navigate to where the `setup.py` file is located and run:
 
 ```bash
-pip install --user -e .
+pip install --user .
 ```
 
 or:
@@ -156,7 +155,7 @@ python setup.py install --user
 
 We are currently preparing a manuscript for `nDTomo`. In the meantime, if you use parts of the code, please cite the work using the following:
 
-> Vamvakeros, A., Papoutsellis, E., Dong, H., Docherty, R., Beale, A.M., Cooper, S.J., Jacques, S.D.M.J., *nDTomo: A Python-Based Software Suite for X-ray Chemical Imaging and Tomography*, 2025, https://github.com/antonyvam/nDTomo
+Vamvakeros, A., Papoutsellis, E., Dong, H., Docherty, R., Beale, A.M., Cooper, S.J., Jacques, S.D.M.J., *nDTomo: A Python-Based Software Suite for X-ray Chemical Imaging and Tomography*, 2025, https://github.com/antonyvam/nDTomo
 
 ## References
 
