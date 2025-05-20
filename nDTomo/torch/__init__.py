@@ -8,6 +8,7 @@ This package contains modules for using Pytorch code, including:
 - `peak_models_torch`: various peak shape models
 """
 
+from ._mock_torch import *  # Safe import; real or mock depending on env
 import importlib
 import sys
 
