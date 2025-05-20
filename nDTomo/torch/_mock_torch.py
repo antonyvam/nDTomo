@@ -1,8 +1,21 @@
 import types
-import os
+import os, sys
 import torch
 
+    
 if os.environ.get("READTHEDOCS") == "True":
+    
+    # Mock torchvision and its transforms
+    torchvision = types.SimpleNamespace()
+    torchvision.transforms = types.SimpleNamespace()
+    torchvision.transforms.functional = types.SimpleNamespace(rotate=lambda x, *args, **kwargs: x)
+    torchvision.transforms.InterpolationMode = types.SimpleNamespace(BILINEAR="bilinear")
+
+    sys.modules["torchvision"] = torchvision
+    sys.modules["torchvision.transforms"] = torchvision.transforms
+    sys.modules["torchvision.transforms.functional"] = torchvision.transforms.functional
+        
+    
     dummy = lambda *args, **kwargs: None
 
     class DummyTensor(types.SimpleNamespace):
