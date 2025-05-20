@@ -1,0 +1,14 @@
+name: ndtomo
+channels:
+  - defaults
+dependencies:
+  - python=3.9
+  - astra-toolbox
+  - pip
+- pip:
+    - git+https://github.com/antonyvam/nDTomo.git
+    - torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118 
+
+
+
+
