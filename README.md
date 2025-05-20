@@ -4,7 +4,7 @@
 nDTomo Software Suite
 =====================
 
-**nDTomo** is a Python-based software suite for the **simulation, visualization, pre-processing, reconstruction, and analysis** of chemical imaging and X-ray tomography data — with a focus on hyperspectral datasets such as XRD-CT (X-ray Diffraction Computed Tomography).
+**nDTomo** is a Python-based software suite for the **simulation, visualization, pre-processing, reconstruction, and analysis** of chemical imaging and X-ray tomography data — with a focus on hyperspectral datasets such as X-ray powder diffraction computed tomography or XRD-CT.
 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/epapoutsellis/nDTomo/cloud_exs?urlpath=%2Fdoc%2Ftree%2Fdocs%2Fsource%2Fnotebooks) [![Tomography Reconstruction (GoogleColab)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/epapoutsellis/nDTomo/blob/cloud_exs/gcolab/tutorial_ct_recon_demo.ipynb)  
 
