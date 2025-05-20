@@ -18,7 +18,6 @@ scikit-learn
 pyopencl
 pillow
 tifffile
-mayavi
 napari
 pystackreg
 algotom
@@ -26,3 +25,4 @@ xdesign
 siphash24
 setuptools
 wheel
+pyqt5

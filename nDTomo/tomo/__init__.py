@@ -1,7 +1,7 @@
 """
 Tomography module for nDTomo.
 
-This package contains modules for simulating tomography data, including:
+This package contains modules for handling sinogram data and reconstructing computed tomography images, including:
 - `sinograms`: methods related to preprocessing and handling sinograms
 - `conv_tomo`: methods related to reconstructing CT images using numpy and scipy
 - `astra_tomo`: methods related to reconstructing CT images using the astra-toolbox

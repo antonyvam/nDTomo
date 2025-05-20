@@ -5,65 +5,88 @@ Methods for adding artificial noise to data
 @author: Antony Vamvakeros
 """
 
-from numpy import min, finfo, float32
+import numpy as np
 from numpy.random import poisson
 from tqdm import tqdm
 
 def addpnoise1D(sp, ct):
     
-    '''
-    Adds poisson noise to a spectrum
-    '''    
+    """
+    Add Poisson noise to a 1D spectrum.
+
+    Parameters
+    ----------
+    sp : ndarray
+        1D array representing the spectrum (e.g., intensity values).
+    ct : float
+        Scaling factor representing the total counts or acquisition time.
+
+    Returns
+    -------
+    ndarray
+        Noisy spectrum with Poisson noise applied and rescaled by the count factor.
+    """
     mi = min(sp)
     
     if mi < 0:
         
-        sp = sp - sp + finfo(float32).eps
+        sp = sp - sp + np.finfo(np.float32).eps
         
     elif mi == 0:
         
-        sp = sp + finfo(float32).eps
+        sp = sp + np.finfo(np.float32).eps
     
     return(poisson(sp * ct)/ ct)
 
 def addpnoise2D(im, ct):
     
-    '''
-    Adds poisson noise to an image
-    '''
+    """
+    Add Poisson noise to a 2D image.
+
+    Parameters
+    ----------
+    im : ndarray
+        2D array representing the image (e.g., integrated intensity map).
+    ct : float
+        Scaling factor representing the total counts or acquisition time.
+
+    Returns
+    -------
+    ndarray
+        Noisy image with Poisson noise applied and rescaled by the count factor.
+    """
     
     mi = min(im)
     
     if mi < 0:
         
-        im = im - mi + finfo(float32).eps
+        im = im - mi + np.finfo(np.float32).eps
         
     elif mi == 0:
         
-        im = im + finfo(float32).eps
+        im = im + np.finfo(np.float32).eps
     
     return(poisson(im * ct)/ ct)
 
 def addpnoise3D(vol, ct):
-    
     '''
-    Adds poisson noise to a stack of images, 3rd dimension is z/spectral
+    Adds Poisson noise to a 3D hyperspectral volume (H x W x Bands),
+    noise is added per pixel-spectrum (i.e., per (i,j,:)).
+    
+    Parameters
+    ----------
+    vol : ndarray
+        3D hyperspectral image (H x W x Bands), must be non-negative.
+    ct : float
+        Scaling constant to simulate photon counts.
     '''
-    
-    mi = min(vol)
-    
+    vol = vol.copy()
+    mi = np.min(vol)
     if mi < 0:
-        
-        vol = vol - mi + finfo(float32).eps
-        
+        vol = vol - mi + np.finfo(np.float32).eps
     elif mi == 0:
-        
-        vol = vol + finfo(float32).eps
-        
-    
-    for ii in tqdm(range(vol.shape[2])):
-        
-        vol[:,:,ii] = poisson(vol[:,:,ii] * ct)/ ct
-    
-    
-    return(vol)
+        vol = vol + np.finfo(np.float32).eps
+
+    # Apply Poisson noise per pixel-spectrum
+    noisy = np.random.poisson(vol * ct) / ct
+    return noisy

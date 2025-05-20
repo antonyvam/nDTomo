@@ -1,6 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-HyperSliceExplorer
+Hyperspectral Imaging Explorers and GUI Tools
+
+This module provides several interactive classes for exploring hyperspectral or volumetric image data, particularly for chemical imaging datasets.
+It includes mouse-interactive tools for visualizing spectra, image slices, and intensity profiles. F
+
+Classes:
+    - HyperSliceExplorer: Explore hyperspectral imaging data
+    - ImageSpectrumGUI: Explore hyperspectral imaging data
+    - InteractiveProfileExtraction: Extract 1D intensity profiles along a line in a 2D image
+    - InteractiveHyperProfileExtraction: Extract 1D and spectral profiles along a line in a hyperspectral volume
+    - ImageSpectrumFitGUI: Compare raw and fitted spectra from voxel data interactively
+    - chemimexplorer: A version of ImageSpectrumGUI which is used as embedded in jupyter notebooks
 
 @author: Antony Vamvakeros
 """
@@ -11,15 +22,62 @@ from scipy.ndimage import map_coordinates
 from matplotlib.lines import Line2D
 
 class HyperSliceExplorer():
-    
-    
-    '''
-    HyperSliceExplorer is used to visualise hyperspectral imaging data
-    '''
+        
+    """
+    Interactive explorer for hyperspectral or volumetric imaging data.
+
+    Allows the user to click and move the mouse over a mean image view 
+    to inspect voxel-level spectra and update an associated spectrum plot. 
+    Users can visualize individual channel images and view spectral changes dynamically.
+    Particularly useful for visual inspection of 3D chemical imaging datasets.
+    """
     
     def __init__(self, data, xaxis=None, xaxislabel='Channels'):
 
 
+        """
+        Initialize the HyperSliceExplorer object.
+
+        Sets up the internal state and prepares data structures for 
+        interactive visualisation of 3D hyperspectral (or chemical imaging) data.
+
+        Parameters
+        ----------
+        data : np.ndarray
+            A 3D array of shape (rows, cols, channels) representing the volumetric dataset
+            where each (x, y) pixel contains a spectrum.
+        xaxis : np.ndarray, optional
+            A 1D array representing the spectral axis (e.g., 2θ, q, or energy).
+            If None, defaults to a linear range [0, N) where N is the number of channels.
+        xaxislabel : str, optional
+            A string label for the x-axis used in spectrum plots. Defaults to 'Channels'.
+
+        Attributes
+        ----------
+        data : np.ndarray
+            The input hyperspectral dataset.
+        xaxis : np.ndarray
+            Spectral axis used for plotting spectra.
+        xaxislabel : str
+            Label shown on spectrum plots.
+        cmap : str
+            Colormap used for image rendering.
+        imoi : np.ndarray
+            Mean image across all channels.
+        mdp : np.ndarray
+            Mean spectrum across all spatial positions.
+        sdp : np.ndarray
+            Summed spectrum across all spatial positions.
+        dproi : np.ndarray
+            Most recently selected spectrum (by click).
+        selectedChannels : list or int
+            Channel(s) currently selected for image display.
+        selectedVoxels : list
+            List of selected voxel positions.
+        map_fig, map_axes, plot_fig, plot_axes : matplotlib components
+            Handles to matplotlib figures and axes for image and spectral views.
+        """
+        
         self.data = data
         if xaxis is None:
             self.xaxis = np.arange(0,data.shape[2])
@@ -50,6 +108,29 @@ class HyperSliceExplorer():
         self.dproi = self.mdp
 
     def explore(self, cmap = 'jet'):
+
+        """
+        Launch interactive exploration of hyperspectral data.
+
+        This method creates two interactive Matplotlib figures:
+        - A mean image view that supports mouse hovering and clicking to inspect voxel-level spectra.
+        - A spectrum plot that updates dynamically based on cursor position over the image or spectrum.
+
+        Users can click:
+        - On the image (left-click) to fix and label a specific voxel's spectrum.
+        - On the spectrum (right-click) to re-enable hover-based channel selection.
+
+        Parameters
+        ----------
+        cmap : str, optional
+            Colormap used for image display. Default is 'jet'.
+
+        Notes
+        -----
+        - A vertical line (vCurve) indicates the current spectral channel under inspection.
+        - Uses Matplotlib event callbacks to manage interactive behavior.
+        - Updates `self.dproi`, `self.histogramCurve`, and `self.activeCurve` for spectrum display.
+        """
                 
         self.cmap = cmap
         
@@ -89,6 +170,29 @@ class HyperSliceExplorer():
         
     def onMapClick(self, event): # SDMJ version
     
+        """
+        Handle mouse click events on the image panel.
+
+        Left-click:
+            - Captures the coordinates of the clicked voxel (row, col).
+            - Extracts and displays the corresponding spectrum in the spectral plot.
+            - Updates the label to show voxel location.
+
+        Right-click:
+            - Hides the fixed spectrum curve.
+            - Rescales the y-axis to fit the last selected voxel spectrum.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse click event containing button info and coordinates.
+
+        Notes
+        -----
+        - Left-click outside the axes resets the spectrum plot to the mean spectrum.
+        - This function updates `self.dproi`, `self.histogramCurve`, and plot limits.
+        """
+            
         if event.button == 1:
             if event.inaxes:
                 self.col = int(event.xdata.round())
@@ -120,7 +224,31 @@ class HyperSliceExplorer():
                 self.plotter.show()        
                 self.plotter.draw()
 
-    def onMapMoveEvent(self, event): # SDMJ version
+    def onMapMoveEvent(self, event): 
+        
+        """
+        Handle mouse movement over the image panel.
+
+        When the cursor is over the image axes:
+            - Displays the spectrum corresponding to the hovered voxel (row, col).
+            - Updates the red "activeCurve" line in the spectrum plot.
+            - Updates the legend to show voxel coordinates.
+            - Dynamically adjusts the y-axis limits based on the hovered spectrum.
+
+        When the cursor leaves the image axes:
+            - Hides the red "activeCurve".
+            - Resets y-axis to fit the last clicked spectrum (`self.dproi`).
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse motion event with axis and coordinate info.
+
+        Notes
+        -----
+        This function provides real-time spectral feedback for hyperspectral data exploration.
+        """
+        
         if event.inaxes:
             
             col = int(event.xdata.round())
@@ -144,6 +272,25 @@ class HyperSliceExplorer():
     
     def onPlotMoveEvent(self, event):
         
+        """
+        Handle mouse movement over the spectral plot panel.
+
+        Updates the left-hand image panel in real-time to show the spatial image 
+        corresponding to the spectral channel under the cursor.
+
+        Actions performed:
+        - Determines the nearest spectral channel (index `nx`) based on x-coordinate.
+        - Updates the image (`imoi`) to show the spatial slice at `nx`.
+        - Updates the title with channel and axis label (e.g., energy, 2θ).
+        - Replaces the colorbar and redraws the figure.
+        - Moves the vertical guide line (`vCurve`) on the spectrum plot to follow the cursor.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse motion event with axis and coordinate information.
+        """
+                
         if event.inaxes:
                         
             nx = np.argmin(np.abs(self.xaxis-event.xdata))
@@ -172,6 +319,20 @@ class HyperSliceExplorer():
      
     def onPlotClick(self, event):
 
+        """
+        Handle mouse click events on the spectral plot.
+
+        Left-click (button 1) disables channel hover updates by disconnecting 
+        the motion event that controls image updates.
+
+        Right-click (button 3) re-enables channel hover updates by reconnecting
+        the motion event handler to update the image view based on cursor position.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse click event.
+        """
         if event.button == 1:
             self.plot_fig.canvas.mpl_disconnect(self.plot_cid)   
 
@@ -182,6 +343,16 @@ class HyperSliceExplorer():
             
     def update(self):
         
+        """
+        Refresh the left-hand image display based on the currently selected channels.
+
+        If no specific channels are selected, displays the mean image across all channels.
+        If a single channel is selected, displays that channel.
+        If multiple channels are selected, displays the mean across those channels.
+
+        Also updates the image title and redraws the figure with the current colormap.
+        """
+                
         self.map_axes.clear() # not fast
         # this bit is messy
         
@@ -200,19 +371,27 @@ class HyperSliceExplorer():
         self.mapper.show()
         self.mapper.draw_all() 
 
-
-def nDvis(data, xaxis=None, xaxislabel='Channels'):
-    
-    hs = HyperSliceExplorer(data, xaxis, xaxislabel)
-    hs.explore()
-
 class ImageSpectrumGUI:
-    def __init__(self, volume):
-        """
-        Initialize the Image Spectrum GUI.
+    
+    """
+    A simple GUI to explore 2D hyperspectral imaging data.
 
-        Args:
-            volume (ndarray): 3D array representing the volume data.
+    Displays an image slice alongside the corresponding spectral data 
+    for the voxel under the mouse. Interaction allows switching between 
+    spectral bands and voxel positions. Ideal for quick exploratory analysis.
+    """    
+    
+    def __init__(self, volume):
+        
+        """
+        Initialize the ImageSpectrumGUI.
+
+        Parameters
+        ----------
+        volume : ndarray
+            2D hyperspectral imaging data with shape (rows, cols, channels).
+            The GUI will display mean images and spectra, and update them
+            interactively based on mouse position.
         """
         self.volume = volume
 
@@ -241,10 +420,18 @@ class ImageSpectrumGUI:
 
     def update_plots(self, event):
         """
-        Update the image and spectrum plots based on the mouse hover event.
+        Handle mouse movement over the figure to update image or spectrum.
 
-        Args:
-            event (matplotlib.backend_bases.MouseEvent): Mouse hover event.
+        If hovering over the image panel and image updates are enabled, 
+        it displays the spectrum of the voxel under the cursor.
+
+        If hovering over the spectrum panel and spectrum updates are enabled, 
+        it displays the image corresponding to the spectral bin under the cursor.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            Event object containing cursor position and axis context.
         """
         if event.inaxes == self.ax_image:
             if not self.image_real_time_update:
@@ -288,10 +475,14 @@ class ImageSpectrumGUI:
 
     def toggle_real_time(self, event):
         """
-        Toggle real-time update for image and spectrum plots on right-click.
+        Toggle real-time interactivity for image or spectrum on right-click.
 
-        Args:
-            event (matplotlib.backend_bases.MouseEvent): Mouse button press event.
+        Disables/enables automatic updates depending on the axis clicked.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            Mouse button press event. Right-click toggles interactivity.
         """
         if event.button == 3:
             if event.inaxes == self.ax_image:
@@ -303,7 +494,34 @@ class ImageSpectrumGUI:
 
 
 class InteractiveProfileExtraction:
+    
+    """
+    Interactive tool for extracting 1D intensity profiles from 2D grayscale images.
+
+    Enables users to draw a line on an image, then extracts and visualizes the
+    intensity values along that path. Useful for analyzing gradients, edges,
+    and intensity distributions across features in microscopy or tomography images.
+
+    Features
+    --------
+    - Interactive line drawing on the image canvas.
+    - Real-time line preview during mouse motion.
+    - Profile extracted using Bresenham's algorithm and interpolated coordinates.
+    - Three-panel display: image, path overlay, and profile plot.
+    """
+        
     def __init__(self, image):
+        
+        """
+        Initialize the InteractiveProfileExtraction tool.
+
+        Parameters
+        ----------
+        image : ndarray
+            2D grayscale image from which intensity profiles will be interactively extracted.
+            The user defines a line on the image, and the corresponding intensity values are plotted.
+        """
+                
         self.image = image
         self.line = None
         self.profile = None
@@ -324,6 +542,16 @@ class InteractiveProfileExtraction:
         self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
 
     def on_press(self, event):
+        
+        """
+        Handle mouse click events for defining the profile line.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            Mouse event used to place or complete the line.
+        """
+                
         if event.button == 1 and event.inaxes == self.axes[0]:
             if self.line is None:
                 self.profile = [event.ydata, event.xdata, event.ydata, event.xdata]
@@ -342,6 +570,15 @@ class InteractiveProfileExtraction:
                     self.show_intensity_profile()
 
     def on_motion(self, event):
+        
+        """
+        Update the profile line dynamically during mouse movement.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            Mouse movement event over the image axis.
+        """        
         if self.line is not None and event.inaxes == self.axes[0] and not self.line_completed:
             self.profile[2] = event.ydata
             self.profile[3] = event.xdata
@@ -350,12 +587,32 @@ class InteractiveProfileExtraction:
             self.fig.canvas.draw()
 
     def extract_intensity_profile(self):
+        
+        """
+        Extract intensity values from the image along the defined line.
+
+        Uses Bresenham’s algorithm to identify discrete pixel coordinates along
+        the user-drawn line. Passes results to the plotting routine.
+        """
+                
         y0, x0, y1, x1 = map(int, self.profile)
         yy, xx = bresenham(y0, x0, y1, x1)
         intensity_profile = self.image[yy, xx]
         self.plot_intensity_profile(xx, yy, intensity_profile)
 
     def plot_intensity_profile(self, xx, yy, intensity_profile):
+        """
+        Display the image with the intensity profile line overlayed.
+
+        Parameters
+        ----------
+        xx : array-like
+            X (column) coordinates of the profile path.
+        yy : array-like
+            Y (row) coordinates of the profile path.
+        intensity_profile : array-like
+            Intensity values along the drawn line.
+        """        
         self.axes[1].clear()
         self.axes[1].imshow(self.image, cmap='gray')
         self.axes[1].plot(yy, xx, 'r-')
@@ -364,6 +621,12 @@ class InteractiveProfileExtraction:
         self.axes[1].set_ylabel("Intensity")
 
     def show_intensity_profile(self):
+
+        """
+        Interpolate and plot the 1D intensity profile along the drawn line.
+
+        Uses scipy.ndimage.map_coordinates for subpixel interpolation.
+        """        
         self.y_coords, self.x_coords = self.get_line_coordinates(self.profile[0], self.profile[1],
                                                        self.profile[2], self.profile[3])
         self.intensity_values = map_coordinates(self.image, np.vstack((self.y_coords,self.x_coords)))
@@ -375,6 +638,12 @@ class InteractiveProfileExtraction:
         self.fig.canvas.draw()
 
     def clear_profile(self):
+        """
+        Clear the currently drawn line and reset the profile extraction state.
+
+        Removes the line overlay from the image, resets internal flags,
+        and clears stored profile information.
+        """        
         if self.line is not None:
             self.line.remove()
             self.line = None
@@ -383,12 +652,48 @@ class InteractiveProfileExtraction:
             self.profile = None
 
     def get_line_coordinates(self, y1, x1, y2, x2):
+        """
+        Generate integer coordinates along a straight line between two points using linear interpolation.
+
+        Parameters
+        ----------
+        y1, x1 : float
+            Row and column of the starting point.
+        y2, x2 : float
+            Row and column of the ending point.
+
+        Returns
+        -------
+        y : ndarray
+            Row indices along the line.
+        x : ndarray
+            Column indices along the line.
+        """        
         length = int(np.hypot(y2 - y1, x2 - x1))
         y, x = np.linspace(y1, y2, length), np.linspace(x1, x2, length)
         return y.astype(int), x.astype(int)
 
 def bresenham(y0, x0, y1, x1):
-    """Bresenham's line algorithm"""
+    """
+    Generate pixel coordinates of a line between two points using Bresenham's algorithm.
+
+    This discrete algorithm is efficient for rasterizing lines in 2D arrays. It ensures that
+    only valid integer pixel coordinates are returned, which is useful for fast profile
+    extraction from images.
+
+    Parameters
+    ----------
+    y0, x0 : int
+        Row and column of the starting point.
+    y1, x1 : int
+        Row and column of the ending point.
+
+    Returns
+    -------
+    coords : ndarray, shape (2, N)
+        Array of (x, y) coordinates along the line as two 1D arrays stacked vertically.
+        These can be used directly to index into 2D arrays: e.g., image[coords[1], coords[0]]
+    """
     dx = abs(x1 - x0)
     dy = abs(y1 - y0)
     steep = dy > dx
@@ -415,7 +720,28 @@ def bresenham(y0, x0, y1, x1):
 
 
 class InteractiveHyperProfileExtraction:
+    
+    """
+    Interactive profile extraction tool for 2D hyperspectral imaging data.
+
+    Enables users to draw a line on a 2D projection of the volume 
+    and extract both spatial intensity profiles and corresponding 
+    spectral information along the line. Useful for linking spatial and 
+    spectral variations in hyperspectral datasets.
+    """
+        
     def __init__(self, vol):
+        
+        """
+        Initialize the InteractiveHyperProfileExtraction tool.
+
+        Parameters
+        ----------
+        vol : ndarray
+            3D hyperspectral or volumetric image data with shape (rows, cols, channels).
+            The tool enables drawing a line on the projection to extract both spatial and spectral profiles.
+        """
+                
         self.vol = vol
         self.mean_image = np.sum(self.vol, axis=2)
         self.line = None
@@ -440,6 +766,18 @@ class InteractiveHyperProfileExtraction:
         self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
 
     def on_press(self, event):
+        
+        """
+        Handle mouse click to initiate or complete a line selection.
+
+        Left click defines the start and end points of the line.
+        Once the line is completed, intensity and spectral profiles are computed.
+        
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            Mouse event captured from the figure canvas.
+        """        
         if event.button == 1 and event.inaxes is not None and event.inaxes in [self.axes[0, 0]]:
             if self.line is None:
                 self.profile = [event.ydata, event.xdata, event.ydata, event.xdata]
@@ -459,6 +797,16 @@ class InteractiveHyperProfileExtraction:
                     self.show_spectral_profile()
 
     def on_motion(self, event):
+
+        """
+        Update the end point of the line dynamically during mouse movement.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            Mouse event captured during movement across the figure.
+        """
+                
         if self.line is not None and event.inaxes is not None and event.inaxes in [self.axes[0, 0]]:
             if not self.line_completed:
                 self.profile[2] = event.ydata
@@ -468,12 +816,26 @@ class InteractiveHyperProfileExtraction:
                 self.fig.canvas.draw()
 
     def extract_intensity_profile(self):
+        """
+        Extract the spatial intensity profile from the 2D mean image 
+        along the selected line using the Bresenham algorithm.
+        """        
         y0, x0, y1, x1 = map(int, self.profile)
         yy, xx = bresenham(y0, x0, y1, x1)
         intensity_profile = self.mean_image[yy, xx]
         self.plot_intensity_profile(xx, yy, intensity_profile)
 
     def plot_intensity_profile(self, xx, yy, intensity_profile):
+        """
+        Overlay the extracted profile line on the image and replot it.
+
+        Parameters
+        ----------
+        xx, yy : ndarray
+            Arrays of x and y pixel coordinates along the profile.
+        intensity_profile : ndarray
+            Intensity values along the drawn line.
+        """        
         self.axes[1,0].clear()
         self.axes[1,0].imshow(self.mean_image, cmap='gray')
         self.axes[1,0].plot(yy, xx, 'r-')
@@ -482,6 +844,12 @@ class InteractiveHyperProfileExtraction:
         self.axes[1,0].set_ylabel("Intensity")
 
     def show_intensity_profile(self):
+        """
+        Plot the interpolated 1D intensity profile along the drawn line.
+
+        Uses linear interpolation via `scipy.ndimage.map_coordinates` to extract
+        smooth values along subpixel positions.
+        """        
         self.y_coords, self.x_coords = self.get_line_coordinates(self.profile[0], self.profile[1],
                                                        self.profile[2], self.profile[3])
         self.intensity_values = map_coordinates(self.mean_image, np.vstack((self.y_coords,self.x_coords)))
@@ -493,7 +861,12 @@ class InteractiveHyperProfileExtraction:
         self.fig.canvas.draw()
 
     def show_spectral_profile(self):
+        """
+        Extract and plot spectra from each pixel along the drawn line.
 
+        Displays stacked spectra with slight vertical offsets to highlight
+        spectral variation along the spatial profile.
+        """
         self.y_coords, self.x_coords = self.get_line_coordinates(self.profile[0], self.profile[1],
                                                        self.profile[2], self.profile[3])
     
@@ -519,6 +892,9 @@ class InteractiveHyperProfileExtraction:
         self.fig.canvas.draw()
         
     def clear_profile(self):
+        """
+        Clear the currently drawn line and reset the tool state.
+        """        
         if self.line is not None:
             self.line.remove()
             self.line = None
@@ -527,20 +903,52 @@ class InteractiveHyperProfileExtraction:
             self.profile = None
 
     def get_line_coordinates(self, y1, x1, y2, x2):
+        """
+        Generate pixel coordinates along a line between two points using linear interpolation.
+
+        Parameters
+        ----------
+        y1, x1 : float
+            Start point of the line.
+        y2, x2 : float
+            End point of the line.
+
+        Returns
+        -------
+        y : ndarray
+            Array of row indices.
+        x : ndarray
+            Array of column indices.
+        """        
         length = int(np.hypot(y2 - y1, x2 - x1))
         y, x = np.linspace(y1, y2, length), np.linspace(x1, x2, length)
         return y.astype(int), x.astype(int)
 
 
 class ImageSpectrumFitGUI:
-    def __init__(self, volume, volfit):
-        """
-        Initialize the Image Spectrum GUI.
+    
+    """
+    GUI for visual comparison between raw and fitted hyperspectral data.
 
-        Args:
-            volume (ndarray): 3D array representing the original volume data.
-            volfit (ndarray): 3D array representing the fitted volume data.
+    Displays original and fitted spectra from a 3D volume on a voxel-by-voxel basis.
+    Supports dynamic inspection by mouse interaction. Useful for verifying 
+    the quality of spectral fitting or peak decomposition across a sample.
+    """
+        
+    def __init__(self, volume, volfit):
+        
         """
+        Initialize the ImageSpectrumFitGUI for raw vs. fitted spectrum comparison.
+
+        Parameters
+        ----------
+        volume : ndarray
+            3D array of original hyperspectral data with shape (rows, cols, channels).
+        volfit : ndarray
+            3D array of fitted spectral data with the same shape as `volume`.
+            The GUI displays both raw and fitted spectra for user-selected voxels.
+        """
+        
         self.volume = volume
         self.volfit = volfit
 
@@ -574,10 +982,18 @@ class ImageSpectrumFitGUI:
 
     def update_plots(self, event):
         """
-        Update the image and spectrum plots based on the mouse hover event.
+        Update the displayed spectrum and image based on mouse hover.
 
-        Args:
-            event (matplotlib.backend_bases.MouseEvent): Mouse hover event.
+        When the cursor hovers over the image panel, updates the spectrum 
+        panel to show the corresponding raw and fitted spectra at that voxel.
+
+        When hovering over the spectrum panel, switches the image display 
+        to show the spatial distribution at the selected spectral bin.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event object containing position and axes info.
         """
         if event.inaxes == self.ax_image:
             if not self.image_real_time_update:
@@ -623,10 +1039,15 @@ class ImageSpectrumFitGUI:
 
     def toggle_real_time(self, event):
         """
-        Toggle real-time update for image and spectrum plots on right-click.
+        Toggle real-time updates for spectrum and image panels on right-click.
 
-        Args:
-            event (matplotlib.backend_bases.MouseEvent): Mouse button press event.
+        Right-clicking over the image panel enables/disables updates triggered by 
+        mouse motion over it. Same applies for the spectrum panel.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse button press event.
         """
         if event.button == 3:
             if event.inaxes == self.ax_image:
@@ -636,13 +1057,28 @@ class ImageSpectrumFitGUI:
                 
 class chemimexplorer:
     
-    def __init__(self, volume, fitted=None):
-        """
-        Initialize the chemimexplorer.
+    """
+    Lightweight GUI for Jupyter-based exploration of chemical imaging volumes.
 
-        Args:
-            volume (ndarray): 3D array representing the volume data.
+    Provides linked spatial and spectral views for both raw and optionally 
+    fitted datasets. Supports mouse-based interaction to inspect individual 
+    spectra. Optimized for use within notebook environments.
+    """
+        
+    def __init__(self, volume, fitted=None):
+        
         """
+        Initialize the chemimexplorer widget for use in notebooks.
+
+        Parameters
+        ----------
+        volume : ndarray
+            2D hyperspectral imaging dataset with shape (rows, cols, channels).
+        fitted : ndarray, optional
+            Optional 3D array of fitted spectral data with the same shape as `volume`.
+            If provided, fitted spectra are displayed alongside raw spectra.
+        """
+        
         self.volume = volume
         self.fitted = fitted
 
@@ -677,10 +1113,15 @@ class chemimexplorer:
 
     def update_plots(self, event):
         """
-        Update the image and spectrum plots based on the mouse hover event.
+        Update the displayed spectrum and image based on mouse hover.
 
-        Args:
-            event (matplotlib.backend_bases.MouseEvent): Mouse hover event.
+        - Hovering over the image updates the spectrum view for the selected voxel.
+        - Hovering over the spectrum panel updates the image view for the selected channel.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event object containing position and axes info.
         """
         if event.inaxes == self.ax_image:
             if not self.image_real_time_update:
@@ -728,10 +1169,15 @@ class chemimexplorer:
 
     def toggle_real_time(self, event):
         """
-        Toggle real-time update for image and spectrum plots on right-click.
+        Toggle real-time updates for image and spectrum panels on right-click.
 
-        Args:
-            event (matplotlib.backend_bases.MouseEvent): Mouse button press event.
+        Right-click over the image disables/enables updates from hovering on it.
+        Same applies for the spectrum panel.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            Mouse click event used to toggle interactivity.
         """
         if event.button == 3:
             if event.inaxes == self.ax_image:
