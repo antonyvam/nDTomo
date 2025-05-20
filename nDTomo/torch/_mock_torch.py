@@ -17,7 +17,6 @@ if os.environ.get("READTHEDOCS") == "True":
     torch = types.SimpleNamespace(
         Tensor=DummyTensor,
         cuda=dummy,
-        device=dummy,
         nn=types.SimpleNamespace(
             Module=object,
             functional=types.SimpleNamespace(),
