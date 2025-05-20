@@ -42,6 +42,7 @@ The repository includes several **example notebooks** to help users learn the AP
 
 | Notebook Filename | Topic |
 |------------------|--------|
+| [`tutorial_phantoms.ipynb`](examples/notebooks/tutorial_2D_shapes.ipynb) | Generating and visualizing 2D/3D phantoms |
 | [`tutorial_pencil_beam.ipynb`](examples/notebooks/tutorial_pencil_beam.ipynb) | Simulating pencil beam CT data with different acquisition schemes |
 | [`tutorial_sinogram_handling.ipynb`](examples/notebooks/tutorial_sinogram_handling.ipynb) | Pre-processing, normalization, and correction of sinograms |
 | [`tutorial_ct_recon_demo.ipynb`](examples/notebooks/tutorial_ct_recon_demo.ipynb) | CT image reconstruction from sinograms using analytical and iterative methods |
@@ -49,8 +50,6 @@ The repository includes several **example notebooks** to help users learn the AP
 | [`tutorial_peak_fitting.ipynb`](examples/notebooks/tutorial_peak_fitting.ipynb) | Peak fitting in synthetic XRD-CT datasets |
 | [`tutorial_peak_fit_cnn.ipynb`](examples/notebooks/tutorial_peak_fit_cnn.ipynb) | Peak fitting in GPU using a self-supervised PeakFitCNN |
 | [`tutorial_DLSR.ipynb`](examples/notebooks/tutorial_DLSR.ipynb) | Simultaneous peak fitting and CT reconstruction in GPU using the DLSR method |
-| [`tutorial_2D_shapes.ipynb`](examples/notebooks/tutorial_2D_shapes.ipynb) | Generating and visualizing 2D phantom shapes |
-| [`tutorial_3D_shapes.ipynb`](examples/notebooks/tutorial_3D_shapes.ipynb) | Building synthetic 3D chemical imaging datasets |
 | [`tutorial_detector_calibration.ipynb`](examples/notebooks/tutorial_detector_calibration.ipynb) | Calibrating detectors and integrating diffraction patterns using pyFAI |
 | [`tutorial_texture_2D_diffraction_patterns.ipynb`](examples/notebooks/tutorial_texture_2D_diffraction_patterns.ipynb) | Investigating the effects of texture on 2D powder patterns |
 
