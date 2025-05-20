@@ -6,6 +6,9 @@ The nDTomo software suite contains a graphical user interface (GUI) and python s
 
 Documentation for the GUI will be provided at (under construction): https://ndtomo.readthedocs.io
 
+**Quick Demo (Tomography Reconstruction)**: [![Tomography Reconstruction (GoogleColab)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/epapoutsellis/nDTomo/blob/gcolab/gcolab/tutorial_ct_recon_demo.ipynb)    
+
+
 The aim of this library, among others, is to generate tools for the following:
 1. **Generation of multi-dimensional phantoms**
 2. **Simulation of various pencil beam computed tomography data acquisition strategies**
