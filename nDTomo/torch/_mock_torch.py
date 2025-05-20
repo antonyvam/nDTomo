@@ -1,62 +1,48 @@
-import os
 import types
-import sys
+import os
+import torch
 
 if os.environ.get("READTHEDOCS") == "True":
-    # ------------------------
-    # Mock torch
-    # ------------------------
-    torch = types.SimpleNamespace()
+    dummy = lambda *args, **kwargs: None
 
-    def dummy(*args, **kwargs):
-        return dummy
+    class DummyTensor(types.SimpleNamespace):
+        def cuda(self, *args, **kwargs):
+            return self
+        def to(self, *args, **kwargs):
+            return self
+        def __call__(self, *args, **kwargs):
+            return self
 
-    torch.tensor = dummy
-    torch.exp = dummy
-    torch.zeros_like = dummy
-    torch.dot = dummy
-    torch.abs = dummy
-    torch.pi = 3.14159
-    torch.quasirandom = types.SimpleNamespace(SobolEngine=dummy)
-
-    torch.nn = types.SimpleNamespace(
-        Module=object,
-        Linear=dummy,
-        Conv2d=dummy,
-        ReLU=dummy,
-        Sequential=dummy,
-        functional=types.SimpleNamespace(
-            relu=dummy,
-            sigmoid=dummy,
-            softmax=dummy,
-            mse_loss=dummy,
-            cross_entropy=dummy,
-            interpolate=dummy
-        )
-    )
-    torch.nn.functional = torch.nn.functional  # alias
-
-    # ------------------------
-    # Mock torchvision
-    # ------------------------
-    torchvision = types.SimpleNamespace()
-    torchvision.transforms = types.SimpleNamespace(
-        functional=types.SimpleNamespace(rotate=dummy),
-        InterpolationMode=dummy
+    # Mock main torch namespace
+    torch = types.SimpleNamespace(
+        Tensor=DummyTensor,
+        cuda=dummy,
+        device=dummy,
+        nn=types.SimpleNamespace(
+            Module=object,
+            functional=types.SimpleNamespace(),
+            Conv2d=DummyTensor,
+            Linear=DummyTensor,
+            ReLU=DummyTensor,
+            Sequential=lambda *args, **kwargs: DummyTensor(),
+            MSELoss=lambda *args, **kwargs: DummyTensor(),
+        ),
+        from_numpy=lambda x: DummyTensor(),
+        zeros=lambda *args, **kwargs: DummyTensor(),
+        ones=lambda *args, **kwargs: DummyTensor(),
+        eye=lambda *args, **kwargs: DummyTensor(),
+        randn=lambda *args, **kwargs: DummyTensor(),
+        arange=lambda *args, **kwargs: DummyTensor(),
+        float32="float32",
+        float64="float64",
+        device=lambda x: x,
     )
 
-    # Inject into sys.modules so imports work
-    sys.modules["torch"] = torch
-    sys.modules["torch.nn"] = torch.nn
-    sys.modules["torch.nn.functional"] = torch.nn.functional
-    sys.modules["torch.quasirandom"] = torch.quasirandom
-    sys.modules["torchvision"] = torchvision
-    sys.modules["torchvision.transforms"] = torchvision.transforms
-    sys.modules["torchvision.transforms.functional"] = torchvision.transforms.functional
-else:
-    import torch
-    import torch.nn.functional as F
-    from torch.quasirandom import SobolEngine
-    from torch import nn
-    from torchvision.transforms.functional import rotate
-    from torchvision.transforms import InterpolationMode
+    # Replace sys.modules entry
+    import sys
+    sys.modules['torch'] = torch
+    sys.modules['torch.nn'] = torch.nn
+    sys.modules['torch.nn.functional'] = torch.nn.functional
+    sys.modules['torch.cuda'] = types.SimpleNamespace(is_available=lambda: False)
+    sys.modules['torchvision'] = types.SimpleNamespace(transforms=types.SimpleNamespace())
+    sys.modules['torchvision.transforms.functional'] = types.SimpleNamespace(rotate=lambda *a, **k: DummyTensor())
