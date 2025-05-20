@@ -89,8 +89,45 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def __init__(self):
 
         """
-        Initialize the main GUI window.
-        This method sets up the main window, initializes various data structures, and creates the file and help menus.
+        Initialize the nDTomoGUI application.
+
+        This method sets up the PyQt5 main window and initializes all necessary GUI elements,
+        including menus, tabs, image and spectrum display areas, widgets for ROI selection,
+        segmentation, peak fitting controls, and embedded IPython console support. It also
+        initializes internal data containers and default parameters used throughout the GUI.
+
+        Main Components Initialized
+        ---------------------------
+        - File menu: open, append, save, and quit actions for chemical imaging datasets.
+        - Advanced menu: create phantom dataset and launch IPython console.
+        - Help menu: about dialog with citation and licensing info.
+        - Tabbed interface:
+            • Tab 1: Image and spectrum explorer with colormap selector and export tools.
+            • Tab 2: ROI image generation and visualization.
+            • Tab 3: ROI segmentation and pattern extraction.
+            • Tab 4: Single-peak fitting with configurable parameters and batch fitting tools.
+        - Dock widgets: interactive Matplotlib canvases for image and spectrum display.
+        - Controls for selecting colormaps, fitting profiles, and managing real-time cursor updates.
+
+        Attributes Initialized
+        ----------------------
+        - self.volume : np.ndarray
+            Loaded 3D chemical imaging data volume.
+        - self.xaxis : np.ndarray
+            1D axis corresponding to spectral or scattering dimension.
+        - self.cmap : str
+            Default colormap for image visualization.
+        - self.peaktype : str
+            Default peak profile ('Gaussian').
+        - self.Area, self.FWHM : float
+            Default initial values for area and FWHM fitting.
+        - self.loaded_dataset_names : list
+            Tracks loaded dataset filenames for display.
+
+        Raises
+        ------
+        RuntimeError
+            If PyQt5 is not installed or Qt5Agg backend cannot be set.
         """
         super(nDTomoGUI, self).__init__()
         
@@ -477,10 +514,28 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def explore(self):
         
         """
-        Compute and display the mean image and mean spectrum from the loaded dataset.
+        Display the mean image and mean spectrum from the loaded chemical imaging dataset.
 
-        This method plots the average projection across all channels and overlays the
-        average spectrum on the spectrum panel. Enables interactive mouse-based inspection.
+        This method calculates the average projection of the 3D volume along the spectral axis
+        and displays it in the image panel. It also computes the mean spectrum across all spatial
+        positions and displays it in the spectrum panel. Interactive tools are initialized to allow
+        real-time cursor-based inspection of local spectra and image slices.
+
+        Functionality
+        -------------
+        - Computes and displays the mean image (`volume.mean(axis=2)`) using the current colormap.
+        - Computes and displays the mean spectrum (`volume.mean(axis=(0, 1))`) as a 1D plot.
+        - Adds a vertical cursor line to the spectrum panel (movable by mouse hover).
+        - Enables interactive updates:
+            • Hover over the image shows the corresponding spectrum at that pixel.
+            • Hover over the spectrum shows the corresponding image slice at that channel.
+            • Scroll wheel zooms on both image and spectrum panels.
+            • Left-click toggles real-time updates on; right-click toggles them off.
+
+        Raises
+        ------
+        ValueError
+            If no data volume has been loaded (`self.volume.size == 0`).
         """
 
         if self.volume.size == 0:
@@ -527,7 +582,23 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
     def on_canvas_scroll(self, event):
         """
-        Handle the mouse scroll event for zooming in the plots.
+        Handle zooming interactions triggered by mouse scroll events.
+
+        This method responds to scroll wheel events within the image or spectrum axes.
+        When scrolling up, it zooms in around the cursor location; when scrolling down,
+        it zooms out. Zooming is applied symmetrically in both axes around the cursor.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The scroll event containing information about which axis the cursor is over,
+            the direction of the scroll, and the data coordinates of the cursor.
+
+        Notes
+        -----
+        - Scroll up zooms in (magnifies view around cursor).
+        - Scroll down zooms out (restores a wider view).
+        - Has no effect if the scroll occurs outside the plotting axes.
         """
         zoom_factor = 1.5  # Zoom factor
 
@@ -552,33 +623,35 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                                       event.ydata + zoom_factor * (self.ax_spectrum.get_ylim()[1] - event.ydata))
             self.canvas_spectrum.draw()
 
-    # def update_spectrum(self, event):
-    #     """
-    #     Update the spectrum plot based on the mouse hover event on the image plot.
-    #     """
-    #     if self.real_time_update_spectrum and event.inaxes == self.ax_image:
-    #         self.x, self.y = int(event.xdata), int(event.ydata)
-
-    #         # Check if the mouse position is within the image dimensions
-    #         if self.x >= 0 and self.x < self.image_width and self.y >= 0 and self.y < self.image_height:
-    #             # Get the spectrum from the volume
-    #             self.spectrum = self.volume[self.x, self.y, :]
-
-    #             # Remove existing non-vline lines
-    #             for line in self.ax_spectrum.get_lines():
-    #                 if line != self.vline:
-    #                     line.remove()
-
-    #             # Plot the new spectrum
-    #             self.ax_spectrum.plot(self.xaxis, self.spectrum, color='b')
-    #             self.ax_spectrum.set_title(f"Histogram: ({self.x}, {self.y})")
-    #             self.ax_spectrum.set_xlabel(self.xaxislabel)
-    #             self.canvas_spectrum.draw()
 
     def update_spectrum(self, event):
         """
-        Update the spectrum plot based on the mouse hover event on the image plot.
-        Overlay fitted peak and residual if diagnostic mode is enabled.
+        Update the 1D spectrum plot based on mouse hover over the 2D image.
+
+        When the user moves the mouse over the image display (ax_image), this method 
+        retrieves the spectrum at the corresponding pixel coordinates and plots it.
+
+        If diagnostic mode is enabled and fitting results are available, the fitted
+        peak model and residual (difference between raw and fitted spectra) are also shown.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            The mouse event object containing position and axis metadata.
+
+        Behavior
+        --------
+        - Plots the raw spectrum at (x, y).
+        - If diagnostic overlay is enabled and the pixel is within a fitted mask:
+            - Plots the model fit (red line) and residuals (green line).
+            - Supports Gaussian, Lorentzian, and Pseudo-Voigt peak profiles.
+        - Updates plot title and legend accordingly.
+
+        Notes
+        -----
+        - Requires valid `self.volume`, `self.xaxis`, and axis handles to be initialized.
+        - `self.mask` must be defined for diagnostics to overlay.
+        - Fit parameters are read from `self.res`, produced after peak fitting.
         """
         if self.real_time_update_spectrum and event.inaxes == self.ax_image:
             self.x, self.y = int(event.xdata), int(event.ydata)
@@ -639,6 +712,27 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                 self.canvas_spectrum.draw()
 
     def valid_fit_for_pixel(self, x, y):
+        """
+        Check if the fitted peak parameters at pixel (x, y) are valid.
+
+        A fit is considered valid if:
+        - 'Area', 'Position', and 'FWHM' exist at the pixel,
+        - All values are finite (not NaN or Inf),
+        - The FWHM value is strictly positive.
+
+        Parameters
+        ----------
+        x : int
+            X-coordinate (row index) of the pixel.
+        y : int
+            Y-coordinate (column index) of the pixel.
+
+        Returns
+        -------
+        bool
+            True if the pixel has valid fit parameters, False otherwise.
+        """
+        
         try:
             return (
                 np.isfinite(self.res['Area'][x, y]) and
@@ -651,7 +745,28 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         
     def update_image(self, event):
         """
-        Update the image plot based on the mouse hover event on the spectrum plot.
+        Update the 2D image view based on mouse hover over the spectrum plot.
+
+        When the user moves the mouse cursor along the spectral axis (ax_spectrum),
+        this method determines the corresponding index in the spectral axis and displays
+        the corresponding 2D slice from the volume.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            Mouse event object triggered by hover in the spectrum axis.
+
+        Behavior
+        --------
+        - Translates the hovered x-axis position to the nearest spectral index.
+        - Extracts the corresponding image slice and updates the image view.
+        - Moves the red vertical cursor line in the spectrum plot to match.
+        - Automatically adjusts color limits and updates the colorbar.
+
+        Notes
+        -----
+        - Handles both default x-axis and inverted axes (e.g., `d-spacing`).
+        - Ensures compatibility with mouse wheel zoom and interaction events.
         """
         if self.real_time_update_image and event.inaxes == self.ax_spectrum:
             self.index = event.xdata
@@ -697,7 +812,15 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
     def toggle_real_time_spectrum(self, event):
         """
-        Toggle the real-time update of the spectrum plot based on the mouse button press event on the image plot.
+        Toggle real-time spectrum updates when hovering over the image plot.
+
+        Enables or disables live spectrum display depending on which mouse button is pressed
+        while clicking on the image plot.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            Mouse event object. Left-click enables, right-click disables real-time updates.
         """
         if event.button == 1:
             self.real_time_update_spectrum = True
@@ -706,7 +829,15 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
     def toggle_real_time_image(self, event):
         """
-        Toggle the real-time update of the image plot based on the mouse button press event on the spectrum plot.
+        Toggle real-time image updates when hovering over the spectrum plot.
+
+        Enables or disables live image updates depending on which mouse button is pressed
+        while clicking on the spectrum plot.
+
+        Parameters
+        ----------
+        event : matplotlib.backend_bases.MouseEvent
+            Mouse event object. Left-click enables, right-click disables real-time updates.
         """
         if event.button == 1:
             self.real_time_update_image = True
@@ -716,7 +847,19 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def exportdp(self):
         
         """
-        Method to export spectra/diffraction patterns of interest
+        Export the current spectrum (diffraction pattern) to HDF5 and text-based formats.
+
+        Saves the currently displayed 1D spectrum (from the selected pixel) and its corresponding
+        x-axis to three separate files:
+        - `.h5` file containing datasets `I` and `xaxis`
+        - `.asc` text file with two columns: x-axis and intensity
+        - `.xy` text file with the same format as `.asc`
+
+        Output filenames include the pixel coordinates (x, y).
+
+        Notes
+        -----
+        This function requires that both `self.hdf_fileName` and `self.spectrum` are set.
         """
         
         if len(self.hdf_fileName)>0 and len(self.spectrum)>0:
@@ -744,7 +887,15 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def exportim(self):
         
         """
-        Method to export spectral/scattering image of interest
+        Export the current spectral/scattering image to HDF5 and PNG formats.
+
+        Saves the currently displayed 2D image (at a specific spectral index) to:
+        - `.h5` file containing datasets `I` (image) and `Channel` (index)
+        - `.png` file visualizing the image using the active colormap
+
+        Notes
+        -----
+        This function requires `self.hdf_fileName` to be set and `self.image` to be populated.
         """
         
         if len(self.hdf_fileName)>0 and len(self.image)>0:
@@ -765,7 +916,20 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             
                 
     def changecolormap(self,ind):
-        
+
+        """
+        Change the active colormap used for image display.
+
+        Parameters
+        ----------
+        ind : int
+            Index of the selected colormap from `self.cmap_list`.
+
+        Notes
+        -----
+        Attempts to refresh the display by calling `self.update()`, if defined.
+        """
+                
         self.cmap = self.cmap_list[ind]
         print(self.cmap)
         try:
@@ -775,6 +939,19 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         
 
     def selXRDCTdata(self):
+
+        """
+        Open a file dialog to select one or more XRD-CT datasets.
+
+        Extracts dataset names and base paths from the selected files,
+        and populates the GUI list widget (`self.datalist`) and `self.pathslist`.
+
+        Notes
+        -----
+        - Uses the custom `FileDialog` class with multi-selection enabled.
+        - Expects filenames to end with `.hdf5`.
+        - Silently ignores or logs any parsing errors.
+        """        
         
         self.dialog = FileDialog()
         if self.dialog.exec_() == QtWidgets.QDialog.Accepted:
@@ -804,13 +981,18 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def fileOpen(self):
         
         """
-        Open and load a chemical imaging dataset from an HDF5 file.
+        Open and load a chemical imaging dataset via file dialog.
 
-        Launches a file dialog, reads the dataset and axis from the selected file,
-        updates internal data structures, and triggers the initial visualization.
+        Opens a file browser to select an HDF5 (.h5 or .hdf5) file, loads the dataset into memory,
+        updates the dataset label in the GUI, and calls `explore()` to display the data.
+
+        Notes
+        -----
+        - Internally calls `self.loadchemvol()` to read the file contents.
+        - Only one dataset is loaded at a time using this method.
         """
                 
-        self.hdf_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open Chemical imaging data', "", "*.hdf5 *.h5")
+        self.hdf_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Open data', "", "*.hdf5 *.h5")
 
         if len(self.hdf_fileName) > 0:
             self.loadchemvol()
@@ -822,17 +1004,19 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def loadchemvol(self):
         
         """
-        Load chemical imaging data from an HDF5 file.
+        Load a chemical imaging volume and spectral axis from the current HDF5 file.
 
-        This function reads an HDF5 file containing hyperspectral imaging data, 
-        attempts to identify the correct dataset structure, and updates the GUI.
+        Reads the 3D dataset from `/data` and an associated axis (e.g., `/twotheta`, `/q`, etc.)
+        from the file `self.hdf_fileName`, performing shape and compatibility checks.
+
+        Updates GUI elements such as channel range spin boxes and sets the axis label.
 
         Raises
         ------
         FileNotFoundError
-            If the specified file does not exist.
+            If `self.hdf_fileName` is not set.
         KeyError
-            If the required dataset ('/data') is not found in the HDF5 file.
+            If the expected dataset `/data` is not found in the file.
         """
                 
         xaxis_labels = ['/d', '/q', '/twotheta', '/Energy', '/tth', '/energy']
@@ -873,8 +1057,24 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                         
     def append_file(self):
         """
-        Appends another dataset to the currently loaded volume along axis=1 (column-wise),
-        ensuring minimal memory usage and displaying combined dataset names.
+        Append an additional chemical imaging dataset to the current volume along the X-axis (axis=0).
+
+        Opens a file dialog to select a new HDF5 dataset and checks for compatibility with the currently
+        loaded volume. If the height and spectral dimensions match, the new volume is concatenated 
+        column-wise. The GUI is updated accordingly.
+
+        Notes
+        -----
+        - Only appends if the new volume has the same shape in dimensions 1 and 2 (height and spectral).
+        - If necessary, the new volume is transposed to match the shape of the existing dataset.
+        - Updates internal volume, dataset label, and spinbox limits.
+        
+        Raises
+        ------
+        KeyError
+            If the '/data' dataset is not found in the appended file.
+        ValueError
+            If shape compatibility is not met (different height or spectral axis).
         """
         append_fileName, _ = QtWidgets.QFileDialog.getOpenFileName(self, 'Append Chemical imaging data', "", "*.hdf5 *.h5")
 
@@ -919,6 +1119,17 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             QtWidgets.QMessageBox.critical(self, "Append Failed", f"Error appending dataset:\n{e}")
 
     def check_and_transpose(self):
+        """
+        Check the shape of the loaded volume and apply a transpose if necessary.
+
+        Ensures that the volume has shape (X, Y, Channels). If the first dimension matches the spectral 
+        length instead of spatial axes, the array is transposed accordingly to bring it to the expected format.
+
+        Notes
+        -----
+        - Transposes (0, 2, 1) if volume.shape[0] == volume.shape[2]
+        - Transposes (1, 2, 0) if volume.shape[1] == volume.shape[2]
+        """        
         dims = self.volume.shape
         if dims[0] != dims[1] and dims[0] == dims[2]:
             # Transpose the array so that the first dimension becomes the last dimension
@@ -929,6 +1140,17 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             
     def savechemvol(self):
 
+        """
+        Save the current chemical imaging dataset to an HDF5 file.
+
+        Prompts the user to select a save location and writes the current 3D volume
+        and x-axis array to disk. Adds a `.h5` extension if not present.
+
+        File contents
+        -------------
+        - 'data': The 3D chemical imaging volume.
+        - 'xaxis': The spectral or scattering axis used for plotting.
+        """
         self.fn, _ = QtWidgets.QFileDialog.getSaveFileName(self, 'Save Chemical imaging data', "", "*.h5")
 	
         if len(self.fn)>0:
@@ -944,9 +1166,20 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             h5f.close()
 
     def fileQuit(self):
+        """
+        Trigger the application close event.
+        """        
         self.close()
 
     def closeEvent(self, ce):
+        """
+        Override the Qt closeEvent handler to ensure proper shutdown.
+
+        Parameters
+        ----------
+        ce : QCloseEvent
+            The close event triggered by the window manager.
+        """        
         self.fileQuit()
 
     def about(self):
@@ -964,20 +1197,40 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     ####################### ROI image #######################
 
     def channel_initial(self, value):
+        """
+        Set the initial channel index for the ROI (Region of Interest) image.
+
+        Parameters
+        ----------
+        value : int
+            The starting spectral channel to define the ROI range.
+        """        
         self.chi = value
         print(self.chi)
 
     def channel_final(self, value):
+        """
+        Set the final channel index for the ROI (Region of Interest) image.
+
+        Parameters
+        ----------
+        value : int
+            The ending spectral channel to define the ROI range.
+        """        
         self.chf = value
         print(self.chf)
         
     def plot_mean_image(self):
 
         """
-        Compute a mean ROI image with linear background subtraction.
+        Compute and display the mean ROI image based on selected channel range.
 
-        Subtracts a pixel-wise linear estimate of background (based on start and end channels)
-        before summing over the ROI range. Applies masking and displays the result.
+        The method:
+        - Calculates a mean image from the 3D volume using channels from `chi` to `chf`.
+        - Normalizes the image to a 0-100 range.
+        - Automatically estimates a central peak position for fitting.
+        - Generates a binary mask from the image using a fixed threshold (5%).
+        - Updates the image canvas with the new ROI visualization.
         """
         
         roi = np.arange(self.chi,self.chf)
@@ -1010,6 +1263,20 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
     def plot_mean_image_mean_bkg(self):
 
+        """
+        Compute and display a mean ROI image with constant background subtraction.
+
+        The background is estimated as the mean of the start (`chi`) and end (`chf`) channels,
+        and subtracted from the sum across the selected ROI channel range.
+
+        Steps:
+        - Normalize the ROI volume.
+        - Subtract mean of boundary channels from the summed signal.
+        - Clip negative values and rescale to 0-100.
+        - Generate a binary mask (thresholded at 5%).
+        - Display the processed image in the main viewer.
+        """
+        
         if self.chf<self.chi:
             self.chf = self.chi + 1
             self.crspinbox2.setValue(self.chf)
@@ -1040,6 +1307,21 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         
     def plot_mean_image_linear_bkg(self):
 
+        """
+        Compute and display a mean ROI image with linear background subtraction.
+
+        The background is estimated per-pixel as a linear interpolation between the values
+        at the start (`chi`) and end (`chf`) channels. This estimated background is subtracted 
+        from the raw ROI before summing.
+
+        Steps:
+        - Fit a linear background for each pixel across the ROI channel range.
+        - Subtract the background from the ROI signal.
+        - Clip negative values and rescale to 0-100.
+        - Create a binary mask (values above 5%).
+        - Display the result in the image viewer.
+        """
+        
         if self.chf<self.chi:
             self.chf = self.chi + 1
             self.crspinbox2.setValue(self.chf)
@@ -1079,7 +1361,18 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def export_roi_image(self):
 
         """
-        Method to export spectral/scattering image of interest
+        Export the currently displayed ROI image to disk.
+
+        This method saves both the raw image data and a rendered PNG:
+        - HDF5 file containing the ROI image (`I`) and the selected channel range (`chi`, `chf`).
+        - PNG image of the ROI visualized with the current colormap.
+
+        The filenames are generated based on the original HDF5 filename and the ROI range.
+
+        Notes
+        -----
+        This function assumes that `self.image` and `self.hdf_fileName` are valid.
+        If no image or filename is available, it prints a warning and exits.
         """
         
         if len(self.hdf_fileName)>0 and len(self.image)>0:
@@ -1099,11 +1392,24 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     ####################### ROI pattern #######################
 
     def set_thr(self, value):
+        """
+        Set the threshold value used for segmenting the ROI image.
+
+        Parameters
+        ----------
+        value : int
+            Threshold value (0–100) used to binarize the ROI image.
+        """        
         self.thr = value
         print(self.thr)
 
     def segment_image(self):
-        
+        """
+        Segment the ROI image using the current threshold value.
+
+        Applies a simple threshold to the currently displayed ROI image to generate a binary mask.
+        Pixels below the threshold are set to 0, others to 1. The resulting mask is displayed in the image view.
+        """        
         # Update the image display
         self.ax_image.clear()
         self.mask = np.copy(self.image)
@@ -1115,6 +1421,13 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     
     def plot_roi_pattern(self):
         
+        """
+        Compute and display the ROI-averaged pattern based on the current segmentation mask.
+
+        Multiplies each spectral slice by the binary mask to isolate the ROI region,
+        then integrates across all pixels to generate a 1D spectrum. The spectrum is
+        normalized and plotted in the spectral view.
+        """        
         voln = np.zeros_like(self.volume)
         for ii in range(self.volume.shape[2]):
             voln[:,:,ii] = self.volume[:,:,ii]*self.mask
@@ -1129,6 +1442,17 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             
     def export_roi_pattern(self):
         
+        """
+        Export the segmented ROI-averaged pattern to multiple file formats.
+
+        Saves the 1D ROI pattern (`self.spectrum`) and corresponding x-axis values (`self.xaxis`)
+        to an HDF5 file (`.h5`) and two plain text formats (`.asc` and `.xy`).
+        Filenames include the current threshold value used for segmentation.
+
+        Notes
+        -----
+        This method will print a warning if `self.spectrum` is empty or no HDF5 file was previously loaded.
+        """        
         if len(self.hdf_fileName)>0 and len(self.spectrum)>0:
             
             s = self.hdf_fileName.split('.h5'); s = s[0]
@@ -1153,9 +1477,19 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
     def suggest_peak_positions(self):
         """
-        Suggest initial peak positions using scipy.signal.find_peaks
-        on the currently loaded ROI pattern, and overlay vertical lines.
-        Also updates the left image panel to match the first suggested peak.
+        Automatically detect and visualize candidate peak positions in the ROI-averaged spectrum.
+
+        Uses `scipy.signal.find_peaks` to identify prominent peaks based on height and spacing thresholds.
+        Detected peaks are displayed as vertical lines overlaid on the spectrum plot:
+            - The first peak is highlighted in red.
+            - All other peaks are shown in green.
+
+        The image viewer is updated to show the spectral slice corresponding to the first detected peak.
+        Detected peak positions are also stored internally for future reference.
+
+        Raises
+        ------
+        Warning dialog if no spectrum is available or no peaks are found.
         """
         if self.spectrum is None or len(self.spectrum) == 0:
             QtWidgets.QMessageBox.warning(self, "No Spectrum", "Please extract the ROI pattern first.")
@@ -1219,8 +1553,16 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     
     def set_fit_range(self):
         """
-        Sets xroi and volroi based on selected channel range (integer indices).
-        Also updates peak position spinboxes based on this range.
+        Define the spectral fitting region and normalize the data volume accordingly.
+
+        This method updates the region of interest (`xroi`, `volroi`) based on the 
+        spinbox values for initial and final channels. It also normalizes the ROI data 
+        and updates the peak position spinboxes to reflect the new fitting range.
+
+        Raises
+        ------
+        QtWidgets.QMessageBox
+            If the selected channel range is invalid (i.e., final ≤ initial).
         """
         ch_min = self.xfit_min_spin.value()
         ch_max = self.xfit_max_spin.value()
@@ -1246,6 +1588,13 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         print(f"Updated peak position guess: {pos:.2f} [{pos_min:.2f}, {pos_max:.2f}]")
         
     def sync_peak_position_from_roi(self):
+        """
+        Automatically update peak position guess based on ROI channel selection.
+
+        This method sets the peak position (`pos_spin`) and bounds (`pos_min_spin`, `pos_max_spin`)
+        using the midpoint of the selected channel range in the ROI tab. It helps keep peak fitting
+        parameters in sync with image generation settings.
+        """        
         chi = self.crspinbox1.value()
         chf = self.crspinbox2.value()
         if chf <= chi:
@@ -1256,6 +1605,20 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.pos_max_spin.setValue(pos + 5.0)
         
     def profile_function(self, ind):
+        """
+        Set the peak profile type for curve fitting based on user selection.
+
+        Updates internal `peaktype` and toggles the visibility of the mixing fraction
+        (γ) parameter used for Pseudo-Voigt profiles.
+
+        Parameters
+        ----------
+        ind : int
+            Index from the dropdown selector:
+            - 0: Gaussian
+            - 1: Lorentzian
+            - 2: Pseudo-Voigt
+        """        
         if ind == 0:
             self.peaktype = "Gaussian"
             print("Gaussian profile")
@@ -1273,7 +1636,23 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             self.fraction_spin.setVisible(True)
 
     def batchpeakfit(self):     
+        
+        """
+        Perform batch single-peak fitting over the masked region of the dataset.
 
+        This method collects all peak fitting parameters from the GUI (initial guesses and bounds)
+        and applies them to the currently selected volume region (`volroi`) using a user-defined
+        peak model (Gaussian, Lorentzian, or Pseudo-Voigt). It applies the segmentation mask to restrict
+        the fitting region, initializes a `FitData` thread for asynchronous processing, and connects
+        the progress and result signals for GUI updates.
+
+        Notes
+        -----
+        - If the fitting type is Pseudo-Voigt, the mixing fraction is also passed to the fitting class.
+        - The fitting thread is non-blocking and results are streamed progressively.
+        - Disables interactive diagnostic display and the "Fit" button until completion.
+        """
+        
         self.check_diag_mode.setEnabled(False)
         
         self.pbutton_fit.setEnabled(False)
@@ -1318,6 +1697,21 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.PeakFitData.fitdone.connect(self.updatefitdata)        
 
     def update_live_fit_image(self, live_data):
+        
+        """
+        Update the image display with intermediate peak fitting results.
+
+        This method is triggered during batch fitting to provide real-time visual feedback
+        of the parameter currently selected in the "Live view" dropdown (Area, Position, or FWHM).
+        It redraws the image canvas using the latest fitting results for the selected parameter
+        and reconnects all interactive events to maintain responsiveness.
+
+        Parameters
+        ----------
+        live_data : np.ndarray
+            A 2D array representing the latest fitting result for a single parameter (typically area),
+            used if no predefined mapping is selected.
+        """        
         param = self.ChooseLive.currentText()
 
         if param == "Area":
@@ -1353,6 +1747,16 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.canvas_image.draw()
         
     def updatefitdata(self):
+
+        """
+        Finalize and display peak fitting results after batch processing.
+
+        This method is called when the fitting thread signals completion. It updates the internal
+        `res` dictionary with the final results (e.g. Area, Position, FWHM), re-enables UI controls,
+        and redraws the image panel to show the fitted peak area map. It also reconnects interactive
+        mouse events to restore full responsiveness of the GUI.
+        """
+                
         if not hasattr(self.PeakFitData, 'res'):
             print("Peak fitting was stopped before completion.")
             return
@@ -1387,12 +1791,34 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.check_diag_mode.setEnabled(True)
         
     def stopfit(self):
+        """
+        Stop the ongoing peak fitting process.
+
+        Requests the fitting thread to stop gracefully, resets the progress bar,
+        and re-enables the fit button for user interaction.
+        """        
         if hasattr(self, 'PeakFitData'):
             self.PeakFitData.request_stop()
         self.progressbar_fit.setValue(0)
         self.pbutton_fit.setEnabled(True)        
         
     def plot_fit_results(self, ind):
+        """
+        Plot a selected parameter map from the peak fitting results.
+
+        Parameters
+        ----------
+        ind : int
+            Index of the parameter to display:
+            - 0: Peak area
+            - 1: Peak position
+            - 2: FWHM
+            - 3: Background 1 slope
+            - 4: Background 2 intercept
+
+        The method updates the image panel with the selected map and reconnects
+        interactive controls.
+        """        
         self.fig_image.clear()
         self.ax_image = self.fig_image.add_subplot(111)
 
@@ -1433,7 +1859,23 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     def savefitresults(self):
         
         """
-        Method to export the peak fitting results
+        Export the peak fitting results to an HDF5 file.
+
+        Saves the fitted parameter maps (area, position, FWHM, background slope and intercept)
+        to a new `.h5` file using the current dataset filename as a base. If the Pseudo-Voigt
+        profile is used, the mixing parameter ('gamma') is also saved.
+
+        The resulting file contains:
+            - 'Area': Peak area map
+            - 'Position': Peak center position map
+            - 'FWHM': Full width at half maximum map
+            - 'bkga': Background slope map
+            - 'bkgb': Background intercept map
+            - 'gamma' (if applicable): Mixing fraction between Gaussian and Lorentzian
+
+        Notes
+        -----
+        This method assumes a dataset has been previously loaded and fitting has been completed.
         """
         if len(self.hdf_fileName)>0:
             s = self.hdf_fileName.split('.h5'); s = s[0]
@@ -1453,6 +1895,26 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     ####################### Create synthetic phantom #######################
 
     def create_phantom(self):
+        
+        """
+        Generate and load a synthetic phantom XRD-CT dataset into the GUI.
+
+        This method creates a 3D synthetic chemical imaging volume based on known diffraction
+        patterns of common elements (Al, Cu, Fe, Pt, Zn). It uses pre-defined 2D spatial templates
+        and overlays them with their respective spectral signatures to construct a realistic
+        simulated XRD-CT dataset.
+
+        The generated volume is loaded into the viewer, and internal data structures are updated
+        (including axis labels, spinbox limits, and dataset name). An initial visualization is
+        triggered via `self.explore()`.
+
+        If the process fails (e.g. missing dependencies or runtime errors), a critical message box is shown.
+
+        Notes
+        -----
+        This function relies on modules within the `nDTomo.sim` and `nDTomo.methods` namespaces.
+        """        
+        
         try:
             from nDTomo.sim.phantoms import load_example_patterns, nDTomophantom_2D, nDTomophantom_3D
             from nDTomo.methods.plots import showspectra, showim
@@ -1486,6 +1948,22 @@ class nDTomoGUI(QtWidgets.QMainWindow):
     ######################## IPython console #######################
     
     def init_console(self):
+        
+        """
+        Launch an embedded IPython console inside the GUI.
+
+        This method creates a dockable widget hosting a fully interactive IPython
+        (Jupyter) console. The console allows the user to inspect and manipulate
+        GUI-level variables such as `volume`, `image`, `spectrum`, and `xaxis`
+        using NumPy and Matplotlib interactively within the same application.
+
+        If the console has already been initialized, this method brings it back into view.
+
+        Notes
+        -----
+        The console is powered by `qtconsole` and runs an in-process kernel,
+        meaning it shares memory with the main application context.
+        """        
         if hasattr(self, 'console_dock') and self.console_dock is not None:
             self.console_dock.show()
             return
@@ -1519,6 +1997,12 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea, self.console_dock)
 
     def stop_console(self):
+        """
+        Shut down the embedded IPython console and its kernel.
+
+        This method stops the running IPython kernel and disconnects the console client.
+        It is triggered when the user exits the docked console interface.
+        """        
         self.kernel_client.stop_channels()
         self.kernel_manager.shutdown_kernel()        
 
@@ -1526,10 +2010,17 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 class FileDialog(QtWidgets.QFileDialog):
     
     """
-    A custom file dialog that supports multi-file selection.
+    Initialize the custom file dialog with multi-selection support.
 
-    This overrides the default QFileDialog to use a non-native dialog with multi-selection enabled
-    for QListView and QTreeView widgets.
+    This constructor configures the dialog to:
+    - Use a non-native file dialog (to allow enhanced widget access).
+    - Enable multi-selection mode for both QListView and QTreeView components,
+      allowing the user to select multiple files at once.
+    
+    Parameters
+    ----------
+    *args : tuple
+        Arguments passed to the base QFileDialog constructor.
     """
 
     def __init__(self, *args):
@@ -1578,6 +2069,41 @@ class FitData(QThread):
     result_partial = pyqtSignal(np.ndarray)
     
     def __init__(self, peaktype, data, x, Area, Areamin, Areamax, Pos, Posmin, Posmax, FWHM, FWHMmin, FWHMmax):
+        
+        """
+        Initialize the FitData worker thread for single-peak fitting.
+
+        This sets up the initial parameters and allocates output arrays for the
+        batch fitting of hyperspectral or tomographic data. The fitting is done
+        using SciPy's non-linear curve fitting (`curve_fit`) on a per-pixel basis.
+
+        Parameters
+        ----------
+        peaktype : str
+            Type of peak to fit; must be one of: "Gaussian", "Lorentzian", "Pseudo-Voigt".
+        data : np.ndarray
+            3D array of shape (X, Y, Channels) representing the volume to fit.
+        x : np.ndarray
+            1D array of length Channels representing the spectral axis.
+        Area : float
+            Initial guess for peak area.
+        Areamin : float
+            Minimum allowed value for peak area.
+        Areamax : float
+            Maximum allowed value for peak area.
+        Pos : float
+            Initial guess for peak position (in x units).
+        Posmin : float
+            Minimum allowed value for peak position.
+        Posmax : float
+            Maximum allowed value for peak position.
+        FWHM : float
+            Initial guess for full width at half maximum.
+        FWHMmin : float
+            Minimum allowed FWHM.
+        FWHMmax : float
+            Maximum allowed FWHM.
+        """        
         QThread.__init__(self)
         self._stop_requested = False
         
@@ -1602,17 +2128,55 @@ class FitData(QThread):
         self.i, self.j = np.where(msk > 0)
 
     def request_stop(self):
+        """
+        Signal the fitting thread to stop.
+
+        Sets an internal flag that is checked periodically during fitting.
+        Allows the fitting process to be gracefully interrupted without killing the thread.
+        """
+                
         self._stop_requested = True
     
     def run(self):
         
         """
-        Initialise the single peak batch fitting process
-        """  
+        Entry point for the QThread.
+
+        Invokes the batch fitting routine (`batchfit`) when the thread is started.
+        """
         self.batchfit()
         
     def batchfit(self):
                 
+        """
+        Perform batch pixel-wise single-peak fitting over a 3D hyperspectral dataset.
+
+        The method fits a Gaussian, Lorentzian, or pseudo-Voigt peak with a linear background
+        to each spectrum in the dataset where the mask is non-zero. It uses SciPy's `curve_fit`
+        for non-linear least squares optimization with parameter bounds. Progress is emitted
+        after each row to support responsive GUI updates.
+
+        For each valid pixel:
+        - Attempts to fit the selected peak model.
+        - On success, stores peak parameters (area, position, FWHM, background terms, and Voigt fraction if applicable).
+        - On failure, stores midpoint values for peak position and width as fallback.
+
+        Emits
+        -----
+        progress_fit : pyqtSignal(int)
+            Signal emitting fitting progress in percentage (0–100).
+        result_partial : pyqtSignal(np.ndarray)
+            Signal emitting current 'Area' map (transposed) for live updating.
+        fitdone : pyqtSignal()
+            Signal emitted upon completion of fitting.
+
+        Notes
+        -----
+        - Uses `request_stop()` flag to allow asynchronous termination from GUI.
+        - Results are stored in the `self.res` dictionary.
+        - The method ensures fitting is done only where data is present (non-zero mask).
+        """
+                        
         if self.peaktype == "Pseudo-Voigt":
             x0 = np.array([float(self.Area), float(self.Pos), float(self.FWHM), 0., 0., 0.5], dtype=float)
         else:
@@ -1684,31 +2248,112 @@ class FitData(QThread):
     def gmodel(self, x, A, m, w, a, b):
         
         """
-        Gaussian model with linear background: (A/(sqrt(2*pi)*w) )* exp( - (x-m)**2 / (2*w**2)) + a*x + b
+        Gaussian peak model with linear background.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            The x-axis values (e.g., channel, energy, or 2θ).
+        A : float
+            Area under the Gaussian peak.
+        m : float
+            Peak center (mean).
+        w : float
+            Full width at half maximum (FWHM) of the peak.
+        a : float
+            Linear background slope.
+        b : float
+            Linear background intercept.
+
+        Returns
+        -------
+        np.ndarray
+            The evaluated Gaussian function with background.
         """
         return (A / (np.sqrt(2 * np.pi) * w)) * np.exp(- (x - m)**2 / (2 * w**2)) + a * x + b    
     
     def lmodel(self, x, A, m, w, a, b):
         
         """
-        Lorentzian model with linear background: (A/(1 + ((1.0*x-m)/w)**2)) / (pi*w) + a*x + b   
+        Lorentzian peak model with linear background.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            The x-axis values.
+        A : float
+            Area under the Lorentzian peak.
+        m : float
+            Peak center.
+        w : float
+            FWHM of the peak.
+        a : float
+            Linear background slope.
+        b : float
+            Linear background intercept.
+
+        Returns
+        -------
+        np.ndarray
+            The evaluated Lorentzian function with background.
         """
         return (A / (1 + ((x - m) / w)**2)) / (np.pi * w) + a * x + b
     
     def pvmodel(self, x, A, m, w, a, b, fr):
         
         """
-        pseudo-Voigt model with linear background: ((1-fr)*gaumodel(x, A, m, s) + fr*lormodel(x, A, m, s))
+        Pseudo-Voigt peak model with linear background.
+
+        This is a linear combination of a Gaussian and Lorentzian profile.
+
+        Parameters
+        ----------
+        x : np.ndarray
+            The x-axis values.
+        A : float
+            Total area under the peak.
+        m : float
+            Peak center.
+        w : float
+            FWHM of the peak.
+        a : float
+            Linear background slope.
+        b : float
+            Linear background intercept.
+        fr : float
+            Fraction of Lorentzian contribution (0 = pure Gaussian, 1 = pure Lorentzian).
+
+        Returns
+        -------
+        np.ndarray
+            The evaluated Pseudo-Voigt function with background.
         """
         gauss = (A / (np.sqrt(2 * np.pi) * w)) * np.exp(- (x - m)**2 / (2 * w**2))
         lorentz = (A / (1 + ((x - m) / w)**2)) / (np.pi * w)
         return (1 - fr) * gauss + fr * lorentz + a * x + b
 
 def main():
-    qApp = QtWidgets.QApplication(sys.argv)
-    aw = nDTomoGUI()
-    aw.show()
-    sys.exit(qApp.exec_())
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Launch nDTomoGUI for chemical imaging analysis.")
+    parser.add_argument('--style', type=str, help='Qt style (e.g., Fusion, Windows, Mac)', default='Fusion')
+    args = parser.parse_args()
+
+    # Initialize QApplication
+    app = QtWidgets.QApplication(sys.argv)
+
+    # Optional: Set Qt style
+    if args.style:
+        QtWidgets.QApplication.setStyle(args.style)
+
+    # Launch main GUI
+    try:
+        window = nDTomoGUI()
+        window.show()
+        sys.exit(app.exec_())
+    except Exception as e:
+        print(f"Application failed to start: {e}")
+        sys.exit(1)
    
 if __name__ == "__main__":
     main()
