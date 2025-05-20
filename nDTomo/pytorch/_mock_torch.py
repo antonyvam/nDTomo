@@ -23,6 +23,7 @@ if os.environ.get("READTHEDOCS") == "True":
     # Mock torch
     torch = types.SimpleNamespace(
         Tensor=DummyTensor,
+        FloatTensor=DummyTensor, 
         cuda=types.SimpleNamespace(is_available=lambda: False),
         nn=types.SimpleNamespace(
             Module=object,
