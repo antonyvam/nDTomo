@@ -45,8 +45,6 @@ The `nDTomoGUI` provides a complete graphical environment for:
 - Generating synthetic phantoms with real reference spectra
 - Using an embedded IPython console for advanced control and debugging
 
-The GUI is described in more detail in the [online documentation](https://ndtomo.readthedocs.io) and supports both novice and expert workflows.
-
 
 References
 ^^^^^^^^^^

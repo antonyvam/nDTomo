@@ -216,3 +216,89 @@ latex_documents = [
     ('index', 'nDTomo.tex', 'nDTomo Documentation',
      'Antonis Vamvakeros et al.', 'manual'),
 ]
+
+latex_elements = {
+    'inputenc': '',  # use utf8
+    'utf8extra': '',
+    'preamble': r'''
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{03C0}{$\pi$}
+\DeclareUnicodeCharacter{2588}{\rule{0.5em}{0.5em}}
+\DeclareUnicodeCharacter{1F50D}{\textbf{[Search]}}
+\DeclareUnicodeCharacter{1F9F1}{\textbf{[Brick]}}
+\DeclareUnicodeCharacter{1F9E0}{\textbf{[Brain]}}
+\DeclareUnicodeCharacter{1F9F0}{\textbf{[Toolbox]}}
+\DeclareUnicodeCharacter{26A0}{\textbf{[Warning]}}
+\DeclareUnicodeCharacter{1F501}{\textbf{[Repeat]}}
+\DeclareUnicodeCharacter{2699}{\textbf{[Gear]}}
+\DeclareUnicodeCharacter{2705}{\textbf{[Check]}}
+\DeclareUnicodeCharacter{1F5BC}{\textbf{[Image]}}
+\DeclareUnicodeCharacter{1F4C8}{\textbf{[Chart]}}
+\DeclareUnicodeCharacter{1F4CA}{\textbf{[Graph]}}
+\DeclareUnicodeCharacter{1F4CB}{\textbf{[Clipboard]}}
+\DeclareUnicodeCharacter{1F6E0}{\textbf{[Wrench]}}
+\DeclareUnicodeCharacter{1F680}{\textbf{[Rocket]}}
+\DeclareUnicodeCharacter{1F4A1}{\textbf{[Idea]}}
+\DeclareUnicodeCharacter{1F4D6}{\textbf{[Book]}}
+\DeclareUnicodeCharacter{1F3A8}{\textbf{[Art]}}
+\DeclareUnicodeCharacter{1F527}{\textbf{[Spanner]}}
+\DeclareUnicodeCharacter{1F52C}{\textbf{[Microscope]}}
+\DeclareUnicodeCharacter{1F393}{\textbf{[Graduate]}}
+\DeclareUnicodeCharacter{1F9EE}{\textbf{[Clipboard]}}
+\DeclareUnicodeCharacter{1F916}{\textbf{[Robot]}}
+\DeclareUnicodeCharacter{1F4AC}{\textbf{[Speech]}}
+%% Block characters
+\DeclareUnicodeCharacter{2588}{\rule{0.5em}{0.5em}}  %% █
+\DeclareUnicodeCharacter{2593}{\rule{0.4em}{0.4em}}  %% ▓
+\DeclareUnicodeCharacter{2592}{\rule{0.3em}{0.3em}}  %% ▒
+\DeclareUnicodeCharacter{25A0}{\rule{0.5em}{0.5em}}  %% ■
+
+%% Math / Greek
+\DeclareUnicodeCharacter{03C0}{\ensuremath{\pi}}      %% π
+\DeclareUnicodeCharacter{03B1}{\ensuremath{\alpha}}   %% α
+\DeclareUnicodeCharacter{03B2}{\ensuremath{\beta}}    %% β
+\DeclareUnicodeCharacter{03B3}{\ensuremath{\gamma}}   %% γ
+\DeclareUnicodeCharacter{03B4}{\ensuremath{\delta}}   %% δ
+\DeclareUnicodeCharacter{03B8}{\ensuremath{\theta}}   %% θ
+\DeclareUnicodeCharacter{03BC}{\ensuremath{\mu}}      %% μ
+\DeclareUnicodeCharacter{03C3}{\ensuremath{\sigma}}   %% σ
+\DeclareUnicodeCharacter{03C9}{\ensuremath{\omega}}   %% ω
+
+%% Arrows
+\DeclareUnicodeCharacter{2192}{\textrightarrow}       %% →
+\DeclareUnicodeCharacter{2190}{\textleftarrow}        %% ←
+\DeclareUnicodeCharacter{2191}{\textuparrow}          %% ↑
+\DeclareUnicodeCharacter{2193}{\textdownarrow}        %% ↓
+\DeclareUnicodeCharacter{21D2}{\Rightarrow}           %% ⇒
+\DeclareUnicodeCharacter{21D0}{\Leftarrow}            %% ⇐
+
+%% Box and logic
+\DeclareUnicodeCharacter{25B6}{\textbf{[▶]}}           %% ▶
+\DeclareUnicodeCharacter{25CB}{\textbf{(o)}}           %% ○
+\DeclareUnicodeCharacter{25CF}{\textbullet}            %% ●
+
+%% Emojis & Icons
+\DeclareUnicodeCharacter{1F50D}{\textbf{[Search]}}     %% 🔍
+\DeclareUnicodeCharacter{1F52C}{\textbf{[Microscope]}} %% 🔬
+\DeclareUnicodeCharacter{1F9E0}{\textbf{[Brain]}}      %% 🧠
+\DeclareUnicodeCharacter{1F9F1}{\textbf{[Brick]}}      %% 🧱
+\DeclareUnicodeCharacter{1F9F0}{\textbf{[Toolbox]}}    %% 🧰
+\DeclareUnicodeCharacter{1F501}{\textbf{[Repeat]}}     %% 🔁
+\DeclareUnicodeCharacter{1F4A1}{\textbf{[Idea]}}       %% 💡
+\DeclareUnicodeCharacter{1F4CA}{\textbf{[Chart]}}      %% 📊
+\DeclareUnicodeCharacter{1F5BC}{\textbf{[Image]}}      %% 🖼
+\DeclareUnicodeCharacter{2705}{\textbf{[Check]}}       %% ✅
+\DeclareUnicodeCharacter{26A0}{\textbf{[Warning]}}     %% ⚠
+\DeclareUnicodeCharacter{2699}{\textbf{[Gear]}}        %% ⚙
+\DeclareUnicodeCharacter{231B}{\textbf{[Hourglass]}}   %% ⌛
+
+%% Misc
+\DeclareUnicodeCharacter{2022}{\textbullet}            %% •
+\DeclareUnicodeCharacter{2212}{-}                      %% − (minus sign)
+\DeclareUnicodeCharacter{00A0}{~}                      %% Non-breaking space
+\DeclareUnicodeCharacter{FE0F}{}                       %% VARIATION SELECTOR-16 (invisible)
+\DeclareUnicodeCharacter{200D}{}                       %% ZERO WIDTH JOINER (invisible)
+\DeclareUnicodeCharacter{FE0F}{}
+\DeclareUnicodeCharacter{274C}{}
+'''
+}
