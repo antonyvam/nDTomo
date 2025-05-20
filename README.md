@@ -18,7 +18,7 @@ The software is designed to be accessible to both researchers and students worki
 
 📘 Official documentation (in progress): https://ndtomo.readthedocs.io
 
----
+![XRD-CT](assets/ndtomo_demo1.gif)
 
 Key Capabilities
 ----------------
@@ -32,6 +32,8 @@ nDTomo provides tools for:
 5. **CT image reconstruction** using algorithms like filtered back-projection and SIRT
 6. **Dimensionality reduction and clustering** for unsupervised chemical phase analysis
 7. **Pixel-wise peak fitting** using Gaussian, Lorentzian, and Pseudo-Voigt models
+8. **Peak fitting using the self-supervised PeakFitCNN**
+9. **Simulanteous peak fitting and tomographic reconstruction using the DLSR approach** using Pytorch GPU
 
  
 
@@ -43,32 +45,30 @@ The aim of this library, among others, is to generate tools for the following:
 4. **Application of computed tomography reconstruction algorithms**
 5. **Data analysis of chemical imaging data through peak fitting**
 
-
 ![XRD-CT](assets/xrdct.png)
 Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray diffraction CT (XRD-CT or Powder diffraction CT) data acquired from an NMC532 Li ion battery. For more details regarding this study see [1].
 
----
 
 Included Tutorials
 ------------------
 
 The repository includes several **example notebooks** to help users learn the API and workflows:
 
-| Notebook Filename                                   | Topic                                                                 |
-|-----------------------------------------------------|------------------------------------------------------------------------|
-| `tutorial_2D_shapes.ipynb`                          | Generating and visualizing 2D phantom shapes                          |
-| `tutorial_3D_shapes.ipynb`                          | Building synthetic 3D chemical imaging datasets                       |
-| `tutorial_pencil_beam.ipynb`                        | Simulating pencil beam CT data with different acquisition schemes     |
-| `tutorial_sinogram_handling.ipynb`                  | Pre-processing, normalization, and correction of sinograms            |
+| Notebook Filename                                   | Topic                                                                         |
+|-----------------------------------------------------|-------------------------------------------------------------------------------|
+| `tutorial_pencil_beam.ipynb`                        | Simulating pencil beam CT data with different acquisition schemes             |
+| `tutorial_sinogram_handling.ipynb`                  | Pre-processing, normalization, and correction of sinograms                    |
 | `tutorial_ct_recon_demo.ipynb`                      | CT image reconstruction from sinograms using analytical and iterative methods |
-| `tutorial_peak_fitting.ipynb`                       | Peak fitting in synthetic XRD-CT datasets                             |
-| `tutorial_dimensionality_reduction.ipynb`           | Unsupervised learning for phase identification in tomography          |
-| `Detector_calibration_Integration_of_2D_powder_diffraction.ipynb` | Calibrating detectors and integrating 2D powder diffraction patterns using pyFAI |
-| `Texture_2D_powder_diffraction_patterns.ipynb`      | Investigating the effects of texture on 2D powder patterns            |
+| `tutorial_dimensionality_reduction.ipynb`           | Unsupervised learning for phase identification in tomography                  |
+| `tutorial_peak_fitting.ipynb`                       | Peak fitting in synthetic XRD-CT datasets                                     |
+| `tutorial_peak_fit_cnn.ipynb`                       | Peak fitting in GPU using a self-supervided PeakFitCNN                        |
+| `tutorial_DLSR.ipynb`                               | Simultaneous peak fitting and CT reconstruction in GPU using the DLSR method  |
+| `tutorial_2D_shapes.ipynb`                          | Generating and visualizing 2D phantom shapes                                  |
+| `tutorial_3D_shapes.ipynb`                          | Building synthetic 3D chemical imaging datasets                               |
+| `tutorial_detector_calibration.ipynb`               | Calibrating detectors and integrating diffraction patterns using pyFAI        |
+| `tutorial_texture_2D_diffraction_patterns.ipynb`    | Investigating the effects of texture on 2D powder patterns                    |
 
 Each notebook is designed to be **standalone and executable**, with detailed inline comments and example outputs.
-
----
 
 Graphical User Interface (nDTomoGUI)
 ------------------------------------
@@ -151,8 +151,8 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 conda install -c astra-toolbox -c nvidia astra-toolbox
 ```
 
-
-## Launching the GUI
+Launching the GUI
+-----------------
 
 After installing `nDTomo`, the graphical user interface can be launched directly from the terminal:
 
@@ -161,12 +161,11 @@ conda activate ndtomo
 nDTomoGUI
 ```
 
-
 Citation
 --------
-If you use parts of the nDTomo code, please cite the work using the following:
+We are currently preparing a manuscript for nDTomo. In the meantime, if you use parts of the nDTomo code, please cite the work using the following:
 
-Vamvakeros, A. et al., nDTomo software suite, 2019, DOI: https://doi.org/10.5281/zenodo.6344270, url: https://github.com/antonyvam/nDTomo
+Vamvakeros, A., Papoutsellis, E., Dong, H., Docherty, R., Beale, A.M., Cooper, S.J., Jacques, S.D.M.J., "nDTomo: A Python-Based Software Suite for X-ray Chemical Imaging and Tomography", 2025, url: https://github.com/antonyvam/nDTomo
 
 
 References
