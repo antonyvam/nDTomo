@@ -11,9 +11,21 @@ from tqdm import tqdm
 
 def addpnoise1D(sp, ct):
     
-    '''
-    Adds poisson noise to a spectrum
-    '''    
+    """
+    Add Poisson noise to a 1D spectrum.
+
+    Parameters
+    ----------
+    sp : ndarray
+        1D array representing the spectrum (e.g., intensity values).
+    ct : float
+        Scaling factor representing the total counts or acquisition time.
+
+    Returns
+    -------
+    ndarray
+        Noisy spectrum with Poisson noise applied and rescaled by the count factor.
+    """
     mi = min(sp)
     
     if mi < 0:
@@ -28,9 +40,21 @@ def addpnoise1D(sp, ct):
 
 def addpnoise2D(im, ct):
     
-    '''
-    Adds poisson noise to an image
-    '''
+    """
+    Add Poisson noise to a 2D image.
+
+    Parameters
+    ----------
+    im : ndarray
+        2D array representing the image (e.g., integrated intensity map).
+    ct : float
+        Scaling factor representing the total counts or acquisition time.
+
+    Returns
+    -------
+    ndarray
+        Noisy image with Poisson noise applied and rescaled by the count factor.
+    """
     
     mi = min(im)
     

@@ -42,47 +42,82 @@ def simulate_synchrotron_intensity(num_points, drop_ratio=0.75, num_topups=1):
 
     return intensity
 
-def KeVtoAng(E):
-    
-    """
-	Convert photon energy in KeV to Angstrom
-	"""  
-    
-    h = 6.620700406E-34;c = 3E8
-    return(1E10*6.242E18*h*c/(E*1E3))
 
+def KeVtoAng(E):
+    """
+    Convert photon energy in keV to wavelength in Angstroms.
+    
+    Parameters
+    ----------
+    E : float or ndarray
+        Photon energy in keV.
+        
+    Returns
+    -------
+    float or ndarray
+        Wavelength in Angstroms.
+    """
+    h = 4.135667696e-15  # Planck constant in eV·s
+    c = 2.99792458e8     # Speed of light in m/s
+    E_eV = E * 1e3       # Convert keV to eV
+    wavelength_m = h * c / E_eV  # in meters
+    return wavelength_m * 1e10   # Convert to Angstroms
 
 def AngtoKeV(wavel):
-    
     """
-	Convert photon energy in KeV to Angstrom
-	"""  
-    
-    h = 6.620700406E-34;c = 3E8
-    return(1E10*6.242E18*h*c/(wavel*1E3))
+    Convert wavelength in Angstroms to photon energy in keV.
+
+    Parameters
+    ----------
+    wavel : float or ndarray
+        Wavelength in Angstroms.
+        
+    Returns
+    -------
+    float or ndarray
+        Photon energy in keV.
+    """
+    h = 4.135667696e-15  # Planck constant in eV·s
+    c = 2.99792458e8     # Speed of light in m/s
+    wavelength_m = wavel * 1e-10
+    E_eV = h * c / wavelength_m
+    return E_eV / 1e3  # Convert to keV
 
 def tth2q(tth, E):
-
     """
-	Convert 2theta to q
-    E is energy in KeV
-	"""  	
+    Convert 2θ (in degrees) to momentum transfer q (in Å⁻¹).
     
-    wavel = KeVtoAng(E)
-    q = np.pi*2/(wavel/(2*np.sin(np.deg2rad(0.5*tth))))
-
-    return(q)
+    Parameters
+    ----------
+    tth : float or ndarray
+        Two-theta angle in degrees.
+    E : float
+        Photon energy in keV.
+        
+    Returns
+    -------
+    float or ndarray
+        q in Å⁻¹.
+    """
+    wavel = KeVtoAng(E)  # in Angstroms
+    return (4 * np.pi * np.sin(np.deg2rad(tth / 2))) / wavel
 
 def q2tth(q, E):
-
     """
-	Convert q to 2theta
-	"""  	
+    Convert momentum transfer q (in Å⁻¹) to 2θ (in degrees).
     
-    h = 6.620700406E-34;c = 3E8
-    wavel = 1E10*6.242E18*h*c/(E*1E3)
-    
-    
-    tth = np.rad2deg(2*np.arcsin(wavel/(4*np.pi/q)))
-
-    return(tth)
+    Parameters
+    ----------
+    q : float or ndarray
+        Momentum transfer in Å⁻¹.
+    E : float
+        Photon energy in keV.
+        
+    Returns
+    -------
+    float or ndarray
+        Two-theta angle in degrees.
+    """
+    wavel = KeVtoAng(E)  # in Angstroms
+    theta_rad = np.arcsin((q * wavel) / (4 * np.pi))
+    return np.rad2deg(2 * theta_rad)
