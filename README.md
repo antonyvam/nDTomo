@@ -86,7 +86,7 @@ nDTomoGUI
 
 Installation instructions
 -------------------------
-An important part of the code is based on astra-toolbox (and tomopy) which is currently available through conda so to make your life easier please install anaconda. It is possible to install astra-toolbox/tomopy from sources (i.e. if one wants to avoid using conda) but it is not a trivial task. I suggest you create a new anaconda environment for nDTomo (e.g. using the anaconda navigator) and make sure to install first the IDEs (Jupyter lab, Spyder etc) before installing the nDTomo.
+An important part of the code is based on astra-toolbox (and tomopy) which is currently available through conda so to make your life easier please install anaconda. It is possible to install astra-toolbox/tomopy from sources (i.e. if one wants to avoid using conda) but it is not a trivial task. I suggest you create a new anaconda environment for nDTomo:
 
 1. **Install nDTomo from GitHub**
 
@@ -97,7 +97,8 @@ conda create --name ndtomo python=3.9
 conda activate ndtomo
 ```
 
-To install from git:
+To install using git:
+*********************
 
 ```
 pip install git+https://github.com/antonyvam/nDTomo.git
@@ -110,7 +111,10 @@ git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
 pip install -e .
 ```
 
-For local installation, using the flag --user:
+For local installation after downloading the repo:
+**************************************************
+
+Navigate to where the setup.py file is located and using the flag --user run:
 
 ```
 pip install --user -e .
@@ -121,7 +125,6 @@ or:
 ```
 python3 setup.py install --user
 ```
-
 
 2. **Install pytorch**
 
