@@ -2332,29 +2332,14 @@ class FitData(QThread):
         lorentz = (A / (1 + ((x - m) / w)**2)) / (np.pi * w)
         return (1 - fr) * gauss + fr * lorentz + a * x + b
 
+
 def main():
-    import argparse
-
-    parser = argparse.ArgumentParser(description="Launch nDTomoGUI for chemical imaging analysis.")
-    parser.add_argument('--style', type=str, help='Qt style (e.g., Fusion, Windows, Mac)', default='Fusion')
-    args = parser.parse_args()
-
-    # Initialize QApplication
-    app = QtWidgets.QApplication(sys.argv)
-
-    # Optional: Set Qt style
-    if args.style:
-        QtWidgets.QApplication.setStyle(args.style)
-
-    # Launch main GUI
-    try:
-        window = nDTomoGUI()
-        window.show()
-        sys.exit(app.exec_())
-    except Exception as e:
-        print(f"Application failed to start: {e}")
-        sys.exit(1)
-   
+    qApp = QtWidgets.QApplication(sys.argv)
+    aw = nDTomoGUI()
+    aw.show()
+    sys.exit(qApp.exec_())
+    qApp.exec_()
+    
 if __name__ == "__main__":
     main()
     
