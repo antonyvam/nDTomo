@@ -44,14 +44,14 @@ The repository includes several **example notebooks** to help users learn the AP
 |------------------|--------|
 | [`tutorial_phantoms.ipynb`](examples/notebooks/tutorial_phantoms.ipynb) | Generating and visualizing 2D/3D phantoms |
 | [`tutorial_pencil_beam.ipynb`](examples/notebooks/tutorial_pencil_beam.ipynb) | Simulating pencil beam CT data with different acquisition schemes |
+| [`tutorial_detector_calibration.ipynb`](examples/notebooks/tutorial_detector_calibration.ipynb) | Calibrating detectors and integrating diffraction patterns using pyFAI |
+| [`tutorial_texture_2D_diffraction_patterns.ipynb`](examples/notebooks/tutorial_texture_2D_diffraction_patterns.ipynb) | Investigating the effects of texture on 2D powder patterns |
 | [`tutorial_sinogram_handling.ipynb`](examples/notebooks/tutorial_sinogram_handling.ipynb) | Pre-processing, normalization, and correction of sinograms |
 | [`tutorial_ct_recon_demo.ipynb`](examples/notebooks/tutorial_ct_recon_demo.ipynb) | CT image reconstruction from sinograms using analytical and iterative methods |
 | [`tutorial_dimensionality_reduction.ipynb`](examples/notebooks/tutorial_dimensionality_reduction.ipynb) | Unsupervised learning for phase identification in tomography |
 | [`tutorial_peak_fitting.ipynb`](examples/notebooks/tutorial_peak_fitting.ipynb) | Peak fitting in synthetic XRD-CT datasets |
 | [`tutorial_peak_fit_cnn.ipynb`](examples/notebooks/tutorial_peak_fit_cnn.ipynb) | Peak fitting in GPU using a self-supervised PeakFitCNN |
 | [`tutorial_DLSR.ipynb`](examples/notebooks/tutorial_DLSR.ipynb) | Simultaneous peak fitting and CT reconstruction in GPU using the DLSR method |
-| [`tutorial_detector_calibration.ipynb`](examples/notebooks/tutorial_detector_calibration.ipynb) | Calibrating detectors and integrating diffraction patterns using pyFAI |
-| [`tutorial_texture_2D_diffraction_patterns.ipynb`](examples/notebooks/tutorial_texture_2D_diffraction_patterns.ipynb) | Investigating the effects of texture on 2D powder patterns |
 
 Each notebook is designed to be **standalone and executable**, with detailed inline comments and example outputs.
 
@@ -64,7 +64,7 @@ The `nDTomoGUI` provides a complete graphical environment for:
 - Segmenting datasets using channel selection and thresholding
 - Extracting and exporting local diffraction patterns
 - Performing single-peak batch fitting across regions of interest
-- Generating synthetic phantoms with real reference spectra
+- Generating a synthetic XRD-CT phantoms for development tests
 - Using an embedded IPython console for advanced control and debugging
 
 The GUI is described in more detail in the [online documentation](https://ndtomo.readthedocs.io) and supports both novice and expert workflows.
