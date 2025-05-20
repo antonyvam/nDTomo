@@ -138,11 +138,11 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.hdf_fileName = ''
         self.c = 3E8
         self.h = 6.620700406E-34        
-        self.cmap = 'jet'
+        self.cmap = 'inferno'
         self.xaxislabel = 'Channel'
         self.chi = 0
         self.chf = 1        
-        self.cmap_list = ['viridis','plasma','inferno','magma','cividis','flag', 
+        self.cmap_list = ['inferno', 'viridis','plasma','magma','cividis','flag', 
             'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
             'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg', 'hsv',
             'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar']
@@ -305,7 +305,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
 
         self.Labelbkg = QtWidgets.QLabel(self)
-        self.Labelbkg.setText('Set the threshold to segment the ROI image - range is between 0 and 100')
+        self.Labelbkg.setText('Set the threshold to segment the ROI image - range is between 0-100%')
         self.tab3.layout.addWidget(self.Labelbkg,0,0)
         
         self.Channel3 = QtWidgets.QLabel(self)
@@ -845,7 +845,6 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             self.real_time_update_image = False
             
     def exportdp(self):
-        
         """
         Export the current spectrum (diffraction pattern) to HDF5 and text-based formats.
 
@@ -859,33 +858,45 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
         Notes
         -----
-        This function requires that both `self.hdf_fileName` and `self.spectrum` are set.
+        This function requires that `self.hdf_fileName`, `self.spectrum`, `self.xaxis`,
+        and pixel coordinates `self.x`, `self.y` are defined.
         """
-        
-        if len(self.hdf_fileName)>0 and len(self.spectrum)>0:
-            
-            s = self.hdf_fileName.split('.h5'); s = s[0]
-            sn = "%s_%s_%s.h5" %(s,str(self.x),str(self.y))
-            print(sn)
+        # Check all prerequisites
+        if not hasattr(self, 'hdf_fileName') or not self.hdf_fileName:
+            print("Missing or invalid HDF5 filename.")
+            return
 
-            h5f = h5py.File(sn, "w")
+        if not hasattr(self, 'spectrum') or not isinstance(self.spectrum, np.ndarray) or self.spectrum.size == 0:
+            print("Spectrum not selected or empty.")
+            return
+
+        if not hasattr(self, 'xaxis') or not isinstance(self.xaxis, np.ndarray) or self.xaxis.size != self.spectrum.size:
+            print("X-axis not defined or does not match spectrum size.")
+            return
+
+        if not all(hasattr(self, attr) for attr in ['x', 'y']):
+            print("Pixel coordinates (x, y) are not defined.")
+            return
+
+        # Safe to proceed with export
+        base = self.hdf_fileName.rsplit('.h5', 1)[0]
+        tag = f"{base}_{self.x}_{self.y}"
+
+        h5_name = f"{tag}.h5"
+        asc_name = f"{tag}.asc"
+        xy_name = f"{tag}.xy"
+
+        print(h5_name)
+
+        with h5py.File(h5_name, "w") as h5f:
             h5f.create_dataset('I', data=self.spectrum)
             h5f.create_dataset('xaxis', data=self.xaxis)
-            h5f.close()
-        
-            xy = np.column_stack((self.xaxis,self.spectrum))
-            sn = "%s_%s_%s.asc" %(s,str(self.x),str(self.y))
-            np.savetxt(sn,xy)
-            
-            xy = np.column_stack((self.xaxis,self.spectrum))
-            sn = "%s_%s_%s.xy" %(s,str(self.x),str(self.y))
-            np.savetxt(sn,xy)
-                
-        else:
-            print("Something is wrong with the data")
+
+        xy_data = np.column_stack((self.xaxis, self.spectrum))
+        np.savetxt(asc_name, xy_data)
+        np.savetxt(xy_name, xy_data)
         
     def exportim(self):
-        
         """
         Export the current spectral/scattering image to HDF5 and PNG formats.
 
@@ -895,28 +906,35 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
         Notes
         -----
-        This function requires `self.hdf_fileName` to be set and `self.image` to be populated.
+        This function requires `self.hdf_fileName`, `self.image`, and `self.index` to be defined and valid.
         """
-        
-        if len(self.hdf_fileName)>0 and len(self.image)>0:
-            s = self.hdf_fileName.split('.h5'); s = s[0]
-            sn = "%s_channel_%s.h5" %(s,str(self.index))
-            print(sn)
+        # Check required attributes exist and are valid
+        if not hasattr(self, 'hdf_fileName') or not self.hdf_fileName:
+            print("Missing or invalid HDF5 filename.")
+            return
 
-            h5f = h5py.File(sn, "w")
+        if not hasattr(self, 'image') or not isinstance(self.image, np.ndarray) or self.image.size == 0:
+            print("No image selected or image is empty.")
+            return
+
+        if not hasattr(self, 'index'):
+            print("No spectral index defined yet.")
+            return
+
+        # Safe to export
+        base = self.hdf_fileName.rsplit('.h5', 1)[0]
+        h5_name = f"{base}_channel_{self.index}.h5"
+        png_name = f"{base}_channel_{self.index}.png"
+
+        print(h5_name)
+        with h5py.File(h5_name, "w") as h5f:
             h5f.create_dataset('I', data=self.image)
-            h5f.create_dataset('Channel', data=self.index)            
-            h5f.close()
-        
-            sn = "%s_channel_%s.png" %(s,str(self.index))
-            plt.imsave(sn,self.image,cmap=self.cmap)
-                        
-        else:
-            print("Something is wrong with the data")
+            h5f.create_dataset('Channel', data=self.index)
+
+        plt.imsave(png_name, self.image, cmap=self.cmap)
             
                 
-    def changecolormap(self,ind):
-
+    def changecolormap(self, ind):
         """
         Change the active colormap used for image display.
 
@@ -927,15 +945,21 @@ class nDTomoGUI(QtWidgets.QMainWindow):
 
         Notes
         -----
-        Attempts to refresh the display by calling `self.update()`, if defined.
+        Updates the display immediately to reflect the new colormap.
         """
-                
         self.cmap = self.cmap_list[ind]
-        print(self.cmap)
+        print(f"Colormap changed to: {self.cmap}")
+
         try:
-            self.update()
-        except: 
-            pass
+            if hasattr(self, 'im') and self.im is not None:
+                self.im.set_cmap(self.cmap)
+                self.canvas_image.draw()
+            
+            if hasattr(self, 'cbar') and self.cbar is not None:
+                self.cbar.update_normal(self.im)
+
+        except Exception as e:
+            print(f"Error updating colormap: {e}")
         
 
     def selXRDCTdata(self):
@@ -1186,7 +1210,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         message = '<b>nDTomoGUI<p>'
         message += '<p><i>Created by Antony Vamvakeros. Running under license under GPLv3'
         message += '<p>Please cite using the following:<p>'
-        message += '<p>Vamvakeros, A. et al., nDTomo software suite, 2019, DOI: https://doi.org/10.5281/zenodo.7139214, url: https://github.com/antonyvam/nDTomo<p>'
+        message += '<p>Vamvakeros, A. et al., nDTomo software suite, 2019, url: https://github.com/antonyvam/nDTomo<p>'
         message += '\t '
         d = QtWidgets.QMessageBox()
         d.setWindowTitle('About')
@@ -1233,6 +1257,18 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         - Updates the image canvas with the new ROI visualization.
         """
         
+        # Ensure chi < chf and both are within volume bounds
+        n_channels = self.volume.shape[2]
+
+        if self.chi > self.chf:
+            self.chi, self.chf = self.chf, self.chi
+            if hasattr(self, 'crspinbox1') and hasattr(self, 'crspinbox2'):
+                self.crspinbox1.setValue(self.chi)
+                self.crspinbox2.setValue(self.chf)
+
+        self.chi = max(0, min(self.chi, n_channels - 1))
+        self.chf = max(self.chi + 1, min(self.chf, n_channels))
+        
         roi = np.arange(self.chi,self.chf)
 
         # Compute central position as float
@@ -1277,9 +1313,18 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         - Display the processed image in the main viewer.
         """
         
-        if self.chf<self.chi:
-            self.chf = self.chi + 1
-            self.crspinbox2.setValue(self.chf)
+        # Ensure chi < chf and both are within volume bounds
+        n_channels = self.volume.shape[2]
+
+        if self.chi > self.chf:
+            self.chi, self.chf = self.chf, self.chi
+            if hasattr(self, 'crspinbox1') and hasattr(self, 'crspinbox2'):
+                self.crspinbox1.setValue(self.chi)
+                self.crspinbox2.setValue(self.chf)
+
+        self.chi = max(0, min(self.chi, n_channels - 1))
+        self.chf = max(self.chi + 1, min(self.chf, n_channels))
+        
         # Update the image display
         self.ax_image.clear()
         roi = np.arange(self.chi,self.chf)
@@ -1322,9 +1367,18 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         - Display the result in the image viewer.
         """
         
-        if self.chf<self.chi:
-            self.chf = self.chi + 1
-            self.crspinbox2.setValue(self.chf)
+        # Ensure chi < chf and both are within volume bounds
+        n_channels = self.volume.shape[2]
+
+        if self.chi > self.chf:
+            self.chi, self.chf = self.chf, self.chi
+            if hasattr(self, 'crspinbox1') and hasattr(self, 'crspinbox2'):
+                self.crspinbox1.setValue(self.chi)
+                self.crspinbox2.setValue(self.chf)
+
+        self.chi = max(0, min(self.chi, n_channels - 1))
+        self.chf = max(self.chi + 1, min(self.chf, n_channels))
+        
         # Update the image display
         self.ax_image.clear()
         roi = np.arange(self.chi,self.chf)
@@ -2111,9 +2165,9 @@ class FitData(QThread):
         self.fitdata = data  
         
         shape = (self.fitdata.shape[0], self.fitdata.shape[1])
-        self.phase = np.full(shape, Area, dtype='float32')
+        self.phase = np.zeros(shape, dtype='float32')
         self.cen = np.full(shape, Pos, dtype='float32')
-        self.wid = np.full(shape, FWHM, dtype='float32')
+        self.wid = np.full(shape, FWHMmin, dtype='float32')
         self.bkg1 = np.zeros(shape, dtype='float32')
         self.bkg2 = np.zeros(shape, dtype='float32')
         self.fr = np.full(shape, 0.5, dtype='float32')     

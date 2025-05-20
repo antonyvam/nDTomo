@@ -14,6 +14,10 @@ It includes:
 
 The software is designed to be accessible to both researchers and students working in chemical imaging, materials science, catalysis, battery research, and synchrotron radiation applications.
 
+.. image:: _static/ndtomo_demo1.gif
+   :alt: nDTomo GUI Demo
+   :align: center
+
 Key Capabilities
 ----------------
 

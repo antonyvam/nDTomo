@@ -15,6 +15,6 @@ This section contains Jupyter notebook examples demonstrating how to use nDTomo.
    notebooks/tutorial_DLSR.ipynb
    notebooks/tutorial_2D_shapes.ipynb
    notebooks/tutorial_3D_shapes.ipynb
-   notebooks/Detector_calibration_Integration_of_2D_powder_diffraction.ipynb
-   notebooks/Texture_2D_powder_diffraction_patterns.ipynb
+   notebooks/tutorial_detector_calibration.ipynb
+   notebooks/tutorial_texture_2D_diffraction_patterns.ipynb
 
