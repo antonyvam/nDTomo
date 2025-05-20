@@ -103,7 +103,6 @@ nbclient==0.10.2
 nbconvert==7.16.6
 nbformat==5.10.4
 # Editable install with no version control (nDTomo==2024.2)
--e z:\users\vaggelis\ndtomo
 nest-asyncio==1.6.0
 networkx==3.2.1
 notebook_shim==0.2.4
