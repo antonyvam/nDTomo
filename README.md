@@ -33,7 +33,7 @@ nDTomo provides tools for:
 8. **Peak fitting using the self-supervised PeakFitCNN**
 9. **Simulanteous peak fitting and tomographic reconstruction using the DLSR approach** using Pytorch GPU
 
-**Quick Demo (Tomography Reconstruction)**: [![Tomography Reconstruction (GoogleColab)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/epapoutsellis/nDTomo/blob/gcolab/gcolab/tutorial_ct_recon_demo.ipynb)    
+**Quick Demo (Tomography Reconstruction)**: [![Tomography Reconstruction (GoogleColab)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/epapoutsellis/nDTomo/blob/gcolab/gcolab/tutorial_ct_recon_demo.ipynb)
 
 
 The aim of this library, among others, is to generate tools for the following:
