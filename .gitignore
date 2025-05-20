@@ -51,3 +51,4 @@ tmp*
 # Jupyter Notebook
 .ipynb_checkpoints
 
+/docs/source/_build
