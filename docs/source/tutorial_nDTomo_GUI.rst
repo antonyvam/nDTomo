@@ -55,6 +55,10 @@ When a file is loaded, the software computes and displays the average image and 
 - Use **mouse scroll** to zoom and drag to pan both plots.
 - **Left-click** enables real-time spectrum updates; **right-click** disables it.
 
+.. image:: _static/ndtomo_demo1.gif
+   :alt: nDTomo GUI Demo
+   :align: center
+
 **Additional features:**
 
 - Change the colormap using the dropdown labeled **"Choose colormap"**.
