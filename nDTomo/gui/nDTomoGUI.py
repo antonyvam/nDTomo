@@ -46,10 +46,6 @@ from matplotlib.figure import Figure
 import matplotlib.pyplot as plt
 import scipy.optimize as sciopt
 from scipy.signal import find_peaks
-import os
-if os.environ.get("READTHEDOCS") != "True":
-    import matplotlib
-    matplotlib.use("Qt5Agg")
 from qtconsole.rich_jupyter_widget import RichJupyterWidget
 from qtconsole.inprocess import QtInProcessKernelManager
 
@@ -1161,8 +1157,6 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         if self.spectrum is None or len(self.spectrum) == 0:
             QtWidgets.QMessageBox.warning(self, "No Spectrum", "Please extract the ROI pattern first.")
             return
-
-        from scipy.signal import find_peaks
 
         # Detect peaks
         peaks, _ = find_peaks(self.spectrum, height=0.1 * np.max(self.spectrum), distance=3)

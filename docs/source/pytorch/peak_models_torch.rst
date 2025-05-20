@@ -1,7 +1,7 @@
 Peak Models Module
 ==================
 
-.. automodule:: nDTomo.torch.peak_models_torch
+.. automodule:: nDTomo.pytorch.peak_models_torch
    :members:
    :undoc-members:
    :show-inheritance:

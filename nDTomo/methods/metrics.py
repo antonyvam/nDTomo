@@ -6,7 +6,7 @@ Metrics for data science
 """
 
 from skimage.metrics import structural_similarity as ssim
-from numpy import sum, mean, max, log10, sqrt, diff, abs
+import numpy as np
 
 def mae(data1, data2):
     """
@@ -19,7 +19,7 @@ def mae(data1, data2):
     Returns:
         float: The mean squared error value.
     """    
-    return mean(abs(data1 - data2))
+    return np.mean(abs(data1 - data2))
 
 def mse(data1, data2):
     """
@@ -32,7 +32,7 @@ def mse(data1, data2):
     Returns:
         float: The mean squared error value.
     """    
-    return mean((data1 - data2) ** 2)
+    return np.mean((data1 - data2) ** 2)
 
 
 def psnr(data1, data2):
@@ -50,7 +50,7 @@ def psnr(data1, data2):
     if mse_val == 0:  # Same volumes
         return 100
     max_pixel = max(data1)
-    return 20 * log10(max_pixel / sqrt(mse_val))
+    return 20 * np.log10(max_pixel / np.sqrt(mse_val))
 
 def ssim_data(data1, data2):
     """
@@ -63,7 +63,7 @@ def ssim_data(data1, data2):
     Returns:
         float: The SSIM value.
     """    
-    data_range = max((data2.max(), data1.max())) - min((data2.min(), data1.min()))
+    data_range = np.max((data2.max(), data1.max())) - np.min((data2.min(), data1.min()))
     return ssim(data1, data2, data_range=data_range)
 
 
@@ -78,8 +78,8 @@ def normalized_cross_correlation(data1, data2):
     Returns:
         float: The NCC value.
     """    
-    numerator = sum((data1 - mean(data1)) * (data2 - mean(data2)))
-    denominator = sqrt(sum((data1 - mean(data1))**2) * sum((data2 - mean(data2))**2))
+    numerator = np.sum((data1 - np.mean(data1)) * (data2 - np.mean(data2)))
+    denominator = np.sqrt(np.sum((data1 - np.mean(data1))**2) * np.sum((data2 - np.mean(data2))**2))
     return numerator/denominator
 
 
@@ -95,15 +95,15 @@ def total_variation_image(image, tv_type):
         float: Total variation value.
     """
     # Calculate differences in x and y directions
-    dx = diff(image, axis=1)
-    dy = diff(image, axis=0)
+    dx = np.diff(image, axis=1)
+    dy = np.diff(image, axis=0)
 
     if tv_type == 'isotropic':
         # Calculate isotropic total variation
-        tv = sum(sqrt(dx**2 + dy**2))
+        tv = np.sum(np.sqrt(dx**2 + dy**2))
     elif tv_type == 'anisotropic':
         # Calculate anisotropic total variation
-        tv = sum(abs(dx)) + sum(abs(dy))
+        tv = np.sum(np.abs(dx)) + np.sum(np.abs(dy))
     else:
         raise ValueError("Invalid TV type. Allowed values are 'isotropic' and 'anisotropic'.")
 
@@ -122,16 +122,16 @@ def total_variation_volume(volume, tv_type):
         float: Total variation value.
     """
     # Calculate differences in x, y, and z directions
-    dx = diff(volume, axis=2)
-    dy = diff(volume, axis=1)
-    dz = diff(volume, axis=0)
+    dx = np.diff(volume, axis=2)
+    dy = np.diff(volume, axis=1)
+    dz = np.diff(volume, axis=0)
 
     if tv_type == 'isotropic':
         # Calculate isotropic total variation
-        tv = sum(sqrt(dx**2 + dy**2 + dz**2))
+        tv = np.sum(np.sqrt(dx**2 + dy**2 + dz**2))
     elif tv_type == 'anisotropic':
         # Calculate anisotropic total variation
-        tv = sum(abs(dx)) + sum(abs(dy)) + sum(abs(dz))
+        tv = np.sum(np.abs(dx)) + np.sum(np.abs(dy)) + np.sum(np.abs(dz))
     else:
         raise ValueError("Invalid TV type. Allowed values are 'isotropic' and 'anisotropic'.")
 
@@ -153,10 +153,10 @@ def calculate_rmse(data1, data2):
     squared_diff = (data1 - data2) ** 2
 
     # Compute the mean squared error
-    mse = mean(squared_diff)
+    mse = np.mean(squared_diff)
 
     # Compute the root mean squared error
-    rmse = sqrt(mse)
+    rmse = np.sqrt(mse)
 
     return rmse
 
@@ -180,7 +180,7 @@ def Rwp(y_obs, y_calc, weights=None):
     numerator = sum(weights * (y_obs - y_calc)**2)
     denominator = sum(weights * y_obs**2)
     
-    return sqrt(numerator / denominator)
+    return np.sqrt(numerator / denominator)
 
 
 def Rexp(y_obs, y_calc, weights=None):
@@ -199,9 +199,9 @@ def Rexp(y_obs, y_calc, weights=None):
     if weights is None:
         weights = 1 / y_obs
 
-    denominator = sum(weights * y_obs**2)
+    denominator = np.sum(weights * y_obs**2)
     
-    return sqrt(1 / denominator)
+    return np.sqrt(1 / denominator)
 
 
 def chi_square(y_obs, y_calc, weights=None):
@@ -220,7 +220,7 @@ def chi_square(y_obs, y_calc, weights=None):
     if weights is None:
         weights = 1 / y_obs
     
-    return sum(weights * (y_obs - y_calc)**2)
+    return np.sum(weights * (y_obs - y_calc)**2)
 
 
 def compute_goodness_of_fit(y_obs, y_calc, weights=None):

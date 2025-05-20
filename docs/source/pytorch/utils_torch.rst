@@ -1,7 +1,7 @@
 Utilities Module
 ================
 
-.. automodule:: nDTomo.torch.utils_torch
+.. automodule:: nDTomo.pytorch.utils_torch
    :members:
    :undoc-members:
    :show-inheritance:

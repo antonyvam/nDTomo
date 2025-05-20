@@ -1,7 +1,7 @@
 Models Module
 =============
 
-.. automodule:: nDTomo.torch.models_torch
+.. automodule:: nDTomo.pytorch.models_torch
    :members:
    :undoc-members:
    :show-inheritance:
