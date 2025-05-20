@@ -42,7 +42,7 @@ The repository includes several **example notebooks** to help users learn the AP
 
 | Notebook Filename | Topic |
 |------------------|--------|
-| [`tutorial_phantoms.ipynb`](examples/notebooks/tutorial_2D_shapes.ipynb) | Generating and visualizing 2D/3D phantoms |
+| [`tutorial_phantoms.ipynb`](examples/notebooks/tutorial_phantoms.ipynb) | Generating and visualizing 2D/3D phantoms |
 | [`tutorial_pencil_beam.ipynb`](examples/notebooks/tutorial_pencil_beam.ipynb) | Simulating pencil beam CT data with different acquisition schemes |
 | [`tutorial_sinogram_handling.ipynb`](examples/notebooks/tutorial_sinogram_handling.ipynb) | Pre-processing, normalization, and correction of sinograms |
 | [`tutorial_ct_recon_demo.ipynb`](examples/notebooks/tutorial_ct_recon_demo.ipynb) | CT image reconstruction from sinograms using analytical and iterative methods |
