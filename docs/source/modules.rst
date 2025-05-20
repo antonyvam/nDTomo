@@ -8,3 +8,4 @@ Available Modules
    tomo/index
    analysis/index
    torch/index
+   gui/index
