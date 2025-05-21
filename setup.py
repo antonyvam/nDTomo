@@ -27,7 +27,7 @@ from setuptools import setup, find_packages
 
 setup(
 	name="nDTomo",
-	version="2025.01",
+	version="2025.05",
 	description="nDTomo software suite",
 	url="http://github.com/antonyvam/nDTomo",
 	author="A. Vamvakeros",

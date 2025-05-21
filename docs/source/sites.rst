@@ -12,6 +12,7 @@ The Tools for Learning, Design and Research (tldr) group : http://tldr-group.git
 ESRF: http://www.esrf.fr/
 
 .. image:: images/ESRF.jpg
+   :scale: 12.5%
 
 
 
