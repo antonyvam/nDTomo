@@ -108,7 +108,7 @@ jobs:
                   license: $license
                 }
               }')" \
-            -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID")
+            -X PUT "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID?mode=replace")
           
           echo "Full response: $RESPONSE"
           
@@ -140,10 +140,10 @@ jobs:
 
           echo "Publish response: $RESPONSE"
 
-          # Instead of checking `.status`, check that `doi_url` exists (indicating publish success)
-          if echo "$RESPONSE" | jq -e '.doi_url' > /dev/null; then
+          if echo "$RESPONSE" | jq -e '.submitted == true' > /dev/null; then
             echo "Zenodo release successfully published."
           else
-            echo "Error: Failed to publish the deposition. Response: $RESPONSE"
+            echo "Warning: Publish may have already succeeded. Manual check recommended. Full response: $RESPONSE"
             exit 1
           fi
+
