@@ -21,7 +21,9 @@ Create a new environment and first install astra-toolbox:
 
 ```
 conda create --name ndtomo python=3.11
+
 conda activate ndtomo
+
 conda install -c astra-toolbox -c nvidia astra-toolbox
 ```
 
@@ -37,6 +39,7 @@ For development work (editable install):
 
 ```
 git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
+
 pip install -e .
 ```
 
@@ -68,6 +71,7 @@ After installing `nDTomo`, the graphical user interface can be launched directly
 
 ```
 conda activate ndtomo
+
 python -m nDTomo.gui.nDTomoGUI
 ```
 
@@ -77,7 +81,9 @@ As a user at the Diamond Light Source, you can install `nDTomo` by doing:
 
 ```
 git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
+
 module load python/3
+
 python setup.py install --user
 ```
 
