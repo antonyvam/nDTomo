@@ -25,6 +25,9 @@
 
 from setuptools import setup, find_packages
 
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
+
 setup(
 	name="nDTomo",
 	version="2025.05",
@@ -49,6 +52,7 @@ setup(
     entry_points={
         'gui_scripts': ['nDTomoGUI = nDTomo.gui.nDTomoGUI:main']
     },		
+    include_package_data=True,
 	license="LICENSE.txt",
 	classifiers=[
 		"Intended Audience :: Science/Research",
@@ -56,5 +60,7 @@ setup(
 		"Topic :: Scientific/Engineering :: Chemistry",
 		"Topic :: Scientific/Engineering :: Visualization",
 		],
+	long_description=long_description,
+	long_description_content_type="text/markdown",
 ) 
 
