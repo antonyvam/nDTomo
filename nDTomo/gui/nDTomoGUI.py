@@ -135,6 +135,9 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.xaxis = np.zeros(())
         self.image = np.zeros(())
         self.spectrum = np.zeros(())
+        self.cbar = None
+        self.im = None
+        self.vline = None
         self.hdf_fileName = ''
         self.c = 3E8
         self.h = 6.620700406E-34        
@@ -549,14 +552,16 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.ax_image = self.fig_image.add_subplot(111)
         self.im = self.ax_image.imshow(mean_image.T, cmap=self.cmap)
 
-        # Add colorbar (or update if it already exists)
+        # Safely remove any existing colorbar
         try:
-            if self.cbar and self.cbar.ax:
+            if hasattr(self, 'cbar') and self.cbar is not None and self.cbar.ax:
                 self.cbar.remove()
-                self.cbar = None
         except Exception as e:
             print("Warning: Failed to remove colorbar:", e)
-            self.cbar = None
+
+        self.cbar = None  # ← move this out of the try: reset cleanly, no matter what
+
+
         self.cbar = self.fig_image.colorbar(self.im, ax=self.ax_image, fraction=0.046, pad=0.04)
 
         self.ax_spectrum.clear()
@@ -792,7 +797,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                         self.im = self.ax_image.imshow(self.image.T, cmap=self.cmap)
                         self.cbar = self.fig_image.colorbar(self.im, ax=self.ax_image, fraction=0.046, pad=0.04)
 
-                    if hasattr(self, 'cbar') and self.cbar is not None:
+                    if hasattr(self, 'cbar') and self.cbar is not None and hasattr(self, 'im') and self.im is not None:
                         self.cbar.update_normal(self.im)
 
                     if self.xaxislabel == 'Channel':
@@ -1066,7 +1071,6 @@ class nDTomoGUI(QtWidgets.QMainWindow):
                         self.xaxis = f[xaxis_label][:]
                         self.xaxislabel = xaxis_label.lstrip('/')            
                         break  # Stop once we find a match             
-
 
                 self.xfit_min_spin.setMaximum(self.volume.shape[2] - 1)
                 self.xfit_max_spin.setMaximum(self.volume.shape[2])
