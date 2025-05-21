@@ -79,7 +79,7 @@ Launch with:
 
 ```bash
 conda activate ndtomo
-nDTomoGUI
+python -m nDTomo.gui.nDTomoGUI
 ```
 
 ## Installation Instructions
