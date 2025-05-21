@@ -73,7 +73,36 @@ jobs:
                       name: "Vamvakeros, Antonis",
                       affiliation: "Finden Ltd / Imperial College London",
                       orcid: "0000-0002-4745-0602"
-                    }
+                    },
+                    {
+                      name: "Papoutsellis, Evangelos",
+                      affiliation: "Finden Ltd",
+                      orcid: "0000-0002-1820-9916"
+                    },
+                    {
+                      name: "Dong, Hongyang",
+                      affiliation: "Finden Ltd"
+                    },    
+                    {
+                      name: "Docherty, Ronan",
+                      affiliation: "Imperial College London",
+                      orcid: "0000-0002-7332-0924"
+                    },
+                    {
+                      name: "Beale, Andrew M.",
+                      affiliation: "University College London / Finden Ltd",
+                      orcid: "0000-0002-0923-1433"
+                    },
+                    {
+                      name: "Cooper, Samuel J.",
+                      affiliation: "Imperial College London",
+                      orcid: "0000-0003-4055-6903"
+                    },
+                    {
+                      name: "Jacques, Simon D.M.",
+                      affiliation: "Finden Ltd",
+                      orcid: "0000-0002-7275-5272"
+                    }                                                            
                   ],
                   access_right: "open",
                   license: $license
