@@ -59,7 +59,7 @@ Each notebook is designed to be **standalone and executable**, with detailed inl
 
 - **Binder** is built with CPU-only support (including `torch`) and can be used to run all notebooks. However, some notebooks may take longer to execute due to the lack of GPU acceleration.
 
-- **Google Colab** provides GPU support, but `torch` is not preinstalled. You will also need to install `nDTomo` at the beginning of each notebook session.
+- **Google Colab** provides GPU support and `torch` is preinstalled. You will also need to install `nDTomo` at the beginning of each notebook session.
 
 ## Graphical User Interface (nDTomoGUI)
 
