@@ -768,7 +768,8 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         - Handles both default x-axis and inverted axes (e.g., `d-spacing`).
         - Ensures compatibility with mouse wheel zoom and interaction events.
         """
-        if self.real_time_update_image and event.inaxes == self.ax_spectrum:
+        if self.real_time_update_image and event.inaxes == self.ax_spectrum and event.xdata is not None:
+
             self.index = event.xdata
 
             if self.index >= 0 and self.index < self.nbins:
