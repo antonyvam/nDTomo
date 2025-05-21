@@ -1,4 +1,4 @@
-![nDTomo](https://raw.githubusercontent.com/antonyvam/nDTomo/main/assets/ndtomo_logo_small.png)
+![nDTomo](assets/ndtomo_logo_small.png)
 
 # nDTomo Software Suite
 
