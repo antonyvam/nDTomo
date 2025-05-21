@@ -92,18 +92,15 @@ An important part of the code is based on astra-toolbox, which is currently avai
 
 It is possible to install astra-toolbox from sources (i.e., if one wants to avoid using conda), but it is not a trivial task. We recommend creating a new conda environment for `nDTomo`.
 
-```bash
-conda install -c astra-toolbox -c nvidia astra-toolbox
-```
-
-### 2. Install nDTomo from GitHub
-
-Create a new environment:
+Create a new environment and first install astra-toolbox:
 
 ```bash
 conda create --name ndtomo python=3.11
 conda activate ndtomo
+conda install -c astra-toolbox -c nvidia astra-toolbox
 ```
+
+### 2. Install nDTomo from GitHub
 
 #### To install using Git:
 
