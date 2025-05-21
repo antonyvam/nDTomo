@@ -78,9 +78,7 @@ nDTomoGUI
 
 ## Installation Instructions
 
-An important part of the code is based on astra-toolbox (and tomopy), which is currently available through conda. To make your life easier, please install [Anaconda](https://www.anaconda.com/products/distribution).
-
-It is possible to install astra-toolbox/tomopy from sources (i.e., if one wants to avoid using conda), but it is not a trivial task. We recommend creating a new conda environment for `nDTomo`.
+The `nDTomo` library and all associated can be installed by following the next three steps:
 
 ### 1. Install nDTomo from GitHub
 
@@ -119,13 +117,19 @@ python3 setup.py install --user
 
 ### 2. Install PyTorch
 
-For Windows/Linux with CUDA 11.8:
+The neural networks, as well as any GPU-based code, used in `nDTomo` require Pytorch which can be installed through pip.
+
+For example, for Windows/Linux with CUDA 11.8:
 
 ```bash
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
 ```
 
 ### 3. Install astra-toolbox
+
+An important part of the code is based on astra-toolbox, which is currently available through conda. To make your life easier, please install [Anaconda](https://www.anaconda.com/products/distribution).
+
+It is possible to install astra-toolbox from sources (i.e., if one wants to avoid using conda), but it is not a trivial task. We recommend creating a new conda environment for `nDTomo`.
 
 ```bash
 conda install -c astra-toolbox -c nvidia astra-toolbox
