@@ -91,7 +91,7 @@ To make your life easier, please install [Anaconda](https://www.anaconda.com/pro
 Create a new environment:
 
 ```bash
-conda create --name ndtomo python=3.9
+conda create --name ndtomo python=3.11
 conda activate ndtomo
 ```
 
