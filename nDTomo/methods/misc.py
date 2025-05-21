@@ -38,22 +38,21 @@ from scipy.optimize import minimize
    
 def ndtomopath():
     """
-    Finds the absolute path of the nDTomo root directory (one level above the package).
+    Returns the absolute path to the installed nDTomo package directory.
+
+    This is useful for locating internal resources such as 'examples/' that now live inside the package.
 
     Returns:
-        str: The absolute path of the nDTomo root directory.
+        str: Absolute path to the nDTomo package.
     """
     spec = importlib.util.find_spec('nDTomo')
     if spec is None or spec.origin is None:
         raise ImportError("nDTomo package not found.")
-    
-    # Path to the package folder
+
+    # Path to the nDTomo package folder
     package_dir = os.path.dirname(spec.origin)
-
-    # One level up: the root of the nDTomo project
-    ndtomo_root = os.path.dirname(package_dir)
-
-    return ndtomo_root
+    
+    return package_dir
 
 def create_circle(npix_im=512, r0=128):
     
