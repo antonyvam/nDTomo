@@ -4,8 +4,6 @@
 
 **nDTomo** is a Python-based software suite for the **simulation, visualization, pre-processing, reconstruction, and analysis** of chemical imaging and X-ray tomography data, with a focus on hyperspectral datasets such as X-ray powder diffraction computed tomography or XRD-CT.
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/epapoutsellis/nDTomo/cloud_exs?urlpath=%2Fdoc%2Ftree%2Fdocs%2Fsource%2Fnotebooks) [![Tomography Reconstruction (GoogleColab)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/epapoutsellis/nDTomo/blob/cloud_exs/gcolab/tutorial_ct_recon_demo.ipynb)
-
 It includes:
 
 - A suite of **notebooks and scripts** for advanced processing, sinogram correction, CT reconstruction, peak fitting, and machine learning-based analysis
@@ -40,6 +38,8 @@ nDTomo provides tools for:
 
 The repository includes several **example notebooks** to help users learn the API and workflows:
 
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/epapoutsellis/nDTomo/cloud_exs?urlpath=%2Fdoc%2Ftree%2Fdocs%2Fsource%2Fnotebooks) [![Tomography Reconstruction (GoogleColab)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/epapoutsellis/nDTomo/blob/cloud_exs/gcolab/tutorial_ct_recon_demo.ipynb)
+
 | Notebook Filename | Topic |
 |------------------|--------|
 | [`tutorial_phantoms.ipynb`](examples/notebooks/tutorial_phantoms.ipynb) | Generating and visualizing 2D/3D phantoms |
@@ -54,6 +54,12 @@ The repository includes several **example notebooks** to help users learn the AP
 | [`tutorial_DLSR.ipynb`](examples/notebooks/tutorial_DLSR.ipynb) | Simultaneous peak fitting and CT reconstruction in GPU using the DLSR method |
 
 Each notebook is designed to be **standalone and executable**, with detailed inline comments and example outputs.
+
+**Note:**
+
+- **Binder** is built with CPU-only support (including `torch`) and can be used to run all notebooks. However, some notebooks may take longer to execute due to the lack of GPU acceleration.
+
+- **Google Colab** provides GPU support, but `torch` is not preinstalled. You will also need to install `nDTomo` at the beginning of each notebook session.
 
 ## Graphical User Interface (nDTomoGUI)
 
