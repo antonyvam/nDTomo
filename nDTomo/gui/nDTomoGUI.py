@@ -559,8 +559,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         except Exception as e:
             print("Warning: Failed to remove colorbar:", e)
 
-        self.cbar = None  # ← move this out of the try: reset cleanly, no matter what
-
+        self.cbar = None
 
         self.cbar = self.fig_image.colorbar(self.im, ax=self.ax_image, fraction=0.046, pad=0.04)
 
@@ -778,43 +777,43 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             self.index = event.xdata
 
             if self.index >= 0 and self.index < self.nbins:
-                try:
-                    if self.xaxislabel == 'd':
-                        self.index = len(self.xaxis) - np.searchsorted(self.xaxisd, [self.index])[0]
-                    else:
-                        self.index = np.searchsorted(self.xaxis.flatten(), [self.index])[0] - 1
+                # try:
+                if self.xaxislabel == 'd':
+                    self.index = len(self.xaxis) - np.searchsorted(self.xaxisd, [self.index])[0]
+                else:
+                    self.index = np.searchsorted(self.xaxis.flatten(), [self.index])[0] - 1
 
-                    self.index = max(0, min(self.index, len(self.xaxis) - 1))
+                self.index = max(0, min(self.index, len(self.xaxis) - 1))
 
-                    # Get image at selected index
-                    self.image = self.volume[:, :, self.index]
+                # Get image at selected index
+                self.image = self.volume[:, :, self.index]
 
-                    # Ensure the image object exists
-                    if hasattr(self, 'im') and self.im is not None:
-                        self.im.set_data(self.image.T)
-                        self.im.set_clim(np.min(self.image), np.max(self.image))
-                    else:
-                        self.im = self.ax_image.imshow(self.image.T, cmap=self.cmap)
-                        self.cbar = self.fig_image.colorbar(self.im, ax=self.ax_image, fraction=0.046, pad=0.04)
+                # Ensure the image object exists
+                if hasattr(self, 'im') and self.im is not None:
+                    self.im.set_data(self.image.T)
+                    self.im.set_clim(np.min(self.image), np.max(self.image))
+                else:
+                    self.im = self.ax_image.imshow(self.image.T, cmap=self.cmap)
+                    self.cbar = self.fig_image.colorbar(self.im, ax=self.ax_image, fraction=0.046, pad=0.04)
 
-                    if hasattr(self, 'cbar') and self.cbar is not None and hasattr(self, 'im') and self.im is not None:
-                        self.cbar.update_normal(self.im)
+                if hasattr(self, 'cbar') and self.cbar is not None and hasattr(self, 'im') and self.im is not None:
+                    self.cbar.update_normal(self.im)
 
-                    if self.xaxislabel == 'Channel':
-                        self.ax_image.set_title(f"Image: Channel {self.index}")
-                    else:
-                        self.ax_image.set_title("Image: Channel %d, %s %.3f" %
-                                                (self.index, self.xaxislabel, self.xaxis[self.index]))
+                if self.xaxislabel == 'Channel':
+                    self.ax_image.set_title(f"Image: Channel {self.index}")
+                else:
+                    self.ax_image.set_title("Image: Channel %d, %s %.3f" %
+                                            (self.index, self.xaxislabel, self.xaxis[self.index]))
 
-                    # Move vertical line on spectrum plot
-                    if hasattr(self, 'vline'):
-                        self.vline.set_xdata(self.xaxis[self.index])
-                        self.canvas_spectrum.draw()
+                # Move vertical line on spectrum plot
+                if hasattr(self, 'vline'):
+                    self.vline.set_xdata([self.xaxis[self.index]])
+                    self.canvas_spectrum.draw()
 
-                    self.canvas_image.draw()
+                self.canvas_image.draw()
 
-                except Exception as e:
-                    print(f"Error in update_image: {e}")
+                # except Exception as e:
+                #     print(f"Error in update_image: {e}")
 
     def toggle_real_time_spectrum(self, event):
         """
