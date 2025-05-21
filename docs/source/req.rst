@@ -20,7 +20,7 @@ It is possible to install astra-toolbox from sources (i.e., if one wants to avoi
 Create a new environment and first install astra-toolbox:
 
 ```
-conda create --name ndtomo python=3.9
+conda create --name ndtomo python=3.11
 conda activate ndtomo
 conda install -c astra-toolbox -c nvidia astra-toolbox
 ```
