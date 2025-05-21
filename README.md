@@ -78,7 +78,7 @@ nDTomoGUI
 
 ## Installation Instructions
 
-The `nDTomo` library and all associated can be installed by following the next three steps:
+To make your life easier, please install [Anaconda](https://www.anaconda.com/products/distribution). The `nDTomo` library and all associated ode can be installed by following the next three steps:
 
 ### 1. Install nDTomo from GitHub
 
@@ -127,7 +127,7 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 
 ### 3. Install astra-toolbox
 
-An important part of the code is based on astra-toolbox, which is currently available through conda. To make your life easier, please install [Anaconda](https://www.anaconda.com/products/distribution).
+An important part of the code is based on astra-toolbox, which is currently available through conda.
 
 It is possible to install astra-toolbox from sources (i.e., if one wants to avoid using conda), but it is not a trivial task. We recommend creating a new conda environment for `nDTomo`.
 
