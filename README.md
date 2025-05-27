@@ -102,7 +102,15 @@ conda install -c astra-toolbox -c nvidia astra-toolbox
 
 ### 2. Install nDTomo from GitHub
 
-#### To install using Git:
+You can choose one of the following options to install the nDTomo library:
+
+#### a. To install using pip:
+
+```bash
+pip install nDTomo
+```
+
+#### b. To install using Git:
 
 ```bash
 pip install git+https://github.com/antonyvam/nDTomo.git
@@ -114,7 +122,7 @@ git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
 pip install -e .
 ```
 
-#### For local installation after downloading the repo:
+#### c. For local installation after downloading the repo:
 
 Navigate to where the `setup.py` file is located and run:
 
