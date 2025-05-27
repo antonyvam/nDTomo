@@ -52,3 +52,4 @@ tmp*
 .ipynb_checkpoints
 
 /docs/source/_build
+.pypirc
