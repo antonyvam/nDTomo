@@ -16,7 +16,7 @@ Key functionalities:
 - Interpolation in 1D, 2D, and 3D
 - Image segmentation, thresholding, and morphological filling
 - Matrix size harmonization (even sizing, padding)
-- Spectral registration and rebinding
+- Spectral registration and rebinning
 - Interactive shape fitting (circle/ellipse)
 - Miscellaneous utility functions (e.g., RGB to grayscale)
 
