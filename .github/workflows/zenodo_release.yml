@@ -18,7 +18,8 @@ jobs:
       # Step 2: Compress the release files
       - name: Prepare Release Files
         run: |
-          zip -r release_files.zip .
+          zip -r "nDTomo-${{ github.event.release.tag_name }}.zip" .
+          echo "ZIP_NAME=nDTomo-${{ github.event.release.tag_name }}.zip" >> $GITHUB_ENV
 
       # Step 3: Extract Metadata from GitHub Release
       - name: Extract Metadata
@@ -54,6 +55,7 @@ jobs:
           NEW_DEPOSITION_ID: ${{ env.deposition_id }}
           RELEASE_TAG: ${{ env.RELEASE_TAG }}
           RELEASE_BODY: ${{ env.RELEASE_BODY }}
+          ZIP_NAME: ${{ env.ZIP_NAME }}
         run: |
           RESPONSE=$(curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
             -H "Content-Type: application/json" \
@@ -128,7 +130,7 @@ jobs:
           NEW_DEPOSITION_ID: ${{ env.deposition_id }}
         run: |
           curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
-            -F "file=@release_files.zip" \
+            -F "file=@${ZIP_NAME}" \
             "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID/files"
 
       # Step 7: Publish the new deposition
