@@ -62,12 +62,14 @@ jobs:
               --arg description "${RELEASE_BODY}" \
               --arg date "$(date +%Y-%m-%d)" \
               --arg license "gpl-3.0" \
+              --arg version "${RELEASE_TAG}" \
               '{
                 metadata: {
                   title: $title,
                   description: $description,
                   upload_type: "software",
                   publication_date: $date,
+                  version: $version,
                   creators: [
                     {
                       name: "Vamvakeros, Antonis",
