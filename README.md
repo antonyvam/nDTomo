@@ -167,9 +167,9 @@ python setup.py install --user
 
 ## Citation
 
-We are currently preparing a manuscript for `nDTomo`. In the meantime, if you use parts of the code, please cite the work using the following:
+We are currently preparing a manuscript for `nDTomo`. In the meantime, if you use parts of the code, please cite the work using the following preprint:
 
-Vamvakeros, A., Papoutsellis, E., Dong, H., Docherty, R., Beale, A.M., Cooper, S.J., Jacques, S.D.M.J., *nDTomo: A Python-Based Software Suite for X-ray Chemical Imaging and Tomography*, 2025, https://github.com/antonyvam/nDTomo
+Vamvakeros, A., Papoutsellis, E., Dong, H., Docherty, R., Beale, A.M., Cooper, S.J., Jacques, S.D.M.J., *nDTomo: A Python-Based Software Suite for X-ray Chemical Imaging and Tomography*, 2025, https://doi.org/10.26434/chemrxiv-2025-h5t2x
 
 ## References
 
