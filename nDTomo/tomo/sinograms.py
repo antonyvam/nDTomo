@@ -267,9 +267,8 @@ def sinocomcor(sinograms, interp=False, sine_wave=False, sine_wave_plot=False, p
     sn = np.zeros_like(sinograms)
     xold = np.arange(sn.shape[0])
 
-    loop_range = tqdm(range(sinograms.shape[1])) if pbar else range(sinograms.shape[1])
-    
     if len(di) == 2:  # For 2D sinograms
+        loop_range = tqdm(range(sinograms.shape[1])) if pbar else range(sinograms.shape[1])
         for ii in loop_range:
             if sine_wave:
                 xnew = xold - (y_fit[ii] - com[ii])
@@ -281,6 +280,7 @@ def sinocomcor(sinograms, interp=False, sine_wave=False, sine_wave_plot=False, p
                 sn[:, ii] = np.interp(xnew, xold, sinograms[:, ii], left=0, right=0)
 
     elif len(di) == 3:  # For 3D sinograms
+        loop_range = tqdm(range(sinograms.shape[2])) if pbar else range(sinograms.shape[2])
         for ll in loop_range:
             for ii in range(sinograms.shape[1]):
                 if sine_wave:
