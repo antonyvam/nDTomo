@@ -18,6 +18,7 @@ scientific simulations, and 3D image processing tasks.
 """
 
 import numpy as np
+from tqdm import tqdm
 
 def create_sphere(arr, center, outer_radius, thickness=0, fill_value=1):
     """
@@ -725,7 +726,7 @@ def create_voronoi_3d(arr, seed_points, fill_values=None):
     # Compute squared distance to each seed point
     dist_matrix = np.full((D, H, W, len(seed_points)), np.inf)
 
-    for i, (x, y, z) in enumerate(seed_points):
+    for i, (x, y, z) in tqdm(enumerate(seed_points)):
         dist_matrix[:, :, :, i] = (X - x) ** 2 + (Y - y) ** 2 + (Z - z) ** 2  # Squared Euclidean distance
 
     # Find the closest seed point for each voxel
