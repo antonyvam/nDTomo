@@ -174,15 +174,22 @@ We are currently preparing a manuscript for `nDTomo`. In the meantime, if you us
 ## References
 
 [1] "Cycling Rate-Induced Spatially-Resolved Heterogeneities in Commercial Cylindrical Li-Ion Batteries", A. Vamvakeros, D. Matras, T.E. Ashton, A.A. Coelho, H. Dong, D. Bauer, Y. Odarchenko, S.W.T. Price, K.T. Butler, O. Gutowski, A.-C. Dippel, M. von Zimmerman, J.A. Darr, S.D.M. Jacques, A.M. Beale, Small Methods, 2100512, 2021. https://doi.org/10.1002/smtd.202100512
+
 [2] "Emerging chemical heterogeneities in a commercial 18650 NCA Li-ion battery during early cycling revealed by synchrotron X-ray diffraction tomography", D. Matras, T.E. Ashton, H. Dong, M. Mirolo, I. Martens, J. Drnec, J.A. Darr, P.D. Quinn, S.D.M. Jacques, A.M. Beale, A. Vamvakeros, Journal of Power Sources 539, 231589, 2022, https://doi.org/10.1016/j.jpowsour.2022.231589
 
 ## Previous technical work (reverse chronological order)
 
 [1] "Obtaining parallax-free X-ray powder diffraction computed tomography data with a self-supervised neural network", H. Dong, S.D.M. Jacques, K.T. Butler, O. Gutowski, A.-C. Dippel, M. von Zimmerman, A.M. Beale, A. Vamvakeros, npj Computational Materials 10 (1), 201, 2024, https://doi.org/10.1038/s41524-024-01389-1
+
 [2] "SAMBA: A Trainable Segmentation Web-App with Smart Labelling", R. Docherty, I. Squires, A. Vamvakeros, S.J. Cooper, Journal of Open Source Software 9 (98), 6159, 2024, https://doi.org/10.21105/joss.06159
+
 [3] "A scalable neural network architecture for self-supervised tomographic image reconstruction", H. Dong, S.D.M. Jacques, W. Kockelmann, S.W.T. Price, R. Emberson, D. Matras, Y. Odarchenko, V. Middelkoop, A. Giokaris, O. Gutowski, A.-C. Dippel, M. von Zimmermann, A.M. Beale, K.T. Butler, A. Vamvakeros, Digital Discovery 2 (4), 967-980, 2023, https://doi.org/10.1039/D2DD00105E
+
 [4] "A deep convolutional neural network for real-time full profile analysis of big powder diffraction data", H. Dong, K.T. Butler, D. Matras, S.W.T. Price, Y. Odarchenko, R. Khatry, A. Thompson, V. Middelkoop, S.D.M. Jacques, A.M. Beale, A. Vamvakeros, npj Computational Materials 7 (1), 74, 2021, https://doi.org/10.1038/s41524-021-00542-4
+
 [5] "DLSR: a solution to the parallax artefact in X-ray diffraction computed tomography data", A. Vamvakeros, A.A. Coelho, D. Matras, H. Dong, Y. Odarchenko, S.W.T. Price, K.T. Butler, O. Gutowski, A.-C. Dippel, M. von Zimmermann, I. Martens, J. Drnec, A.M. Beale, S.D.M. [1] "Interlaced X-ray diffraction computed tomography", A. Vamvakeros, S.D.M. Jacques, M. Di Michiel, P. Senecal, V. Middelkoop, R.J. Cernik and A.M. Beale, Journal of Applied Crystallography 49 (2), 485-496, 2016, https://doi.org/10.1107/S160057671600131X
+
 [6] "Interlaced X-ray diffraction computed tomography", A. Vamvakeros, S.D.M. Jacques, M. Di Michiel, P. Senecal, V. Middelkoop, R.J. Cernik and A.M. Beale, Journal of Applied Crystallography 49 (2), 485-496, 2016, https://doi.org/10.1107/S160057671600131X
+
 [7] "Removing multiple outliers and single-crystal artefacts from X-ray diffraction computed tomography data", A. Vamvakeros, S.D.M. Jacques, M. Di Michiel, V. Middelkoop, C.K. Egan, R. J. Cernik, A. M Beale, Journal of Applied Crystallography 48 (6), 1943-1955, 2015, 
 Jacques, Journal of Applied Crystallography 53 (6), 1531-1541, 2020, https://doi.org/10.1107/S1600576720013576
