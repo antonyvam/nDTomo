@@ -187,7 +187,7 @@ We are currently preparing a manuscript for `nDTomo`. In the meantime, if you us
 
 [4] "A deep convolutional neural network for real-time full profile analysis of big powder diffraction data", H. Dong, K.T. Butler, D. Matras, S.W.T. Price, Y. Odarchenko, R. Khatry, A. Thompson, V. Middelkoop, S.D.M. Jacques, A.M. Beale, A. Vamvakeros, npj Computational Materials 7 (1), 74, 2021, https://doi.org/10.1038/s41524-021-00542-4
 
-[5] "DLSR: a solution to the parallax artefact in X-ray diffraction computed tomography data", A. Vamvakeros, A.A. Coelho, D. Matras, H. Dong, Y. Odarchenko, S.W.T. Price, K.T. Butler, O. Gutowski, A.-C. Dippel, M. von Zimmermann, I. Martens, J. Drnec, A.M. Beale, S.D.M. [1] "Interlaced X-ray diffraction computed tomography", A. Vamvakeros, S.D.M. Jacques, M. Di Michiel, P. Senecal, V. Middelkoop, R.J. Cernik and A.M. Beale, Journal of Applied Crystallography 49 (2), 485-496, 2016, https://doi.org/10.1107/S160057671600131X
+[5] "DLSR: a solution to the parallax artefact in X-ray diffraction computed tomography data", A. Vamvakeros, A.A. Coelho, D. Matras, H. Dong, Y. Odarchenko, S.W.T. Price, K.T. Butler, O. Gutowski, A.-C. Dippel, M. von Zimmermann, I. Martens, J. Drnec, A.M. Beale, S.D.M. Jacques, https://doi.org/10.1107/S1600576720013576
 
 [6] "Interlaced X-ray diffraction computed tomography", A. Vamvakeros, S.D.M. Jacques, M. Di Michiel, P. Senecal, V. Middelkoop, R.J. Cernik and A.M. Beale, Journal of Applied Crystallography 49 (2), 485-496, 2016, https://doi.org/10.1107/S160057671600131X
 
