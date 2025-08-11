@@ -1,4 +1,4 @@
-![nDTomo](assets/ndtomo_logo_small.png)
+![nDTomo](https://raw.githubusercontent.com/antonyvam/nDTomo/master/assets/ndtomo_logo_small.png)
 
 # nDTomo Software Suite
 
@@ -30,7 +30,7 @@ nDTomo provides tools for:
 8. **Peak fitting using the self-supervised PeakFitCNN**
 9. **Simultaneous peak fitting and tomographic reconstruction using the DLSR approach** with PyTorch GPU acceleration
 
-![XRD-CT](assets/xrdct.png)
+![XRD-CT](https://raw.githubusercontent.com/antonyvam/nDTomo/master/assets/xrdct.png)
 
 *Figure: Comparison between X-ray absorption-contrast CT (or microCT) and X-ray diffraction CT (XRD-CT or Powder diffraction CT) data acquired from a cylindrical Li-ion battery. For more details regarding these XRD-CT studies using cylindrical Li-ion batteries see [1,2].*
 
@@ -42,16 +42,16 @@ The repository includes several **example notebooks** to help users learn the AP
 
 | Notebook Filename | Topic |
 |------------------|--------|
-| [`tutorial_phantoms.ipynb`](docs/source/notebooks/tutorial_phantoms.ipynb) | Generating and visualizing 2D/3D phantoms |
-| [`tutorial_pencil_beam.ipynb`](docs/source/notebooks/tutorial_pencil_beam.ipynb) | Simulating pencil beam CT data with different acquisition schemes |
-| [`tutorial_detector_calibration.ipynb`](docs/source/notebooks/tutorial_detector_calibration.ipynb) | Calibrating detectors and integrating diffraction patterns using pyFAI |
-| [`tutorial_texture_2D_diffraction_patterns.ipynb`](docs/source/notebooks/tutorial_texture_2D_diffraction_patterns.ipynb) | Investigating the effects of texture on 2D powder patterns |
-| [`tutorial_sinogram_handling.ipynb`](docs/source/notebooks/tutorial_sinogram_handling.ipynb) | Pre-processing, normalization, and correction of sinograms |
-| [`tutorial_ct_recon_demo.ipynb`](docs/source/notebooks/tutorial_ct_recon_demo.ipynb) | CT image reconstruction from sinograms using analytical and iterative methods |
-| [`tutorial_dimensionality_reduction.ipynb`](docs/source/notebooks/tutorial_dimensionality_reduction.ipynb) | Unsupervised learning for phase identification in tomography |
-| [`tutorial_peak_fitting.ipynb`](docs/source/notebooks/tutorial_peak_fitting.ipynb) | Peak fitting in synthetic XRD-CT datasets |
-| [`tutorial_peak_fit_cnn.ipynb`](docs/source/notebooks/tutorial_peak_fit_cnn.ipynb) | Peak fitting in GPU using a self-supervised PeakFitCNN |
-| [`tutorial_DLSR.ipynb`](docs/source/notebooks/tutorial_DLSR.ipynb) | Simultaneous peak fitting and CT reconstruction in GPU using the DLSR method |
+| [`tutorial_phantoms.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_phantoms.ipynb) | Generating and visualizing 2D/3D phantoms |
+| [`tutorial_pencil_beam.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_pencil_beam.ipynb) | Simulating pencil beam CT data with different acquisition schemes |
+| [`tutorial_detector_calibration.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_detector_calibration.ipynb) | Calibrating detectors and integrating diffraction patterns using pyFAI |
+| [`tutorial_texture_2D_diffraction_patterns.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_texture_2D_diffraction_patterns.ipynb) | Investigating the effects of texture on 2D powder patterns |
+| [`tutorial_sinogram_handling.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_sinogram_handling.ipynb) | Pre-processing, normalization, and correction of sinograms |
+| [`tutorial_ct_recon_demo.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_ct_recon_demo.ipynb) | CT image reconstruction from sinograms using analytical and iterative methods |
+| [`tutorial_dimensionality_reduction.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_dimensionality_reduction.ipynb) | Unsupervised learning for phase identification in tomography |
+| [`tutorial_peak_fitting.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_peak_fitting.ipynb) | Peak fitting in synthetic XRD-CT datasets |
+| [`tutorial_peak_fit_cnn.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_peak_fit_cnn.ipynb) | Peak fitting in GPU using a self-supervised PeakFitCNN |
+| [`tutorial_DLSR.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_DLSR.ipynb) | Simultaneous peak fitting and CT reconstruction in GPU using the DLSR method |
 
 Each notebook is designed to be **standalone and executable**, with detailed inline comments and example outputs.
 
