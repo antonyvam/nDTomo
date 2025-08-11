@@ -14,7 +14,7 @@ The software is designed to be accessible to both researchers and students worki
 
 📘 Official documentation: https://ndtomo.readthedocs.io
 
-![XRD-CT](assets/ndtomo_demo1.gif)
+![XRD-CT](https://raw.githubusercontent.com/antonyvam/nDTomo/master/assets/ndtomo_demo1.gif)
 
 ## Key Capabilities
 
