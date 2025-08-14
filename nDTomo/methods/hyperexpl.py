@@ -381,7 +381,7 @@ class ImageSpectrumGUI:
     spectral bands and voxel positions. Ideal for quick exploratory analysis.
     """    
     
-    def __init__(self, volume):
+    def __init__(self, volume, cmap='jet'):
         
         """
         Initialize the ImageSpectrumGUI.
@@ -403,7 +403,7 @@ class ImageSpectrumGUI:
         mean_spectrum = np.mean(volume, axis=(0, 1))
 
         # Plot the mean image and mean spectrum
-        self.image = self.ax_image.imshow(mean_image.T, cmap='gray')
+        self.image = self.ax_image.imshow(mean_image.T, cmap=cmap)
         self.spectrum, = self.ax_spectrum.plot(mean_spectrum, color='b')
 
         # Set titles for image and spectrum
