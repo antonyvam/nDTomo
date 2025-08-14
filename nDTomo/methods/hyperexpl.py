@@ -371,29 +371,67 @@ class HyperSliceExplorer():
         self.mapper.show()
         self.mapper.draw_all() 
 
+
 class ImageSpectrumGUI:
     
     """
-    A simple GUI to explore 2D hyperspectral imaging data.
+    Interactive viewer for 2D hyperspectral images (rows x cols x channels).
 
-    Displays an image slice alongside the corresponding spectral data 
-    for the voxel under the mouse. Interaction allows switching between 
-    spectral bands and voxel positions. Ideal for quick exploratory analysis.
-    """    
+    The left pane shows an image for a chosen spectral band; the right pane
+    shows the spectrum at the current mouse position. Hovering over the image
+    updates the spectrum to the voxel (x, y) under the cursor. Hovering over
+    the spectrum updates the image to the spectral band under the cursor
+    (i.e., quick band scrubbing).
+
+    Right-click toggles “live” updates independently for each pane so you can
+    freeze either the image or the spectrum while inspecting the other.
+
+    If an optional boolean `mask` is provided, it is overlaid in color on the
+    image view to help assess segmentation quality (uses a semi-transparent
+    overlay). This is useful for QA of thresholding/segmentation against the
+    raw grayscale signal.
+
+    Notes
+    -----
+    - Expected input shape is (rows, cols, channels). Displayed images are
+      normalized for visualization only; underlying data are unchanged.
+    - The overlay `mask` should match `volume.shape[:2]` or `volume.shape`
+      (if channel-wise masks); when 3D it uses the slice `mask[:, :, band]`.
+    - Designed for quick exploratory analysis without precomputations; large
+      volumes are fine as only the needed slices/vectors are drawn on demand.
+    """
     
-    def __init__(self, volume, cmap='jet'):
+    def __init__(self, volume, cmap='jet', mask=None):
         
         """
-        Initialize the ImageSpectrumGUI.
+        Initialize the interactive viewer.
 
         Parameters
         ----------
         volume : ndarray
-            2D hyperspectral imaging data with shape (rows, cols, channels).
-            The GUI will display mean images and spectra, and update them
-            interactively based on mouse position.
+            Hyperspectral data with shape (rows, cols, channels). The left
+            panel starts from the mean image over channels; the right panel
+            starts from the mean spectrum over (rows, cols). Moving the mouse
+            updates the other panel in real time.
+        cmap : str, optional
+            Matplotlib colormap for the image view (default: 'jet'). Ignored
+            when a color overlay is rendered by `mask` for a given band.
+        mask : ndarray of bool, optional
+            Segmentation mask to overlay on the image view for visual QA.
+            shape == (rows, cols, channels): the band-specific mask
+            `mask[:, :, band]` is shown when that band is displayed.
+
+        Interaction
+        -----------
+        - Hover over image: updates spectrum at cursor (x, y).
+        - Hover over spectrum: updates image to nearest spectral band index.
+        - Right-click on a panel: toggles live updates for that panel on/off.
+
         """
+
         self.volume = volume
+        if mask is not None:
+            self.mask = mask
 
         # Create main figure and subplots
         self.fig, (self.ax_image, self.ax_spectrum) = plt.subplots(1, 2, figsize=(10, 5))
@@ -460,8 +498,13 @@ class ImageSpectrumGUI:
             # Get the image from the volume
             image = self.volume[:, :, index]
 
+            if self.mask is not None:
+                image = label2rgb(self.mask[:, :, index], image=image,
+                                  bg_label=0, alpha=0.35,
+                                  colors=[(1, 0, 0)])
+
             # Update the image display
-            self.image.set_data(image.T)
+            self.image.set_data(image.transpose(1,0,2))
             self.ax_image.relim()
             self.ax_image.autoscale_view()
 
@@ -489,7 +532,6 @@ class ImageSpectrumGUI:
                 self.image_real_time_update = not self.image_real_time_update
             elif event.inaxes == self.ax_spectrum:
                 self.spectrum_real_time_update = not self.spectrum_real_time_update
-
 
 
 
