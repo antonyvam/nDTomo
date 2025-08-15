@@ -485,128 +485,6 @@ class CNN3D(nn.Module):
         else:
             out = self.cnn3d(x)
         return out
-    
-class SD2I(nn.Module):
-    
-    """
-    The SD2I model combines dense layers and 2D convolutions to generate high-resolution 2D images from a single input.
-    It uses progressive upsampling and deep feature refinement and is suitable for inverse problems or image synthesis.
-
-    Parameters
-    ----------
-    npix : int
-        Target image size (npix x npix).
-    factor : int
-        Latent channel factor to expand dense output into feature maps.
-    nims : int
-        Number of output images (channels).
-    nfilts : int
-        Number of filters in convolutional blocks.
-    ndense : int
-        Width of fully connected layers before reshaping into feature maps.
-    dropout : bool
-        Whether to use dropout in dense layers.
-    norm_type : str or None
-        Normalization type: 'batch', 'layer', or None.
-    upsampling : int
-        Number of upsampling steps (1, 2, or 4).
-    act_layer : str
-        Final activation function: 'Sigmoid' or None.
-
-    Forward
-    -------
-    x : torch.Tensor
-        Input tensor of shape (batch_size, 1) — a single scalar per sample.
-
-    Returns
-    -------
-    torch.Tensor
-        Output tensor of shape (batch_size, nims, npix, npix).
-    """
-    
-    def __init__(self, npix, factor=8, nims=5, nfilts = 32, ndense = 64, dropout=True, norm_type='layer', upsampling = 4, act_layer='Sigmoid'):
-        
-        super(SD2I, self).__init__()
-        
-        self.npix = npix
-        self.act_layer = act_layer
-        self.upsampling = upsampling
-        self.flatten = nn.Flatten()
-        
-        layers = []
-        layers.append(nn.Linear(1, ndense))
-        layers.append(nn.ReLU())
-        for _ in range(3):  # Repeat the following block 4 times
-            layers.append(nn.Linear(ndense, ndense))
-            layers.append(nn.ReLU())
-            if dropout:
-                layers.append(nn.Dropout1d(0.01))
-        self.dense_stack = nn.Sequential(*layers)
-        
-        dense_large = []
-        dense_large.append(nn.Linear(ndense, int(np.ceil(self.npix / self.upsampling)) * int(np.ceil(self.npix / self.upsampling)) * factor))
-        dense_large.append(nn.ReLU())
-        if dropout:
-            dense_large.append(nn.Dropout1d(0.01))
-        self.dense_large = nn.Sequential(*dense_large)
-        
-        self.reshape = nn.Unflatten(1, (factor, int(np.ceil(self.npix / self.upsampling)), int(np.ceil(self.npix / self.upsampling))))
-            
-        conv_layers = []
-        conv_layers.append(nn.Conv2d(factor, nfilts, kernel_size=3, stride=1, padding='same'))
-        if norm_type is not None:
-            if norm_type == 'batch':
-                conv_layers.append(nn.BatchNorm2d(nfilts))
-            elif norm_type == 'layer':
-                conv_layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))            
-        conv_layers.append(nn.ReLU())        
-        for _ in range(2):  # Repeat the following block 3 times
-            conv_layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'))
-            if norm_type is not None:
-                if norm_type == 'batch':
-                    conv_layers.append(nn.BatchNorm2d(nfilts))
-                elif norm_type == 'layer':
-                    conv_layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))           
-            conv_layers.append(nn.ReLU())        
-        self.conv2d_stack_afterdense = nn.Sequential(*conv_layers)
-
-        conv_layers = []
-        for _ in range(3):  # Repeat the following block 3 times
-            conv_layers.append(nn.Conv2d(nfilts, nfilts, kernel_size=3, stride=1, padding='same'))
-            if norm_type is not None:
-                if norm_type == 'batch':
-                    conv_layers.append(nn.BatchNorm2d(nfilts))
-                elif norm_type == 'layer':
-                    conv_layers.append(nn.LayerNorm([nfilts, self.npix, self.npix]))          
-            conv_layers.append(nn.ReLU())        
-        self.conv2d_stack = nn.Sequential(*conv_layers)
-        
-        self.conv2d_final = nn.Conv2d(nfilts, nims, kernel_size=3, stride=1, padding='same')
-        self.upsample2D = nn.Upsample(scale_factor=2, mode='bilinear')
-        self.Sigmoid = nn.Sigmoid()
-        
-            
-    def forward(self, x):
-        x = self.flatten(x)
-        x = self.dense_stack(x)
-        x = self.dense_large(x)
-        x = self.reshape(x)
-
-        if self.upsampling == 4:
-            x = self.upsample2D(x)
-            x = self.conv2d_stack_afterdense(x)
-            x = self.upsample2D(x)
-            x = self.conv2d_stack(x)
-        elif self.upsampling == 2: 
-            x = self.upsample2D(x)
-            x = self.conv2d_stack_afterdense(x)
-        elif self.upsampling == 1: 
-            x = self.conv2d_stack_afterdense(x)            
-        x = self.conv2d_final(x)
-        if self.act_layer == 'Sigmoid':
-            x = self.Sigmoid(x)
-        return(x)
-
 
 class VolumeModel(nn.Module):
     
@@ -1051,4 +929,191 @@ class UNet2D(nn.Module):
         if self.activation is not None:
             x = self.activation(x)
         return x
-    
+
+class Crop2D(nn.Module):
+
+    """
+    Crop a 4D tensor along the height and width dimensions.
+
+    Parameters
+    ----------
+    top : int, optional
+        Number of pixels to remove from the top. Default is 0.
+    bottom : int, optional
+        Number of pixels to remove from the bottom. Default is 0.
+    left : int, optional
+        Number of pixels to remove from the left. Default is 0.
+    right : int, optional
+        Number of pixels to remove from the right. Default is 0.
+
+    Notes
+    -----
+    - Expects input tensors in NCHW format: (batch, channels, height, width).
+    - If any crop value is 0, that side is left unchanged.
+    - This layer performs a simple slice, without resizing or interpolation.
+
+    Examples
+    --------
+    >>> crop = Crop2D(top=1, bottom=2, left=0, right=1)
+    >>> x = torch.randn(2, 3, 10, 10)
+    >>> y = crop(x)
+    >>> y.shape
+    torch.Size([2, 3, 7, 9])
+    """
+
+    def __init__(self, top=0, bottom=0, left=0, right=0):
+        super().__init__()
+        self.top, self.bottom, self.left, self.right = top, bottom, left, right
+
+    def forward(self, x):
+        _, _, H, W = x.shape
+        t, b, l, r = self.top, self.bottom, self.left, self.right
+        return x[:, :, t:(H - b if b > 0 else H), l:(W - r if r > 0 else W)]
+
+
+class SD2I(nn.Module):
+    """
+    SD2I (Single Digit to Image) reconstruction network.
+
+    This is a PyTorch reimplementation of the Keras/TensorFlow SD2I model.
+    It reconstructs a 2D image from a single scalar input using a sequence of dense
+    layers, optional progressive upsampling, and convolutional refinement.
+
+    Parameters
+    ----------
+    npix : int
+        Target output image size (height = width = npix).
+    factor : int, optional
+        Number of feature channels after the dense-to-feature-map reshape. Default is 8.
+    upsample : bool, optional
+        If True, use the progressive upsampling branch (two stages of ×2 upsampling).
+        If False, use the direct full-resolution branch without upsampling. Default is True.
+
+    Architecture (upsample=True)
+    ----------------------------
+    1. Dense stack: [64 → ReLU] × 3, then linear projection to
+       ceil(npix / 4) × ceil(npix / 4) × factor features.
+    2. Reshape to (factor, H0, W0), where H0 = W0 = ceil(npix / 4).
+    3. Upsample ×2 (nearest neighbor).
+       - Conditional crop: remove 1 pixel from bottom & right if npix % 4 in {1, 2}.
+    4. Conv block: [3×3 conv, 64 filters, ReLU] × 3.
+    5. Upsample ×2 (nearest neighbor).
+       - Conditional crop: remove 1 pixel from top & left if npix is odd.
+    6. Conv block: [3×3 conv, 64 filters, ReLU] × 3.
+    7. Final 3×3 conv to 1 channel (linear activation).
+
+    Architecture (upsample=False)
+    -----------------------------
+    1. Dense stack: [128 → ReLU] × 3, then linear projection to npix × npix × factor features.
+    2. Reshape to (factor, npix, npix).
+    3. Conv stack:
+       - 3×3 conv, 128 filters, ReLU
+       - 3×3 conv, 128 filters, ReLU
+       - 3×3 conv,  64 filters, ReLU
+       - 3×3 conv,   1 filter, linear
+
+    Notes
+    -----
+    - All convolutions use "same" padding (padding=1 for kernel_size=3).
+    - Upsampling uses nearest-neighbor to match Keras `UpSampling2D`.
+    - Weights are initialized with a RandomNormal(mean=0.0, std=0.05) to match
+      Keras `kernel_initializer='random_normal'`.
+
+    Examples
+    --------
+    >>> model = SD2I(npix=128, factor=8, upsample=True)
+    >>> inp = torch.randn(4, 1)  # batch of scalars
+    >>> out = model(inp)
+    >>> out.shape
+    torch.Size([4, 1, 128, 128])
+    """
+
+    def __init__(self, npix: int, factor: int = 8, upsample: bool = True):
+        super().__init__()
+        self.npix = npix
+        self.factor = factor
+        self.upsample_flag = upsample
+
+        self.flatten = nn.Flatten()
+
+        if upsample:
+            h0 = int(math.ceil(npix / 4))
+            self.fc = nn.Sequential(
+                nn.Linear(1, 64), nn.ReLU(inplace=True),
+                nn.Linear(64, 64), nn.ReLU(inplace=True),
+                nn.Linear(64, 64), nn.ReLU(inplace=True),
+                nn.Linear(64, h0 * h0 * factor),  # linear
+            )
+            self.reshape_h = h0
+            self.reshape_w = h0
+
+            self.up = nn.Upsample(scale_factor=2, mode='nearest')
+            self.crop_after_up1 = Crop2D(top=0, bottom=1, left=0, right=1) \
+                if (npix % 4 == 1 or npix % 4 == 2) else nn.Identity()
+
+            self.conv1 = nn.Sequential(
+                nn.Conv2d(factor, 64, kernel_size=3, padding=1), nn.ReLU(inplace=True),
+                nn.Conv2d(64, 64, kernel_size=3, padding=1),     nn.ReLU(inplace=True),
+                nn.Conv2d(64, 64, kernel_size=3, padding=1),     nn.ReLU(inplace=True),
+            )
+
+            self.crop_after_up2 = Crop2D(top=1, bottom=0, left=1, right=0) \
+                if (npix % 2 == 1) else nn.Identity()
+
+            self.conv2 = nn.Sequential(
+                nn.Conv2d(64, 64, kernel_size=3, padding=1), nn.ReLU(inplace=True),
+                nn.Conv2d(64, 64, kernel_size=3, padding=1), nn.ReLU(inplace=True),
+                nn.Conv2d(64, 64, kernel_size=3, padding=1), nn.ReLU(inplace=True),
+            )
+            self.to_out = nn.Conv2d(64, 1, kernel_size=3, padding=1)  # linear
+
+        else:
+            self.fc = nn.Sequential(
+                nn.Linear(1, 128), nn.ReLU(inplace=True),
+                nn.Linear(128, 128), nn.ReLU(inplace=True),
+                nn.Linear(128, 128), nn.ReLU(inplace=True),
+                nn.Linear(128, npix * npix * factor),  # linear
+            )
+            self.reshape_h = npix
+            self.reshape_w = npix
+
+            self.conv_stack = nn.Sequential(
+                nn.Conv2d(factor, 128, kernel_size=3, padding=1), nn.ReLU(inplace=True),
+                nn.Conv2d(128, 128, kernel_size=3, padding=1),    nn.ReLU(inplace=True),
+                nn.Conv2d(128, 64, kernel_size=3, padding=1),     nn.ReLU(inplace=True),
+                nn.Conv2d(64, 1, kernel_size=3, padding=1),       # linear
+            )
+
+        self._init_random_normal(std=0.05)
+
+    def _init_random_normal(self, std=0.05):
+        """Initialize Conv2d and Linear layers with N(0, std^2) and zero bias."""
+        for m in self.modules():
+            if isinstance(m, (nn.Conv2d, nn.Linear)):
+                nn.init.normal_(m.weight, mean=0.0, std=std)
+                if m.bias is not None:
+                    nn.init.zeros_(m.bias)
+
+    def forward(self, x):
+        x = self.flatten(x)
+        x = self.fc(x)
+
+        if self.upsample_flag:
+            B = x.shape[0]
+            x = x.view(B, self.factor, self.reshape_h, self.reshape_w)
+            x = self.up(x)
+            x = self.crop_after_up1(x)
+            x = self.conv1(x)
+
+            x = self.up(x)
+            x = self.crop_after_up2(x)
+            x = self.conv2(x)
+
+            x = self.to_out(x)
+
+        else:
+            B = x.shape[0]
+            x = x.view(B, self.factor, self.reshape_h, self.reshape_w)
+            x = self.conv_stack(x)
+
+        return x
