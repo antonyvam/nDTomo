@@ -506,7 +506,10 @@ class ImageSpectrumGUI:
                                   colors=[(1, 0, 0)])
 
             # Update the image display
-            self.image.set_data(image.transpose(1,0,2))
+            if self.mask is not None:
+                self.image.set_data(image.transpose(1,0,2))
+            else:
+                self.image.set_data(image.T)
             self.ax_image.relim()
             self.ax_image.autoscale_view()
 
