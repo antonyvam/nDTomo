@@ -432,6 +432,8 @@ class ImageSpectrumGUI:
         self.volume = volume
         if mask is not None:
             self.mask = mask
+        else:
+            self.mask = None
 
         # Create main figure and subplots
         self.fig, (self.ax_image, self.ax_spectrum) = plt.subplots(1, 2, figsize=(10, 5))
