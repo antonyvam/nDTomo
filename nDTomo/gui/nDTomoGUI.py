@@ -145,7 +145,7 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         self.xaxislabel = 'Channel'
         self.chi = 0
         self.chf = 1        
-        self.cmap_list = ['inferno', 'viridis','plasma','magma','cividis','flag', 
+        self.cmap_list = ['gray', 'inferno', 'viridis','plasma','magma','cividis','flag', 
             'prism', 'ocean', 'gist_earth', 'terrain', 'gist_stern',
             'gnuplot', 'gnuplot2', 'CMRmap', 'cubehelix', 'brg', 'hsv',
             'gist_rainbow', 'rainbow', 'jet', 'nipy_spectral', 'gist_ncar']
