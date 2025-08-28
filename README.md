@@ -167,7 +167,7 @@ python setup.py install --user
 
 ## Citation
 
-If you use parts of the code, please cite the work using the following preprint:
+If you use parts of the code, please cite the work using the following paper:
 
 *nDTomo: A Modular Python Toolkit for X-ray Chemical Imaging and Tomography*, A. Vamvakeros, E. Papoutsellis, H. Dong, R. Docherty, A.M. Beale, S.J. Cooper, S.D.M. Jacques, Digital Discovery, 2025, https://doi.org/10.1039/D5DD00252D
 
