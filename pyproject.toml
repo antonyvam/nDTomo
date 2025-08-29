@@ -1,5 +1,54 @@
-[project]
-readme = { file = "README.md", content-type = "text/markdown" }
 [build-system]
-requires = ["setuptools>=64"]
+requires = ["setuptools>=69", "wheel"]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "nDTomo"
+dynamic = ["version"]                      # read from your package
+description = "nDTomo software suite"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "A. Vamvakeros", email = "antonyvam@gmail.com" }]
+license = { file = "LICENSE.txt" }
+urls = { Homepage = "http://github.com/antonyvam/nDTomo" }
+dependencies = [
+  "h5py",
+  "matplotlib",
+  "numpy",
+  "scipy",
+  "siphash24",
+  "pyqtgraph",
+  "scikit-image",
+  "scikit-learn",
+  "xdesign",
+  "tqdm",
+  "ipykernel",
+  "pystackreg",
+  "tifffile",
+  "jupyterlab",
+  "algotom",
+  "fabio",
+  "pyFAI>=2025.01",
+  "napari",
+  "configobj",
+  "ipympl",
+  "pyqt5",
+  "pyopencl",
+  "jupyterlab_widgets",
+]
+
+[project.optional-dependencies]
+torch = ["torch", "torchvision", "torchaudio"]
+
+[project.gui-scripts]
+nDTomoGUI = "nDTomo.gui.nDTomoGUI:main"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.package-data]
+nDTomo = ["*.txt", "*.rst"]
+
+[tool.setuptools.dynamic]
+version = { attr = "nDTomo.__version__" }
+
