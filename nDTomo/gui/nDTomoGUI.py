@@ -898,8 +898,8 @@ class nDTomoGUI(QtWidgets.QMainWindow):
             h5f.create_dataset('xaxis', data=self.xaxis)
 
         xy_data = np.column_stack((self.xaxis, self.spectrum))
-        np.savetxt(asc_name, xy_data)
-        np.savetxt(xy_name, xy_data)
+        np.savetxt(asc_name, xy_data, fmt="%.5f")
+        np.savetxt(xy_name, xy_data, fmt="%.5f")
         
     def exportim(self):
         """
@@ -1524,11 +1524,11 @@ class nDTomoGUI(QtWidgets.QMainWindow):
         
             xy = np.column_stack((self.xaxis,self.spectrum))
             sn = "%s_ROI_thr%s.asc" %(s,str(self.thr))
-            np.savetxt(sn,xy)
+            np.savetxt(sn,xy, fmt="%.5f")
             
             xy = np.column_stack((self.xaxis,self.spectrum))
             sn = "%s_ROI_thr%s.xy" %(s,str(self.thr))
-            np.savetxt(sn,xy)
+            np.savetxt(sn,xy, fmt="%.5f")
                 
         else:
             print("Something is wrong with the data")
