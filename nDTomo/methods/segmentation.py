@@ -690,7 +690,7 @@ def get_model(eta: float = 0.3, gamma: float = 0, max_depth: int = 6, class_weig
 
 
 def fit_model(model: XGBClassifier, fit_data: Arr, target_data: UInt8Arr) -> XGBClassifier:
-    model = model.fit(fit_data, target_data)
+    model = model.fit(fit_data, target_data - 1)
     return model
 
 
