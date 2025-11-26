@@ -10,13 +10,14 @@ This package contains modules for using PyTorch code, including:
 
 # Use mocked torch modules if on ReadTheDocs
 import os
+
 if os.environ.get("READTHEDOCS") == "True":
     from . import _mock_torch  # This registers mocks via sys.modules
 
 import importlib
 
 __all__ = []
-modules = ["models_torch", "tomo_torch", "utils_torch", "peak_models_torch"]
+modules = ["models_torch", "tomo_torch", "utils_torch", "peak_models_torch", "segmentation_torch"]
 
 # Import all functions dynamically from each module
 for module in modules:
