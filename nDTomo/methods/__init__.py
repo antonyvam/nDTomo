@@ -15,7 +15,7 @@ import sys
 
 # List of submodules
 __all__ = []
-modules = ["hyperexpl", "metrics", "noise", "plots", "xrays", "misc"]
+modules = ["hyperexpl", "metrics", "noise", "plots", "xrays", "misc", "segmentation"]
 
 # Import all functions dynamically
 for module in modules:
