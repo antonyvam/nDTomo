@@ -1,6 +1,7 @@
 import pytest
 
 import numpy as np
+from torch import tensor
 from tifffile import imread, imwrite
 from nDTomo.methods.segmentation import (
     Arr,
@@ -12,6 +13,14 @@ from nDTomo.methods.segmentation import (
     get_features,
     get_training_data,
     apply,
+)
+from nDTomo.pytorch.segmentation_torch import (
+    prepare_for_gpu,
+    get_features as get_features_gpu,
+    get_training_data as get_training_data_gpu,
+    get_model as get_model_gpu,
+    fit_model as fit_model_gpu,
+    apply as apply_gpu,
 )
 
 
@@ -69,7 +78,7 @@ def test_cpu_e2e(
     fname: str = "tests/out/0_seg.tif",
     run_checks: bool = True,
     miou_cutoff: float = MIOU_CUTOFF,
-) -> tuple[float, UInt8Arr]:
+) -> None:
     features = get_features(image, feat_cfg)
     fit, target = get_training_data(features, labels)
     model = get_model()
@@ -87,6 +96,40 @@ def test_cpu_e2e(
         assert rh == fh
         assert rw == fw
         print(f"mIoU of segmentation: {miou:.4f}")
+        assert miou > miou_cutoff
+
+
+def test_gpu_e2e(
+    image: Arr,
+    labels: UInt8Arr,
+    feat_cfg: FeatureConfig,
+    ground_truth: UInt8Arr,
+    save: bool = True,
+    fname: str = "tests/out/0_seg_gpu.tif",
+    run_checks: bool = True,
+    miou_cutoff: float = MIOU_CUTOFF,
+) -> None:
+    img_tensor = prepare_for_gpu(image)
+    features = get_features_gpu(img_tensor, feat_cfg)
+
+    labels_tensor = tensor(labels)
+
+    fit, target = get_training_data_gpu(features, labels_tensor, shuffle=True)
+    model = get_model_gpu()
+    model = fit_model_gpu(model, fit, target)
+    pred = apply_gpu(model, features)
+    rh, rw = pred.shape
+    fh, fw, _ = features.shape
+
+    miou = class_avg_miou(pred, ground_truth)
+
+    if save:
+        imwrite(fname, pred.astype(np.uint8))
+
+    if run_checks:
+        assert rh == fh
+        assert rw == fw
+        print(f"mIoU of GPU segmentation: {miou:.4f}")
         assert miou > miou_cutoff
 
 

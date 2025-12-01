@@ -35,6 +35,8 @@ dependencies = [
   "pyqt5",
   "pyopencl",
   "jupyterlab_widgets",
+  "xgboost",
+  "cupy-cuda12x"
 ]
 
 [project.optional-dependencies]
