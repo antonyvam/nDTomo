@@ -1,6 +1,8 @@
 import numpy as np
 
-from typing import cast, TYPE_CHECKING
+from typing import TYPE_CHECKING
+
+from xgboost import DMatrix, XGBClassifier
 
 from nDTomo.methods.segmentation import FeatureConfig, _rotate_ts
 
@@ -595,8 +597,87 @@ def get_features(
     return image_features
 
 
+def _get_labelled_training_data_from_stack(
+    feature_stack: torch.Tensor, labels: torch.Tensor
+) -> tuple[torch.Tensor, torch.Tensor]:
+    h, w, n_feats = feature_stack.shape
+    flat_labels = labels.reshape((h * w))
+    flat_features = feature_stack.reshape((h * w, n_feats))
+
+    labelled_mask = torch.nonzero(flat_labels, as_tuple=True)
+
+    fit_data = flat_features[labelled_mask[0], :]
+    target_data = flat_labels[labelled_mask[0]]
+
+    return fit_data, target_data
+
+
+def _shuffle_sample_training_data(
+    fit: torch.Tensor, target: torch.Tensor, shuffle: bool = True, sample_n: int = -1
+) -> tuple[torch.Tensor, torch.Tensor]:
+    n_samples = target.shape[0]
+    all_inds = torch.arange(0, n_samples, 1)
+    if shuffle:
+        all_inds = torch.randperm(target.nelement())
+    if sample_n > 0:
+        sample_inds = all_inds[:sample_n]
+        return fit[sample_inds], target[sample_inds]
+    else:
+        return fit[all_inds], target[all_inds]
+
+
+def get_training_data(
+    feature_stack: torch.Tensor,
+    labels: torch.Tensor,
+    shuffle: bool = True,
+    sample_n: int = -1,
+) -> tuple[torch.Tensor, torch.Tensor]:
+    """Get training data from feature stack and labelled image.
+
+    :param feature_stack: feature arr
+    :type feature_stack: np.ndarray
+    :param labels: labelled img arr
+    :type labels: np.ndarray
+    :param shuffle: whether to shuffle data, defaults to True
+    :type shuffle: bool, optional
+    :param sample_n: number of samples to return, defaults to -1 (all)
+    :type sample_n: int, optional
+    :return: fit data and target data
+    :rtype: Tuple[np.ndarray, np.ndarray]
+    """
+    fit_data, target_data = _get_labelled_training_data_from_stack(feature_stack, labels)
+    fit_data, target_data = _shuffle_sample_training_data(fit_data, target_data, shuffle, sample_n)
+    return fit_data, target_data
+
+
+def get_model(eta: float = 0.3, gamma: float = 0, max_depth: int = 6, class_weight: str = "balanced") -> XGBClassifier:
+    return XGBClassifier(
+        eta=eta, gamma=gamma, max_depth=max_depth, class_weight=class_weight, device="cuda", tree_method="hist"
+    )
+
+
+def fit_model(model: XGBClassifier, fit_data: torch.Tensor, target_data: torch.Tensor) -> XGBClassifier:
+    data = DMatrix(data=fit_data, label=target_data - 1)
+    model = model.fit(data.get_data(), data.get_label())
+    return model
+
+
+def apply(model: XGBClassifier, feature_stack: torch.Tensor) -> np.ndarray:
+    h, w, n_feats = feature_stack.shape
+    flat_features = feature_stack.reshape((h * w, n_feats))
+    data = DMatrix(flat_features)
+    pred_flat = model.predict(data.get_data())
+    pred_flat += 1
+    pred_img = pred_flat.reshape((h, w))
+    return pred_img
+
+
 if __name__ == "__main__":
-    cfg = FeatureConfig(bilateral=True, median=True, maximum=True)
-    img = torch.rand(1, 1, 64, 64)
+    cfg = FeatureConfig(
+        bilateral=True,
+        median=True,
+        maximum=True,
+    )
+    img = torch.rand(1, 1, 300, 300)
     feats = _multiscale_features_gpu(img, cfg)
     print(feats.shape)
