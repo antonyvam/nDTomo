@@ -38,7 +38,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-torch = ["torch", "torchvision", "torchaudio"]
+torch = ["torch", "torchvision", "torchaudio", "torchnmf", "torch-kmeans"]
 
 [project.gui-scripts]
 nDTomoGUI = "nDTomo.gui.nDTomoGUI:main"
