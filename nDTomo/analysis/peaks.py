@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Models for peak fitting
+Models and functions for peak fitting
 
 @author: Dr A. Vamvakeros
 """
 
 import numpy as np
 import h5py
+from tqdm import tqdm
+from scipy.optimize import curve_fit
 
 tand = lambda x: np.tan(x*np.pi/180.)
 atand = lambda x: 180.*np.arctan(x)/np.pi
@@ -484,3 +486,101 @@ def loadpeakfits(fn, peaks):
             Bkgc = f['/Bkgc'][:]
 
     return Areas, Pos, Sigma, Bkga, Bkgb, Bkgc
+
+
+def subtract_linear_background(data_roi, tth_roi):
+    """
+    Subtracts a linear background from the last axis of a 3D array.
+
+    The background is estimated by defining a straight line connecting 
+    the first and last intensity values of each spectrum along the last axis.
+
+    Parameters
+    ----------
+    data_roi : numpy.ndarray
+        Input 3D array containing the spectral data. The function assumes 
+        the spectral channel (energy/tth) is along the last axis 
+        (e.g., shape [dim1, dim2, channels]).
+    tth_roi : numpy.ndarray
+        1D array representing the x-axis values (e.g., 2-theta angles) 
+        corresponding to the last dimension of `data_roi`.
+
+    Returns
+    -------
+    numpy.ndarray
+        The background-subtracted data, with the same shape as `data_roi`.
+    """
+    x1 = tth_roi[0]
+    x2 = tth_roi[-1]
+    
+    y1 = data_roi[:, :, 0]
+    y2 = data_roi[:, :, -1]
+    
+    slope = (y2 - y1) / (x2 - x1)
+    intercept = y1 - slope * x1
+
+    # Broadcast slope and intercept to match data_roi shape for subtraction
+    background = slope[..., None] * tth_roi + intercept[..., None]
+    
+    return data_roi - background
+
+def fit_gaussian_map(data, x_axis, threshold=1e-3, sigma_bounds=(0.01, 1.0)):
+    """
+    Fits a Gaussian function to the spectral dimension of a 3D dataset for every pixel.
+
+    Iterates through the spatial dimensions (x, y) of the input data and fits a 
+    Gaussian peak to the signal along the last axis. Pixels with maximum intensity 
+    below the specified threshold are skipped.
+
+    Parameters
+    ----------
+    data : numpy.ndarray
+        Input 3D array (e.g., [x, y, channels]) containing the spectral data 
+        to be fitted.
+    x_axis : numpy.ndarray
+        1D array representing the x-axis values (e.g., 2-theta or energy) 
+        corresponding to the last dimension of `data`.
+    threshold : float, optional, default=1e-3
+        Intensity threshold. Pixels where the maximum signal is below this 
+        value will be skipped (parameters remain 0).
+    sigma_bounds : tuple, optional, default=(0.01, 1.0)
+        A tuple of (min, max) defining the lower and upper bounds for the 
+        sigma (width) parameter of the Gaussian.
+
+    Returns
+    -------
+    numpy.ndarray
+        A 3D array of shape (x, y, 3) containing the fitted parameters for 
+        each pixel. The last axis corresponds to [Amplitude, Mean (mu), Sigma].
+        Returns zeros for pixels where the fit failed or signal was below threshold.
+    """
+    nx, ny, _ = data.shape
+    params = np.zeros((nx, ny, 3))  # A, mu, sigma
+
+    # Fitting bounds: 
+    # Amplitude: 0 to inf
+    # Position (mu): constrained to the range of x_axis
+    # Sigma: constrained by sigma_bounds
+    lower_bounds = [0, x_axis[0], sigma_bounds[0]]
+    upper_bounds = [np.inf, x_axis[-1], sigma_bounds[1]]
+    bounds = (lower_bounds, upper_bounds)
+
+    # Loop over all pixels
+    for ix in tqdm(range(nx), desc="Fitting Gaussians"):
+        for iy in range(ny):
+            y = data[ix, iy, :]
+            
+            # Skip pixels with very low signal
+            if y.max() < threshold:
+                continue
+            
+            # Initial guess: [amplitude, position, width]
+            guess = [y.max(), x_axis[np.argmax(y)], 0.01]
+            
+            try:
+                popt, _ = curve_fit(Gaussian, x_axis, y, p0=guess, bounds=bounds)
+                params[ix, iy, :] = popt
+            except RuntimeError:
+                pass  # Fit failed, parameters remain 0
+
+    return params
