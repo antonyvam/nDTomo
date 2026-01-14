@@ -30,7 +30,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
 	name="nDTomo",
-	version="2025.05",
+	version="2025.06",
 	description="nDTomo software suite",
 	url="http://github.com/antonyvam/nDTomo",
 	author="A. Vamvakeros",
