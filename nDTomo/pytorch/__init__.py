@@ -6,6 +6,7 @@ This package contains modules for using PyTorch code, including:
 - `tomo_torch`: methods related to computed tomography
 - `utils_torch`: methods used for computed tomography, peak fitting and others
 - `peak_models_torch`: various peak shape models
+- `reg_torch`: methods for 2D/3D affine image registration, volume warping, and point cloud alignment
 """
 
 # Use mocked torch modules if on ReadTheDocs
@@ -16,7 +17,7 @@ if os.environ.get("READTHEDOCS") == "True":
 import importlib
 
 __all__ = []
-modules = ["models_torch", "tomo_torch", "utils_torch", "peak_models_torch"]
+modules = ["models_torch", "tomo_torch", "utils_torch", "peak_models_torch", "reg_torch"]
 
 # Import all functions dynamically from each module
 for module in modules:

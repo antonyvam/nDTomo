@@ -9,7 +9,6 @@ This module includes differentiable and non-differentiable implementations of:
 - Utility functions for constructing sparse system matrices, rotating images, and defining affine transforms.
 
 Main features:
---------------
 - Differentiable 3D forward and backward projectors using `torchvision.transforms.functional.rotate`.
 - Support for iterative solvers: SIRT (with normalization) and CGLS.
 - Conversion utilities for using SciPy sparse matrices in PyTorch (e.g., `Amatrix_torch`, `Sino_torch`, `Amatrix_rec`).

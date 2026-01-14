@@ -1,13 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-PyTorch functions for 2D affine image registration, volume warping, and point cloud alignment.
+PyTorch functions for 2D/3D affine image registration, volume warping, and point cloud alignment.
 
 This module provides differentiable implementations for aligning 2D images and 3D volumes
 using geometric transformations. It includes tools for both intensity-based image registration
 and geometry-based point cloud registration (ICP).
 
 Main features:
---------------
 - Differentiable 2D and 3D registration (`register_affine_2d` and `register_affine_3d`) supporting Rotation, Translation, Scale, and Shear.
 - Batched volume warping (`warp_volume_xy_batched`) to apply 2D transforms to 3D stacks efficiently.
 - Point cloud alignment using a differentiable Iterative Closest Point (`icp_torch`) implementation.

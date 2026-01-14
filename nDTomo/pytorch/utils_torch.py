@@ -7,7 +7,6 @@ reconstruction, inverse problems, and spectral imaging applications.
 Author: Antony Vamvakeros
 
 Contents:
----------
 - Index generation utilities:
     * generate_indices: Draws (row, col) indices from uniform, normal, or Sobol distributions.
     * generate_sobol_indices_batch: Batch generation of Sobol-distributed indices.
@@ -30,7 +29,6 @@ Contents:
     * SSIM3DLoss: SSIM loss adapted for 3D volumes using a uniform kernel.
 
 Notes:
-------
 All functions are implemented with PyTorch and designed to run on either CPU or CUDA. 
 The TV and SSIM losses are differentiable and can be integrated directly into model training loops 
 for regularization or perceptual fidelity in reconstruction tasks.
