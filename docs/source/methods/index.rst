@@ -11,5 +11,5 @@ The `methods` module contains functions for processing tomography data.
    noise
    plots
    xrays
-   misc
    zip
+   misc

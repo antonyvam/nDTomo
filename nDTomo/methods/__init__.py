@@ -7,8 +7,8 @@ This package contains modules for peak analysis, including:
 - `noise`: methods related to noise models
 - `plots`: methods related to handling plots
 - `xrays`: methods related to X-ray science
-- `misc`: a broad collection of general-purpose functions and tools used across the nDTomo package
 - `zip`: methods for zipping files and folders
+- `misc`: a broad collection of general-purpose functions and tools used across the nDTomo package
 """
 
 import importlib

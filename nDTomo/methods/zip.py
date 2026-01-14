@@ -7,15 +7,15 @@ Methods for zipping files and folders.
 Example usage:
 
 # (1) one zip per tif (recursive)
-zips = zip_each_file_with_extension(r"D:\data", "tif", recursive=True)
+zips = zip_each_file_with_extension("D:\\data", "tif", recursive=True)
 
 # (2) one zip containing all png + tif under folder
-z = zip_all_files_with_extension(r"D:\data", "png,tif", "all_images", recursive=True, keep_paths=True)
+z = zip_all_files_with_extension("D:\\data", "png,tif", "all_images", recursive=True, keep_paths=True)
 
 # (3) zip an explicit list of files (store basenames; rename if collisions)
 z = zip_file_list(
-    [r"D:\a\1.tif", r"D:\b\1.tif", r"D:\b\2.tif"],
-    r"D:\out\selected.zip",
+    ["D:\\a\\1.tif", "D:\\b\\1.tif", "D:\\b\\2.tif"],
+    "D:\\out\\selected.zip",
     keep_paths=False,
     on_collision="rename",
 )
