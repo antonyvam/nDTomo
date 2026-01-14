@@ -380,7 +380,7 @@ def icp_torch(A, B, max_iterations=2000, lr=0.01, tolerance=1e-6, verbose=False)
         R_ortho = u @ v.T
         B_final = (B @ R_ortho.T + t).cpu().numpy()
         
-    return B_final, R_ortho.cpu().numpy(), t.cpu().numpy()
+    return B_final, R_ortho.detach().cpu().numpy(), t.detach().cpu().numpy()
     
 # ==============================================================================
 #                          VOLUME REGISTRATION (3D)
