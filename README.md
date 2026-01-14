@@ -29,6 +29,7 @@ nDTomo provides tools for:
 7. **Pixel-wise peak fitting** using Gaussian, Lorentzian, and Pseudo-Voigt models
 8. **Peak fitting using the self-supervised PeakFitCNN**
 9. **Simultaneous peak fitting and tomographic reconstruction using the DLSR approach** with PyTorch GPU acceleration
+10. **Registration 2D, 3D and point cloud** with PyTorch
 
 ![XRD-CT](https://raw.githubusercontent.com/antonyvam/nDTomo/master/assets/xrdct.png)
 
@@ -52,6 +53,7 @@ The repository includes several **example notebooks** to help users learn the AP
 | [`tutorial_peak_fitting.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_peak_fitting.ipynb) | Peak fitting in synthetic XRD-CT datasets |
 | [`tutorial_peak_fit_cnn.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_peak_fit_cnn.ipynb) | Peak fitting in GPU using a self-supervised PeakFitCNN |
 | [`tutorial_DLSR.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_DLSR.ipynb) | Simultaneous peak fitting and CT reconstruction in GPU using the DLSR method |
+| [`tutorial_registration.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_registration.ipynb) | Registration 2D, 3D and point cloud with PyTorch |
 
 Each notebook is designed to be **standalone and executable**, with detailed inline comments and example outputs.
 
@@ -169,7 +171,7 @@ python setup.py install --user
 
 If you use parts of the code, please cite the work using the following paper:
 
-*nDTomo: A Modular Python Toolkit for X-ray Chemical Imaging and Tomography*, A. Vamvakeros, E. Papoutsellis, H. Dong, R. Docherty, A.M. Beale, S.J. Cooper, S.D.M. Jacques, Digital Discovery, 2025, https://doi.org/10.1039/D5DD00252D
+*nDTomo: A Modular Python Toolkit for X-ray Chemical Imaging and Tomography*, A. Vamvakeros, E. Papoutsellis, H. Dong, R. Docherty, A.M. Beale, S.J. Cooper, S.D.M. Jacques, Digital Discovery, 4, 2579-2592, 2025, https://doi.org/10.1039/D5DD00252D
 
 ## References
 
@@ -179,19 +181,23 @@ If you use parts of the code, please cite the work using the following paper:
 
 ## Previous technical work (reverse chronological order)
 
-[1] "Obtaining parallax-free X-ray powder diffraction computed tomography data with a self-supervised neural network", H. Dong, S.D.M. Jacques, K.T. Butler, O. Gutowski, A.-C. Dippel, M. von Zimmerman, A.M. Beale, A. Vamvakeros, npj Computational Materials 10 (1), 201, 2024, https://doi.org/10.1038/s41524-024-01389-1
+[1] "Upsampling DINOv2 features for unsupervised vision tasks and weakly supervised materials segmentation", R. Docherty, A. Vamvakeros, S.J. Cooper, Advanced Intelligence Systems, 2026, accepted, preprint: https://doi.org/10.48550/arXiv.2410.19836
 
-[2] "SAMBA: A Trainable Segmentation Web-App with Smart Labelling", R. Docherty, I. Squires, A. Vamvakeros, S.J. Cooper, Journal of Open Source Software 9 (98), 6159, 2024, https://doi.org/10.21105/joss.06159
+[2] "Maybe you don't need a U-Net: convolutional feature upsampling for materials micrograph segmentation", R. Docherty, A. Vamvakeros, S.J. Cooper, 2025, preprint: https://doi.org/10.48550/arXiv.2508.21529
 
-[3] "A scalable neural network architecture for self-supervised tomographic image reconstruction", H. Dong, S.D.M. Jacques, W. Kockelmann, S.W.T. Price, R. Emberson, D. Matras, Y. Odarchenko, V. Middelkoop, A. Giokaris, O. Gutowski, A.-C. Dippel, M. von Zimmermann, A.M. Beale, K.T. Butler, A. Vamvakeros, Digital Discovery, 2 (4), 967-980, 2023, https://doi.org/10.1039/D2DD00105E
+[3] "Obtaining parallax-free X-ray powder diffraction computed tomography data with a self-supervised neural network", H. Dong, S.D.M. Jacques, K.T. Butler, O. Gutowski, A.-C. Dippel, M. von Zimmerman, A.M. Beale, A. Vamvakeros, npj Computational Materials 10 (1), 201, 2024, https://doi.org/10.1038/s41524-024-01389-1
 
-[4] "A deep convolutional neural network for real-time full profile analysis of big powder diffraction data", H. Dong, K.T. Butler, D. Matras, S.W.T. Price, Y. Odarchenko, R. Khatry, A. Thompson, V. Middelkoop, S.D.M. Jacques, A.M. Beale, A. Vamvakeros, npj Computational Materials 7 (1), 74, 2021, https://doi.org/10.1038/s41524-021-00542-4
+[4] "SAMBA: A Trainable Segmentation Web-App with Smart Labelling", R. Docherty, I. Squires, A. Vamvakeros, S.J. Cooper, Journal of Open Source Software 9 (98), 6159, 2024, https://doi.org/10.21105/joss.06159
 
-[5] "DLSR: a solution to the parallax artefact in X-ray diffraction computed tomography data", A. Vamvakeros, A.A. Coelho, D. Matras, H. Dong, Y. Odarchenko, S.W.T. Price, K.T. Butler, O. Gutowski, A.-C. Dippel, M. von Zimmermann, I. Martens, J. Drnec, A.M. Beale, S.D.M. Jacques, Journal of Applied Crystallography 53 (6), 1531-1541, https://doi.org/10.1107/S1600576720013576
+[5] "A scalable neural network architecture for self-supervised tomographic image reconstruction", H. Dong, S.D.M. Jacques, W. Kockelmann, S.W.T. Price, R. Emberson, D. Matras, Y. Odarchenko, V. Middelkoop, A. Giokaris, O. Gutowski, A.-C. Dippel, M. von Zimmermann, A.M. Beale, K.T. Butler, A. Vamvakeros, Digital Discovery, 2 (4), 967-980, 2023, https://doi.org/10.1039/D2DD00105E
 
-[6] "5D operando tomographic diffraction imaging of a catalyst bed", A. Vamvakeros, S.D.M. Jacques, M. Di Michiel, D. Matras, V. Middelkoop, I.Z. Ismagilov, E.V. Matus, V.V. Kuznetsov, J. Drnec, P. Senecal, A.M. Beale, Nature communications 9 (1), 4751, 2018, https://doi.org/10.1038/s41467-018-07046-8
+[6] "A deep convolutional neural network for real-time full profile analysis of big powder diffraction data", H. Dong, K.T. Butler, D. Matras, S.W.T. Price, Y. Odarchenko, R. Khatry, A. Thompson, V. Middelkoop, S.D.M. Jacques, A.M. Beale, A. Vamvakeros, npj Computational Materials 7 (1), 74, 2021, https://doi.org/10.1038/s41524-021-00542-4
 
-[7] "Interlaced X-ray diffraction computed tomography", A. Vamvakeros, S.D.M. Jacques, M. Di Michiel, P. Senecal, V. Middelkoop, R.J. Cernik and A.M. Beale, Journal of Applied Crystallography 49 (2), 485-496, 2016, https://doi.org/10.1107/S160057671600131X
+[7] "DLSR: a solution to the parallax artefact in X-ray diffraction computed tomography data", A. Vamvakeros, A.A. Coelho, D. Matras, H. Dong, Y. Odarchenko, S.W.T. Price, K.T. Butler, O. Gutowski, A.-C. Dippel, M. von Zimmermann, I. Martens, J. Drnec, A.M. Beale, S.D.M. Jacques, Journal of Applied Crystallography 53 (6), 1531-1541, https://doi.org/10.1107/S1600576720013576
 
-[8] "Removing multiple outliers and single-crystal artefacts from X-ray diffraction computed tomography data", A. Vamvakeros, S.D.M. Jacques, M. Di Michiel, V. Middelkoop, C.K. Egan, R. J. Cernik, A. M Beale, Journal of Applied Crystallography 48 (6), 1943-1955, 2015, 
+[8] "5D operando tomographic diffraction imaging of a catalyst bed", A. Vamvakeros, S.D.M. Jacques, M. Di Michiel, D. Matras, V. Middelkoop, I.Z. Ismagilov, E.V. Matus, V.V. Kuznetsov, J. Drnec, P. Senecal, A.M. Beale, Nature communications 9 (1), 4751, 2018, https://doi.org/10.1038/s41467-018-07046-8
+
+[9] "Interlaced X-ray diffraction computed tomography", A. Vamvakeros, S.D.M. Jacques, M. Di Michiel, P. Senecal, V. Middelkoop, R.J. Cernik and A.M. Beale, Journal of Applied Crystallography 49 (2), 485-496, 2016, https://doi.org/10.1107/S160057671600131X
+
+[10] "Removing multiple outliers and single-crystal artefacts from X-ray diffraction computed tomography data", A. Vamvakeros, S.D.M. Jacques, M. Di Michiel, V. Middelkoop, C.K. Egan, R. J. Cernik, A. M Beale, Journal of Applied Crystallography 48 (6), 1943-1955, 2015, 
 Jacques, Journal of Applied Crystallography 48 (6), 1943-1955, 2015, https://doi.org/10.1107/S1600576715020701
