@@ -8,6 +8,7 @@ This package contains modules for peak analysis, including:
 - `plots`: methods related to handling plots
 - `xrays`: methods related to X-ray science
 - `misc`: a broad collection of general-purpose functions and tools used across the nDTomo package
+- `zip`: methods for zipping files and folders
 """
 
 import importlib
@@ -15,7 +16,7 @@ import sys
 
 # List of submodules
 __all__ = []
-modules = ["hyperexpl", "metrics", "noise", "plots", "xrays", "misc"]
+modules = ["hyperexpl", "metrics", "noise", "plots", "xrays", "misc", "zip"]
 
 # Import all functions dynamically
 for module in modules:

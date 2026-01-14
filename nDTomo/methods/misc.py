@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 nDTomo Utility Tools
-====================
 
 This module contains a broad collection of general-purpose functions and tools
 used across the nDTomo package. These include image and volume processing

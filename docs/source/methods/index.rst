@@ -12,3 +12,4 @@ The `methods` module contains functions for processing tomography data.
    plots
    xrays
    misc
+   zip
