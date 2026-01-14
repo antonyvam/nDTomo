@@ -11,6 +11,12 @@ requires-python = ">=3.9"
 authors = [{ name = "A. Vamvakeros", email = "antonyvam@gmail.com" }]
 license = { file = "LICENSE.txt" }
 urls = { Homepage = "http://github.com/antonyvam/nDTomo" }
+classifiers = [
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Visualization",
+]
 dependencies = [
   "h5py",
   "matplotlib",
@@ -51,4 +57,8 @@ nDTomo = ["*.txt", "*.rst"]
 
 [tool.setuptools.dynamic]
 version = { attr = "nDTomo.__version__" }
+
+[tool.setuptools.packages.find]
+where = ["."]  # scan the root directory
+include = ["nDTomo*"]  # include nDTomo and any subpackages
 

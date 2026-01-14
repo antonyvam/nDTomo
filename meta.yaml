@@ -1,6 +1,6 @@
 package:
   name: ndtomo
-  version: "2025.02"
+  version: "2025.06"
   
 source:
   path: .
