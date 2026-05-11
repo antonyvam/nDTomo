@@ -53,3 +53,6 @@ tmp*
 
 /docs/source/_build
 .pypirc
+tests/out/*
+
+*test_nmf*
