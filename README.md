@@ -175,6 +175,10 @@ If you use parts of the code, please cite the work using the following paper:
 
 *nDTomo: A Modular Python Toolkit for X-ray Chemical Imaging and Tomography*, A. Vamvakeros, E. Papoutsellis, H. Dong, R. Docherty, A.M. Beale, S.J. Cooper, S.D.M. Jacques, Digital Discovery, 4, 2579-2592, 2025, https://doi.org/10.1039/D5DD00252D
 
+## Other Code
+
+Please see here for the full Segmentation library: https://github.com/tldr-group/interactive-seg-backend
+
 ## References
 
 [1] "Cycling Rate-Induced Spatially-Resolved Heterogeneities in Commercial Cylindrical Li-Ion Batteries", A. Vamvakeros, D. Matras, T.E. Ashton, A.A. Coelho, H. Dong, D. Bauer, Y. Odarchenko, S.W.T. Price, K.T. Butler, O. Gutowski, A.-C. Dippel, M. von Zimmerman, J.A. Darr, S.D.M. Jacques, A.M. Beale, Small Methods, 2100512, 2021. https://doi.org/10.1002/smtd.202100512
