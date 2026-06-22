@@ -17,4 +17,5 @@ This section contains Jupyter notebook examples demonstrating how to use nDTomo.
    notebooks/tutorial_peak_fit_cnn.ipynb
    notebooks/tutorial_DLSR.ipynb
    notebooks/tutorial_registration.ipynb
+   notebooks/tutorial_segmentation.ipynb
 
