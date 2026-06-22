@@ -12,6 +12,7 @@ Classes:
     - InteractiveHyperProfileExtraction: Extract 1D and spectral profiles along a line in a hyperspectral volume
     - ImageSpectrumFitGUI: Compare raw and fitted spectra from voxel data interactively
     - chemimexplorer: A version of ImageSpectrumGUI which is used as embedded in jupyter notebooks
+    - LabelPainter: Interactive tool for manual sparse pixel-wise labeling and label refinement
 
 @author: Antony Vamvakeros
 """
@@ -20,6 +21,11 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy.ndimage import map_coordinates
 from matplotlib.lines import Line2D
+from matplotlib.colors import ListedColormap
+from matplotlib.widgets import Cursor
+from matplotlib.path import Path
+import copy
+from skimage.morphology import flood_fill # For the Magic Wand
 
 class HyperSliceExplorer():
         
@@ -1231,3 +1237,261 @@ class chemimexplorer:
                 self.image_real_time_update = not self.image_real_time_update
             elif event.inaxes == self.ax_spectrum:
                 self.spectrum_real_time_update = not self.spectrum_real_time_update
+
+
+class LabelPainter:
+    """
+    An interactive Matplotlib-based GUI for sparse pixel-wise labeling.
+
+    Provides keyboard and mouse bindings to draw masks on an image using an 
+    intensity-aware smart brush or a connectivity-based magic wand tool.
+
+    Parameters
+    ----------
+    img : np.ndarray
+        The baseline structural grayscale or multi-channel image array to be segmented.
+    num_classes : int, default=5
+        Total number of unique phase/material classes available for annotation.
+    """
+    def __init__(self, img, num_classes=5):
+        # 0. Modern way to disable Matplotlib defaults
+        for key in ['p', 'f', 's', 'w']:
+            try:
+                plt.rcParams[f'keymap.pan' if key=='p' else f'keymap.fullscreen' if key=='f' else f'keymap.save' if key=='s' else 'keymap.quit'].remove(key)
+            except (ValueError, KeyError):
+                pass
+
+        self.img = img.astype(np.float32)
+        self.mask = np.zeros(img.shape[:2], dtype=np.uint8)
+        self.history = [self.mask.copy()]
+        
+        self.num_classes = num_classes
+        self.current_class = 1
+        self.brush_size = 3
+        self.tolerance = 0.05  # Starting tolerance for 0.0 - 1.0 range
+        self.tol_step = 0.005  # Fine-grained steps for floats
+        self.is_drawing = False
+        self.last_mouse_pos = (0, 0) # Track position for 'w' key
+        
+        self.fig, self.ax = plt.subplots(figsize=(12, 8))
+        self.ax.imshow(img, cmap='gray', interpolation='nearest')
+        
+        # 1. FIXED: Modern Colormap Access
+        cmap_base = plt.get_cmap('tab10')
+        colors = cmap_base(np.linspace(0, 1, num_classes + 1))
+        colors[0, 3] = 0.0  # Background transparent
+        self.cmap = ListedColormap(colors)
+        
+        self.mask_plot = self.ax.imshow(self.mask, cmap=self.cmap, 
+                                        vmin=0, vmax=num_classes, alpha=0.5)
+        
+        # 2. Add Cursor
+        self.cursor = Cursor(self.ax, useblit=True, color='red', linewidth=0.8)
+        
+        self.update_ui()
+        
+        # 3. Connect Events
+        self.fig.canvas.mpl_connect('button_press_event', self.on_press)
+        self.fig.canvas.mpl_connect('button_release_event', self.on_release)
+        self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
+        self.fig.canvas.mpl_connect('key_press_event', self.on_key)
+        
+        plt.show()
+
+    def update_ui(self, msg=""):
+        """
+        Refresh the active information title bar on the Matplotlib canvas.
+
+        Parameters
+        ----------
+        msg : str, default=""
+            Optional status message string to prepend to the default status telemetry.
+        """
+        title = (f"CLASS: {self.current_class} | TOL: {self.tolerance} | BRUSH: {self.brush_size}\n"
+                 "W: Magic Wand | LEFT-DRAG: Smart Brush | Z: Undo | T/G: Tol | S: Save")
+        if msg: title = f"{msg}\n{title}"
+        self.ax.set_title(title)
+        self.fig.canvas.draw_idle()
+
+    def save_history(self):
+        """
+        Push the current state of the label mask onto an internal undo stack.
+        
+        Maintains a maximum history buffer depth of 20 operations.
+        """
+        self.history.append(self.mask.copy())
+        if len(self.history) > 20: self.history.pop(0)
+
+    def paint_smart(self, x, y, erase=False):
+        """
+        Apply or erase class values using an intensity-bounded circular neighborhood.
+
+        Evaluates a spatial circular region surrounding the target pixel coordinate. 
+        When adding labels, pixels within the radius are only updated if their 
+        absolute intensity variance matches the seed pixel within the current tolerance.
+
+        Parameters
+        ----------
+        x : float or None
+            The raw data space x-coordinate from the canvas event tracking.
+        y : float or None
+            The raw data space y-coordinate from the canvas event tracking.
+        erase : bool, default=False
+            If True, clears the class assignment (sets mask to 0) across the area.
+        """
+        if x is None or y is None: return
+        ix, iy = int(round(x)), int(round(y))
+        
+        # Prevent OOB errors
+        if not (0 <= ix < self.img.shape[1] and 0 <= iy < self.img.shape[0]): return
+
+        y_grid, x_grid = np.ogrid[:self.mask.shape[0], :self.mask.shape[1]]
+        dist_sq = (x_grid - ix)**2 + (y_grid - iy)**2
+        brush_indices = dist_sq <= self.brush_size**2
+        
+        if not erase:
+            seed_intensity = self.img[iy, ix]
+            match_intensity = np.abs(self.img - seed_intensity) <= self.tolerance
+            final_pixels = brush_indices & match_intensity
+        else:
+            final_pixels = brush_indices
+
+        self.mask[final_pixels] = 0 if erase else self.current_class
+        self.mask_plot.set_data(self.mask)
+        self.fig.canvas.draw_idle()
+
+    def magic_wand(self, x, y):
+        """
+        Execute a connectivity-bounded flood fill region expansion from a seed point.
+
+        Uses skimage's 4-way morphological flood fill execution engine. Includes protection 
+        against segmentation leakage by rejecting expansions that span more than 40 percent 
+        of the canvas matrix.
+
+        Parameters
+        ----------
+        x : float or None
+            The anchor x-coordinate target for seed extraction.
+        y : float or None
+            The anchor y-coordinate target for seed extraction.
+        """
+        if x is None or y is None: return
+        ix, iy = int(round(x)), int(round(y))
+        if not (0 <= ix < self.img.shape[1] and 0 <= iy < self.img.shape[0]): return
+        
+        # 1. Capture seed intensity
+        seed_val = self.img[iy, ix]
+        
+        # 2. Perform the fill (Connectivity=2 is 8-way, Connectivity=1 is 4-way)
+        filled_area = flood_fill(self.img, (iy, ix), new_value=-1, 
+                                 tolerance=self.tolerance, connectivity=1)
+        mask_to_fill = (filled_area == -1)
+        px_count = np.sum(mask_to_fill)
+
+        # 3. Handle Results
+        if px_count <= 1:
+            self.update_ui(f"Fail: Only 1px at {seed_val:.3f}. Increase Tol (T)")
+            return
+            
+        if px_count > (self.img.size * 0.4):
+            self.update_ui(f"Leak blocked! ({px_count} px). Decrease Tol (G)")
+            return
+
+        # 4. Apply
+        self.save_history()
+        self.mask[mask_to_fill] = self.current_class
+        self.mask_plot.set_data(self.mask)
+        self.update_ui(f"Success: Filled {px_count} pixels")
+        self.fig.canvas.draw_idle()
+
+        # 4. Success - Save history and apply
+        self.save_history()
+        self.mask[mask_to_fill] = self.current_class
+        self.mask_plot.set_data(self.mask)
+        self.update_ui(f"Filled {px_count} pixels")
+        print(f"Wand: Seed={seed_val:.1f}, Tol={self.tolerance}, Pixels={px_count}")
+
+    def on_press(self, event):
+        """
+        Handle canvas mouse button click and click-drag initializations.
+        
+        Triggers standard smart painting routines on left-click and erases active 
+        mask layers when a right-click event is initiated.
+        """
+        if event.inaxes == self.ax and self.fig.canvas.manager.toolbar.mode == "":
+            self.save_history()
+            self.is_drawing = True
+            self.paint_smart(event.xdata, event.ydata, erase=(event.button == 3))
+
+    def on_motion(self, event):
+        """
+        Track live mouse coordinates across active canvas pixels.
+        
+        Continuously updates crosshair registration indexes and appends drawn labels 
+        if the dragging sequence remains active.
+        """
+        if event.inaxes == self.ax:
+            self.last_mouse_pos = (event.xdata, event.ydata) # Always update pos
+            if self.is_drawing:
+                self.paint_smart(event.xdata, event.ydata, erase=(event.button == 3))
+
+    def on_key(self, event):
+        """
+        Parse interactive canvas hotkeys for operational state updates.
+
+        Supported Keybindings:
+        * '1' - 'N': Direct phase class target switching.
+        * 'left' / 'right' arrow keys: Sequentially cycle phase indices.
+        * 'up' / 'down' arrow keys: Increase or decrease brush radius metrics.
+        * 't' / 'g': Step up or step down intensity boundary tolerance levels.
+        * 'z': Pop and restore the previous mask state array from history.
+        * 'w': Fire connectivity flood-fill at current mouse coordinates.
+        * 's': Serialize current mask to a standard NumPy array file disk space.
+        """
+        # 1. Direct number selection
+        if event.key in [str(i) for i in range(1, self.num_classes + 1)]:
+            self.current_class = int(event.key)
+        
+        # 2. Arrow keys for class switching (Left/Right)
+        elif event.key == 'right':
+            # Increment and wrap around
+            self.current_class = (self.current_class % self.num_classes) + 1
+        elif event.key == 'left':
+            # Decrement and wrap around
+            self.current_class = self.current_class - 1
+            if self.current_class < 1:
+                self.current_class = self.num_classes
+        
+        # 3. Brush sizing (Up/Down)
+        elif event.key == 'up': 
+            self.brush_size += 1
+        elif event.key == 'down': 
+            self.brush_size = max(1, self.brush_size - 1)
+            
+        # 4. Tolerance (T/G)
+        elif event.key == 't': 
+            self.tolerance += self.tol_step
+        elif event.key == 'g': 
+            self.tolerance = max(0.001, self.tolerance - self.tol_step)
+            
+        # 5. Undo (Z)
+        elif event.key == 'z':
+            if len(self.history) > 0:
+                self.mask = self.history.pop()
+                self.mask_plot.set_data(self.mask)
+                
+        # 6. Magic Wand (W)
+        elif event.key == 'w':
+            self.magic_wand(*self.last_mouse_pos)
+            
+        # 7. Save (S)
+        elif event.key == 's':
+            np.save('refined_labels.npy', self.mask)
+            self.update_ui("SAVED!")
+            return # Skip the standard UI update to keep the "SAVED!" message visible
+            
+        self.update_ui()
+
+    def on_release(self, event):
+        """Terminate drawing sequences when the mouse button is released."""
+        self.is_drawing = False
