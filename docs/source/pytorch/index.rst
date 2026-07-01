@@ -11,3 +11,4 @@ The `pytorch` module contains functions for handling computed tomography and che
    tomo_torch
    utils_torch
    reg_torch
+   seg_torch

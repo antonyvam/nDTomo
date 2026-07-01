@@ -9,6 +9,7 @@ This package contains modules for peak analysis, including:
 - `xrays`: methods related to X-ray science
 - `zip`: methods for zipping files and folders
 - `misc`: a broad collection of general-purpose functions and tools used across the nDTomo package
+- `segmentation`: methods related to image segmentation
 """
 
 import importlib

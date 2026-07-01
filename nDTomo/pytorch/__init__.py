@@ -7,6 +7,7 @@ This package contains modules for using PyTorch code, including:
 - `utils_torch`: methods used for computed tomography, peak fitting and others
 - `peak_models_torch`: various peak shape models
 - `reg_torch`: methods for 2D/3D affine image registration, volume warping, and point cloud alignment
+- `segmentation_torch`: methods for image registration
 """
 
 # Use mocked torch modules if on ReadTheDocs
