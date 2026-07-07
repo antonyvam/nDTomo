@@ -55,7 +55,7 @@ The repository includes several **example notebooks** to help users learn the AP
 | [`tutorial_peak_fit_cnn.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_peak_fit_cnn.ipynb) | Peak fitting in GPU using a self-supervised PeakFitCNN |
 | [`tutorial_DLSR.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_DLSR.ipynb) | Simultaneous peak fitting and CT reconstruction in GPU using the DLSR method |
 | [`tutorial_registration.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_registration.ipynb) | Registration 2D, 3D and point cloud with PyTorch |
-| [`tutorial_segmentation.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_segmentation.ipynb) | Image segmentation in CPU and GPU with PyTorch |
+| [`tutorial_segmentation.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_segmentation.ipynb) | Image segmentation in CPU and GPU with PyTorch implementations |
 
 Each notebook is designed to be **standalone and executable**, with detailed inline comments and example outputs.
 
