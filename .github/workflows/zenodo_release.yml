@@ -132,9 +132,11 @@ jobs:
         env:
           ZENODO_TOKEN: ${{ secrets.ZENODO_API_TOKEN }}
           NEW_DEPOSITION_ID: ${{ env.deposition_id }}
+          # EXPLICITLY MAP THE VARIABLE HERE:
+          ZIP_FILE_NAME: "nDTomo-${{ github.event.release.tag_name }}.zip"
         run: |
           curl -s -H "Authorization: Bearer $ZENODO_TOKEN" \
-            -F "file=@${ZIP_NAME}" \
+            -F "file=@${ZIP_FILE_NAME}" \
             "https://zenodo.org/api/deposit/depositions/$NEW_DEPOSITION_ID/files"
 
       # Step 7: Publish the new deposition
