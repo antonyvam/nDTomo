@@ -10,7 +10,7 @@ name: Upload Python Package to PyPI
 
 on:
   release:
-    types: [published]
+    types: [published, prereleased]
 
 permissions:
   contents: read
@@ -75,3 +75,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: dist/
+          repository-url: https://test.pypi.org/legacy/
