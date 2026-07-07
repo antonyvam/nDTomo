@@ -33,7 +33,15 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install build
-
+      
+      # Overwrites __version__ with exact GitHub Release tag string
+      - name: Inject Release Version into __init__.py
+        run: |
+          VERSION="${{ github.event.release.tag_name }}"
+          # Removes leading 'v' if your tag is named 'v2026.07' instead of '2026.07'
+          VERSION="${VERSION#v}" 
+          echo "__version__ = '$VERSION'" > nDTomo/__init__.py
+          
       - name: Build release distributions
         run: |
           python -m build
