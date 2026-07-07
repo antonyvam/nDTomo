@@ -7,13 +7,17 @@ on:
 
 jobs:
   upload-to-zenodo:
+    # This line ensures the job is skipped entirely if the "Set as a pre-release" box is checked on GitHub
+    if: github.event.release.prerelease == false
     name: Publish Release on Zenodo
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the repository
+      # Step 1: Checkout the exact tag cleanly
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name }}
 
       # Step 2: Compress the release files
       - name: Prepare Release Files
@@ -106,7 +110,7 @@ jobs:
                       name: "Jacques, Simon D.M.",
                       affiliation: "Finden Ltd",
                       orcid: "0000-0002-7275-5272"
-                    }                                                            
+                    }                                            
                   ],
                   access_right: "open",
                   license: $license
@@ -150,4 +154,3 @@ jobs:
             echo "Warning: Publish may have already succeeded. Manual check recommended. Full response: $RESPONSE"
             exit 1
           fi
-
