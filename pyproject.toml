@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=69", "wheel"]
+requires = ["setuptools<81", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,7 +7,7 @@ name = "nDTomo"
 dynamic = ["version"]                      # read from your package
 description = "nDTomo software suite"
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.11"
 authors = [{ name = "A. Vamvakeros", email = "antonyvam@gmail.com" }]
 license = { file = "LICENSE" }
 urls = { Homepage = "http://github.com/antonyvam/nDTomo" }
