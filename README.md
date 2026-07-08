@@ -153,7 +153,7 @@ conda activate ndtomo
 python -m nDTomo.gui.nDTomoGUI
 ```
 
-### 4. Running via Docker (Recommended for GPU Compute)
+## Running via Docker (Recommended for GPU Compute)
 
 We also provide a self-contained Docker environment. This eliminates the need to manually configure complex CUDA binaries or local package versions.
 
