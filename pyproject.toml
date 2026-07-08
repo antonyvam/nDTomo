@@ -27,6 +27,7 @@ dependencies = [
   "scikit-image",
   "scikit-learn",
   "xdesign",
+  "setuptools<81",
   "tqdm",
   "ipykernel",
   "pystackreg",
