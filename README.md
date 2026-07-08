@@ -40,8 +40,6 @@ nDTomo provides tools for:
 
 The repository includes several **example notebooks** to help users learn the API and workflows:
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/epapoutsellis/nDTomo/cloud_exs?urlpath=%2Fdoc%2Ftree%2Fdocs%2Fsource%2Fnotebooks) [![Tomography Reconstruction (GoogleColab)](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/epapoutsellis/nDTomo/blob/cloud_exs/gcolab/tutorial_ct_recon_demo.ipynb)
-
 | Notebook Filename | Topic |
 |------------------|--------|
 | [`tutorial_phantoms.ipynb`](https://github.com/antonyvam/nDTomo/blob/master/docs/source/notebooks/tutorial_phantoms.ipynb) | Generating and visualizing 2D/3D phantoms |
@@ -60,8 +58,6 @@ The repository includes several **example notebooks** to help users learn the AP
 Each notebook is designed to be **standalone and executable**, with detailed inline comments and example outputs.
 
 **Note:**
-
-- **Binder** is built with CPU-only support (including `torch`) and can be used to run all notebooks. However, some notebooks may take longer to execute due to the lack of GPU acceleration.
 
 - **Google Colab** provides GPU support and `torch` is preinstalled. You will also need to install `nDTomo` at the beginning of each notebook session.
 
@@ -190,6 +186,21 @@ docker build -t ndtomo-local .
 
 3. Run your locally built image:
 docker run -it --gpus all -p 8888:8888 -v "$(pwd)":/app ndtomo-local
+
+
+## Try nDTomo Instantly (Web Demo)
+
+If you want to explore our tutorials or test the API without installing anything locally, you can launch an interactive JupyterLab workspace directly in your web browser using MyBinder:
+
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/antonyvam/nDTomo/master?urlpath=lab)
+
+> ⚠️ **Note on Cloud Resources:** This public demo environment runs on free, CPU-only cloud infrastructure. Heavy GPU-accelerated modules (such as deep learning models or massive tomographic reconstructions) will run significantly slower here than on a local GPU setup or via our official Docker container.
+
+### What to expect:
+1. Click the **Launch Binder** badge above.
+2. Wait a few moments for the cloud container to spin up.
+3. Navigate to the `docs/source/notebooks/` directory in the left sidebar explorer to run the interactive tutorials.
+4. **Save your work:** Binder sessions are temporary. If your browser remains idle for more than 10 minutes, the session will close and any changes you made will be deleted. Download your modified notebooks locally if you want to save them!
 
 ## Citation
 
