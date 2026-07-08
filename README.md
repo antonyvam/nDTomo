@@ -131,13 +131,7 @@ pip install -e .
 Navigate to where the `setup.py` file is located and run:
 
 ```bash
-pip install --user .
-```
-
-or:
-
-```bash
-python3 setup.py install --user
+pip install .
 ```
 
 ### 3. Install PyTorch
@@ -157,16 +151,6 @@ After installing `nDTomo`, the graphical user interface can be launched directly
 ```bash
 conda activate ndtomo
 python -m nDTomo.gui.nDTomoGUI
-```
-
-## Diamond Light Source
-
-As a user at the Diamond Light Source, you can install `nDTomo` by doing:
-
-```bash
-git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
-module load python/3
-python setup.py install --user
 ```
 
 ## Citation
