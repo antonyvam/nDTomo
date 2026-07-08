@@ -164,16 +164,16 @@ We also provide a self-contained Docker environment. This eliminates the need to
 ### a) Build the Image
 Navigate to the root directory of the cloned repository and build the container image:
 
-docker build -t ndtomo-compute .
+docker build -t ndtomo .
 
 ### b) Launch the Workspace
 Run the container to spin up an isolated JupyterLab server. 
 
 #### For Linux and Windows (With NVIDIA GPU Acceleration)
-docker run -it --gpus all -p 8888:8888 -v "$(pwd)":/app ndtomo-compute
+docker run -it --gpus all -p 8888:8888 -v "$(pwd)":/app ndtomo
 
 #### For macOS or systems without an NVIDIA GPU (CPU-Only Mode)
-docker run -it -p 8888:8888 -v "$(pwd)":/app ndtomo-compute
+docker run -it -p 8888:8888 -v "$(pwd)":/app ndtomo
 
 > Note on the -v flag: This maps your local repository directory directly into the container. Any changes you make or notebooks you save inside the browser interface will be saved permanently to your hard drive.
 
