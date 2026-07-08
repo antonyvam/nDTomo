@@ -33,7 +33,7 @@ jobs:
         shell: bash -el {0}
         run: |
           python -m pip install --upgrade pip
-          python -m pip install nbconvert ipykernel
+          python -m pip install nbconvert ipykernel setuptools
           # Installs your specific CUDA-optimized PyTorch binaries
           python -m pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
           python -m pip install .
