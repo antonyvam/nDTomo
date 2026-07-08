@@ -1,0 +1,18 @@
+name: Code Quality Check
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  ruff-lint:
+    name: Run Ruff Linter
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository code
+        uses: actions/checkout@v4
+
+      - name: Run Ruff Check
+        uses: astral-sh/ruff-action@v3
