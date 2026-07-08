@@ -35,17 +35,15 @@ jobs:
           
           # 2. Add the precise file list inside the array block
           NOTEBOOKS=(
-            "tutorial_DLSR.ipynb"
             "tutorial_detector_calibration.ipynb"
             "tutorial_dimensionality_reduction.ipynb"
-            "tutorial_peak_fit_cnn.ipynb"
             "tutorial_peak_fitting.ipynb"
             "tutorial_pencil_beam.ipynb"
             "tutorial_phantoms.ipynb"
-            "tutorial_registration.ipynb"
-            "tutorial_segmentation.ipynb"
             "tutorial_sinogram_handling.ipynb"
             "tutorial_texture_2D_diffraction_patterns.ipynb"
+            "tutorial_segmentation.ipynb"
+            "tutorial_registration.ipynb"
           )
           
           # 3. Loop through the chosen sequence array and execute them sequentially
