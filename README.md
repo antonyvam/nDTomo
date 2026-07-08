@@ -153,6 +153,37 @@ conda activate ndtomo
 python -m nDTomo.gui.nDTomoGUI
 ```
 
+### 4. Running via Docker (Recommended for GPU Compute)
+
+We also provide a self-contained Docker environment. This eliminates the need to manually configure complex CUDA binaries or local package versions.
+
+### Prerequisites
+* Install Docker Desktop (Windows/macOS) or Docker Engine (Linux).
+* For GPU acceleration on Linux or Windows (WSL2), ensure you have an NVIDIA GPU and that the NVIDIA Container Toolkit is installed.
+
+### a) Build the Image
+Navigate to the root directory of the cloned repository and build the container image:
+
+docker build -t ndtomo-compute .
+
+### b) Launch the Workspace
+Run the container to spin up an isolated JupyterLab server. 
+
+#### For Linux and Windows (With NVIDIA GPU Acceleration)
+docker run -it --gpus all -p 8888:8888 -v "$(pwd)":/app ndtomo-compute
+
+#### For macOS or systems without an NVIDIA GPU (CPU-Only Mode)
+docker run -it -p 8888:8888 -v "$(pwd)":/app ndtomo-compute
+
+> Note on the -v flag: This maps your local repository directory directly into the container. Any changes you make or notebooks you save inside the browser interface will be saved permanently to your hard drive.
+
+### c) Accessing JupyterLab
+Once the container starts, copy and paste the generated URL string from your terminal into your web browser:
+
+http://127.0.0.1:8888/lab?token=your_unique_token_here
+
+Navigate to the docs/source/notebooks/ directory in the sidebar explorer to run the interactive tomographic reconstruction tutorials.
+
 ## Citation
 
 If you use parts of the code, please cite the work using the following paper:
