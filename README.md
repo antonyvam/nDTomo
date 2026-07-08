@@ -155,34 +155,41 @@ python -m nDTomo.gui.nDTomoGUI
 
 ## Running via Docker (Recommended for GPU Compute)
 
-We also provide a self-contained Docker environment. This eliminates the need to manually configure complex CUDA binaries or local package versions.
+We provide a self-contained Docker environment which eliminates the need to manually configure complex CUDA binaries or local package versions.
 
 ### Prerequisites
 * Install Docker Desktop (Windows/macOS) or Docker Engine (Linux).
 * For GPU acceleration on Linux or Windows (WSL2), ensure you have an NVIDIA GPU and that the NVIDIA Container Toolkit is installed.
 
-### a) Build the Image
-Navigate to the root directory of the cloned repository and build the container image:
-
-docker build -t ndtomo .
-
-### b) Launch the Workspace
-Run the container to spin up an isolated JupyterLab server. 
+### 1. Launching the Workspace (Quick Start)
+You do not need to download the source code or build the image locally. Run the container command directly in your terminal to automatically pull your pre-compiled workspace straight from Docker Hub and spin up the JupyterLab server.
 
 #### For Linux and Windows (With NVIDIA GPU Acceleration)
-docker run -it --gpus all -p 8888:8888 -v "$(pwd)":/app ndtomo
+docker run -it --gpus all -p 8888:8888 -v "$(pwd)":/app antonyvam/ndtomo:latest
 
 #### For macOS or systems without an NVIDIA GPU (CPU-Only Mode)
-docker run -it -p 8888:8888 -v "$(pwd)":/app ndtomo
+docker run -it -p 8888:8888 -v "$(pwd)":/app antonyvam/ndtomo:latest
 
-> Note on the -v flag: This maps your local repository directory directly into the container. Any changes you make or notebooks you save inside the browser interface will be saved permanently to your hard drive.
+> Note on the -v flag: This maps your current terminal directory directly into the container's `/app` folder. Any changes you make or notebooks you save inside the browser interface will be saved permanently to your local hard drive.
 
-### c) Accessing JupyterLab
+### 2. Accessing JupyterLab
 Once the container starts, copy and paste the generated URL string from your terminal into your web browser:
 
 http://127.0.0.1:8888/lab?token=your_unique_token_here
 
 Navigate to the docs/source/notebooks/ directory in the sidebar explorer to run the interactive tomographic reconstruction tutorials.
+
+### Advanced: Building the Image Locally (Optional for Developers)
+If you want to modify the source code, tweak dependencies, or test custom configurations locally before committing changes, you can manually build the image from the repository root instead of pulling it from Docker Hub.
+
+1. Clone the repository and navigate to the root directory:
+git clone https://github.com/antonyvam/nDTomo.git && cd nDTomo
+
+2. Build the image locally:
+docker build -t ndtomo-local .
+
+3. Run your locally built image:
+docker run -it --gpus all -p 8888:8888 -v "$(pwd)":/app ndtomo-local
 
 ## Citation
 
