@@ -57,10 +57,6 @@ The repository includes several **example notebooks** to help users learn the AP
 
 Each notebook is designed to be **standalone and executable**, with detailed inline comments and example outputs.
 
-**Note:**
-
-- **Google Colab** provides GPU support and `torch` is preinstalled. You will also need to install `nDTomo` at the beginning of each notebook session.
-
 ## Graphical User Interface (nDTomoGUI)
 
 The `nDTomoGUI` provides a complete graphical environment for:
