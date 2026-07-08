@@ -9,7 +9,7 @@ description = "nDTomo software suite"
 readme = "README.md"
 requires-python = ">=3.9"
 authors = [{ name = "A. Vamvakeros", email = "antonyvam@gmail.com" }]
-license = { file = "LICENSE.txt" }
+license = { file = "LICENSE" }
 urls = { Homepage = "http://github.com/antonyvam/nDTomo" }
 classifiers = [
     "Intended Audience :: Science/Research",
