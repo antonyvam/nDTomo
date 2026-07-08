@@ -1,4 +1,3 @@
-name: ndtomo-binder
 channels:
   - astra-toolbox
   - conda-forge
@@ -19,11 +18,11 @@ dependencies:
   - napari
   - configobj
   - ipympl
-  - pyqt5
   - jupyterlab_widgets
   - xgboost
   - pip
   - pip:
+      - pyqt5
       - siphash24
       - pyqtgraph
       - xdesign
