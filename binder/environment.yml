@@ -1,14 +1,34 @@
-name: ndtomo
+name: ndtomo-binder
 channels:
-  - defaults
-dependencies:
-  - python=3.9
   - astra-toolbox
+  - conda-forge
+dependencies:
+  - python=3.11
+  - astra-toolbox
+  - jupyterlab
+  - h5py
+  - matplotlib
+  - numpy
+  - scipy
+  - scikit-image
+  - scikit-learn
+  - tqdm
+  - ipykernel
+  - tifffile
+  - pyFAI>=2025.01
+  - napari
+  - configobj
+  - ipympl
+  - pyqt5
+  - jupyterlab_widgets
+  - xgboost
   - pip
   - pip:
-      - git+https://github.com/antonyvam/nDTomo.git  
-      - torch
-      - torchvision
-      - torchaudio  
-      - --extra-index-url https://download.pytorch.org/whl/cpu      
-
+      - siphash24
+      - pyqtgraph
+      - xdesign
+      - pystackreg
+      - algotom
+      - fabio
+      - torch --index-url https://download.pytorch.org/whl/cpu
+      - torchvision --index-url https://download.pytorch.org/whl/cpu
