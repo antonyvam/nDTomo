@@ -20,12 +20,12 @@ dependencies:
   - ipympl
   - jupyterlab_widgets
   - xgboost
+  - xdesign
   - pip
   - pip:
       - pyqt5
       - siphash24
       - pyqtgraph
-      - xdesign
       - pystackreg
       - algotom
       - fabio
