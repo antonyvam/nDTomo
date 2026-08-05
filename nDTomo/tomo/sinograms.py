@@ -377,7 +377,7 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pba
 
     xold = np.arange(0, s.shape[0])
 
-    if xnew is not None:
+    if xnew is None:
 
         # Center of rotation search range
         cr = np.arange(s.shape[0] / 2 - crsr, s.shape[0] / 2 + crsr, 0.1)
