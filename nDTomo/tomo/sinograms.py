@@ -295,7 +295,10 @@ def sinocomcor(sinograms, interp=False, sine_wave=False, sine_wave_plot=False, p
     return sn
 
 
-def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pbar=True):
+
+def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pbar=True,
+                  return_xnew = False, xnew = None):
+
     """
     Centers sinograms by calculating and applying the center of rotation (COR) correction.
 
@@ -333,10 +336,21 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pba
         If True, display progress bars during the COR calculation and correction steps.
         If False, suppress progress bar output.
 
+    return_xnew : bool, optional, default=False
+        If True, return a tuple containing the corrected sinogram and the `xnew` grid.
+        If False, return only the corrected sinogram.
+
+    xnew : numpy.ndarray or None, optional, default=None
+        Precomputed target grid for interpolation:
+        - None: Automatically search for and calculate the optimal COR grid.
+        - Array: Bypass the search phase and apply the provided transformation grid directly.
+
     Returns
     -------
-    numpy.ndarray
-        Corrected sinogram(s) after applying the calculated COR correction. 
+    numpy.ndarray or tuple
+        - If `return_xnew` is False: numpy.ndarray of corrected sinogram(s).
+        - If `return_xnew` is True: tuple (corrected_sinograms, xnew).
+        
         The shape of the returned array matches the input array, except for adjustments 
         in the detector elements due to the calculated COR shift.
 
@@ -346,8 +360,8 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pba
       of differences between the flipped projection at 180° and the projection at 0°.
     - For 3D sinograms, the COR correction is applied to each spectral channel individually.
     - The function uses `numpy.interp` for linear interpolation.
-
     """
+
     di = sinograms.shape
     if len(di) > 2:
         if channels is None:
@@ -361,32 +375,36 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pba
     if scan == 360:
         s = s[:, :int(np.round(s.shape[1] / 2))]
 
-    # Center of rotation search range
-    cr = np.arange(s.shape[0] / 2 - crsr, s.shape[0] / 2 + crsr, 0.1)
     xold = np.arange(0, s.shape[0])
-    st = []  # Standard deviations for COR candidates
 
-    if pbar:
-        print("Calculating the COR")
-    loop_range = tqdm(range(len(cr))) if pbar else range(len(cr))
-    for kk in loop_range:
-        xnew = cr[kk] + np.arange(-np.ceil(s.shape[0] / 2), np.ceil(s.shape[0] / 2) - 1)
-        sn = np.zeros((len(xnew), s.shape[1]), dtype="float32")
-        for ii in range(s.shape[1]):
-            if interp:
-                sn[:, ii] = np.interp(xnew, xold, s[:, ii])
-            else:
-                sn[:, ii] = np.interp(xnew, xold, s[:, ii], left=0, right=0)
-        re = sn[::-1, -1]
-        st.append(np.std(sn[:, 0] - re))
+    if xnew is not None:
 
-    # Find the optimal center of rotation
-    m = np.argmin(st)
-    if pbar:
-        print(f"Calculated COR: {cr[m]}")
+        # Center of rotation search range
+        cr = np.arange(s.shape[0] / 2 - crsr, s.shape[0] / 2 + crsr, 0.1)
+        
+        st = []  # Standard deviations for COR candidates
 
-    # Apply COR correction
-    xnew = cr[m] + np.arange(-np.ceil(s.shape[0] / 2), np.ceil(s.shape[0] / 2) - 1)
+        if pbar:
+            print("Calculating the COR")
+        loop_range = tqdm(range(len(cr))) if pbar else range(len(cr))
+        for kk in loop_range:
+            xnew = cr[kk] + np.arange(-np.ceil(s.shape[0] / 2), np.ceil(s.shape[0] / 2) - 1)
+            sn = np.zeros((len(xnew), s.shape[1]), dtype="float32")
+            for ii in range(s.shape[1]):
+                if interp:
+                    sn[:, ii] = np.interp(xnew, xold, s[:, ii])
+                else:
+                    sn[:, ii] = np.interp(xnew, xold, s[:, ii], left=0, right=0)
+            re = sn[::-1, -1]
+            st.append(np.std(sn[:, 0] - re))
+
+        # Find the optimal center of rotation
+        m = np.argmin(st)
+        if pbar:
+            print(f"Calculated COR: {cr[m]}")
+
+        # Apply COR correction
+        xnew = cr[m] + np.arange(-np.ceil(s.shape[0] / 2), np.ceil(s.shape[0] / 2) - 1)
 
     if pbar:
         print("Applying the COR correction")
@@ -407,7 +425,11 @@ def sinocentering(sinograms, crsr=5, interp=True, scan=180, channels = None, pba
             else:
                 sn[:, ii] = np.interp(xnew, xold, sinograms[:, ii], left=0, right=0)
 
-    return sn
+    if return_xnew:
+        return(sn, xnew)
+    else:
+        return sn
+
 
 def zigzag_rows(s):
     """
