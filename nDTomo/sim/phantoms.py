@@ -86,7 +86,7 @@ def phantom_random_shapes(sz=368, min_shapes=3, max_shapes=10,
     """
 
     im, _ = random_shapes((sz, sz), min_shapes=min_shapes, max_shapes=max_shapes, 
-                          shape=shape, multichannel=False, min_size=min_size, 
+                          shape=shape, num_channels=1, min_size=min_size, 
                           max_size=max_size, allow_overlap=allow_overlap)
 
     # Convert background pixels (255) to 1, and all shape pixels to 0-1 range
