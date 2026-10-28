@@ -1,17 +1,16 @@
-# -*- coding: utf-8 -*-
 """
 Methods for creating geometric shapes in 3D.
 
-This module provides a collection of functions for generating and manipulating 
-various 3D geometric shapes within NumPy arrays. The implemented shapes range 
-from basic primitives such as spheres, cubes, and cylinders to more complex 
+This module provides a collection of functions for generating and manipulating
+various 3D geometric shapes within NumPy arrays. The implemented shapes range
+from basic primitives such as spheres, cubes, and cylinders to more complex
 structures like toroids, Möbius strips, and fractal-based geometries.
 
-Each function operates on a 3D NumPy array, modifying it by filling the specified 
-shape with a given value. The methods utilize vectorized operations for efficiency 
+Each function operates on a 3D NumPy array, modifying it by filling the specified
+shape with a given value. The methods utilize vectorized operations for efficiency
 and support both solid and hollow versions of certain shapes where applicable.
 
-These functions are useful for synthetic data generation, volumetric modeling, 
+These functions are useful for synthetic data generation, volumetric modeling,
 scientific simulations, and 3D image processing tasks.
 
 @author: Antony Vamvakeros
@@ -20,13 +19,14 @@ scientific simulations, and 3D image processing tasks.
 import numpy as np
 from tqdm import tqdm
 
+
 def create_sphere(arr, center, outer_radius, thickness=0, fill_value=1):
     """
     Creates a solid or hollow sphere in a 3D array.
 
     This function generates either a solid sphere or a hollow spherical shell
-    (hollow sphere) in the given 3D array `arr`. If `thickness` is 0, a solid sphere 
-    is created. Otherwise, a shell is formed where voxels within the specified 
+    (hollow sphere) in the given 3D array `arr`. If `thickness` is 0, a solid sphere
+    is created. Otherwise, a shell is formed where voxels within the specified
     thickness are filled.
 
     Parameters
@@ -50,15 +50,20 @@ def create_sphere(arr, center, outer_radius, thickness=0, fill_value=1):
     x0, y0, z0 = center
     inner_radius = max(outer_radius - thickness, 0)  # Avoid negative radius
 
-    X, Y, Z = np.ogrid[:arr.shape[0], :arr.shape[1], :arr.shape[2]]
-    dist2 = (X - x0)**2 + (Y - y0)**2 + (Z - z0)**2
+    X, Y, Z = np.ogrid[: arr.shape[0], : arr.shape[1], : arr.shape[2]]
+    dist2 = (X - x0) ** 2 + (Y - y0) ** 2 + (Z - z0) ** 2
 
     outer_r2 = outer_radius**2
     inner_r2 = inner_radius**2
 
-    mask = dist2 <= outer_r2 if thickness == 0 else (dist2 <= outer_r2) & (dist2 >= inner_r2)
+    mask = (
+        dist2 <= outer_r2
+        if thickness == 0
+        else (dist2 <= outer_r2) & (dist2 >= inner_r2)
+    )
     arr[mask] = fill_value
     return arr
+
 
 def create_cube(arr, center, size, thickness=0, fill_value=1):
     """
@@ -95,7 +100,7 @@ def create_cube(arr, center, size, thickness=0, fill_value=1):
     z_min, z_max = max(z0 - half_size, 0), min(z0 + half_size, arr.shape[2] - 1)
 
     # Fill the cube region
-    arr[x_min:x_max+1, y_min:y_max+1, z_min:z_max+1] = fill_value
+    arr[x_min : x_max + 1, y_min : y_max + 1, z_min : z_max + 1] = fill_value
 
     # If thickness > 0, create a hollow cube by removing the inner region
     if thickness > 0:
@@ -104,10 +109,19 @@ def create_cube(arr, center, size, thickness=0, fill_value=1):
         inner_z_min, inner_z_max = z_min + thickness, z_max - thickness
 
         # Ensure we don't completely remove the cube
-        if inner_x_min < inner_x_max and inner_y_min < inner_y_max and inner_z_min < inner_z_max:
-            arr[inner_x_min:inner_x_max+1, inner_y_min:inner_y_max+1, inner_z_min+1:inner_z_max] = 0
+        if (
+            inner_x_min < inner_x_max
+            and inner_y_min < inner_y_max
+            and inner_z_min < inner_z_max
+        ):
+            arr[
+                inner_x_min : inner_x_max + 1,
+                inner_y_min : inner_y_max + 1,
+                inner_z_min + 1 : inner_z_max,
+            ] = 0
 
     return arr
+
 
 def create_cuboid(arr, center, size_x, size_y, size_z, thickness=0, fill_value=1):
     """
@@ -148,7 +162,7 @@ def create_cuboid(arr, center, size_x, size_y, size_z, thickness=0, fill_value=1
     z_min, z_max = max(z0 - half_z, 0), min(z0 + half_z, arr.shape[2] - 1)
 
     # Fill the cuboid region
-    arr[x_min:x_max+1, y_min:y_max+1, z_min:z_max+1] = fill_value
+    arr[x_min : x_max + 1, y_min : y_max + 1, z_min : z_max + 1] = fill_value
 
     # If thickness > 0, create a hollow cuboid by removing the inner region
     if thickness > 0:
@@ -157,18 +171,28 @@ def create_cuboid(arr, center, size_x, size_y, size_z, thickness=0, fill_value=1
         inner_z_min, inner_z_max = z_min + thickness, z_max - thickness
 
         # Ensure we don't completely remove the cuboid
-        if inner_x_min < inner_x_max and inner_y_min < inner_y_max and inner_z_min < inner_z_max:
-            arr[inner_x_min:inner_x_max+1, inner_y_min:inner_y_max+1, inner_z_min+1:inner_z_max] = 0
+        if (
+            inner_x_min < inner_x_max
+            and inner_y_min < inner_y_max
+            and inner_z_min < inner_z_max
+        ):
+            arr[
+                inner_x_min : inner_x_max + 1,
+                inner_y_min : inner_y_max + 1,
+                inner_z_min + 1 : inner_z_max,
+            ] = 0
 
     return arr
 
 
-def create_cylinder(arr, center_xy, z_range, outer_radius, thickness=1, fill_value=1, caps=True):
+def create_cylinder(
+    arr, center_xy, z_range, outer_radius, thickness=1, fill_value=1, caps=True
+):
     """
     Creates a solid or hollow cylinder in a 3D NumPy array, oriented along the Z-axis.
 
-    The function supports both solid and hollow cylinders. If `thickness=0`, a solid 
-    cylinder is created. If `thickness > 0`, a hollow cylinder with a specified wall 
+    The function supports both solid and hollow cylinders. If `thickness=0`, a solid
+    cylinder is created. If `thickness > 0`, a hollow cylinder with a specified wall
     thickness is created. Optional top and bottom caps can be included.
 
     Parameters
@@ -197,22 +221,22 @@ def create_cylinder(arr, center_xy, z_range, outer_radius, thickness=1, fill_val
     if thickness == 0:
         cx, cy = center_xy
         z_start, z_end = z_range
-        
+
         # Make sure z-range is within bounds
         z_start = max(z_start, 0)
-        z_end   = min(z_end, arr.shape[2])
+        z_end = min(z_end, arr.shape[2])
 
         # Create coordinate grids
-        X, Y, Z = np.ogrid[:arr.shape[0], :arr.shape[1], :arr.shape[2]]
-        
+        X, Y, Z = np.ogrid[: arr.shape[0], : arr.shape[1], : arr.shape[2]]
+
         # Distance in X-Y plane from (cx, cy)
-        dist2_xy = (X - cx)**2 + (Y - cy)**2
-        
+        dist2_xy = (X - cx) ** 2 + (Y - cy) ** 2
+
         # Condition for being inside the cylinder cross-section
         cross_section_mask = dist2_xy <= outer_radius**2
         # Condition for being within z-range
-        z_mask = (Z >= z_start) & (Z < z_end)
-        
+        z_mask = (z_start <= Z) & (z_end > Z)
+
         # Combine both masks
         mask = cross_section_mask & z_mask
         arr[mask] = fill_value
@@ -224,7 +248,7 @@ def create_cylinder(arr, center_xy, z_range, outer_radius, thickness=1, fill_val
 
         # Clamp z-range to the array's bounds
         z_start = max(z_start, 0)
-        z_end   = min(z_end, arr.shape[2])
+        z_end = min(z_end, arr.shape[2])
         if z_start >= z_end:
             return arr  # no valid Z range, do nothing
 
@@ -232,10 +256,10 @@ def create_cylinder(arr, center_xy, z_range, outer_radius, thickness=1, fill_val
         inner_radius = max(outer_radius - thickness, 0)
 
         # Create coordinate arrays with ogrid
-        X, Y, Z = np.ogrid[:arr.shape[0], :arr.shape[1], :arr.shape[2]]
+        X, Y, Z = np.ogrid[: arr.shape[0], : arr.shape[1], : arr.shape[2]]
 
         # Distance (squared) in the X-Y plane from center (cx, cy)
-        dist2_xy = (X - cx)**2 + (Y - cy)**2
+        dist2_xy = (X - cx) ** 2 + (Y - cy) ** 2
         outer_r2 = outer_radius**2
         inner_r2 = inner_radius**2
 
@@ -245,8 +269,8 @@ def create_cylinder(arr, center_xy, z_range, outer_radius, thickness=1, fill_val
         if caps:
             # Side region is from z in [z_start + thickness, z_end - thickness)
             # This ensures that the caps remain visible.
-            side_z_min = min(z_start + thickness, z_end)  
-            side_z_max = max(z_end - thickness, z_start)  
+            side_z_min = min(z_start + thickness, z_end)
+            side_z_max = max(z_end - thickness, z_start)
         else:
             # If no caps, the side spans the entire [z_start, z_end)
             side_z_min = z_start
@@ -255,7 +279,7 @@ def create_cylinder(arr, center_xy, z_range, outer_radius, thickness=1, fill_val
         # Side walls: ring shape in cross-section,
         # for z in [side_z_min, side_z_max)
         side_mask_xy = (dist2_xy <= outer_r2) & (dist2_xy >= inner_r2)
-        side_mask_z  = (Z >= side_z_min) & (Z < side_z_max)
+        side_mask_z = (side_z_min <= Z) & (side_z_max > Z)
         side_mask = side_mask_xy & side_mask_z
 
         # -------------------------
@@ -265,15 +289,15 @@ def create_cylinder(arr, center_xy, z_range, outer_radius, thickness=1, fill_val
             # -- TOP CAP --
             # Covers z in [z_end - thickness, z_end)
             top_z_min = max(z_end - thickness, z_start)
-            top_mask_z = (Z >= top_z_min) & (Z < z_end)
-            top_mask_xy = (dist2_xy <= outer_r2)
+            top_mask_z = (top_z_min <= Z) & (z_end > Z)
+            top_mask_xy = dist2_xy <= outer_r2
             top_mask = top_mask_xy & top_mask_z
 
             # -- BOTTOM CAP --
             # Covers z in [z_start, z_start + thickness)
             bot_z_max = min(z_start + thickness, z_end)
-            bot_mask_z = (Z >= z_start) & (Z < bot_z_max)
-            bot_mask_xy = (dist2_xy <= outer_r2)
+            bot_mask_z = (z_start <= Z) & (bot_z_max > Z)
+            bot_mask_xy = dist2_xy <= outer_r2
             bot_mask = bot_mask_xy & bot_mask_z
 
             # Combine side + caps
@@ -287,14 +311,13 @@ def create_cylinder(arr, center_xy, z_range, outer_radius, thickness=1, fill_val
         return arr
 
 
-
 def create_cone(arr, tip, height, outer_radius, thickness=1, fill_value=1, caps=False):
     """
     Creates a solid or hollow cone in a 3D NumPy array, oriented along the Z-axis.
 
-    The function supports both solid and hollow cones. If `thickness=0`, a solid 
-    cone is created. If `thickness > 0`, a hollow cone with a specified wall 
-    thickness is created. Optional base caps can be included to close the bottom 
+    The function supports both solid and hollow cones. If `thickness=0`, a solid
+    cone is created. If `thickness > 0`, a hollow cone with a specified wall
+    thickness is created. Optional base caps can be included to close the bottom
     of the cone.
 
     Parameters
@@ -312,7 +335,7 @@ def create_cone(arr, tip, height, outer_radius, thickness=1, fill_value=1, caps=
     fill_value : int or float, optional
         The value used to fill the cone or its walls.
     caps : bool, optional (default=False)
-        If True, the cone is closed off at the base with a filled annular disk. 
+        If True, the cone is closed off at the base with a filled annular disk.
         If False, the cone remains open at the base.
 
     Returns
@@ -325,36 +348,35 @@ def create_cone(arr, tip, height, outer_radius, thickness=1, fill_value=1, caps=
         x0, y0, z0 = tip
         z1 = z0 + height
 
-        X, Y, Z = np.ogrid[:arr.shape[0], :arr.shape[1], :arr.shape[2]]
-        
+        X, Y, Z = np.ogrid[: arr.shape[0], : arr.shape[1], : arr.shape[2]]
+
         # Fraction of height completed at each Z
         # (Z - z0)/height goes from 0 at the tip to 1 at the base
         frac = (Z - z0) / height
-        
+
         # Only consider 0 <= frac <= 1 (within cone's vertical extent)
         within_height_mask = (frac >= 0) & (frac <= 1)
-        
+
         # Radius at each z-layer
         r_current = outer_radius * frac
-        
+
         # Distance in X-Y plane from (x0, y0)
-        dist2_xy = (X - x0)**2 + (Y - y0)**2
+        dist2_xy = (X - x0) ** 2 + (Y - y0) ** 2
         r2_current = r_current**2  # square the radius for direct comparison
-        
+
         # Condition for inside the cone's cross-section
         cross_section_mask = dist2_xy <= r2_current
-        
+
         mask = within_height_mask & cross_section_mask
         arr[mask] = fill_value
         return arr
 
     else:
-
         x0, y0, z0 = tip
         z1 = z0 + height
 
         # Create mesh grid
-        X, Y, Z = np.ogrid[:arr.shape[0], :arr.shape[1], :arr.shape[2]]
+        X, Y, Z = np.ogrid[: arr.shape[0], : arr.shape[1], : arr.shape[2]]
 
         # Compute normalized height fraction for each Z-layer
         frac = (Z - z0) / height
@@ -370,7 +392,7 @@ def create_cone(arr, tip, height, outer_radius, thickness=1, fill_value=1, caps=
         r2_inner = r_inner**2
 
         # Distance squared from cone axis in X-Y plane
-        dist2_xy = (X - x0)**2 + (Y - y0)**2
+        dist2_xy = (X - x0) ** 2 + (Y - y0) ** 2
 
         # Side shell: Hollow conical shape with **constant thickness**
         shell_mask = (dist2_xy <= r2_outer) & (dist2_xy >= r2_inner)
@@ -380,8 +402,12 @@ def create_cone(arr, tip, height, outer_radius, thickness=1, fill_value=1, caps=
         # Add a base cap (disk) if caps=True
         # ---------------------------------------------------------
         if caps:
-            base_mask_z = (Z >= z1 - thickness) & (Z < z1)  # Fill last 'thickness' layers
-            base_mask_xy = (dist2_xy <= outer_radius**2)  # Fully solid base (not just hollow)
+            base_mask_z = (z1 - thickness <= Z) & (
+                z1 > Z
+            )  # Fill last 'thickness' layers
+            base_mask_xy = (
+                dist2_xy <= outer_radius**2
+            )  # Fully solid base (not just hollow)
             base_mask = base_mask_z & base_mask_xy
             final_mask = side_mask | base_mask
         else:
@@ -395,9 +421,9 @@ def create_pyramid(arr, tip, height, base_size, thickness=1, fill_value=1):
     """
     Creates a solid or hollow pyramid in a 3D NumPy array, oriented along the Z-axis.
 
-    The pyramid has a square base centered at `(x0, y0, z0 + height)`, tapering 
-    to a tip at `(x0, y0, z0)`. If `thickness=0`, a solid pyramid is created. 
-    If `thickness > 0`, a hollow pyramid with a uniform wall thickness is created. 
+    The pyramid has a square base centered at `(x0, y0, z0 + height)`, tapering
+    to a tip at `(x0, y0, z0)`. If `thickness=0`, a solid pyramid is created.
+    If `thickness > 0`, a hollow pyramid with a uniform wall thickness is created.
     Optional base and tip caps can be included to fully enclose the pyramid.
 
     Parameters
@@ -427,7 +453,7 @@ def create_pyramid(arr, tip, height, base_size, thickness=1, fill_value=1):
         x0, y0, z0 = tip
         z1 = z0 + height
 
-        X, Y, Z = np.mgrid[:arr.shape[0], :arr.shape[1], :arr.shape[2]]
+        X, Y, Z = np.mgrid[: arr.shape[0], : arr.shape[1], : arr.shape[2]]
 
         # Compute the fraction along Z
         frac = (Z - z0) / height
@@ -443,7 +469,13 @@ def create_pyramid(arr, tip, height, base_size, thickness=1, fill_value=1):
         y_max = y0 + half_width
 
         # Create the mask
-        pyramid_mask = (X >= x_min) & (X <= x_max) & (Y >= y_min) & (Y <= y_max) & within_height_mask
+        pyramid_mask = (
+            (x_min <= X)
+            & (x_max >= X)
+            & (y_min <= Y)
+            & (y_max >= Y)
+            & within_height_mask
+        )
 
         arr[pyramid_mask] = fill_value
         return arr
@@ -451,7 +483,7 @@ def create_pyramid(arr, tip, height, base_size, thickness=1, fill_value=1):
         x0, y0, z0 = tip
         z1 = z0 + height
 
-        X, Y, Z = np.mgrid[:arr.shape[0], :arr.shape[1], :arr.shape[2]]
+        X, Y, Z = np.mgrid[: arr.shape[0], : arr.shape[1], : arr.shape[2]]
 
         # Compute the fraction along Z
         frac = (Z - z0) / height
@@ -472,23 +504,36 @@ def create_pyramid(arr, tip, height, base_size, thickness=1, fill_value=1):
         y_max_inner = y0 + half_width_inner
 
         # Create hollow pyramid mask
-        pyramid_mask_outer = (X >= x_min_outer) & (X <= x_max_outer) & (Y >= y_min_outer) & (Y <= y_max_outer)
-        pyramid_mask_inner = (X >= x_min_inner) & (X <= x_max_inner) & (Y >= y_min_inner) & (Y <= y_max_inner)
+        pyramid_mask_outer = (
+            (x_min_outer <= X)
+            & (x_max_outer >= X)
+            & (y_min_outer <= Y)
+            & (y_max_outer >= Y)
+        )
+        pyramid_mask_inner = (
+            (x_min_inner <= X)
+            & (x_max_inner >= X)
+            & (y_min_inner <= Y)
+            & (y_max_inner >= Y)
+        )
 
         # Hollow shell
         shell_mask = within_height_mask & (pyramid_mask_outer & ~pyramid_mask_inner)
 
         # Base cap
-        base_mask = (Z >= z1 - thickness) & (Z <= z1) & pyramid_mask_outer
+        base_mask = (z1 - thickness <= Z) & (z1 >= Z) & pyramid_mask_outer
         # Tip cap
-        tip_mask = (Z >= z0) & (Z <= z0 + thickness) & pyramid_mask_outer
+        tip_mask = (z0 <= Z) & (z0 + thickness >= Z) & pyramid_mask_outer
 
         # Combine side shell + base cap + tip cap
-        final_mask = shell_mask | base_mask | tip_mask    
+        final_mask = shell_mask | base_mask | tip_mask
         arr[final_mask] = fill_value
         return arr
 
-def create_torus(arr, center, major_radius, minor_radius, fill_value=1, hollow_thickness=0):
+
+def create_torus(
+    arr, center, major_radius, minor_radius, fill_value=1, hollow_thickness=0
+):
     """
     Creates a torus (3D ring) in `arr`, centered at `center`, with major and minor radii.
 
@@ -514,17 +559,17 @@ def create_torus(arr, center, major_radius, minor_radius, fill_value=1, hollow_t
     """
 
     x0, y0, z0 = center
-    X, Y, Z = np.mgrid[:arr.shape[0], :arr.shape[1], :arr.shape[2]]
+    X, Y, Z = np.mgrid[: arr.shape[0], : arr.shape[1], : arr.shape[2]]
 
     # Distance from center in XY plane
     dist_xy = np.sqrt((X - x0) ** 2 + (Y - y0) ** 2)
 
     # Define torus equation
-    torus_mask = (major_radius - dist_xy) ** 2 + (Z - z0) ** 2 <= minor_radius ** 2
+    torus_mask = (major_radius - dist_xy) ** 2 + (Z - z0) ** 2 <= minor_radius**2
 
     if hollow_thickness > 0:
         inner_radius = minor_radius - hollow_thickness
-        torus_mask &= (major_radius - dist_xy) ** 2 + (Z - z0) ** 2 >= inner_radius ** 2
+        torus_mask &= (major_radius - dist_xy) ** 2 + (Z - z0) ** 2 >= inner_radius**2
 
     arr[torus_mask] = fill_value
     return arr
@@ -556,14 +601,22 @@ def create_ellipsoid(arr, center, radii, fill_value=1, hollow_thickness=0):
     x0, y0, z0 = center
     a, b, c = radii
 
-    X, Y, Z = np.mgrid[:arr.shape[0], :arr.shape[1], :arr.shape[2]]
+    X, Y, Z = np.mgrid[: arr.shape[0], : arr.shape[1], : arr.shape[2]]
 
     # Ellipsoid equation
-    ellipsoid_mask = ((X - x0) ** 2 / a ** 2) + ((Y - y0) ** 2 / b ** 2) + ((Z - z0) ** 2 / c ** 2) <= 1
+    ellipsoid_mask = ((X - x0) ** 2 / a**2) + ((Y - y0) ** 2 / b**2) + (
+        (Z - z0) ** 2 / c**2
+    ) <= 1
 
     if hollow_thickness > 0:
-        a_inner, b_inner, c_inner = max(a - hollow_thickness, 0.1), max(b - hollow_thickness, 0.1), max(c - hollow_thickness, 0.1)
-        inner_mask = ((X - x0) ** 2 / a_inner ** 2) + ((Y - y0) ** 2 / b_inner ** 2) + ((Z - z0) ** 2 / c_inner ** 2) <= 1
+        a_inner, b_inner, c_inner = (
+            max(a - hollow_thickness, 0.1),
+            max(b - hollow_thickness, 0.1),
+            max(c - hollow_thickness, 0.1),
+        )
+        inner_mask = ((X - x0) ** 2 / a_inner**2) + ((Y - y0) ** 2 / b_inner**2) + (
+            (Z - z0) ** 2 / c_inner**2
+        ) <= 1
         ellipsoid_mask &= ~inner_mask  # Make it hollow
 
     arr[ellipsoid_mask] = fill_value
@@ -595,7 +648,7 @@ def create_hexagonal_prism(arr, center_xy, z_range, outer_radius, fill_value=1):
 
     cx, cy = center_xy
     z_min, z_max = z_range
-    X, Y, Z = np.mgrid[:arr.shape[0], :arr.shape[1], :arr.shape[2]]
+    X, Y, Z = np.mgrid[: arr.shape[0], : arr.shape[1], : arr.shape[2]]
 
     qx = np.abs(X - cx)
     qy = np.abs(Y - cy)
@@ -604,7 +657,7 @@ def create_hexagonal_prism(arr, center_xy, z_range, outer_radius, fill_value=1):
     hex_mask = (qy <= outer_radius) & (qx * np.sqrt(3) + qy <= outer_radius * 2)
 
     # Restrict to Z-range
-    z_mask = (Z >= z_min) & (Z < z_max)
+    z_mask = (z_min <= Z) & (z_max > Z)
 
     arr[hex_mask & z_mask] = fill_value
     return arr
@@ -679,7 +732,7 @@ def create_menger_sponge(arr, center, size, depth, fill_value=1):
         x_min, x_max = cx - half_size, cx + half_size
         y_min, y_max = cy - half_size, cy + half_size
         z_min, z_max = cz - half_size, cz + half_size
-        arr[x_min:x_max+1, y_min:y_max+1, z_min:z_max+1] = fill_value
+        arr[x_min : x_max + 1, y_min : y_max + 1, z_min : z_max + 1] = fill_value
         return arr
 
     # Recursive case: Divide into 27 smaller cubes
@@ -690,9 +743,13 @@ def create_menger_sponge(arr, center, size, depth, fill_value=1):
         for dy in offsets:
             for dz in offsets:
                 # Skip the center cube and face centers
-                if (dx == 0 and dy == 0) or (dy == 0 and dz == 0) or (dz == 0 and dx == 0):
+                if (
+                    (dx == 0 and dy == 0)
+                    or (dy == 0 and dz == 0)
+                    or (dz == 0 and dx == 0)
+                ):
                     continue
-                
+
                 # Compute new center and recursively draw the smaller cube
                 new_center = (center[0] + dx, center[1] + dy, center[2] + dz)
                 create_menger_sponge(arr, new_center, step, depth - 1, fill_value)
@@ -727,7 +784,9 @@ def create_voronoi_3d(arr, seed_points, fill_values=None):
     dist_matrix = np.full((D, H, W, len(seed_points)), np.inf)
 
     for i, (x, y, z) in tqdm(enumerate(seed_points)):
-        dist_matrix[:, :, :, i] = (X - x) ** 2 + (Y - y) ** 2 + (Z - z) ** 2  # Squared Euclidean distance
+        dist_matrix[:, :, :, i] = (
+            (X - x) ** 2 + (Y - y) ** 2 + (Z - z) ** 2
+        )  # Squared Euclidean distance
 
     # Find the closest seed point for each voxel
     closest_seed = np.argmin(dist_matrix, axis=3)
@@ -739,4 +798,3 @@ def create_voronoi_3d(arr, seed_points, fill_values=None):
         arr[:, :, :] = np.vectorize(lambda i: fill_values[i])(closest_seed)
 
     return arr
-

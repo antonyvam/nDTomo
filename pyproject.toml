@@ -65,3 +65,59 @@ version = { attr = "nDTomo.__version__" }
 where = ["."]  # scan the root directory
 include = ["nDTomo*"]  # include nDTomo and any subpackages
 
+# ---------------------------------------------------------
+# Ruff Configuration
+# ---------------------------------------------------------
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+# Skip Sphinx doc configs and build artifacts
+extend-exclude = [
+    "docs/source/conf.py",
+    "_build",
+]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "F",   # Pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "SIM", # flake8-simplify
+    "PIE", # flake8-pie
+    "RUF", # Ruff-specific rules
+    "B",   # flake8-bugbear
+]
+
+ignore = [
+    # Allow formatting to dictate line breaks without failing the build
+    "E501",
+    # Allow scientific variable naming: 'I' for intensity, 'l' for indices
+    "E741",
+    # Allow mathematical symbols (gamma, multiplication signs, en-dashes) in docstrings/UI
+    "RUF001",
+    "RUF002",
+    # Allow non-PEP8 mixed-case package/module names (nDTomo, nDTomoGUI, shapes2D)
+    "N999",
+    # Allow blind `except Exception:` (common in GUI error handlers)
+    "BLE001",
+    # Allow raising built-in Exception(...)
+    "TRY002",
+    # Allow dynamic default for device checks (e.g., torch.cuda.is_available())
+    "B008",
+    # Allow try-except-pass in fallback blocks
+    "S110",
+    # Do not force ternary operators on multiline if/else logic
+    "SIM108",
+    # Allow legacy %-formatting without breaking CI
+    "UP031",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Interactive notebooks frequently redefine variables, import out of order, or have unused imports
+"docs/source/notebooks/*.ipynb" = ["F401", "F811", "E722", "E402", "RUF059"]
+
+# Mock & lazy imports
+"nDTomo/pytorch/segmentation_torch.py" = ["TC004"]
+"nDTomo/pytorch/__init__.py" = ["F401"]

@@ -1,26 +1,36 @@
-import pytest
-
 import numpy as np
-from torch import tensor
+import pytest
 from tifffile import imread, imwrite
+from torch import tensor
+
 from nDTomo.methods.segmentation import (
     Arr,
-    UInt8Arr,
     FeatureConfig,
-    load_labels,
-    get_model,
+    UInt8Arr,
+    apply,
     fit_model,
     get_features,
+    get_model,
     get_training_data,
-    apply,
+    load_labels,
+)
+from nDTomo.pytorch.segmentation_torch import (
+    apply as apply_gpu,
+)
+from nDTomo.pytorch.segmentation_torch import (
+    fit_model as fit_model_gpu,
+)
+from nDTomo.pytorch.segmentation_torch import (
+    get_features as get_features_gpu,
+)
+from nDTomo.pytorch.segmentation_torch import (
+    get_model as get_model_gpu,
+)
+from nDTomo.pytorch.segmentation_torch import (
+    get_training_data as get_training_data_gpu,
 )
 from nDTomo.pytorch.segmentation_torch import (
     prepare_for_gpu,
-    get_features as get_features_gpu,
-    get_training_data as get_training_data_gpu,
-    get_model as get_model_gpu,
-    fit_model as fit_model_gpu,
-    apply as apply_gpu,
 )
 
 
@@ -58,7 +68,9 @@ def labels() -> Arr:
 
 @pytest.fixture()
 def feat_cfg() -> FeatureConfig:
-    return FeatureConfig(bilateral=True, median=True, maximum=True, add_weka_sigma_multiplier=False)
+    return FeatureConfig(
+        bilateral=True, median=True, maximum=True, add_weka_sigma_multiplier=False
+    )
 
 
 @pytest.fixture()

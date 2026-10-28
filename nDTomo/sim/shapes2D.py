@@ -1,23 +1,23 @@
-# -*- coding: utf-8 -*-
 """
 Methods for creating geometric shapes in 2D.
 
-This module provides a collection of functions for generating and manipulating 
-various 2D geometric shapes within NumPy arrays. The shapes include basic primitives 
-such as circles, ellipses, rectangles, and triangles, as well as more complex 
+This module provides a collection of functions for generating and manipulating
+various 2D geometric shapes within NumPy arrays. The shapes include basic primitives
+such as circles, ellipses, rectangles, and triangles, as well as more complex
 structures like polygons, stars, and Voronoi diagrams.
 
-Each function operates directly on a 2D NumPy array, modifying it by filling the 
-specified shape with a given value. The methods utilize vectorized operations 
+Each function operates directly on a 2D NumPy array, modifying it by filling the
+specified shape with a given value. The methods utilize vectorized operations
 for efficiency and support both solid and hollow versions of the shapes.
 
-These functions are useful for synthetic data generation, image processing, 
+These functions are useful for synthetic data generation, image processing,
 pattern recognition, and visualization tasks in scientific computing.
 
 @author: Dr A. Vamvakeros
 """
 
 import numpy as np
+
 
 def create_circle(arr, center, radius, thickness=0, fill_value=1):
     """
@@ -49,12 +49,17 @@ def create_circle(arr, center, radius, thickness=0, fill_value=1):
     X, Y = np.ogrid[:H, :W]
 
     dist2 = (X - cx) ** 2 + (Y - cy) ** 2
-    outer_r2 = radius ** 2
-    inner_r2 = inner_radius ** 2
+    outer_r2 = radius**2
+    inner_r2 = inner_radius**2
 
-    mask = dist2 <= outer_r2 if thickness == 0 else (dist2 <= outer_r2) & (dist2 >= inner_r2)
+    mask = (
+        dist2 <= outer_r2
+        if thickness == 0
+        else (dist2 <= outer_r2) & (dist2 >= inner_r2)
+    )
     arr[mask] = fill_value
     return arr
+
 
 def create_rectangle(arr, corner, width, height, thickness=0, fill_value=1):
     """
@@ -93,12 +98,13 @@ def create_rectangle(arr, corner, width, height, thickness=0, fill_value=1):
         arr[x0:x_end, y0:y_end] = fill_value
     else:
         # Hollow rectangle (border only)
-        arr[x0:x0+thickness, y0:y_end] = fill_value  # Top edge
-        arr[x_end-thickness:x_end, y0:y_end] = fill_value  # Bottom edge
-        arr[x0:x_end, y0:y0+thickness] = fill_value  # Left edge
-        arr[x0:x_end, y_end-thickness:y_end] = fill_value  # Right edge
+        arr[x0 : x0 + thickness, y0:y_end] = fill_value  # Top edge
+        arr[x_end - thickness : x_end, y0:y_end] = fill_value  # Bottom edge
+        arr[x0:x_end, y0 : y0 + thickness] = fill_value  # Left edge
+        arr[x0:x_end, y_end - thickness : y_end] = fill_value  # Right edge
 
     return arr
+
 
 def create_triangle(arr, p1, p2, p3, fill_value=1):
     """
@@ -134,7 +140,7 @@ def create_triangle(arr, p1, p2, p3, fill_value=1):
     if min_x > max_x or min_y > max_y:
         return arr  # No area to fill
 
-    X, Y = np.ogrid[min_x:max_x+1, min_y:max_y+1]
+    X, Y = np.ogrid[min_x : max_x + 1, min_y : max_y + 1]
 
     # Compute triangle area using determinant method
     def tri_area(ax, ay, bx, by, cx, cy):
@@ -145,15 +151,14 @@ def create_triangle(arr, p1, p2, p3, fill_value=1):
     area_PAC = tri_area(x1, y1, X, Y, x3, y3)
     area_PAB = tri_area(x1, y1, x2, y2, X, Y)
 
-
     inside_mask = (area_PBC + area_PAC + area_PAB) == area_ABC
-    arr_region = arr[min_x:max_x+1, min_y:max_y+1]
+    arr_region = arr[min_x : max_x + 1, min_y : max_y + 1]
     arr_region[inside_mask] = fill_value
 
     return arr
 
 
-def create_equilateral_triangle(arr, p1, side, fill_value=1, orientation='default'):
+def create_equilateral_triangle(arr, p1, side, fill_value=1, orientation="default"):
     """
     Creates and fills an equilateral triangle in a 2D array.
 
@@ -182,13 +187,13 @@ def create_equilateral_triangle(arr, p1, side, fill_value=1, orientation='defaul
     (x1, y1) = p1
     # Compute the "height" for an equilateral triangle
     # We'll round to int because array indices must be integers
-    height = int(round((np.sqrt(3) / 2) * side))
+    height = round((np.sqrt(3) / 2) * side)
 
     # Convert side to an integer if necessary
     # (in case side was float, to ensure consistent indexing)
-    side_int = int(round(side))
+    side_int = round(side)
 
-    if orientation == 'default':
+    if orientation == "default":
         # -------------------------------------------
         # Base is left-to-right at row x1
         # Apex is above the base
@@ -199,7 +204,7 @@ def create_equilateral_triangle(arr, p1, side, fill_value=1, orientation='defaul
         p2 = (x1, y1 + side_int)
         p3 = (x1 - height, y1 + side_int // 2)
 
-    elif orientation == 'down':
+    elif orientation == "down":
         # -------------------------------------------
         # Base is left-to-right at row x1
         # Apex is below the base
@@ -210,14 +215,14 @@ def create_equilateral_triangle(arr, p1, side, fill_value=1, orientation='defaul
         p2 = (x1, y1 + side_int)
         p3 = (x1 + height, y1 + side_int // 2)
 
-    elif orientation == 'random':
+    elif orientation == "random":
         # -------------------------------------------
         # Base is at a random angle alpha in [0, 2*pi),
         # measured in image coordinates (x=rows downward, y=columns to the right).
         # We'll interpret alpha=0 as base pointing to the right,
         # and apex "above" means in the negative-x direction from the base.
         # -------------------------------------------
-        alpha = np.random.uniform(0, 2*np.pi)
+        alpha = np.random.uniform(0, 2 * np.pi)
 
         # Base vector from p1 to p2
         # side (row offset) = side * cos(alpha), side (col offset) = side * sin(alpha)
@@ -228,22 +233,22 @@ def create_equilateral_triangle(arr, p1, side, fill_value=1, orientation='defaul
         # apex_offset = side*(sqrt(3)/2) in a direction perpendicular to the base vector
         # A 90-degree rotation of (cos alpha, sin alpha) -> (-sin alpha, cos alpha)
         # We'll put the apex "above" the base in image coordinates, i.e., negative row offset
-        # so that visually it's "above" if alpha=0. 
+        # so that visually it's "above" if alpha=0.
         # apex_dx = (sqrt(3)/2 * side) * (-sin alpha)
         # apex_dy = (sqrt(3)/2 * side) * ( cos alpha)
-        apex_scale = (np.sqrt(3)/2) * side
+        apex_scale = (np.sqrt(3) / 2) * side
         apex_dx = apex_scale * (-np.sin(alpha))
-        apex_dy = apex_scale * ( np.cos(alpha))
+        apex_dy = apex_scale * (np.cos(alpha))
 
         # Now define p2 and p3
-        x2_f = x1 + base_dx   # floating point
+        x2_f = x1 + base_dx  # floating point
         y2_f = y1 + base_dy
         x3_f = x1 + (base_dx / 2.0) + apex_dx
         y3_f = y1 + (base_dy / 2.0) + apex_dy
 
         # Round them to int for array indexing
-        p2 = (int(round(x2_f)), int(round(y2_f)))
-        p3 = (int(round(x3_f)), int(round(y3_f)))
+        p2 = (round(x2_f), round(y2_f))
+        p3 = (round(x3_f), round(y3_f))
 
     else:
         raise ValueError("orientation must be one of ['default', 'down', 'random']")
@@ -266,11 +271,11 @@ def create_equilateral_triangle(arr, p1, side, fill_value=1, orientation='defaul
         return arr
 
     # 2) Create sub-grid
-    X, Y = np.ogrid[min_x:max_x+1, min_y:max_y+1]
+    X, Y = np.ogrid[min_x : max_x + 1, min_y : max_y + 1]
 
     # Barycentric area helper
     def tri_area(ax, ay, bx, by, cx, cy):
-        return np.abs(ax*(by-cy) + bx*(cy-ay) + cx*(ay-by))
+        return np.abs(ax * (by - cy) + bx * (cy - ay) + cx * (ay - by))
 
     area_ABC = tri_area(xA, yA, xB, yB, xC, yC)
 
@@ -286,10 +291,11 @@ def create_equilateral_triangle(arr, p1, side, fill_value=1, orientation='defaul
     inside_mask = (area_PBC + area_PAC + area_PAB) == area_ABC
 
     # Fill the relevant region in `arr`
-    arr_region = arr[min_x:max_x+1, min_y:max_y+1]
+    arr_region = arr[min_x : max_x + 1, min_y : max_y + 1]
     arr_region[inside_mask] = fill_value
 
     return arr
+
 
 def create_ellipse(arr, center, axes_radii, thickness=0, fill_value=1):
     """
@@ -320,16 +326,16 @@ def create_ellipse(arr, center, axes_radii, thickness=0, fill_value=1):
     X, Y = np.ogrid[:H, :W]
 
     # Outer ellipse mask
-    outer_mask = ((X - cx)**2 / a_outer**2) + ((Y - cy)**2 / b_outer**2) <= 1
+    outer_mask = ((X - cx) ** 2 / a_outer**2) + ((Y - cy) ** 2 / b_outer**2) <= 1
 
     if thickness > 0:
         # Ensure valid inner ellipse radii
         a_inner = max(a_outer - thickness, 0.1)
         b_inner = max(b_outer - thickness, 0.1)
-        
+
         # Inner ellipse mask
-        inner_mask = ((X - cx)**2 / a_inner**2) + ((Y - cy)**2 / b_inner**2) <= 1
-        
+        inner_mask = ((X - cx) ** 2 / a_inner**2) + ((Y - cy) ** 2 / b_inner**2) <= 1
+
         # Hollow ring mask
         final_mask = outer_mask & (~inner_mask)
     else:
@@ -338,7 +344,10 @@ def create_ellipse(arr, center, axes_radii, thickness=0, fill_value=1):
     arr[final_mask] = fill_value
     return arr
 
-def create_star(arr, center, n_points=5, r_outer=10, r_inner=5, fill_value=1, angle_offset=0.0):
+
+def create_star(
+    arr, center, n_points=5, r_outer=10, r_inner=5, fill_value=1, angle_offset=0.0
+):
     """
     Creates a filled star shape in a 2D array.
 
@@ -369,13 +378,13 @@ def create_star(arr, center, n_points=5, r_outer=10, r_inner=5, fill_value=1, an
 
     # Build the star's vertices
     # 2*n_points total vertices (outer+inner)
-    for k in range(2*n_points):
+    for k in range(2 * n_points):
         theta = angle_offset + (np.pi * k / n_points)
         # Even k -> outer vertex, odd k -> inner vertex
         r = r_outer if (k % 2 == 0) else r_inner
-        x = cx + r*np.cos(theta)
-        y = cy + r*np.sin(theta)
-        vertices.append((int(round(x)), int(round(y))))
+        x = cx + r * np.cos(theta)
+        y = cy + r * np.sin(theta)
+        vertices.append((round(x), round(y)))
 
     # Now fill polygon
     return create_polygon(arr, vertices, fill_value=fill_value)
@@ -415,7 +424,7 @@ def create_polygon(arr, vertices, fill_value=1):
         return arr  # Nothing to fill
 
     # Build 2D mesh grid (shape => (#rows, #cols))
-    X, Y = np.mgrid[min_x:max_x+1, min_y:max_y+1]
+    X, Y = np.mgrid[min_x : max_x + 1, min_y : max_y + 1]
     # Flatten them
     XX = X.ravel()
     YY = Y.ravel()
@@ -427,7 +436,7 @@ def create_polygon(arr, vertices, fill_value=1):
     inside_mask = inside_mask_1d.reshape(X.shape)
 
     # Fill the region
-    arr[min_x:max_x+1, min_y:max_y+1][inside_mask] = fill_value
+    arr[min_x : max_x + 1, min_y : max_y + 1][inside_mask] = fill_value
     return arr
 
 
@@ -476,10 +485,10 @@ def _point_in_poly_1d(xs, ys, vertices):
             continue  # horizontal edge => skip
 
         # X intersection of the line at py
-        x_int = x1 + (x2 - x1)*(py - y1)/(y2 - y1)
+        x_int = x1 + (x2 - x1) * (py - y1) / (y2 - y1)
 
         # Condition B: x_int >= px
-        condB = (x_int >= px)
+        condB = x_int >= px
 
         # Combine => an intersection event
         edge_mask = condA & condB

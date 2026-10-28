@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Hyperspectral Imaging Explorers and GUI Tools
 
@@ -17,34 +16,33 @@ Classes:
 @author: Antony Vamvakeros
 """
 
+import contextlib
+
 import matplotlib.pyplot as plt
 import numpy as np
-from scipy.ndimage import map_coordinates
-from matplotlib.lines import Line2D
 from matplotlib.colors import ListedColormap
+from matplotlib.lines import Line2D
 from matplotlib.widgets import Cursor
-from matplotlib.path import Path
-import copy
-from skimage.morphology import flood_fill # For the Magic Wand
+from scipy.ndimage import map_coordinates
+from skimage.color import label2rgb
+from skimage.morphology import flood_fill  # For the Magic Wand
 
-class HyperSliceExplorer():
-        
+
+class HyperSliceExplorer:
     """
     Interactive explorer for hyperspectral or volumetric imaging data.
 
-    Allows the user to click and move the mouse over a mean image view 
-    to inspect voxel-level spectra and update an associated spectrum plot. 
+    Allows the user to click and move the mouse over a mean image view
+    to inspect voxel-level spectra and update an associated spectrum plot.
     Users can visualize individual channel images and view spectral changes dynamically.
     Particularly useful for visual inspection of 3D chemical imaging datasets.
     """
-    
-    def __init__(self, data, xaxis=None, xaxislabel='Channels'):
 
-
+    def __init__(self, data, xaxis=None, xaxislabel="Channels"):
         """
         Initialize the HyperSliceExplorer object.
 
-        Sets up the internal state and prepares data structures for 
+        Sets up the internal state and prepares data structures for
         interactive visualisation of 3D hyperspectral (or chemical imaging) data.
 
         Parameters
@@ -83,38 +81,37 @@ class HyperSliceExplorer():
         map_fig, map_axes, plot_fig, plot_axes : matplotlib components
             Handles to matplotlib figures and axes for image and spectral views.
         """
-        
+
         self.data = data
         if xaxis is None:
-            self.xaxis = np.arange(0,data.shape[2])
+            self.xaxis = np.arange(0, data.shape[2])
         else:
             self.xaxis = xaxis
-            
+
         self.xaxislabel = xaxislabel
-        
+
         self.mapper = []
         self.map_fig = []
         self.map_axes = []
         self.map_data = []
-        self.mapHoldState= 0;
+        self.mapHoldState = 0
         self.plotter = []
         self.plot_fig = []
         self.plot_axes = []
-        self.currentCurve = 0;
+        self.currentCurve = 0
         self.plot = []
-        self.plotHoldState= 0;
+        self.plotHoldState = 0
         self.selectedChannels = []
-        self.selectedVoxels = np.empty(0,dtype=object)
-        self.meanSpectrum = np.mean(np.mean(data, axis = 0), axis = 0)
-        self.cmap = 'jet'
+        self.selectedVoxels = np.empty(0, dtype=object)
+        self.meanSpectrum = np.mean(np.mean(data, axis=0), axis=0)
+        self.cmap = "jet"
 
-        self.imoi = np.mean(self.data,axis=2)
-        self.mdp = np.mean(np.mean(self.data,axis=1),axis=0)
-        self.sdp = np.sum(np.sum(self.data,axis=1),axis=0)
+        self.imoi = np.mean(self.data, axis=2)
+        self.mdp = np.mean(np.mean(self.data, axis=1), axis=0)
+        self.sdp = np.sum(np.sum(self.data, axis=1), axis=0)
         self.dproi = self.mdp
 
-    def explore(self, cmap = 'jet'):
-
+    def explore(self, cmap="jet"):
         """
         Launch interactive exploration of hyperspectral data.
 
@@ -137,45 +134,48 @@ class HyperSliceExplorer():
         - Uses Matplotlib event callbacks to manage interactive behavior.
         - Updates `self.dproi`, `self.histogramCurve`, and `self.activeCurve` for spectrum display.
         """
-                
+
         self.cmap = cmap
-        
-        self.mapper = plt;
+
+        self.mapper = plt
         self.map_fig = self.mapper.figure()
-        self.map_axes = self.map_fig.add_subplot(111)        
+        self.map_axes = self.map_fig.add_subplot(111)
         self.map_data = self.mapper.imshow(self.imoi, cmap=self.cmap)
-        title = 'Mean image'
-        self.mapper.title(title, fontstyle='italic')
-        self.map_fig.canvas.mpl_connect('button_press_event', self.onMapClick)
-        self.map_fig.canvas.mpl_connect('motion_notify_event', self.onMapMoveEvent)        
-        
+        title = "Mean image"
+        self.mapper.title(title, fontstyle="italic")
+        self.map_fig.canvas.mpl_connect("button_press_event", self.onMapClick)
+        self.map_fig.canvas.mpl_connect("motion_notify_event", self.onMapMoveEvent)
+
         self.cb = self.map_fig.colorbar(self.map_data)
-        
+
         self.mapper.show()
-        self.mapper.draw()  
-        
-        
+        self.mapper.draw()
+
         self.plotter = plt
         self.plot_fig = self.plotter.figure()
-        self.plot_axes = self.plot_fig.add_subplot(111)        
+        self.plot_axes = self.plot_fig.add_subplot(111)
         self.plotter.legend()
-        self.plotter.title("Mean spectrum", fontstyle='italic')
-        
-        self.plot_fig.canvas.mpl_connect('motion_notify_event', self.onPlotClick)       
-        self.plot_cid = self.plot_fig.canvas.mpl_connect('motion_notify_event', self.onPlotMoveEvent)   
-        self.plotter.show()        
-        self.plotter.draw()        
+        self.plotter.title("Mean spectrum", fontstyle="italic")
 
-        self.histogramCurve = self.plotter.plot(self.xaxis, self.mdp, label='Mean spectrum', color="b")
-        self.activeCurve = self.plotter.plot(self.xaxis, self.mdp, label='Mean spectrum', color="r")
-        
+        self.plot_fig.canvas.mpl_connect("motion_notify_event", self.onPlotClick)
+        self.plot_cid = self.plot_fig.canvas.mpl_connect(
+            "motion_notify_event", self.onPlotMoveEvent
+        )
+        self.plotter.show()
+        self.plotter.draw()
+
+        self.histogramCurve = self.plotter.plot(
+            self.xaxis, self.mdp, label="Mean spectrum", color="b"
+        )
+        self.activeCurve = self.plotter.plot(
+            self.xaxis, self.mdp, label="Mean spectrum", color="r"
+        )
+
         ########
         self.vCurve = self.plotter.axvline(x=0, color="k")
         #######
-                
-        
-    def onMapClick(self, event): # SDMJ version
-    
+
+    def onMapClick(self, event):  # SDMJ version
         """
         Handle mouse click events on the image panel.
 
@@ -198,40 +198,38 @@ class HyperSliceExplorer():
         - Left-click outside the axes resets the spectrum plot to the mean spectrum.
         - This function updates `self.dproi`, `self.histogramCurve`, and plot limits.
         """
-            
+
         if event.button == 1:
             if event.inaxes:
                 self.col = int(event.xdata.round())
                 self.row = int(event.ydata.round())
-                
-                self.dproi = self.data[self.row,self.col,:]
-                
-                self.histogramCurve[0].set_data(self.xaxis, self.dproi) 
-                self.histogramCurve[0].set_label(str(self.row)+','+str(self.col))
-                self.histogramCurve[0].set_visible(True)          
+
+                self.dproi = self.data[self.row, self.col, :]
+
+                self.histogramCurve[0].set_data(self.xaxis, self.dproi)
+                self.histogramCurve[0].set_label(str(self.row) + "," + str(self.col))
+                self.histogramCurve[0].set_visible(True)
                 self.plotter.legend()
-                
-                self.plotter.show()        
+
+                self.plotter.show()
                 self.plotter.draw()
 
             else:
-                self.selectedVoxels = np.empty(0,dtype=object)
-                self.plot_axes.clear() # not fast
-                self.plotter.plot(self.xaxis, self.mdp, label='Mean spectrum')
-                self.plotter.legend()                
-                self.plotter.draw() 
-
-        if event.button == 3:
-            if event.inaxes:
-                self.histogramCurve[0].set_visible(False)          
-                
-                self.plot_axes.set_xlim(self.xaxis[0],self.xaxis[-1])
-                self.plot_axes.set_ylim(0,np.max(self.dproi))
-                self.plotter.show()        
+                self.selectedVoxels = np.empty(0, dtype=object)
+                self.plot_axes.clear()  # not fast
+                self.plotter.plot(self.xaxis, self.mdp, label="Mean spectrum")
+                self.plotter.legend()
                 self.plotter.draw()
 
-    def onMapMoveEvent(self, event): 
-        
+        if event.button == 3 and event.inaxes:
+            self.histogramCurve[0].set_visible(False)
+
+            self.plot_axes.set_xlim(self.xaxis[0], self.xaxis[-1])
+            self.plot_axes.set_ylim(0, np.max(self.dproi))
+            self.plotter.show()
+            self.plotter.draw()
+
+    def onMapMoveEvent(self, event):
         """
         Handle mouse movement over the image panel.
 
@@ -254,34 +252,32 @@ class HyperSliceExplorer():
         -----
         This function provides real-time spectral feedback for hyperspectral data exploration.
         """
-        
+
         if event.inaxes:
-            
             col = int(event.xdata.round())
             row = int(event.ydata.round())
-            
-            dproi = self.data[row,col,:]            
-            
-            self.activeCurve[0].set_data(self.xaxis, dproi) 
-            self.activeCurve[0].set_label(str(row)+','+str(col))
+
+            dproi = self.data[row, col, :]
+
+            self.activeCurve[0].set_data(self.xaxis, dproi)
+            self.activeCurve[0].set_label(str(row) + "," + str(col))
             self.activeCurve[0].set_visible(True)
-            if np.max(dproi)>0:
-                self.plot_axes.set_ylim(0,np.max(dproi))
+            if np.max(dproi) > 0:
+                self.plot_axes.set_ylim(0, np.max(dproi))
 
         else:
             self.activeCurve[0].set_visible(False)
-            self.activeCurve[0].set_label('')
-            self.plot_axes.set_ylim(0,np.max(self.dproi))
-            
+            self.activeCurve[0].set_label("")
+            self.plot_axes.set_ylim(0, np.max(self.dproi))
+
         self.plotter.legend()
         self.plotter.draw()
-    
+
     def onPlotMoveEvent(self, event):
-        
         """
         Handle mouse movement over the spectral plot panel.
 
-        Updates the left-hand image panel in real-time to show the spatial image 
+        Updates the left-hand image panel in real-time to show the spatial image
         corresponding to the spectral channel under the cursor.
 
         Actions performed:
@@ -296,39 +292,35 @@ class HyperSliceExplorer():
         event : matplotlib.backend_bases.MouseEvent
             The mouse motion event with axis and coordinate information.
         """
-                
+
         if event.inaxes:
-                        
-            nx = np.argmin(np.abs(self.xaxis-event.xdata))
-            
-            if nx<0:
+            nx = np.argmin(np.abs(self.xaxis - event.xdata))
+
+            if nx < 0:
                 nx = 0
-            elif nx>len(self.xaxis):
-                nx = len(self.xaxis)-1
+            elif nx > len(self.xaxis):
+                nx = len(self.xaxis) - 1
 
             self.selectedChannels = nx
-            self.map_axes.clear() # not fast
-            self.imoi = self.data[:,:,nx]
-            self.map_data = self.map_axes.imshow(self.imoi, cmap = self.cmap)
+            self.map_axes.clear()  # not fast
+            self.imoi = self.data[:, :, nx]
+            self.map_data = self.map_axes.imshow(self.imoi, cmap=self.cmap)
             title = "Channel = %d; %s = %.3f" % (nx, self.xaxislabel, self.xaxis[nx])
 
-            try:
+            with contextlib.suppress(BaseException):
                 self.cb.remove()
-            except:
-                pass
-            
+
             self.cb = self.map_fig.colorbar(self.map_data)
             self.map_axes.set_title(title)
-            self.mapper.draw_all()             
-            self.vCurve.set_xdata(event.xdata) 
+            self.mapper.draw_all()
+            self.vCurve.set_xdata(event.xdata)
             self.plotter.draw()
-     
-    def onPlotClick(self, event):
 
+    def onPlotClick(self, event):
         """
         Handle mouse click events on the spectral plot.
 
-        Left-click (button 1) disables channel hover updates by disconnecting 
+        Left-click (button 1) disables channel hover updates by disconnecting
         the motion event that controls image updates.
 
         Right-click (button 3) re-enables channel hover updates by reconnecting
@@ -340,15 +332,16 @@ class HyperSliceExplorer():
             The mouse click event.
         """
         if event.button == 1:
-            self.plot_fig.canvas.mpl_disconnect(self.plot_cid)   
+            self.plot_fig.canvas.mpl_disconnect(self.plot_cid)
 
         elif event.button == 3:
-            self.plot_cid = self.plot_fig.canvas.mpl_connect('motion_notify_event', self.onPlotMoveEvent)
-            self.plotter.show()  
-            self.plotter.draw()   
-            
+            self.plot_cid = self.plot_fig.canvas.mpl_connect(
+                "motion_notify_event", self.onPlotMoveEvent
+            )
+            self.plotter.show()
+            self.plotter.draw()
+
     def update(self):
-        
         """
         Refresh the left-hand image display based on the currently selected channels.
 
@@ -358,28 +351,35 @@ class HyperSliceExplorer():
 
         Also updates the image title and redraws the figure with the current colormap.
         """
-                
-        self.map_axes.clear() # not fast
+
+        self.map_axes.clear()  # not fast
         # this bit is messy
-        
-        self.imoi = np.mean(self.data, axis = 2)
-        if (not self.selectedChannels):
-            self.map_axes.imshow(self.imoi ,cmap=self.cmap)
-            title = 'Mean image'
+
+        self.imoi = np.mean(self.data, axis=2)
+        if not self.selectedChannels:
+            self.map_axes.imshow(self.imoi, cmap=self.cmap)
+            title = "Mean image"
         else:
             if self.selectedChannels.size == 1:
-                self.map_axes.imshow(self.data[:,:,self.selectedChannels],cmap=self.cmap)
-                title = "Channel = %d; %s = %.3f" % (self.nx, self.xaxislabel, self.xaxis[self.nx])
+                self.map_axes.imshow(
+                    self.data[:, :, self.selectedChannels], cmap=self.cmap
+                )
+                title = "Channel = %d; %s = %.3f" % (
+                    self.nx,
+                    self.xaxislabel,
+                    self.xaxis[self.nx],
+                )
             if self.selectedChannels.size > 1:
-                self.map_axes.imshow(np.mean(self.data[:,:,self.selectedChannels],2),cmap=self.cmap)
-                title = self.name+' '+'mean of selected channels'
+                self.map_axes.imshow(
+                    np.mean(self.data[:, :, self.selectedChannels], 2), cmap=self.cmap
+                )
+                title = self.name + " " + "mean of selected channels"
         self.map_axes.set_title(title)
         self.mapper.show()
-        self.mapper.draw_all() 
+        self.mapper.draw_all()
 
 
 class ImageSpectrumGUI:
-    
     """
     Interactive viewer for 2D hyperspectral images (rows x cols x channels).
 
@@ -406,9 +406,8 @@ class ImageSpectrumGUI:
     - Designed for quick exploratory analysis without precomputations; large
       volumes are fine as only the needed slices/vectors are drawn on demand.
     """
-    
-    def __init__(self, volume, cmap='jet', mask=None):
-        
+
+    def __init__(self, volume, cmap="jet", mask=None):
         """
         Initialize the interactive viewer.
 
@@ -442,7 +441,9 @@ class ImageSpectrumGUI:
             self.mask = None
 
         # Create main figure and subplots
-        self.fig, (self.ax_image, self.ax_spectrum) = plt.subplots(1, 2, figsize=(10, 5))
+        self.fig, (self.ax_image, self.ax_spectrum) = plt.subplots(
+            1, 2, figsize=(10, 5)
+        )
 
         # Initialize with mean image and mean spectrum
         mean_image = np.mean(volume, axis=2)
@@ -450,15 +451,15 @@ class ImageSpectrumGUI:
 
         # Plot the mean image and mean spectrum
         self.image = self.ax_image.imshow(mean_image.T, cmap=cmap)
-        self.spectrum, = self.ax_spectrum.plot(mean_spectrum, color='b')
+        (self.spectrum,) = self.ax_spectrum.plot(mean_spectrum, color="b")
 
         # Set titles for image and spectrum
-        self.ax_image.set_title('Image')
-        self.ax_spectrum.set_title('Spectrum')
+        self.ax_image.set_title("Image")
+        self.ax_spectrum.set_title("Spectrum")
 
         # Connect mouse hover events
-        self.fig.canvas.mpl_connect('motion_notify_event', self.update_plots)
-        self.fig.canvas.mpl_connect('button_press_event', self.toggle_real_time)
+        self.fig.canvas.mpl_connect("motion_notify_event", self.update_plots)
+        self.fig.canvas.mpl_connect("button_press_event", self.toggle_real_time)
 
         # Initialize real-time update flags
         self.image_real_time_update = True
@@ -468,10 +469,10 @@ class ImageSpectrumGUI:
         """
         Handle mouse movement over the figure to update image or spectrum.
 
-        If hovering over the image panel and image updates are enabled, 
+        If hovering over the image panel and image updates are enabled,
         it displays the spectrum of the voxel under the cursor.
 
-        If hovering over the spectrum panel and spectrum updates are enabled, 
+        If hovering over the spectrum panel and spectrum updates are enabled,
         it displays the image corresponding to the spectral bin under the cursor.
 
         Parameters
@@ -496,7 +497,7 @@ class ImageSpectrumGUI:
                 self.ax_spectrum.autoscale_view()
 
                 # Set title with coordinates
-                self.ax_spectrum.set_title(f'Spectrum (x={x}, y={y})')
+                self.ax_spectrum.set_title(f"Spectrum (x={x}, y={y})")
 
         elif event.inaxes == self.ax_spectrum:
             if not self.spectrum_real_time_update:
@@ -507,20 +508,24 @@ class ImageSpectrumGUI:
             image = self.volume[:, :, index]
 
             if self.mask is not None:
-                image = label2rgb(self.mask[:, :, index], image=image,
-                                  bg_label=0, alpha=0.35,
-                                  colors=[(1, 0, 0)])
+                image = label2rgb(
+                    self.mask[:, :, index],
+                    image=image,
+                    bg_label=0,
+                    alpha=0.35,
+                    colors=[(1, 0, 0)],
+                )
 
             # Update the image display
             if self.mask is not None:
-                self.image.set_data(image.transpose(1,0,2))
+                self.image.set_data(image.transpose(1, 0, 2))
             else:
                 self.image.set_data(image.T)
             self.ax_image.relim()
             self.ax_image.autoscale_view()
 
             # Set title with bin
-            self.ax_image.set_title(f'Image (Bin={index})')
+            self.ax_image.set_title(f"Image (Bin={index})")
 
             # Set color limits based on the current image
             self.image.set_clim(np.min(image), np.max(image))
@@ -545,9 +550,7 @@ class ImageSpectrumGUI:
                 self.spectrum_real_time_update = not self.spectrum_real_time_update
 
 
-
 class InteractiveProfileExtraction:
-    
     """
     Interactive tool for extracting 1D intensity profiles from 2D grayscale images.
 
@@ -562,9 +565,8 @@ class InteractiveProfileExtraction:
     - Profile extracted using Bresenham's algorithm and interpolated coordinates.
     - Three-panel display: image, path overlay, and profile plot.
     """
-        
+
     def __init__(self, image):
-        
         """
         Initialize the InteractiveProfileExtraction tool.
 
@@ -574,28 +576,27 @@ class InteractiveProfileExtraction:
             2D grayscale image from which intensity profiles will be interactively extracted.
             The user defines a line on the image, and the corresponding intensity values are plotted.
         """
-                
+
         self.image = image
         self.line = None
         self.profile = None
 
         self.fig, self.axes = plt.subplots(1, 3, figsize=(12, 4))
-        self.axes[0].imshow(self.image, cmap='gray')
+        self.axes[0].imshow(self.image, cmap="gray")
         self.axes[0].set_title("Interactive Profile Extraction")
         self.axes[1].set_title("Intensity Profile")
         self.axes[1].set_xlabel("Distance (pixels)")
         self.axes[1].set_ylabel("Intensity")
-        self.axes[2].set_xlabel('Position along the line')
-        self.axes[2].set_ylabel('Intensity')
-        self.axes[2].set_title('Intensity Profile')
+        self.axes[2].set_xlabel("Position along the line")
+        self.axes[2].set_ylabel("Intensity")
+        self.axes[2].set_title("Intensity Profile")
 
         self.line_completed = False
 
-        self.fig.canvas.mpl_connect('button_press_event', self.on_press)
-        self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
+        self.fig.canvas.mpl_connect("button_press_event", self.on_press)
+        self.fig.canvas.mpl_connect("motion_notify_event", self.on_motion)
 
     def on_press(self, event):
-        
         """
         Handle mouse click events for defining the profile line.
 
@@ -604,11 +605,15 @@ class InteractiveProfileExtraction:
         event : matplotlib.backend_bases.MouseEvent
             Mouse event used to place or complete the line.
         """
-                
+
         if event.button == 1 and event.inaxes == self.axes[0]:
             if self.line is None:
                 self.profile = [event.ydata, event.xdata, event.ydata, event.xdata]
-                self.line = Line2D([self.profile[1], self.profile[3]], [self.profile[0], self.profile[2]], color='red')
+                self.line = Line2D(
+                    [self.profile[1], self.profile[3]],
+                    [self.profile[0], self.profile[2]],
+                    color="red",
+                )
                 self.axes[0].add_line(self.line)
                 self.fig.canvas.draw()
             else:
@@ -623,7 +628,6 @@ class InteractiveProfileExtraction:
                     self.show_intensity_profile()
 
     def on_motion(self, event):
-        
         """
         Update the profile line dynamically during mouse movement.
 
@@ -631,8 +635,12 @@ class InteractiveProfileExtraction:
         ----------
         event : matplotlib.backend_bases.MouseEvent
             Mouse movement event over the image axis.
-        """        
-        if self.line is not None and event.inaxes == self.axes[0] and not self.line_completed:
+        """
+        if (
+            self.line is not None
+            and event.inaxes == self.axes[0]
+            and not self.line_completed
+        ):
             self.profile[2] = event.ydata
             self.profile[3] = event.xdata
             self.line.set_xdata([self.profile[1], self.profile[3]])
@@ -640,14 +648,13 @@ class InteractiveProfileExtraction:
             self.fig.canvas.draw()
 
     def extract_intensity_profile(self):
-        
         """
         Extract intensity values from the image along the defined line.
 
         Uses Bresenham’s algorithm to identify discrete pixel coordinates along
         the user-drawn line. Passes results to the plotting routine.
         """
-                
+
         y0, x0, y1, x1 = map(int, self.profile)
         yy, xx = bresenham(y0, x0, y1, x1)
         intensity_profile = self.image[yy, xx]
@@ -665,29 +672,31 @@ class InteractiveProfileExtraction:
             Y (row) coordinates of the profile path.
         intensity_profile : array-like
             Intensity values along the drawn line.
-        """        
+        """
         self.axes[1].clear()
-        self.axes[1].imshow(self.image, cmap='gray')
-        self.axes[1].plot(yy, xx, 'r-')
+        self.axes[1].imshow(self.image, cmap="gray")
+        self.axes[1].plot(yy, xx, "r-")
         self.axes[1].set_title("Intensity Profile")
         self.axes[1].set_xlabel("Distance (pixels)")
         self.axes[1].set_ylabel("Intensity")
 
     def show_intensity_profile(self):
-
         """
         Interpolate and plot the 1D intensity profile along the drawn line.
 
         Uses scipy.ndimage.map_coordinates for subpixel interpolation.
-        """        
-        self.y_coords, self.x_coords = self.get_line_coordinates(self.profile[0], self.profile[1],
-                                                       self.profile[2], self.profile[3])
-        self.intensity_values = map_coordinates(self.image, np.vstack((self.y_coords,self.x_coords)))
+        """
+        self.y_coords, self.x_coords = self.get_line_coordinates(
+            self.profile[0], self.profile[1], self.profile[2], self.profile[3]
+        )
+        self.intensity_values = map_coordinates(
+            self.image, np.vstack((self.y_coords, self.x_coords))
+        )
         self.axes[2].clear()
         self.axes[2].plot(self.intensity_values)
-        self.axes[2].set_xlabel('Position along the line')
-        self.axes[2].set_ylabel('Intensity')
-        self.axes[2].set_title('Intensity Profile')
+        self.axes[2].set_xlabel("Position along the line")
+        self.axes[2].set_ylabel("Intensity")
+        self.axes[2].set_title("Intensity Profile")
         self.fig.canvas.draw()
 
     def clear_profile(self):
@@ -696,7 +705,7 @@ class InteractiveProfileExtraction:
 
         Removes the line overlay from the image, resets internal flags,
         and clears stored profile information.
-        """        
+        """
         if self.line is not None:
             self.line.remove()
             self.line = None
@@ -721,10 +730,11 @@ class InteractiveProfileExtraction:
             Row indices along the line.
         x : ndarray
             Column indices along the line.
-        """        
+        """
         length = int(np.hypot(y2 - y1, x2 - x1))
         y, x = np.linspace(y1, y2, length), np.linspace(x1, x2, length)
         return y.astype(int), x.astype(int)
+
 
 def bresenham(y0, x0, y1, x1):
     """
@@ -773,18 +783,16 @@ def bresenham(y0, x0, y1, x1):
 
 
 class InteractiveHyperProfileExtraction:
-    
     """
     Interactive profile extraction tool for 2D hyperspectral imaging data.
 
-    Enables users to draw a line on a 2D projection of the volume 
-    and extract both spatial intensity profiles and corresponding 
-    spectral information along the line. Useful for linking spatial and 
+    Enables users to draw a line on a 2D projection of the volume
+    and extract both spatial intensity profiles and corresponding
+    spectral information along the line. Useful for linking spatial and
     spectral variations in hyperspectral datasets.
     """
-        
+
     def __init__(self, vol):
-        
         """
         Initialize the InteractiveHyperProfileExtraction tool.
 
@@ -794,47 +802,54 @@ class InteractiveHyperProfileExtraction:
             3D hyperspectral or volumetric image data with shape (rows, cols, channels).
             The tool enables drawing a line on the projection to extract both spatial and spectral profiles.
         """
-                
+
         self.vol = vol
         self.mean_image = np.sum(self.vol, axis=2)
         self.line = None
         self.profile = None
 
         self.fig, self.axes = plt.subplots(2, 2, figsize=(12, 12))
-        self.axes[0, 0].imshow(self.mean_image, cmap='gray')
+        self.axes[0, 0].imshow(self.mean_image, cmap="gray")
         self.axes[0, 0].set_title("Interactive Profile Extraction")
         self.axes[1, 0].set_title("Intensity Profile")
         self.axes[1, 0].set_xlabel("Distance (pixels)")
         self.axes[1, 0].set_ylabel("Intensity")
-        self.axes[0, 1].set_xlabel('Position along the line')
-        self.axes[0, 1].set_ylabel('Intensity')
-        self.axes[0, 1].set_title('Intensity Profile')
-        self.axes[1, 1].set_xlabel('Position along the line')
-        self.axes[1, 1].set_ylabel('Intensity')
-        self.axes[1, 1].set_title('Spectral Profile')
+        self.axes[0, 1].set_xlabel("Position along the line")
+        self.axes[0, 1].set_ylabel("Intensity")
+        self.axes[0, 1].set_title("Intensity Profile")
+        self.axes[1, 1].set_xlabel("Position along the line")
+        self.axes[1, 1].set_ylabel("Intensity")
+        self.axes[1, 1].set_title("Spectral Profile")
 
         self.line_completed = False
 
-        self.fig.canvas.mpl_connect('button_press_event', self.on_press)
-        self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
+        self.fig.canvas.mpl_connect("button_press_event", self.on_press)
+        self.fig.canvas.mpl_connect("motion_notify_event", self.on_motion)
 
     def on_press(self, event):
-        
         """
         Handle mouse click to initiate or complete a line selection.
 
         Left click defines the start and end points of the line.
         Once the line is completed, intensity and spectral profiles are computed.
-        
+
         Parameters
         ----------
         event : matplotlib.backend_bases.MouseEvent
             Mouse event captured from the figure canvas.
-        """        
-        if event.button == 1 and event.inaxes is not None and event.inaxes in [self.axes[0, 0]]:
+        """
+        if (
+            event.button == 1
+            and event.inaxes is not None
+            and event.inaxes in [self.axes[0, 0]]
+        ):
             if self.line is None:
                 self.profile = [event.ydata, event.xdata, event.ydata, event.xdata]
-                self.line = Line2D([self.profile[1], self.profile[3]], [self.profile[0], self.profile[2]], color='red')
+                self.line = Line2D(
+                    [self.profile[1], self.profile[3]],
+                    [self.profile[0], self.profile[2]],
+                    color="red",
+                )
                 self.axes[0, 0].add_line(self.line)
                 self.fig.canvas.draw()
             else:
@@ -850,7 +865,6 @@ class InteractiveHyperProfileExtraction:
                     self.show_spectral_profile()
 
     def on_motion(self, event):
-
         """
         Update the end point of the line dynamically during mouse movement.
 
@@ -859,20 +873,23 @@ class InteractiveHyperProfileExtraction:
         event : matplotlib.backend_bases.MouseEvent
             Mouse event captured during movement across the figure.
         """
-                
-        if self.line is not None and event.inaxes is not None and event.inaxes in [self.axes[0, 0]]:
-            if not self.line_completed:
-                self.profile[2] = event.ydata
-                self.profile[3] = event.xdata
-                self.line.set_xdata([self.profile[1], self.profile[3]])
-                self.line.set_ydata([self.profile[0], self.profile[2]])
-                self.fig.canvas.draw()
+
+        if (
+            self.line is not None
+            and event.inaxes is not None
+            and event.inaxes in [self.axes[0, 0]]
+        ) and not self.line_completed:
+            self.profile[2] = event.ydata
+            self.profile[3] = event.xdata
+            self.line.set_xdata([self.profile[1], self.profile[3]])
+            self.line.set_ydata([self.profile[0], self.profile[2]])
+            self.fig.canvas.draw()
 
     def extract_intensity_profile(self):
         """
-        Extract the spatial intensity profile from the 2D mean image 
+        Extract the spatial intensity profile from the 2D mean image
         along the selected line using the Bresenham algorithm.
-        """        
+        """
         y0, x0, y1, x1 = map(int, self.profile)
         yy, xx = bresenham(y0, x0, y1, x1)
         intensity_profile = self.mean_image[yy, xx]
@@ -888,13 +905,13 @@ class InteractiveHyperProfileExtraction:
             Arrays of x and y pixel coordinates along the profile.
         intensity_profile : ndarray
             Intensity values along the drawn line.
-        """        
-        self.axes[1,0].clear()
-        self.axes[1,0].imshow(self.mean_image, cmap='gray')
-        self.axes[1,0].plot(yy, xx, 'r-')
-        self.axes[1,0].set_title("Intensity Profile")
-        self.axes[1,0].set_xlabel("Distance (pixels)")
-        self.axes[1,0].set_ylabel("Intensity")
+        """
+        self.axes[1, 0].clear()
+        self.axes[1, 0].imshow(self.mean_image, cmap="gray")
+        self.axes[1, 0].plot(yy, xx, "r-")
+        self.axes[1, 0].set_title("Intensity Profile")
+        self.axes[1, 0].set_xlabel("Distance (pixels)")
+        self.axes[1, 0].set_ylabel("Intensity")
 
     def show_intensity_profile(self):
         """
@@ -902,15 +919,18 @@ class InteractiveHyperProfileExtraction:
 
         Uses linear interpolation via `scipy.ndimage.map_coordinates` to extract
         smooth values along subpixel positions.
-        """        
-        self.y_coords, self.x_coords = self.get_line_coordinates(self.profile[0], self.profile[1],
-                                                       self.profile[2], self.profile[3])
-        self.intensity_values = map_coordinates(self.mean_image, np.vstack((self.y_coords,self.x_coords)))
-        self.axes[0,1].clear()
-        self.axes[0,1].plot(self.intensity_values)
-        self.axes[0,1].set_xlabel('Position along the line')
-        self.axes[0,1].set_ylabel('Intensity')
-        self.axes[0,1].set_title('Intensity Profile')
+        """
+        self.y_coords, self.x_coords = self.get_line_coordinates(
+            self.profile[0], self.profile[1], self.profile[2], self.profile[3]
+        )
+        self.intensity_values = map_coordinates(
+            self.mean_image, np.vstack((self.y_coords, self.x_coords))
+        )
+        self.axes[0, 1].clear()
+        self.axes[0, 1].plot(self.intensity_values)
+        self.axes[0, 1].set_xlabel("Position along the line")
+        self.axes[0, 1].set_ylabel("Intensity")
+        self.axes[0, 1].set_title("Intensity Profile")
         self.fig.canvas.draw()
 
     def show_spectral_profile(self):
@@ -920,34 +940,36 @@ class InteractiveHyperProfileExtraction:
         Displays stacked spectra with slight vertical offsets to highlight
         spectral variation along the spatial profile.
         """
-        self.y_coords, self.x_coords = self.get_line_coordinates(self.profile[0], self.profile[1],
-                                                       self.profile[2], self.profile[3])
-    
+        self.y_coords, self.x_coords = self.get_line_coordinates(
+            self.profile[0], self.profile[1], self.profile[2], self.profile[3]
+        )
+
         sorted_indices = np.argsort(self.x_coords)
         self.sorted_x_coords = self.x_coords[sorted_indices]
         self.sorted_y_coords = self.y_coords[sorted_indices]
-    
-        self.spectra = np.zeros((len(self.sorted_x_coords),self.vol.shape[2]), dtype = 'float32')
-        
+
+        self.spectra = np.zeros(
+            (len(self.sorted_x_coords), self.vol.shape[2]), dtype="float32"
+        )
+
         self.axes[1, 1].clear()
-    
+
         ii = 0
-        for y, x in zip(self.sorted_y_coords, self.sorted_x_coords):
+        for y, x in zip(self.sorted_y_coords, self.sorted_x_coords, strict=False):
             spectrum = self.vol[y, x, :]
             self.spectra[ii] = spectrum
             self.axes[1, 1].plot(spectrum + ii * 0.1)
             ii = ii + 1
 
-
-        self.axes[1,1].set_xlabel('Position along the line')
-        self.axes[1,1].set_ylabel('Intensity')
-        self.axes[1,1].set_title('Spectral Profile')
+        self.axes[1, 1].set_xlabel("Position along the line")
+        self.axes[1, 1].set_ylabel("Intensity")
+        self.axes[1, 1].set_title("Spectral Profile")
         self.fig.canvas.draw()
-        
+
     def clear_profile(self):
         """
         Clear the currently drawn line and reset the tool state.
-        """        
+        """
         if self.line is not None:
             self.line.remove()
             self.line = None
@@ -972,24 +994,22 @@ class InteractiveHyperProfileExtraction:
             Array of row indices.
         x : ndarray
             Array of column indices.
-        """        
+        """
         length = int(np.hypot(y2 - y1, x2 - x1))
         y, x = np.linspace(y1, y2, length), np.linspace(x1, x2, length)
         return y.astype(int), x.astype(int)
 
 
 class ImageSpectrumFitGUI:
-    
     """
     GUI for visual comparison between raw and fitted hyperspectral data.
 
     Displays original and fitted spectra from a 3D volume on a voxel-by-voxel basis.
-    Supports dynamic inspection by mouse interaction. Useful for verifying 
+    Supports dynamic inspection by mouse interaction. Useful for verifying
     the quality of spectral fitting or peak decomposition across a sample.
     """
-        
+
     def __init__(self, volume, volfit):
-        
         """
         Initialize the ImageSpectrumFitGUI for raw vs. fitted spectrum comparison.
 
@@ -1001,12 +1021,14 @@ class ImageSpectrumFitGUI:
             3D array of fitted spectral data with the same shape as `volume`.
             The GUI displays both raw and fitted spectra for user-selected voxels.
         """
-        
+
         self.volume = volume
         self.volfit = volfit
 
         # Create main figure and subplots
-        self.fig, (self.ax_image, self.ax_spectrum) = plt.subplots(1, 2, figsize=(10, 5))
+        self.fig, (self.ax_image, self.ax_spectrum) = plt.subplots(
+            1, 2, figsize=(10, 5)
+        )
 
         # Initialize with mean image and mean spectrum
         mean_image = np.mean(volume, axis=2)
@@ -1014,20 +1036,24 @@ class ImageSpectrumFitGUI:
         mean_spectrum_fit = np.mean(volfit, axis=(0, 1))
 
         # Plot the mean image and mean spectrum
-        self.image = self.ax_image.imshow(mean_image.T, cmap='gray')
-        self.spectrum, = self.ax_spectrum.plot(mean_spectrum, 'bo', label='Original Spectrum')
-        self.spectrum_fit, = self.ax_spectrum.plot(mean_spectrum_fit, 'r-', label='Fit Spectrum')
+        self.image = self.ax_image.imshow(mean_image.T, cmap="gray")
+        (self.spectrum,) = self.ax_spectrum.plot(
+            mean_spectrum, "bo", label="Original Spectrum"
+        )
+        (self.spectrum_fit,) = self.ax_spectrum.plot(
+            mean_spectrum_fit, "r-", label="Fit Spectrum"
+        )
 
         # Set titles for image and spectrum
-        self.ax_image.set_title('Image')
-        self.ax_spectrum.set_title('Spectrum')
+        self.ax_image.set_title("Image")
+        self.ax_spectrum.set_title("Spectrum")
 
         # Add legend to the spectrum plot
         self.ax_spectrum.legend()
 
         # Connect mouse hover events
-        self.fig.canvas.mpl_connect('motion_notify_event', self.update_plots)
-        self.fig.canvas.mpl_connect('button_press_event', self.toggle_real_time)
+        self.fig.canvas.mpl_connect("motion_notify_event", self.update_plots)
+        self.fig.canvas.mpl_connect("button_press_event", self.toggle_real_time)
 
         # Initialize real-time update flags
         self.image_real_time_update = True
@@ -1037,10 +1063,10 @@ class ImageSpectrumFitGUI:
         """
         Update the displayed spectrum and image based on mouse hover.
 
-        When the cursor hovers over the image panel, updates the spectrum 
+        When the cursor hovers over the image panel, updates the spectrum
         panel to show the corresponding raw and fitted spectra at that voxel.
 
-        When hovering over the spectrum panel, switches the image display 
+        When hovering over the spectrum panel, switches the image display
         to show the spatial distribution at the selected spectral bin.
 
         Parameters
@@ -1067,7 +1093,7 @@ class ImageSpectrumFitGUI:
                 self.ax_spectrum.autoscale_view()
 
                 # Set title with coordinates
-                self.ax_spectrum.set_title(f'Spectrum (x={x}, y={y})')
+                self.ax_spectrum.set_title(f"Spectrum (x={x}, y={y})")
 
         elif event.inaxes == self.ax_spectrum:
             if not self.spectrum_real_time_update:
@@ -1083,7 +1109,7 @@ class ImageSpectrumFitGUI:
             self.ax_image.autoscale_view()
 
             # Set title with bin
-            self.ax_image.set_title(f'Image (Bin={index})')
+            self.ax_image.set_title(f"Image (Bin={index})")
 
             # Set color limits based on the current image
             self.image.set_clim(np.min(image), np.max(image))
@@ -1094,7 +1120,7 @@ class ImageSpectrumFitGUI:
         """
         Toggle real-time updates for spectrum and image panels on right-click.
 
-        Right-clicking over the image panel enables/disables updates triggered by 
+        Right-clicking over the image panel enables/disables updates triggered by
         mouse motion over it. Same applies for the spectrum panel.
 
         Parameters
@@ -1107,19 +1133,18 @@ class ImageSpectrumFitGUI:
                 self.image_real_time_update = not self.image_real_time_update
             elif event.inaxes == self.ax_spectrum:
                 self.spectrum_real_time_update = not self.spectrum_real_time_update
-                
+
+
 class chemimexplorer:
-    
     """
     Lightweight GUI for Jupyter-based exploration of chemical imaging volumes.
 
-    Provides linked spatial and spectral views for both raw and optionally 
-    fitted datasets. Supports mouse-based interaction to inspect individual 
+    Provides linked spatial and spectral views for both raw and optionally
+    fitted datasets. Supports mouse-based interaction to inspect individual
     spectra. Optimized for use within notebook environments.
     """
-        
+
     def __init__(self, volume, fitted=None):
-        
         """
         Initialize the chemimexplorer widget for use in notebooks.
 
@@ -1131,12 +1156,14 @@ class chemimexplorer:
             Optional 3D array of fitted spectral data with the same shape as `volume`.
             If provided, fitted spectra are displayed alongside raw spectra.
         """
-        
+
         self.volume = volume
         self.fitted = fitted
 
         # Create main figure and subplots
-        self.fig, (self.ax_image, self.ax_spectrum) = plt.subplots(1, 2, figsize=(10, 5))
+        self.fig, (self.ax_image, self.ax_spectrum) = plt.subplots(
+            1, 2, figsize=(10, 5)
+        )
 
         # Initialize with mean image and mean spectrum
         mean_image = np.mean(volume, axis=2)
@@ -1145,20 +1172,22 @@ class chemimexplorer:
             mean_spectrum_fitted = np.mean(self.fitted, axis=(0, 1))
 
         # Plot the mean image and mean spectrum
-        self.image = self.ax_image.imshow(mean_image.T, cmap='gray')
+        self.image = self.ax_image.imshow(mean_image.T, cmap="gray")
         if self.fitted is not None:
-            self.spectrum, = self.ax_spectrum.plot(mean_spectrum, 'b+')
-            self.spectrum_fitted, = self.ax_spectrum.plot(mean_spectrum_fitted, color='r')
+            (self.spectrum,) = self.ax_spectrum.plot(mean_spectrum, "b+")
+            (self.spectrum_fitted,) = self.ax_spectrum.plot(
+                mean_spectrum_fitted, color="r"
+            )
         else:
-            self.spectrum, = self.ax_spectrum.plot(mean_spectrum, color='b')
+            (self.spectrum,) = self.ax_spectrum.plot(mean_spectrum, color="b")
 
         # Set titles for image and spectrum
-        self.ax_image.set_title('Image')
-        self.ax_spectrum.set_title('Histogram')
+        self.ax_image.set_title("Image")
+        self.ax_spectrum.set_title("Histogram")
 
         # Connect mouse hover events
-        self.fig.canvas.mpl_connect('motion_notify_event', self.update_plots)
-        self.fig.canvas.mpl_connect('button_press_event', self.toggle_real_time)
+        self.fig.canvas.mpl_connect("motion_notify_event", self.update_plots)
+        self.fig.canvas.mpl_connect("button_press_event", self.toggle_real_time)
 
         # Initialize real-time update flags
         self.image_real_time_update = True
@@ -1197,7 +1226,7 @@ class chemimexplorer:
                 self.ax_spectrum.autoscale_view()
 
                 # Set title with coordinates
-                self.ax_spectrum.set_title(f'Histogram (x={x}, y={y})')
+                self.ax_spectrum.set_title(f"Histogram (x={x}, y={y})")
 
         elif event.inaxes == self.ax_spectrum:
             if not self.spectrum_real_time_update:
@@ -1213,7 +1242,7 @@ class chemimexplorer:
             self.ax_image.autoscale_view()
 
             # Set title with bin
-            self.ax_image.set_title(f'Image (Bin={index})')
+            self.ax_image.set_title(f"Image (Bin={index})")
 
             # Set color limits based on the current image
             self.image.set_clim(np.min(image), np.max(image))
@@ -1243,7 +1272,7 @@ class LabelPainter:
     """
     An interactive Matplotlib-based GUI for sparse pixel-wise labeling.
 
-    Provides keyboard and mouse bindings to draw masks on an image using an 
+    Provides keyboard and mouse bindings to draw masks on an image using an
     intensity-aware smart brush or a connectivity-based magic wand tool.
 
     Parameters
@@ -1253,49 +1282,57 @@ class LabelPainter:
     num_classes : int, default=5
         Total number of unique phase/material classes available for annotation.
     """
+
     def __init__(self, img, num_classes=5):
         # 0. Modern way to disable Matplotlib defaults
-        for key in ['p', 'f', 's', 'w']:
-            try:
-                plt.rcParams[f'keymap.pan' if key=='p' else f'keymap.fullscreen' if key=='f' else f'keymap.save' if key=='s' else 'keymap.quit'].remove(key)
-            except (ValueError, KeyError):
-                pass
+        for key in ["p", "f", "s", "w"]:
+            with contextlib.suppress(ValueError, KeyError):
+                plt.rcParams[
+                    "keymap.pan"
+                    if key == "p"
+                    else "keymap.fullscreen"
+                    if key == "f"
+                    else "keymap.save"
+                    if key == "s"
+                    else "keymap.quit"
+                ].remove(key)
 
         self.img = img.astype(np.float32)
         self.mask = np.zeros(img.shape[:2], dtype=np.uint8)
         self.history = [self.mask.copy()]
-        
+
         self.num_classes = num_classes
         self.current_class = 1
         self.brush_size = 3
         self.tolerance = 0.05  # Starting tolerance for 0.0 - 1.0 range
         self.tol_step = 0.005  # Fine-grained steps for floats
         self.is_drawing = False
-        self.last_mouse_pos = (0, 0) # Track position for 'w' key
-        
+        self.last_mouse_pos = (0, 0)  # Track position for 'w' key
+
         self.fig, self.ax = plt.subplots(figsize=(12, 8))
-        self.ax.imshow(img, cmap='gray', interpolation='nearest')
-        
+        self.ax.imshow(img, cmap="gray", interpolation="nearest")
+
         # 1. FIXED: Modern Colormap Access
-        cmap_base = plt.get_cmap('tab10')
+        cmap_base = plt.get_cmap("tab10")
         colors = cmap_base(np.linspace(0, 1, num_classes + 1))
         colors[0, 3] = 0.0  # Background transparent
         self.cmap = ListedColormap(colors)
-        
-        self.mask_plot = self.ax.imshow(self.mask, cmap=self.cmap, 
-                                        vmin=0, vmax=num_classes, alpha=0.5)
-        
+
+        self.mask_plot = self.ax.imshow(
+            self.mask, cmap=self.cmap, vmin=0, vmax=num_classes, alpha=0.5
+        )
+
         # 2. Add Cursor
-        self.cursor = Cursor(self.ax, useblit=True, color='red', linewidth=0.8)
-        
+        self.cursor = Cursor(self.ax, useblit=True, color="red", linewidth=0.8)
+
         self.update_ui()
-        
+
         # 3. Connect Events
-        self.fig.canvas.mpl_connect('button_press_event', self.on_press)
-        self.fig.canvas.mpl_connect('button_release_event', self.on_release)
-        self.fig.canvas.mpl_connect('motion_notify_event', self.on_motion)
-        self.fig.canvas.mpl_connect('key_press_event', self.on_key)
-        
+        self.fig.canvas.mpl_connect("button_press_event", self.on_press)
+        self.fig.canvas.mpl_connect("button_release_event", self.on_release)
+        self.fig.canvas.mpl_connect("motion_notify_event", self.on_motion)
+        self.fig.canvas.mpl_connect("key_press_event", self.on_key)
+
         plt.show()
 
     def update_ui(self, msg=""):
@@ -1307,27 +1344,31 @@ class LabelPainter:
         msg : str, default=""
             Optional status message string to prepend to the default status telemetry.
         """
-        title = (f"CLASS: {self.current_class} | TOL: {self.tolerance} | BRUSH: {self.brush_size}\n"
-                 "W: Magic Wand | LEFT-DRAG: Smart Brush | Z: Undo | T/G: Tol | S: Save")
-        if msg: title = f"{msg}\n{title}"
+        title = (
+            f"CLASS: {self.current_class} | TOL: {self.tolerance} | BRUSH: {self.brush_size}\n"
+            "W: Magic Wand | LEFT-DRAG: Smart Brush | Z: Undo | T/G: Tol | S: Save"
+        )
+        if msg:
+            title = f"{msg}\n{title}"
         self.ax.set_title(title)
         self.fig.canvas.draw_idle()
 
     def save_history(self):
         """
         Push the current state of the label mask onto an internal undo stack.
-        
+
         Maintains a maximum history buffer depth of 20 operations.
         """
         self.history.append(self.mask.copy())
-        if len(self.history) > 20: self.history.pop(0)
+        if len(self.history) > 20:
+            self.history.pop(0)
 
     def paint_smart(self, x, y, erase=False):
         """
         Apply or erase class values using an intensity-bounded circular neighborhood.
 
-        Evaluates a spatial circular region surrounding the target pixel coordinate. 
-        When adding labels, pixels within the radius are only updated if their 
+        Evaluates a spatial circular region surrounding the target pixel coordinate.
+        When adding labels, pixels within the radius are only updated if their
         absolute intensity variance matches the seed pixel within the current tolerance.
 
         Parameters
@@ -1339,16 +1380,18 @@ class LabelPainter:
         erase : bool, default=False
             If True, clears the class assignment (sets mask to 0) across the area.
         """
-        if x is None or y is None: return
-        ix, iy = int(round(x)), int(round(y))
-        
-        # Prevent OOB errors
-        if not (0 <= ix < self.img.shape[1] and 0 <= iy < self.img.shape[0]): return
+        if x is None or y is None:
+            return
+        ix, iy = round(x), round(y)
 
-        y_grid, x_grid = np.ogrid[:self.mask.shape[0], :self.mask.shape[1]]
-        dist_sq = (x_grid - ix)**2 + (y_grid - iy)**2
+        # Prevent OOB errors
+        if not (0 <= ix < self.img.shape[1] and 0 <= iy < self.img.shape[0]):
+            return
+
+        y_grid, x_grid = np.ogrid[: self.mask.shape[0], : self.mask.shape[1]]
+        dist_sq = (x_grid - ix) ** 2 + (y_grid - iy) ** 2
         brush_indices = dist_sq <= self.brush_size**2
-        
+
         if not erase:
             seed_intensity = self.img[iy, ix]
             match_intensity = np.abs(self.img - seed_intensity) <= self.tolerance
@@ -1364,8 +1407,8 @@ class LabelPainter:
         """
         Execute a connectivity-bounded flood fill region expansion from a seed point.
 
-        Uses skimage's 4-way morphological flood fill execution engine. Includes protection 
-        against segmentation leakage by rejecting expansions that span more than 40 percent 
+        Uses skimage's 4-way morphological flood fill execution engine. Includes protection
+        against segmentation leakage by rejecting expansions that span more than 40 percent
         of the canvas matrix.
 
         Parameters
@@ -1375,24 +1418,27 @@ class LabelPainter:
         y : float or None
             The anchor y-coordinate target for seed extraction.
         """
-        if x is None or y is None: return
-        ix, iy = int(round(x)), int(round(y))
-        if not (0 <= ix < self.img.shape[1] and 0 <= iy < self.img.shape[0]): return
-        
+        if x is None or y is None:
+            return
+        ix, iy = round(x), round(y)
+        if not (0 <= ix < self.img.shape[1] and 0 <= iy < self.img.shape[0]):
+            return
+
         # 1. Capture seed intensity
         seed_val = self.img[iy, ix]
-        
+
         # 2. Perform the fill (Connectivity=2 is 8-way, Connectivity=1 is 4-way)
-        filled_area = flood_fill(self.img, (iy, ix), new_value=-1, 
-                                 tolerance=self.tolerance, connectivity=1)
-        mask_to_fill = (filled_area == -1)
+        filled_area = flood_fill(
+            self.img, (iy, ix), new_value=-1, tolerance=self.tolerance, connectivity=1
+        )
+        mask_to_fill = filled_area == -1
         px_count = np.sum(mask_to_fill)
 
         # 3. Handle Results
         if px_count <= 1:
             self.update_ui(f"Fail: Only 1px at {seed_val:.3f}. Increase Tol (T)")
             return
-            
+
         if px_count > (self.img.size * 0.4):
             self.update_ui(f"Leak blocked! ({px_count} px). Decrease Tol (G)")
             return
@@ -1414,8 +1460,8 @@ class LabelPainter:
     def on_press(self, event):
         """
         Handle canvas mouse button click and click-drag initializations.
-        
-        Triggers standard smart painting routines on left-click and erases active 
+
+        Triggers standard smart painting routines on left-click and erases active
         mask layers when a right-click event is initiated.
         """
         if event.inaxes == self.ax and self.fig.canvas.manager.toolbar.mode == "":
@@ -1426,12 +1472,12 @@ class LabelPainter:
     def on_motion(self, event):
         """
         Track live mouse coordinates across active canvas pixels.
-        
-        Continuously updates crosshair registration indexes and appends drawn labels 
+
+        Continuously updates crosshair registration indexes and appends drawn labels
         if the dragging sequence remains active.
         """
         if event.inaxes == self.ax:
-            self.last_mouse_pos = (event.xdata, event.ydata) # Always update pos
+            self.last_mouse_pos = (event.xdata, event.ydata)  # Always update pos
             if self.is_drawing:
                 self.paint_smart(event.xdata, event.ydata, erase=(event.button == 3))
 
@@ -1451,45 +1497,45 @@ class LabelPainter:
         # 1. Direct number selection
         if event.key in [str(i) for i in range(1, self.num_classes + 1)]:
             self.current_class = int(event.key)
-        
+
         # 2. Arrow keys for class switching (Left/Right)
-        elif event.key == 'right':
+        elif event.key == "right":
             # Increment and wrap around
             self.current_class = (self.current_class % self.num_classes) + 1
-        elif event.key == 'left':
+        elif event.key == "left":
             # Decrement and wrap around
             self.current_class = self.current_class - 1
             if self.current_class < 1:
                 self.current_class = self.num_classes
-        
+
         # 3. Brush sizing (Up/Down)
-        elif event.key == 'up': 
+        elif event.key == "up":
             self.brush_size += 1
-        elif event.key == 'down': 
+        elif event.key == "down":
             self.brush_size = max(1, self.brush_size - 1)
-            
+
         # 4. Tolerance (T/G)
-        elif event.key == 't': 
+        elif event.key == "t":
             self.tolerance += self.tol_step
-        elif event.key == 'g': 
+        elif event.key == "g":
             self.tolerance = max(0.001, self.tolerance - self.tol_step)
-            
+
         # 5. Undo (Z)
-        elif event.key == 'z':
+        elif event.key == "z":
             if len(self.history) > 0:
                 self.mask = self.history.pop()
                 self.mask_plot.set_data(self.mask)
-                
+
         # 6. Magic Wand (W)
-        elif event.key == 'w':
+        elif event.key == "w":
             self.magic_wand(*self.last_mouse_pos)
-            
+
         # 7. Save (S)
-        elif event.key == 's':
-            np.save('refined_labels.npy', self.mask)
+        elif event.key == "s":
+            np.save("refined_labels.npy", self.mask)
             self.update_ui("SAVED!")
-            return # Skip the standard UI update to keep the "SAVED!" message visible
-            
+            return  # Skip the standard UI update to keep the "SAVED!" message visible
+
         self.update_ui()
 
     def on_release(self, event):

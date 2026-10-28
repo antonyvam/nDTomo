@@ -1,21 +1,19 @@
-# -*- coding: utf-8 -*-
 """
 Tomography tools for nDTomo
 
 @author: Antony Vamvakeros
 """
-#%%
+# %%
 
 import numpy as np
-from skimage.transform import iradon, radon
-from tqdm import tqdm
-import matplotlib.pyplot as plt
-from scipy.fft import fft, ifft, fftfreq
+from scipy.fft import fft, fftfreq, ifft
 from scipy.ndimage import rotate
 from scipy.sparse import csr_matrix, diags
+from skimage.transform import iradon, radon
+from tqdm import tqdm
 
-    
-def filter_sinogram(sinogram, filter_type='Ramp'):
+
+def filter_sinogram(sinogram, filter_type="Ramp"):
     """
     Applies a frequency domain filter to a sinogram.
 
@@ -33,15 +31,15 @@ def filter_sinogram(sinogram, filter_type='Ramp'):
     filtered_sinogram : ndarray
         The filtered sinogram with the same shape as input.
     """
-    n, n_theta = sinogram.shape
+    n, _n_theta = sinogram.shape
     f = fftfreq(n).reshape(-1, 1)
 
     # Ramp filter
     ramp = np.abs(f)
 
-    if filter_type == 'Ramp':
+    if filter_type == "Ramp":
         filt = ramp
-    elif filter_type == 'Shepp-Logan':
+    elif filter_type == "Shepp-Logan":
         filt = ramp * np.sinc(f / (2 * f.max()))
     else:
         raise ValueError("Unsupported filter_type. Choose 'Ramp' or 'Shepp-Logan'.")
@@ -52,6 +50,7 @@ def filter_sinogram(sinogram, filter_type='Ramp'):
     filtered_sinogram = np.real(ifft(sino_fft_filtered, axis=0))
 
     return filtered_sinogram
+
 
 def forwardproject(image, angles, num_detectors=None):
     """
@@ -90,12 +89,17 @@ def forwardproject(image, angles, num_detectors=None):
             sinogram[:, i] = projection
         elif len(projection) > num_detectors:
             offset = (len(projection) - num_detectors) // 2
-            sinogram[:, i] = projection[offset:offset + num_detectors]
+            sinogram[:, i] = projection[offset : offset + num_detectors]
         else:
             pad = (num_detectors - len(projection)) // 2
-            sinogram[:, i] = np.pad(projection, (pad, num_detectors - len(projection) - pad), mode='constant')
+            sinogram[:, i] = np.pad(
+                projection,
+                (pad, num_detectors - len(projection) - pad),
+                mode="constant",
+            )
 
     return sinogram
+
 
 def backproject(sinogram, angles, output_size=None, normalize=True):
     """
@@ -129,7 +133,7 @@ def backproject(sinogram, angles, output_size=None, normalize=True):
         projection_2d = np.tile(projection[:, np.newaxis], (1, output_size))
 
         # Rotate the 2D projection to the current angle
-        rotated = rotate(projection_2d, angle= theta + 90, reshape=False, order=3)
+        rotated = rotate(projection_2d, angle=theta + 90, reshape=False, order=3)
 
         # Accumulate into reconstruction
         reconstruction += rotated
@@ -141,14 +145,13 @@ def backproject(sinogram, angles, output_size=None, normalize=True):
     return reconstruction
 
 
-def radonvol(vol, scan = 180, theta=None):
-    
-    '''
+def radonvol(vol, scan=180, theta=None):
+    """
     Computes the Radon transform of a stack of 2D images or a single 2D image.
-    
-    The Radon transform is calculated along specified projection angles for each 
-    2D slice in the input volume. This function supports both 2D and 3D input 
-    data, where the third dimension in the 3D case corresponds to either the 
+
+    The Radon transform is calculated along specified projection angles for each
+    2D slice in the input volume. This function supports both 2D and 3D input
+    data, where the third dimension in the 3D case corresponds to either the
     z-axis or spectral dimension.
 
     Parameters
@@ -161,7 +164,7 @@ def radonvol(vol, scan = 180, theta=None):
         Total range of angles (in degrees) over which projections are computed.
         Default is 180 degrees.
     theta : array-like, optional
-        Array of projection angles (in degrees). If not provided, 
+        Array of projection angles (in degrees). If not provided,
         the angles are evenly spaced over the range defined by `scan`.
 
     Returns
@@ -177,28 +180,28 @@ def radonvol(vol, scan = 180, theta=None):
     - The output dimensions depend on the input shape:
       - For 2D input: `(len(theta), width of the input image)`
       - For 3D input: `(height of the input image stack, len(theta), depth of the stack)`
-    '''
-    if theta is None:
-        theta = np.arange(0, scan, scan/vol.shape[0])    
-    nproj = len(theta)
-    if len(vol.shape)>2:
-        s = np.zeros((vol.shape[0], nproj, vol.shape[2]))    
-        for ii in tqdm(range(s.shape[2])):
-            s[:,:,ii] = radon(vol[:,:,ii], theta)
-    elif len(vol.shape)==2:
-        s = radon(vol, theta)
-    print('The dimensions of the sinogram volume are ', s.shape)
-    return(s)
-        
-def fbpvol(svol, scan = 180, theta=None, nt = None):
-    
     """
-    Reconstructs a stack of images or a single image from sinograms using the 
+    if theta is None:
+        theta = np.arange(0, scan, scan / vol.shape[0])
+    nproj = len(theta)
+    if len(vol.shape) > 2:
+        s = np.zeros((vol.shape[0], nproj, vol.shape[2]))
+        for ii in tqdm(range(s.shape[2])):
+            s[:, :, ii] = radon(vol[:, :, ii], theta)
+    elif len(vol.shape) == 2:
+        s = radon(vol, theta)
+    print("The dimensions of the sinogram volume are ", s.shape)
+    return s
+
+
+def fbpvol(svol, scan=180, theta=None, nt=None):
+    """
+    Reconstructs a stack of images or a single image from sinograms using the
     filtered backprojection (FBP) algorithm.
-    
-    The function processes a 2D sinogram or a 3D stack of sinograms, where the 
-    third dimension represents either the z-axis or spectral dimension. 
-    Reconstruction is performed for each slice using the filtered backprojection 
+
+    The function processes a 2D sinogram or a 3D stack of sinograms, where the
+    third dimension represents either the z-axis or spectral dimension.
+    Reconstruction is performed for each slice using the filtered backprojection
     method from `skimage.transform.iradon`.
 
     Parameters
@@ -208,13 +211,13 @@ def fbpvol(svol, scan = 180, theta=None, nt = None):
         - A 2D array (n_projections x detector_width) representing a single sinogram.
         - A 3D array (n_rows x n_projections x n_depths) representing a stack of sinograms.
     scan : int, optional
-        Total range of projection angles (in degrees) over which the sinograms 
+        Total range of projection angles (in degrees) over which the sinograms
         were acquired. Default is 180 degrees.
     theta : array-like, optional
-        Array of projection angles (in degrees). If not provided, 
+        Array of projection angles (in degrees). If not provided,
         the angles are evenly spaced over the range defined by `scan`.
     nt : int, optional
-        Desired size of the reconstructed images (number of pixels along one 
+        Desired size of the reconstructed images (number of pixels along one
         dimension). If not provided, it defaults to the number of rows in `svol`.
 
     Returns
@@ -227,7 +230,7 @@ def fbpvol(svol, scan = 180, theta=None, nt = None):
     Notes
     -----
     - The reconstruction is performed using `skimage.transform.iradon`.
-    - The `circle` parameter in `iradon` is set to `True`, assuming the object 
+    - The `circle` parameter in `iradon` is set to `True`, assuming the object
       fits entirely within the reconstruction area.
     - The output dimensions depend on the input:
       - For 2D sinograms: `(nt, nt)`.
@@ -237,32 +240,30 @@ def fbpvol(svol, scan = 180, theta=None, nt = None):
     if nt is None:
         nt = svol.shape[0]
     nproj = svol.shape[1]
-    
+
     if theta is None:
-        theta = np.arange(0, scan, scan/nproj)
-    
-    if len(svol.shape)>2:
-    
+        theta = np.arange(0, scan, scan / nproj)
+
+    if len(svol.shape) > 2:
         vol = np.zeros((nt, nt, svol.shape[2]))
-        
+
         for ii in tqdm(range(svol.shape[2])):
-            
-            vol[:,:,ii] = iradon(svol[:,:,ii], theta, nt, circle = True)
-                
-    elif len(svol.shape)==2:
-        
-        vol = iradon(svol, theta, nt, circle = True)
-    
-    print('The dimensions of the reconstructed volume are ', vol.shape)
-        
-    return(vol)
+            vol[:, :, ii] = iradon(svol[:, :, ii], theta, nt, circle=True)
+
+    elif len(svol.shape) == 2:
+        vol = iradon(svol, theta, nt, circle=True)
+
+    print("The dimensions of the reconstructed volume are ", vol.shape)
+
+    return vol
+
 
 def paralleltomo(N, theta, p, w):
     """
     Creates a 2D tomography test problem using parallel beams.
 
-    This function generates a sparse matrix `A` representing the forward projection 
-    operator for a 2D domain discretized into N x N cells. The problem is defined 
+    This function generates a sparse matrix `A` representing the forward projection
+    operator for a 2D domain discretized into N x N cells. The problem is defined
     using `p` parallel rays for each angle in `theta`.
 
     Parameters
@@ -333,7 +334,7 @@ def paralleltomo(N, theta, p, w):
             I = (np.abs(np.diff(xxy)) > 1e-10) | (np.abs(np.diff(yxy)) > 1e-10)
             xxy, yxy = xxy[:-1][I], yxy[:-1][I]
 
-            d = np.sqrt(np.diff(xxy)**2 + np.diff(yxy)**2)
+            d = np.sqrt(np.diff(xxy) ** 2 + np.diff(yxy) ** 2)
             if d.size > 0:
                 xm = 0.5 * (xxy[:-1] + xxy[1:]) + N / 2
                 ym = 0.5 * (yxy[:-1] + yxy[1:]) + N / 2
@@ -348,7 +349,7 @@ def paralleltomo(N, theta, p, w):
     A = csr_matrix((vals, (rows, cols)), shape=(nA * p, N**2), dtype=np.float32)
     return A
 
-        
+
 def sirt(A, b, x0=None, n_iter=20, relax=1.0):
     """
     Simultaneous Iterative Reconstruction Technique (SIRT) with row and column normalization.
@@ -388,12 +389,9 @@ def sirt(A, b, x0=None, n_iter=20, relax=1.0):
     - Particularly useful in tomographic reconstruction where balancing ray coverage is critical.
     """
     A = A.tocsr()
-    m, n = A.shape
+    _m, n = A.shape
 
-    if x0 is None:
-        x = np.zeros(n)
-    else:
-        x = x0.copy()
+    x = np.zeros(n) if x0 is None else x0.copy()
 
     # Row normalization: M = diag(1 / ||a_i||^2)
     row_norms = np.array(A.power(2).sum(axis=1)).flatten()
@@ -409,8 +407,8 @@ def sirt(A, b, x0=None, n_iter=20, relax=1.0):
     M = diags(M_inv)
 
     for _ in range(n_iter):
-        r = b - A @ x                      # residual
-        x += relax * D @ (A.T @ (M @ r))   # apply normalized update
+        r = b - A @ x  # residual
+        x += relax * D @ (A.T @ (M @ r))  # apply normalized update
 
     return x
 
@@ -422,7 +420,7 @@ def cgls(A, b, x0=None, n_iter=10):
     This method minimizes the least-squares objective:
         ||Ax - b||^2
 
-    It is equivalent to applying the Conjugate Gradient method to the 
+    It is equivalent to applying the Conjugate Gradient method to the
     normal equations:
         AᵀA x = Aᵀb
 
@@ -450,11 +448,8 @@ def cgls(A, b, x0=None, n_iter=10):
       expensive to compute.
     - This implementation does not support stopping criteria based on tolerance.
     """
-    
-    if x0 is None:
-        x = np.zeros(A.shape[1])
-    else:
-        x = x0.copy()
+
+    x = np.zeros(A.shape[1]) if x0 is None else x0.copy()
 
     r = b - A @ x
     p = A.T @ r
@@ -473,7 +468,6 @@ def cgls(A, b, x0=None, n_iter=10):
         d = s + beta * d
 
     return x
-
 
 
 def cgls_functional(sinogram, angles, x0=None, n_iter=10):
@@ -507,10 +501,7 @@ def cgls_functional(sinogram, angles, x0=None, n_iter=10):
 
     b = sinogram.ravel()
 
-    if x0 is None:
-        x = np.zeros(N * N, dtype=np.float32)
-    else:
-        x = x0.ravel().copy()
+    x = np.zeros(N * N, dtype=np.float32) if x0 is None else x0.ravel().copy()
 
     r = b - forward(x)
     p = backward(r)
@@ -557,16 +548,16 @@ def sirt_functional(sinogram, angles, x0=None, n_iter=20, relax=1.0, epsilon=1e-
     """
     N = sinogram.shape[0]
 
-    def forward(x): return forwardproject(x.reshape((N, N)), angles)
-    def backward(y): return backproject(y, angles, output_size=N, normalize=False)
+    def forward(x):
+        return forwardproject(x.reshape((N, N)), angles)
+
+    def backward(y):
+        return backproject(y, angles, output_size=N, normalize=False)
 
     b = sinogram
     W_voxel = backward(forward(np.ones((N, N), dtype=np.float32)))
 
-    if x0 is None:
-        x = np.zeros((N, N), dtype=np.float32)
-    else:
-        x = x0.copy()
+    x = np.zeros((N, N), dtype=np.float32) if x0 is None else x0.copy()
 
     for _ in range(n_iter):
         residual = b - forward(x)

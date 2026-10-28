@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 PyTorch functions for 2D and 3D tomography and Radon transform simulation.
 
@@ -18,15 +17,15 @@ Main features:
 Author: Antony Vamvakeros
 """
 
-import torch
-from torchvision.transforms.functional import rotate
-import torch.nn.functional as F
-from torchvision.transforms import InterpolationMode
-from numpy import vstack
 import numpy as np
+import torch
+import torch.nn.functional as F
+from numpy import vstack
+from torchvision.transforms import InterpolationMode
+from torchvision.transforms.functional import rotate
 
-def forward_project_3D(vol, angles, npix, nch, device='cuda'):
 
+def forward_project_3D(vol, angles, npix, nch, device="cuda"):
     """
     Perform forward projection (Radon transform) of a 3D volume using PyTorch.
 
@@ -55,12 +54,14 @@ def forward_project_3D(vol, angles, npix, nch, device='cuda'):
 
     sinos = torch.zeros((nch, npix, len(angles)), device=device)
     for angle in range(len(angles)):
-        vol_rot = rotate(vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
-        sinos[:,:,angle] = torch.sum(vol_rot, dim=3)[0,:,:]
+        vol_rot = rotate(
+            vol, float(angles[angle]), interpolation=InterpolationMode.BILINEAR
+        )
+        sinos[:, :, angle] = torch.sum(vol_rot, dim=3)[0, :, :]
     return sinos
 
-def back_project_3D(sinos, angles, npix, nch, device='cuda'):
 
+def back_project_3D(sinos, angles, npix, nch, device="cuda"):
     """
     Perform backprojection (inverse Radon transform) of a 3D sinogram using PyTorch.
 
@@ -88,18 +89,19 @@ def back_project_3D(sinos, angles, npix, nch, device='cuda'):
     """
     vol = torch.zeros((1, nch, npix, npix), device=device)
     for angle in range(len(angles)):
-        vol_rot = sinos[:,:,angle].unsqueeze(0).unsqueeze(0)
+        vol_rot = sinos[:, :, angle].unsqueeze(0).unsqueeze(0)
         vol_rot = torch.transpose(vol_rot, 2, 1)
         vol_rot = vol_rot.repeat(1, 1, npix, 1)
         vol_rot = torch.transpose(vol_rot, 3, 2)
-        vol_rot = rotate(vol_rot, 
-                         -float(angles[angle]), interpolation=InterpolationMode.BILINEAR)
+        vol_rot = rotate(
+            vol_rot, -float(angles[angle]), interpolation=InterpolationMode.BILINEAR
+        )
         vol += vol_rot
     return vol[0, :, :, :]
 
 
 # Compute W_ray for SIRT
-def compute_W_ray(angles, npix, nch, device='cuda'):
+def compute_W_ray(angles, npix, nch, device="cuda"):
     """
     Compute ray normalization weights for each voxel via forward projection of a constant volume.
 
@@ -121,13 +123,15 @@ def compute_W_ray(angles, npix, nch, device='cuda'):
     -------
     W_ray : torch.Tensor
         Weighting map of shape (nch, npix, len(angles)) representing forward projection of ones.
-    """    
+    """
     vol = torch.ones((1, nch, npix, npix), dtype=torch.float32, device=device)
     W_ray = forward_project_3D(vol, angles, npix, nch, device)
     return W_ray
 
 
-def sirt_pytorch_functional(sinos, angles, npix, nch=1, n_iter=20, relax=0.01, epsilon=1e-6, device='cuda'):
+def sirt_pytorch_functional(
+    sinos, angles, npix, nch=1, n_iter=20, relax=0.01, epsilon=1e-6, device="cuda"
+):
     """
     SIRT reconstruction using PyTorch with function-based forward and backward projectors.
 
@@ -163,11 +167,13 @@ def sirt_pytorch_functional(sinos, angles, npix, nch=1, n_iter=20, relax=0.01, e
     for _ in range(n_iter):
         sim = forward_project_3D(vol, angles, npix, nch, device)
         residual = sinos - sim
-        correction = back_project_3D(residual / (W_ray + epsilon), angles, npix, nch, device)
+        correction = back_project_3D(
+            residual / (W_ray + epsilon), angles, npix, nch, device
+        )
         vol += relax * correction
 
-    if device == 'cuda':
-        vol = vol.cpu() 
+    if device == "cuda":
+        vol = vol.cpu()
 
     vol = vol.squeeze().numpy()
     vol = np.transpose(vol)
@@ -175,7 +181,7 @@ def sirt_pytorch_functional(sinos, angles, npix, nch=1, n_iter=20, relax=0.01, e
     return vol  # shape: (nch, npix, npix)
 
 
-def cgls_pytorch_functional(sinos, angles, npix, nch=1, n_iter=10, device='cuda'):
+def cgls_pytorch_functional(sinos, angles, npix, nch=1, n_iter=10, device="cuda"):
     """
     CGLS reconstruction using PyTorch with functional forward and back projectors.
 
@@ -227,13 +233,14 @@ def cgls_pytorch_functional(sinos, angles, npix, nch=1, n_iter=10, device='cuda'
         beta = delta_new / delta_old
         d = s + beta * d
 
-    if device == 'cuda':
-        x = x.cpu() 
+    if device == "cuda":
+        x = x.cpu()
 
     x = x.squeeze().numpy()
     x = np.transpose(x)
 
     return x
+
 
 def Amatrix_torch(A, gpu=True):
     """
@@ -262,6 +269,7 @@ def Amatrix_torch(A, gpu=True):
     Atorch = torch.sparse.FloatTensor(i, v, torch.Size(shape))
     return Atorch.cuda() if gpu else Atorch
 
+
 def Sino_torch(Atorch, im, ntr, npr):
     """
     Generates a sinogram by applying a torch sparse A matrix to an image.
@@ -285,6 +293,7 @@ def Sino_torch(Atorch, im, ntr, npr):
     imt = torch.from_numpy(im).float().reshape(ntr * ntr, 1).cuda()
     s = Amatrix_sino(Atorch, imt, npr, ntr)
     return s
+
 
 def Amatrix_sino(Atorch, im, npr, ntr):
     """
@@ -310,6 +319,7 @@ def Amatrix_sino(Atorch, im, npr, ntr):
     stf = stf.reshape(npr, ntr)
     return stf
 
+
 def Amatrix_rec(AtorchT, s, ntr):
     """
     Reconstructs an image from a sinogram using the transpose of the A matrix.
@@ -331,6 +341,7 @@ def Amatrix_rec(AtorchT, s, ntr):
     rec = torch.matmul(AtorchT, s.view(-1, 1))
     return rec.reshape(ntr, ntr)
 
+
 def RotMat(theta):
     """
     Creates a 2D rotation matrix for use in affine transformations.
@@ -346,12 +357,20 @@ def RotMat(theta):
         A 2×3 affine rotation matrix tensor.
     """
     theta = torch.tensor(theta)
-    rotmat = torch.tensor([[torch.cos(theta), -torch.sin(theta), 0],
-                           [torch.sin(theta),  torch.cos(theta), 0]])
+    rotmat = torch.tensor(
+        [
+            [torch.cos(theta), -torch.sin(theta), 0],
+            [torch.sin(theta), torch.cos(theta), 0],
+        ]
+    )
     return rotmat
 
 
-def imrotate_torch(im, theta, dtype=torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor):
+def imrotate_torch(
+    im,
+    theta,
+    dtype=torch.cuda.FloatTensor if torch.cuda.is_available() else torch.FloatTensor,
+):
     """
     Rotates a 2D image (or batch) using an affine transformation.
 
@@ -375,8 +394,7 @@ def imrotate_torch(im, theta, dtype=torch.cuda.FloatTensor if torch.cuda.is_avai
     return imr
 
 
-
-def create_torch_Amat(Acoo, values, indices, shape, device='cuda'):
+def create_torch_Amat(Acoo, values, indices, shape, device="cuda"):
     """
     Constructs a PyTorch sparse A matrix from COO components.
 

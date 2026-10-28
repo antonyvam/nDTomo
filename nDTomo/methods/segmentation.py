@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 nDTomo Segmentation
 ====================
@@ -22,39 +21,41 @@ Every feature computes a value for *every pixel* in the image.
 @author: Ronan Docherty
 """
 
-import numpy as np
-from numpy import log2, logspace
-import numpy.typing as npt
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import asdict, dataclass
+from itertools import chain, combinations_with_replacement
+from json import dumps
+from multiprocessing import cpu_count
+from os.path import exists
+from typing import Literal, TypeAlias, cast
 
+import numpy as np
+import numpy.typing as npt
+from numpy import log2, logspace
+from PIL import Image
+from scipy.ndimage import (
+    convolve,  # type: ignore[import]
+    rotate,  # type: ignore[import]
+)
 from skimage import filters
 from skimage.draw import disk  # type: ignore[import]
-from scipy.ndimage import convolve  # type: ignore[import]
-from skimage.util.dtype import img_as_float32  # type: ignore[import]
-from scipy.ndimage import rotate  # type: ignore[import]
 from skimage.filters import gaussian  # type: ignore[import]
-
-from itertools import combinations_with_replacement
-from itertools import chain
-
-from concurrent.futures import ThreadPoolExecutor
-from multiprocessing import cpu_count
-
-from xgboost import XGBClassifier
-
+from skimage.util.dtype import img_as_float32  # type: ignore[import]
 from tifffile import imread
-from PIL import Image
-from os.path import exists
-
-from dataclasses import dataclass, asdict
-from json import dumps
-from typing import Literal, cast, TypeAlias
-
+from xgboost import XGBClassifier
 
 # %% ===================================TYPES===================================
 
-FloatArr: TypeAlias = npt.NDArray[np.float16] | npt.NDArray[np.float32] | npt.NDArray[np.float64]
+FloatArr: TypeAlias = (
+    npt.NDArray[np.float16] | npt.NDArray[np.float32] | npt.NDArray[np.float64]
+)
 UInt8Arr: TypeAlias = npt.NDArray[np.uint8]
-IntArr: TypeAlias = npt.NDArray[np.uint8] | npt.NDArray[np.uint16] | npt.NDArray[np.int32] | npt.NDArray[np.int64]
+IntArr: TypeAlias = (
+    npt.NDArray[np.uint8]
+    | npt.NDArray[np.uint16]
+    | npt.NDArray[np.int32]
+    | npt.NDArray[np.int64]
+)
 Arr: TypeAlias = FloatArr | IntArr
 
 
@@ -121,12 +122,18 @@ class FeatureConfig:
             )
             self.sigmas = sigmas
 
-        assert self.membrane_thickness >= 1, "membrane_thickness must be greater than (or equal to) 0"
-        assert self.membrane_patch_size >= 3, "membrane_patch_size must be greater than (or equal to) 3"
+        assert self.membrane_thickness >= 1, (
+            "membrane_thickness must be greater than (or equal to) 0"
+        )
+        assert self.membrane_patch_size >= 3, (
+            "membrane_patch_size must be greater than (or equal to) 3"
+        )
 
     def __repr__(self) -> str:
         to_stringify = asdict(self)
-        out_str = f"FEATURE CONFIG: \n`{self.name}`: {self.desc}\n" + dumps(to_stringify, ensure_ascii=True, indent=2)
+        out_str = f"FEATURE CONFIG: \n`{self.name}`: {self.desc}\n" + dumps(
+            to_stringify, ensure_ascii=True, indent=2
+        )
         to_stringify.pop("name")
         to_stringify.pop("desc")
         return out_str
@@ -223,7 +230,9 @@ def _singlescale_edges(
     return np.sqrt(g_x**2 + g_y**2)
 
 
-def _singlescale_hessian(gaussian_filtered: FloatArr, return_full: bool = True) -> tuple[FloatArr, ...]:
+def _singlescale_hessian(
+    gaussian_filtered: FloatArr, return_full: bool = True
+) -> tuple[FloatArr, ...]:
     """Compute mod, trace, det and eigenvalues of Hessian matrix of $gaussian_filtered image (i.e for every pixel).
 
     :param gaussian_filtered: img array (that has optionally been gaussian blurred)
@@ -242,8 +251,8 @@ def _singlescale_hessian(gaussian_filtered: FloatArr, return_full: bool = True) 
     det = a * d - b**2
     # orientation_2 = orientation_1 + np.pi / 2
     # eigvals = feature.hessian_matrix_eigvals(H_elems)
-    eig1 = trace + np.sqrt((4 * b**2 + (a - d) ** 2))
-    eig2 = trace - np.sqrt((4 * b**2 + (a - d) ** 2))
+    eig1 = trace + np.sqrt(4 * b**2 + (a - d) ** 2)
+    eig2 = trace - np.sqrt(4 * b**2 + (a - d) ** 2)
 
     if return_full:
         return (eig1 / 2.0, eig2 / 2.0, mod, trace, det)
@@ -384,7 +393,9 @@ def _membrane_projections(
     x1 = 1 + membrane_patch_size // 2 + membrane_thickness // 2
     kernel[:, x0:x1] = 1
 
-    all_kernels = [np.rint(_rotate_ts(kernel, angle, reshape=False)) for angle in range(0, 180, 6)]
+    all_kernels = [
+        np.rint(_rotate_ts(kernel, angle, reshape=False)) for angle in range(0, 180, 6)
+    ]
     # map these across threads to speed up (order unimportant)
     with ThreadPoolExecutor(max_workers=num_workers) as ex:
         out_angles: list[npt.NDArray[np.float32]] = list(
@@ -412,7 +423,9 @@ def _singlescale_singlechannel_features(
     sigma: int,
     config: FeatureConfig,
 ) -> list[Arr]:
-    assert len(img.shape) == 2, f"img shape {img.shape} wrong, should be 2D/singlechannel"
+    assert len(img.shape) == 2, (
+        f"img shape {img.shape} wrong, should be 2D/singlechannel"
+    )
     results: list[Arr] = []
     mult = 0.4 if config.add_weka_sigma_multiplier else 1
     gaussian_filtered = _singlescale_gaussian(img, sigma, mult)
@@ -421,7 +434,9 @@ def _singlescale_singlechannel_features(
     if config.sobel_filter:
         results.append(_singlescale_edges(gaussian_filtered))
     if config.hessian_filter:
-        hessian_out = _singlescale_hessian(gaussian_filtered, config.add_mod_trace_det_hessian)
+        hessian_out = _singlescale_hessian(
+            gaussian_filtered, config.add_mod_trace_det_hessian
+        )
         results += hessian_out
 
     circle_footprint = _make_footprint(int(np.ceil(sigma)))
@@ -537,10 +552,7 @@ def _multiscale_features(
         return _multiscale_singlechannel(raw_img[:, :, 0], config, num_workers)
 
     # (C, H, W) -> (H, W, C)
-    if n_ch == 3 and channel_idx == 0:
-        correct_channel_img = np.transpose(raw_img, (1, 2, 0))
-    else:
-        correct_channel_img = raw_img
+    correct_channel_img = np.transpose(raw_img, (1, 2, 0)) if n_ch == 3 and channel_idx == 0 else raw_img
 
     for channel in range(n_ch):
         slice_arr = correct_channel_img[:, :, channel]
@@ -607,7 +619,9 @@ def _rescale_unique_vals_to_contiguous_labels(
     # map from (2D) np array, go from unique values -> classes
     unique_vals = sorted(np.unique(arr))
     if len(unique_vals) > N_VALS_CUTOFF:
-        raise Exception("Too many unique values in array! Are you sure this is an integer label array? ")
+        raise Exception(
+            "Too many unique values in array! Are you sure this is an integer label array? "
+        )
 
     out = np.zeros_like(arr, dtype=np.uint8)
     for i, val in enumerate(unique_vals):
@@ -634,9 +648,11 @@ def load_labels(path: str) -> npt.NDArray[np.uint8]:
         return _rescale_unique_vals_to_contiguous_labels(arr)
 
 
-def _get_labelled_training_data_from_stack(feature_stack: Arr, labels: UInt8Arr) -> tuple[Arr, UInt8Arr]:
+def _get_labelled_training_data_from_stack(
+    feature_stack: Arr, labels: UInt8Arr
+) -> tuple[Arr, UInt8Arr]:
     h, w, n_feats = feature_stack.shape
-    flat_labels = labels.reshape((h * w))
+    flat_labels = labels.reshape(h * w)
     flat_features = feature_stack.reshape((h * w, n_feats))
 
     labelled_mask = np.nonzero(flat_labels)
@@ -680,16 +696,29 @@ def get_training_data(
     :return: fit data and target data
     :rtype: Tuple[np.ndarray, np.ndarray]
     """
-    fit_data, target_data = _get_labelled_training_data_from_stack(feature_stack, labels)
-    fit_data, target_data = _shuffle_sample_training_data(fit_data, target_data, shuffle, sample_n)
+    fit_data, target_data = _get_labelled_training_data_from_stack(
+        feature_stack, labels
+    )
+    fit_data, target_data = _shuffle_sample_training_data(
+        fit_data, target_data, shuffle, sample_n
+    )
     return fit_data, target_data
 
 
-def get_model(eta: float = 0.3, gamma: float = 0, max_depth: int = 6, class_weight: str = "balanced") -> XGBClassifier:
-    return XGBClassifier(eta=eta, gamma=gamma, max_depth=max_depth, class_weight=class_weight)
+def get_model(
+    eta: float = 0.3,
+    gamma: float = 0,
+    max_depth: int = 6,
+    class_weight: str = "balanced",
+) -> XGBClassifier:
+    return XGBClassifier(
+        eta=eta, gamma=gamma, max_depth=max_depth, class_weight=class_weight
+    )
 
 
-def fit_model(model: XGBClassifier, fit_data: Arr, target_data: UInt8Arr) -> XGBClassifier:
+def fit_model(
+    model: XGBClassifier, fit_data: Arr, target_data: UInt8Arr
+) -> XGBClassifier:
     model = model.fit(fit_data, target_data - 1)
     return model
 

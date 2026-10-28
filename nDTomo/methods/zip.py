@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Methods for zipping files and folders.
 
@@ -23,13 +22,14 @@ z = zip_file_list(
 """
 
 from __future__ import annotations
+
 import pathlib
 import re
 import shutil
 import subprocess
 import tempfile
 import zipfile
-from typing import Iterable, List, Optional, Sequence, Union
+from collections.abc import Iterable, Sequence
 
 Path = pathlib.Path
 
@@ -37,7 +37,8 @@ Path = pathlib.Path
 # Helpers
 # -----------------------------
 
-def _normalize_exts(ext: str) -> List[str]:
+
+def _normalize_exts(ext: str) -> list[str]:
     """
     Parse one or more filename extensions into canonical, lowercase suffixes.
 
@@ -64,13 +65,13 @@ def _normalize_exts(ext: str) -> List[str]:
         raise ValueError("Provide at least one extension, e.g. 'png' or '.png'.")
 
     parts = ext.replace(",", " ").split()
-    exts: List[str] = []
+    exts: list[str] = []
     for e in parts:
         e = e.strip().lower()
         if not e:
             continue
         if e.startswith("*."):
-            e = e[1:]          # '*.png' -> '.png'
+            e = e[1:]  # '*.png' -> '.png'
         if not e.startswith("."):
             e = "." + e
         exts.append(e)
@@ -107,14 +108,14 @@ def _iter_files(folder: Path, recursive: bool) -> Iterable[Path]:
     -----
     This function does not filter by extension; callers should apply any
     suffix/pattern filtering.
-    """    
+    """
     it = folder.rglob("*") if recursive else folder.glob("*")
     for p in it:
         if p.is_file():
             yield p
 
 
-def _resolve_7z(seven_zip: Optional[Union[str, Path]] = None) -> str:
+def _resolve_7z(seven_zip: str | Path | None = None) -> str:
     """
     Resolve a 7-Zip executable for use with subprocess.
 
@@ -161,7 +162,7 @@ def _resolve_7z(seven_zip: Optional[Union[str, Path]] = None) -> str:
     )
 
 
-def _run_7z(cmd: Sequence[str], *, cwd: Optional[Union[str, Path]] = None) -> None:
+def _run_7z(cmd: Sequence[str], *, cwd: str | Path | None = None) -> None:
     """
     Execute a 7-Zip command and raise a rich error message on failure.
 
@@ -200,7 +201,7 @@ def _run_7z(cmd: Sequence[str], *, cwd: Optional[Union[str, Path]] = None) -> No
         raise RuntimeError("\n".join(msg)) from e
 
 
-def _format_volume_size(volume: Union[str, int]) -> str:
+def _format_volume_size(volume: str | int) -> str:
     """
     Format a volume size specification for 7-Zip split archives (``-v``).
 
@@ -229,12 +230,16 @@ def _format_volume_size(volume: Union[str, int]) -> str:
         v = volume.strip().lower()
         if not re.fullmatch(r"\d+(\.\d+)?[kmg]?", v) and not v.endswith("b"):
             # allow '10g', '500m', '100k', '123b', '10'
-            raise ValueError("Volume must be like '10g', '500m', '100k', '123b', or '10'.")
+            raise ValueError(
+                "Volume must be like '10g', '500m', '100k', '123b', or '10'."
+            )
         # If user wrote plain digits, default to bytes
         if re.fullmatch(r"\d+(\.\d+)?", v):
             # 7z expects an integer for bytes; reject floats for bytes.
             if "." in v:
-                raise ValueError("If passing bytes as a string, use an integer like '123b'.")
+                raise ValueError(
+                    "If passing bytes as a string, use an integer like '123b'."
+                )
             return v + "b"
         return v
 
@@ -249,8 +254,9 @@ def _format_volume_size(volume: Union[str, int]) -> str:
 # ZIP (Python stdlib)
 # -----------------------------
 
+
 def zip_by_extension(
-    folder: Union[str, Path],
+    folder: str | Path,
     ext: str,
     zip_basename: str,
     *,
@@ -331,10 +337,7 @@ def zip_by_extension(
 
     with zipfile.ZipFile(out_zip, mode="w", compression=compression, **kwargs) as zf:
         for p in files:
-            if keep_paths:
-                arc = str(p.relative_to(folder)).replace("\\", "/")
-            else:
-                arc = p.name
+            arc = str(p.relative_to(folder)).replace("\\", "/") if keep_paths else p.name
 
             if arc in used:
                 if on_collision == "raise":
@@ -369,14 +372,15 @@ def zip_by_extension(
 # ZIP (7-Zip)
 # -----------------------------
 
+
 def zip_with_7z(
-    folder: Union[str, Path],
+    folder: str | Path,
     ext: str,
     zip_basename: str,
     *,
     recursive: bool = False,
     level: int = 1,  # 0..9
-    seven_zip: Optional[Union[str, Path]] = None,
+    seven_zip: str | Path | None = None,
     keep_paths: bool = True,
 ) -> Path:
     """
@@ -427,7 +431,9 @@ def zip_with_7z(
     """
 
     if recursive and not keep_paths:
-        raise ValueError("zip_with_7z: recursive=True requires keep_paths=True (otherwise 7z can't find subfolder files).")
+        raise ValueError(
+            "zip_with_7z: recursive=True requires keep_paths=True (otherwise 7z can't find subfolder files)."
+        )
 
     folder = Path(folder)
     if not folder.exists():
@@ -457,7 +463,8 @@ def zip_with_7z(
         lst.write_text("\n".join(rels), encoding="utf-8")
 
         cmd = [
-            seven_zip, "a",
+            seven_zip,
+            "a",
             "-tzip",
             "-mmt=on",
             f"-mx={int(level)}",
@@ -475,12 +482,13 @@ def zip_with_7z(
 # 7z (single file / folder)
 # -----------------------------
 
+
 def seven_zip_file(
-    file_path: Union[str, Path],
+    file_path: str | Path,
     *,
-    seven_zip: Optional[Union[str, Path]] = None,
+    seven_zip: str | Path | None = None,
     level: int = 5,
-    out_path: Optional[Union[str, Path]] = None,
+    out_path: str | Path | None = None,
 ) -> Path:
     """
     Create a ``.7z`` archive from a single file using 7-Zip.
@@ -521,7 +529,8 @@ def seven_zip_file(
     out.parent.mkdir(parents=True, exist_ok=True)
 
     cmd = [
-        seven_zip, "a",
+        seven_zip,
+        "a",
         "-t7z",
         f"-mx={int(level)}",
         "-mmt=on",
@@ -535,11 +544,11 @@ def seven_zip_file(
 
 
 def seven_zip_folder(
-    folder_path: Union[str, Path],
+    folder_path: str | Path,
     *,
-    seven_zip: Optional[Union[str, Path]] = None,
+    seven_zip: str | Path | None = None,
     level: int = 5,
-    out_dir: Optional[Union[str, Path]] = None,
+    out_dir: str | Path | None = None,
     include_folder: bool = True,
 ) -> Path:
     """
@@ -591,7 +600,8 @@ def seven_zip_folder(
 
     if include_folder:
         cmd = [
-            seven_zip, "a",
+            seven_zip,
+            "a",
             "-t7z",
             f"-mx={int(level)}",
             "-mmt=on",
@@ -602,7 +612,8 @@ def seven_zip_folder(
         _run_7z(cmd, cwd=folder_path.parent)
     else:
         cmd = [
-            seven_zip, "a",
+            seven_zip,
+            "a",
             "-t7z",
             f"-mx={int(level)}",
             "-mmt=on",
@@ -617,14 +628,14 @@ def seven_zip_folder(
 
 
 def seven_zip_folder_split(
-    folder_path: Union[str, Path],
+    folder_path: str | Path,
     *,
-    seven_zip: Optional[Union[str, Path]] = None,
+    seven_zip: str | Path | None = None,
     level: int = 1,
-    volume: Union[str, int] = "10g",
+    volume: str | int = "10g",
     include_folder: bool = True,
-    out_dir: Optional[Union[str, Path]] = None,
-) -> List[Path]:
+    out_dir: str | Path | None = None,
+) -> list[Path]:
     """
     Create a split-volume ``.7z`` archive from a directory using 7-Zip.
 
@@ -690,7 +701,8 @@ def seven_zip_folder_split(
 
     if include_folder:
         cmd = [
-            seven_zip, "a",
+            seven_zip,
+            "a",
             "-t7z",
             f"-mx={int(level)}",
             "-mmt=on",
@@ -702,7 +714,8 @@ def seven_zip_folder_split(
         _run_7z(cmd, cwd=folder_path.parent)
     else:
         cmd = [
-            seven_zip, "a",
+            seven_zip,
+            "a",
             "-t7z",
             f"-mx={int(level)}",
             "-mmt=on",
@@ -716,7 +729,11 @@ def seven_zip_folder_split(
     # Collect numeric parts only: <name>.7z.001, .002, ...
     part_re = re.compile(re.escape(out_base.name) + r"\.\d{3,}$")
     parts = sorted(
-        [p for p in out_base.parent.iterdir() if p.is_file() and part_re.fullmatch(p.name)],
+        [
+            p
+            for p in out_base.parent.iterdir()
+            if p.is_file() and part_re.fullmatch(p.name)
+        ],
         key=lambda p: p.name,
     )
     if not parts:
@@ -728,13 +745,13 @@ def seven_zip_folder_split(
 
 
 def zip_each_file_with_extension(
-    folder: Union[str, Path],
+    folder: str | Path,
     ext: str,
     *,
     recursive: bool = False,
     fast: bool = True,
-    out_dir: Optional[Union[str, Path]] = None,
-) -> List[Path]:
+    out_dir: str | Path | None = None,
+) -> list[Path]:
     """
     Create one ZIP archive per matched file.
 
@@ -785,7 +802,7 @@ def zip_each_file_with_extension(
     if out_dir_p is not None:
         out_dir_p.mkdir(parents=True, exist_ok=True)
 
-    out_zips: List[Path] = []
+    out_zips: list[Path] = []
     for f in files:
         zip_name = f.stem + ".zip"
         zpath = (out_dir_p / zip_name) if out_dir_p else (f.parent / zip_name)
@@ -799,7 +816,7 @@ def zip_each_file_with_extension(
 
 
 def zip_all_files_with_extension(
-    folder: Union[str, Path],
+    folder: str | Path,
     ext: str,
     zip_basename: str,
     *,
@@ -825,7 +842,9 @@ def zip_all_files_with_extension(
         Path to the created ZIP archive.
     """
     return zip_by_extension(
-        folder, ext, zip_basename,
+        folder,
+        ext,
+        zip_basename,
         recursive=recursive,
         fast=fast,
         keep_paths=keep_paths,
@@ -834,10 +853,10 @@ def zip_all_files_with_extension(
 
 
 def zip_file_list(
-    files: Sequence[Union[str, Path]],
-    out_zip: Union[str, Path],
+    files: Sequence[str | Path],
+    out_zip: str | Path,
     *,
-    base_dir: Optional[Union[str, Path]] = None,
+    base_dir: str | Path | None = None,
     fast: bool = True,
     keep_paths: bool = False,
     on_collision: str = "raise",  # 'raise' | 'rename'

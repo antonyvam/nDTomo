@@ -1,17 +1,27 @@
-import types
 import os
 import sys
+import types
 
 if os.environ.get("READTHEDOCS") == "True":
 
-    dummy = lambda *args, **kwargs: DummyTensor()
+    def dummy(*args, **kwargs):
+        return DummyTensor()
 
     class DummyTensor:
-        def cuda(self, *args, **kwargs): return self
-        def to(self, *args, **kwargs): return self
-        def __call__(self, *args, **kwargs): return self
-        def __getattr__(self, name): return self
-        def __getitem__(self, key): return self
+        def cuda(self, *args, **kwargs):
+            return self
+
+        def to(self, *args, **kwargs):
+            return self
+
+        def __call__(self, *args, **kwargs):
+            return self
+
+        def __getattr__(self, name):
+            return self
+
+        def __getitem__(self, key):
+            return self
 
     # Mock torchvision and its transforms
     torchvision = types.SimpleNamespace()
@@ -23,7 +33,7 @@ if os.environ.get("READTHEDOCS") == "True":
     # Mock torch
     torch = types.SimpleNamespace(
         Tensor=DummyTensor,
-        FloatTensor=DummyTensor, 
+        FloatTensor=DummyTensor,
         cuda=types.SimpleNamespace(is_available=lambda: False),
         nn=types.SimpleNamespace(
             Module=object,

@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
 """
 Analytical peak functions and polynomial models using PyTorch.
 
-This module defines several 1D peak profiles (e.g., Gaussian, Lorentzian, Pseudo-Voigt) and 
-polynomial bases commonly used in signal processing, spectroscopy, and diffraction analysis. 
+This module defines several 1D peak profiles (e.g., Gaussian, Lorentzian, Pseudo-Voigt) and
+polynomial bases commonly used in signal processing, spectroscopy, and diffraction analysis.
 These functions are differentiable and compatible with PyTorch-based optimization and learning workflows.
 
 Author: Antony Vamvakeros
@@ -34,8 +33,9 @@ def polynomial(x, coefficients):
     degree = len(coefficients) - 1
     y = torch.zeros_like(x)
     for i in range(degree + 1):
-        y += coefficients[i] * x ** i
+        y += coefficients[i] * x**i
     return y
+
 
 def chebyshev_polynomial(x, n_terms):
     """
@@ -76,12 +76,13 @@ def chebyshev_polynomial(x, n_terms):
     T_n_1 = x
 
     # Iteratively compute the Chebyshev polynomial
-    for i in range(2, n_terms):
+    for _i in range(2, n_terms):
         T_n_2 = 2 * x * T_n_1 - T_n
         T_n = T_n_1
         T_n_1 = T_n_2
 
     return torch.dot(coeffs, T_n_1)
+
 
 def gaussian_peak(x, amplitude, mean, std):
     """
@@ -102,8 +103,9 @@ def gaussian_peak(x, amplitude, mean, std):
     -------
     torch.Tensor
         Gaussian peak evaluated at `x`.
-    """    
-    return amplitude * torch.exp(-(x - mean)**2 / (2 * std**2))
+    """
+    return amplitude * torch.exp(-((x - mean) ** 2) / (2 * std**2))
+
 
 def lorentzian_peak(x, amplitude, x0, gamma):
     """
@@ -124,12 +126,13 @@ def lorentzian_peak(x, amplitude, x0, gamma):
     -------
     torch.Tensor
         Lorentzian peak evaluated at `x`.
-    """    
+    """
     return amplitude / (1 + ((x - x0) / gamma) ** 2)
+
 
 def pseudo_voigt_peak(x, amplitude, x0, sigma, fraction):
     """
-    Generate a symmetric Pseudo-Voigt peak composed of a linear combination of Gaussian 
+    Generate a symmetric Pseudo-Voigt peak composed of a linear combination of Gaussian
     and Lorentzian components with equal width.
 
     Parameters
@@ -143,7 +146,7 @@ def pseudo_voigt_peak(x, amplitude, x0, sigma, fraction):
     sigma : float or torch.Tensor
         Common width used for both Gaussian and Lorentzian components.
     fraction : float
-        Mixing ratio of the Gaussian component. Must be in [0, 1]. 
+        Mixing ratio of the Gaussian component. Must be in [0, 1].
         The Lorentzian component weight is (1 - fraction).
 
     Returns
@@ -153,7 +156,7 @@ def pseudo_voigt_peak(x, amplitude, x0, sigma, fraction):
     """
     gaussian = gaussian_peak(x, amplitude, x0, sigma)
     lorentzian = lorentzian_peak(x, amplitude, x0, sigma)
-    return fraction*gaussian + (1-fraction)*lorentzian
+    return fraction * gaussian + (1 - fraction) * lorentzian
 
 
 def pearson7_peak(x, amplitude, x0, sigma, m, a, b, c):
@@ -177,8 +180,18 @@ def pearson7_peak(x, amplitude, x0, sigma, m, a, b, c):
     -------
     torch.Tensor
         Pearson VII profile evaluated at `x`.
-    """    
-    return amplitude * (1 + m*((x-x0)/sigma)**2) / (1 + a*((x-x0)/sigma)**2 + b*((x-x0)/sigma)**4 + c*((x-x0)/sigma)**6)
+    """
+    return (
+        amplitude
+        * (1 + m * ((x - x0) / sigma) ** 2)
+        / (
+            1
+            + a * ((x - x0) / sigma) ** 2
+            + b * ((x - x0) / sigma) ** 4
+            + c * ((x - x0) / sigma) ** 6
+        )
+    )
+
 
 def voigt_peak(x, amplitude, x0, sigma, gamma):
     """
@@ -201,8 +214,12 @@ def voigt_peak(x, amplitude, x0, sigma, gamma):
     -------
     torch.Tensor
         Voigt-like peak evaluated at `x`.
-    """    
-    return amplitude * torch.exp(-((x-x0)**2)/(2*sigma**2)) * torch.exp(-gamma*torch.abs(x-x0))
+    """
+    return (
+        amplitude
+        * torch.exp(-((x - x0) ** 2) / (2 * sigma**2))
+        * torch.exp(-gamma * torch.abs(x - x0))
+    )
 
 
 def doniach_sunjic_peak(x, amplitude, x0, sigma, b):
@@ -226,10 +243,13 @@ def doniach_sunjic_peak(x, amplitude, x0, sigma, b):
     -------
     torch.Tensor
         Doniach-Šunjić peak evaluated at `x`.
-    """    
-    return amplitude * (1 + (x-x0)**2/(sigma**2 + b*(x-x0)**2))**-1
+    """
+    return amplitude * (1 + (x - x0) ** 2 / (sigma**2 + b * (x - x0) ** 2)) ** -1
 
-def split_pearson_peak(x, amplitude, x0, sigma1, sigma2, m1, m2, a1, a2, b1, b2, c1, c2):
+
+def split_pearson_peak(
+    x, amplitude, x0, sigma1, sigma2, m1, m2, a1, a2, b1, b2, c1, c2
+):
     """
     Generate a two-component asymmetric Pearson peak.
 
@@ -250,8 +270,19 @@ def split_pearson_peak(x, amplitude, x0, sigma1, sigma2, m1, m2, a1, a2, b1, b2,
     -------
     torch.Tensor
         Asymmetric Pearson profile evaluated at `x`.
-    """    
-    return amplitude * (1 + m1*((x-x0)/sigma1)**2) / (1 + a1*((x-x0)/sigma1)**2 + b1*((x-x0)/sigma1)**4 + c1*((x-x0)/sigma1)**6) + amplitude * (1 + m2*((x-x0)/sigma2)**2) / (1 + a2*((x-x0)/sigma2)**2 + b2*((x-x0)/sigma2)**4 + c2*((x-x0)/sigma2)**6)
+    """
+    return amplitude * (1 + m1 * ((x - x0) / sigma1) ** 2) / (
+        1
+        + a1 * ((x - x0) / sigma1) ** 2
+        + b1 * ((x - x0) / sigma1) ** 4
+        + c1 * ((x - x0) / sigma1) ** 6
+    ) + amplitude * (1 + m2 * ((x - x0) / sigma2) ** 2) / (
+        1
+        + a2 * ((x - x0) / sigma2) ** 2
+        + b2 * ((x - x0) / sigma2) ** 4
+        + c2 * ((x - x0) / sigma2) ** 6
+    )
+
 
 def exponential_power_peak(x, amplitude, x0, sigma, alpha, beta):
     """
@@ -277,7 +308,8 @@ def exponential_power_peak(x, amplitude, x0, sigma, alpha, beta):
     torch.Tensor
         Peak evaluated at `x` using the exponential power law form.
     """
-    return amplitude * (1 + (x-x0)/sigma)**(-alpha) * torch.exp(-beta*(x-x0))
+    return amplitude * (1 + (x - x0) / sigma) ** (-alpha) * torch.exp(-beta * (x - x0))
+
 
 def pseudo_voigt_peak_t(x, A, xo, st, fraction, sl, i):
     """
@@ -304,18 +336,10 @@ def pseudo_voigt_peak_t(x, A, xo, st, fraction, sl, i):
     -------
     torch.Tensor
         Composite Pseudo-Voigt + linear background evaluated at `x`.
-    """ 
-    return fraction*(A * torch.exp(-(x - xo)**2 / (2 * st**2))) + (1-fraction)*((A / torch.pi) * (st / ((x - xo)**2 + st**2))) + sl*x + i
-
-
-
-
-
-
-
-
-
-
-
-
-
+    """
+    return (
+        fraction * (A * torch.exp(-((x - xo) ** 2) / (2 * st**2)))
+        + (1 - fraction) * ((A / torch.pi) * (st / ((x - xo) ** 2 + st**2)))
+        + sl * x
+        + i
+    )

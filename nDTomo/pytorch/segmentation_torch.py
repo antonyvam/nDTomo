@@ -1,15 +1,13 @@
 import numpy as np
-
-from typing import TYPE_CHECKING
-
+import torch
+from torch.nn.functional import avg_pool2d, conv2d, max_pool2d, pad
 from xgboost import DMatrix, XGBClassifier
 
 from nDTomo.methods.segmentation import FeatureConfig, _rotate_ts
 
-
 try:
     import torch
-    from torch.nn.functional import conv2d, max_pool2d, avg_pool2d, pad
+    from torch.nn.functional import avg_pool2d, conv2d, max_pool2d, pad
 
     torch_imported = True
 except ImportError:
@@ -17,17 +15,15 @@ except ImportError:
     torch_imported = False
 TORCH_AVAILABLE = torch_imported
 
-if TYPE_CHECKING:
-    import torch
-    from torch.nn.functional import conv2d, max_pool2d, avg_pool2d, pad
-
 
 # TODO:
 # kornia get gaussian 2d, median filter, bilateral ?
 # training code
 
 
-def prepare_for_gpu(arr: np.ndarray, device: str = "cuda:0", dtype: "torch.dtype" = torch.float32) -> "torch.Tensor":
+def prepare_for_gpu(
+    arr: np.ndarray, device: str = "cuda:0", dtype: "torch.dtype" = torch.float32
+) -> "torch.Tensor":
     ndims = len(arr.shape)
     if ndims == 2:
         arr = np.expand_dims(arr, (0, 1))  # (H, W) -> (1, 1, H, W)
@@ -90,7 +86,9 @@ def _gaussian(window_size: int, sigma: float) -> torch.Tensor:
     return gauss / gauss.sum()
 
 
-def _get_gaussian_kernel1d(kernel_size: int, sigma: float, force_even: bool = False) -> torch.Tensor:
+def _get_gaussian_kernel1d(
+    kernel_size: int, sigma: float, force_even: bool = False
+) -> torch.Tensor:
     r"""Function that returns Gaussian filter coefficients.
 
     Args:
@@ -112,8 +110,14 @@ def _get_gaussian_kernel1d(kernel_size: int, sigma: float, force_even: bool = Fa
         >>> get_gaussian_kernel1d(5, 1.5)
         tensor([0.1201, 0.2339, 0.2921, 0.2339, 0.1201])
     """
-    if not isinstance(kernel_size, int) or ((kernel_size % 2 == 0) and not force_even) or (kernel_size <= 0):
-        raise TypeError("kernel_size must be an odd positive integer. Got {}".format(kernel_size))
+    if (
+        not isinstance(kernel_size, int)
+        or ((kernel_size % 2 == 0) and not force_even)
+        or (kernel_size <= 0)
+    ):
+        raise TypeError(
+            f"kernel_size must be an odd positive integer. Got {kernel_size}"
+        )
     window_1d: torch.Tensor = _gaussian(kernel_size, sigma)
     return window_1d
 
@@ -158,7 +162,9 @@ def _get_gaussian_kernel2d(
     sigma_x, sigma_y = sigma
     kernel_x: torch.Tensor = _get_gaussian_kernel1d(ksize_x, sigma_x, force_even)
     kernel_y: torch.Tensor = _get_gaussian_kernel1d(ksize_y, sigma_y, force_even)
-    kernel_2d: torch.Tensor = torch.matmul(kernel_x.unsqueeze(-1), kernel_y.unsqueeze(-1).t())
+    kernel_2d: torch.Tensor = torch.matmul(
+        kernel_x.unsqueeze(-1), kernel_y.unsqueeze(-1).t()
+    )
     kernel_2d = kernel_2d.to(device=device, dtype=dtype)
     return kernel_2d
 
@@ -205,7 +211,9 @@ def _median_blur(input: torch.Tensor, kernel_size: tuple[int, int]) -> torch.Ten
     b, c, h, w = input.shape
 
     # map the local window to single vector
-    features: torch.Tensor = conv2d(input.reshape(b * c, 1, h, w), kernel, padding=padding, stride=1)
+    features: torch.Tensor = conv2d(
+        input.reshape(b * c, 1, h, w), kernel, padding=padding, stride=1
+    )
     features = features.view(b, c, -1, h, w)  # BxCx(K_h * K_w)xHxW
 
     # compute the median along the feature axis
@@ -228,7 +236,9 @@ def _bilateral_blur(
     pad_y, pad_x = _compute_zero_padding((ky, kx))
 
     padded_input = pad(input, (pad_x, pad_x, pad_y, pad_y), mode=border_type)
-    unfolded_input = padded_input.unfold(2, ky, 1).unfold(3, kx, 1).flatten(-2)  # (B, C, H, W, Ky x Kx)
+    unfolded_input = (
+        padded_input.unfold(2, ky, 1).unfold(3, kx, 1).flatten(-2)
+    )  # (B, C, H, W, Ky x Kx)
 
     guidance = input
     unfolded_guidance = unfolded_input
@@ -240,9 +250,13 @@ def _bilateral_blur(
         color_distance_sq = diff.square().sum(1, keepdim=True)
     else:
         raise ValueError("color_distance_type only acceps l1 or l2")
-    color_kernel = (-0.5 / sigma_color**2 * color_distance_sq).exp()  # (B, 1, H, W, Ky x Kx)
+    color_kernel = (
+        -0.5 / sigma_color**2 * color_distance_sq
+    ).exp()  # (B, 1, H, W, Ky x Kx)
 
-    space_kernel = _get_gaussian_kernel2d((ky, kx), sigma_space, device=input.device, dtype=input.dtype)
+    space_kernel = _get_gaussian_kernel2d(
+        (ky, kx), sigma_space, device=input.device, dtype=input.dtype
+    )
     space_kernel = space_kernel.view(-1, 1, 1, 1, kx * ky)
 
     kernel = space_kernel * color_kernel
@@ -264,7 +278,9 @@ def _get_multiscale_gaussian_kernel(
     N = len(sigmas)
     max_s = max(sigmas)
     max_k = 4 * int(max_s * mult) + 1
-    filters = torch.zeros((N, 1, max_k, max_k), dtype=dtype, device=device, requires_grad=False)
+    filters = torch.zeros(
+        (N, 1, max_k, max_k), dtype=dtype, device=device, requires_grad=False
+    )
     for i, sigma in enumerate(sigmas):
         filters[i, :, :, :] = _get_gaussian_kernel2d(
             (max_k, max_k), (sigma * mult, sigma * mult), device=device, dtype=dtype
@@ -273,7 +289,9 @@ def _get_multiscale_gaussian_kernel(
     return filters
 
 
-def _get_sobel_kernel(device: torch.device, dtype: torch.dtype, n_channels: int) -> "torch.Tensor":
+def _get_sobel_kernel(
+    device: torch.device, dtype: torch.dtype, n_channels: int
+) -> "torch.Tensor":
     g_y = torch.tensor(
         [[1, 0, -1], [2, 0, -2], [1, 0, -1]],
         dtype=dtype,
@@ -311,7 +329,9 @@ def _reflect_padded(func):  # type: ignore
 
 
 @_reflect_padded
-def _convolve(img: torch.Tensor, kernel: torch.Tensor, norm: bool = False) -> "torch.Tensor":
+def _convolve(
+    img: torch.Tensor, kernel: torch.Tensor, norm: bool = False
+) -> "torch.Tensor":
     _, in_ch, _, _ = img.shape
     if norm:
         summand = torch.sum(torch.abs(kernel), dim=(2, 3), keepdim=True)
@@ -326,7 +346,7 @@ def _convolve(img: torch.Tensor, kernel: torch.Tensor, norm: bool = False) -> "t
 def _get_gradient_mag(edges: "torch.Tensor") -> "torch.Tensor":
     g_x = edges[0:1, 0::2]
     g_y = edges[0:1, 1::2]
-    return torch.sqrt((g_x**2 + g_y**2))
+    return torch.sqrt(g_x**2 + g_y**2)
 
 
 def _singescale_hessian(
@@ -345,22 +365,19 @@ def _singescale_hessian(
     """
     second_deriv = _convolve(dx_dy, sobel_kernel, True)
 
-    a: "torch.Tensor" = second_deriv[0:1, 0::4]
-    b: "torch.Tensor" = second_deriv[0:1, 1::4]
-    d: "torch.Tensor" = second_deriv[0:1, 3::4]
+    a: torch.Tensor = second_deriv[0:1, 0::4]
+    b: torch.Tensor = second_deriv[0:1, 1::4]
+    d: torch.Tensor = second_deriv[0:1, 3::4]
 
     mod = torch.sqrt(a**2 + b**2 + d**2)
     trace = a + d
     det = a * d - b**2
 
-    eig1 = trace + torch.sqrt((4 * b**2 + (a - d) ** 2))
-    eig2 = trace - torch.sqrt((4 * b**2 + (a - d) ** 2))
+    eig1 = trace + torch.sqrt(4 * b**2 + (a - d) ** 2)
+    eig2 = trace - torch.sqrt(4 * b**2 + (a - d) ** 2)
 
     to_stack: tuple[torch.Tensor, ...]
-    if return_full:
-        to_stack = (eig1 / 2.0, eig2 / 2.0, mod, trace, det)
-    else:
-        to_stack = (eig1 / 2.0, eig2 / 2.0)
+    to_stack = (eig1 / 2.0, eig2 / 2.0, mod, trace, det) if return_full else (eig1 / 2.0, eig2 / 2.0)
     out = torch.cat(to_stack, dim=1)
     return out
 
@@ -408,7 +425,7 @@ def _bilateral(img: "torch.Tensor") -> "torch.Tensor":
     for spatial_radius in (3, 5):
         for value_range in (50, 100):  # check your pixels are [0, 255]
             k = 2 * spatial_radius + 1
-            filtered: "torch.Tensor" = _bilateral_blur(
+            filtered: torch.Tensor = _bilateral_blur(
                 img,
                 k,
                 sigma_color=value_range / 255.0,
@@ -418,7 +435,9 @@ def _bilateral(img: "torch.Tensor") -> "torch.Tensor":
     return torch.cat(bilaterals, dim=1)
 
 
-def _difference_of_gaussians(gaussian_blurs: torch.Tensor, N_sigmas: int) -> "torch.Tensor":
+def _difference_of_gaussians(
+    gaussian_blurs: torch.Tensor, N_sigmas: int
+) -> "torch.Tensor":
     diff_list: list[torch.Tensor] = []
     for i in range(N_sigmas):
         sigma_1 = gaussian_blurs[0:1, i::N_sigmas]
@@ -442,16 +461,23 @@ def _get_membrane_proj_kernel(
     x1 = 1 + membrane_patch_size // 2 + membrane_thickness // 2
     kernel[:, x0:x1] = 1
 
-    all_kernels = [np.rint(_rotate_ts(kernel, angle, reshape=False)) for angle in range(0, 180, angle_increment_deg)]
+    all_kernels = [
+        np.rint(_rotate_ts(kernel, angle, reshape=False))
+        for angle in range(0, 180, angle_increment_deg)
+    ]
     kernel_np = np.stack(all_kernels)
-    kernel_torch = torch.tensor(kernel_np, device=device, dtype=dtype, requires_grad=False)
+    kernel_torch = torch.tensor(
+        kernel_np, device=device, dtype=dtype, requires_grad=False
+    )
     filters = kernel_torch.unsqueeze(1)
     filters = torch.tile(filters, (n_channels, 1, 1, 1))
 
     return filters
 
 
-def _membrane_projections(img: torch.Tensor, kernel: torch.Tensor, N_ch: int) -> "torch.Tensor":
+def _membrane_projections(
+    img: torch.Tensor, kernel: torch.Tensor, N_ch: int
+) -> "torch.Tensor":
     # TODO: most other gpu filters work with N-channel imgs s.t slicing the output stack
     # by every N you'll get the stack for the Nth channel - this does not work like that
     projs = _convolve(img, kernel, False)
@@ -460,12 +486,24 @@ def _membrane_projections(img: torch.Tensor, kernel: torch.Tensor, N_ch: int) ->
 
     projections_out: list[torch.Tensor] = []
     for i in range(N_ch):
-        sum_proj = torch.sum(projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1)
-        mean_proj = torch.mean(projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1)
-        std_proj = torch.std(projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1)
-        median_proj, _ = torch.median(projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1)
-        max_proj = torch.amax(projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1)
-        min_proj = torch.amin(projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1)
+        sum_proj = torch.sum(
+            projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1
+        )
+        mean_proj = torch.mean(
+            projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1
+        )
+        std_proj = torch.std(
+            projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1
+        )
+        median_proj, _ = torch.median(
+            projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1
+        )
+        max_proj = torch.amax(
+            projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1
+        )
+        min_proj = torch.amin(
+            projs[0:1, i * projs_per_ch : (i + 1) * projs_per_ch], dim=1
+        )
         projections_out += [
             mean_proj,
             max_proj,
@@ -511,11 +549,15 @@ def _multiscale_features_gpu(
 
     device = raw_img.device
     mult = 0.4 if config.add_weka_sigma_multiplier else 1
-    gauss_kernel = _get_multiscale_gaussian_kernel(device, dtype, config.sigmas, C, mult)
+    gauss_kernel = _get_multiscale_gaussian_kernel(
+        device, dtype, config.sigmas, C, mult
+    )
     sobel_kernel = _get_sobel_kernel(device, dtype, C)
     sobel_squared = _get_sobel_kernel(device, dtype, 2 * C)
 
-    membrane_kernel = _get_membrane_proj_kernel(device, dtype, C, config.membrane_patch_size, config.membrane_thickness)
+    membrane_kernel = _get_membrane_proj_kernel(
+        device, dtype, C, config.membrane_patch_size, config.membrane_thickness
+    )
 
     gaussian_blurs = _convolve(converted_img, gauss_kernel, norm=False)
 
@@ -542,7 +584,9 @@ def _multiscale_features_gpu(
         if config.sobel_filter:
             features.append(_get_gradient_mag(edges))
         if config.hessian_filter:
-            hess = _singescale_hessian(edges, sobel_squared, config.add_mod_trace_det_hessian)
+            hess = _singescale_hessian(
+                edges, sobel_squared, config.add_mod_trace_det_hessian
+            )
             features.append(hess)
 
         if config.mean:
@@ -601,7 +645,7 @@ def _get_labelled_training_data_from_stack(
     feature_stack: torch.Tensor, labels: torch.Tensor
 ) -> tuple[torch.Tensor, torch.Tensor]:
     h, w, n_feats = feature_stack.shape
-    flat_labels = labels.reshape((h * w))
+    flat_labels = labels.reshape(h * w)
     flat_features = feature_stack.reshape((h * w, n_feats))
 
     labelled_mask = torch.nonzero(flat_labels, as_tuple=True)
@@ -645,18 +689,34 @@ def get_training_data(
     :return: fit data and target data
     :rtype: Tuple[np.ndarray, np.ndarray]
     """
-    fit_data, target_data = _get_labelled_training_data_from_stack(feature_stack, labels)
-    fit_data, target_data = _shuffle_sample_training_data(fit_data, target_data, shuffle, sample_n)
+    fit_data, target_data = _get_labelled_training_data_from_stack(
+        feature_stack, labels
+    )
+    fit_data, target_data = _shuffle_sample_training_data(
+        fit_data, target_data, shuffle, sample_n
+    )
     return fit_data, target_data
 
 
-def get_model(eta: float = 0.3, gamma: float = 0, max_depth: int = 6, class_weight: str = "balanced") -> XGBClassifier:
+def get_model(
+    eta: float = 0.3,
+    gamma: float = 0,
+    max_depth: int = 6,
+    class_weight: str = "balanced",
+) -> XGBClassifier:
     return XGBClassifier(
-        eta=eta, gamma=gamma, max_depth=max_depth, class_weight=class_weight, device="cuda", tree_method="hist"
+        eta=eta,
+        gamma=gamma,
+        max_depth=max_depth,
+        class_weight=class_weight,
+        device="cuda",
+        tree_method="hist",
     )
 
 
-def fit_model(model: XGBClassifier, fit_data: torch.Tensor, target_data: torch.Tensor) -> XGBClassifier:
+def fit_model(
+    model: XGBClassifier, fit_data: torch.Tensor, target_data: torch.Tensor
+) -> XGBClassifier:
     data = DMatrix(data=fit_data, label=target_data - 1)
     model = model.fit(data.get_data(), data.get_label())
     return model
