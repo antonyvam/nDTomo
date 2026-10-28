@@ -457,25 +457,27 @@ def astra_rec_vol(
         # Create a basic square volume geometry
         vol_geom = astra.create_vol_geom(sinos.shape[0], sinos.shape[0])
         # Create a parallel beam geometry with 180 angles between 0 and pi, and image.shape[0] detector pixels of width 1.
-        proj_geom = astra.create_proj_geom(
-            "parallel", 1.0, int(1.0 * sinos.shape[0]), theta
-        )
-    if proj_geom is None:
-        if method == "FBP_CUDA":
+        proj_geom = astra.create_proj_geom('parallel', 1.0, int(1.0*sinos.shape[0]), theta)
+
+        if method == 'FBP_CUDA':
             # Create a sinogram using the GPU.
-            proj_id = astra.create_projector("cuda", proj_geom, vol_geom)
-        elif method == "FBP":
+            proj_id = astra.create_projector('cuda',proj_geom,vol_geom)
+        elif method == 'FBP':
             # Create a sinogram using the GPU.
-            proj_id = astra.create_projector("strip", proj_geom, vol_geom)
+            proj_id = astra.create_projector('strip',proj_geom,vol_geom)
+
+    vol_id = astra.create_vol_geom(sinos.shape[0], sinos.shape[0])
+
     if rec_id is None:
         # Create a data object for the reconstruction
         rec_id = astra.data2d.create("-vol", vol_geom)
 
     cfg = astra.astra_dict(method)
-    cfg["ReconstructionDataId"] = rec_id
-    cfg["ProjectorId"] = proj_id
-    if method == "FBP" or method == "FBP_CUDA":
-        cfg["option"] = {"FilterType": filt}
+    cfg['ReconstructionDataId'] = rec_id
+    cfg['ProjectorId'] = proj_id
+    cfg['VolumeGeometryId'] = vol_id
+    if method == 'FBP' or method == 'FBP_CUDA':
+        cfg['option'] = { 'FilterType': filt }
 
     loop_range = tqdm(range(sinos.shape[2])) if pbar else range(sinos.shape[2])
 
@@ -485,16 +487,22 @@ def astra_rec_vol(
             "-sino", proj_geom, sinos[:, :, ii].transpose()
         )
 
+        sinogram_id = astra.data2d.create('-sino', proj_geom, sinos[:,:,ii].transpose())
+
+        cfg['ProjectionDataId'] = sinogram_id
+
         cfg["ProjectionDataId"] = sinogram_id
 
         # Create the algorithm object from the configuration structure
         alg_id = astra.algorithm.create(cfg)
         astra.algorithm.run(alg_id)
 
+
         # Get the result
         rec[:, :, ii] = astra.data2d.get(rec_id)
 
         astra.algorithm.delete(alg_id)
+
 
     astra.data2d.delete(rec_id)
     astra.data2d.delete(sinogram_id)

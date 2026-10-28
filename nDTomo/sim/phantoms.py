@@ -105,16 +105,9 @@ def phantom_random_shapes(
         2D image array containing the generated shapes.
     """
 
-    im, _ = random_shapes(
-        (sz, sz),
-        min_shapes=min_shapes,
-        max_shapes=max_shapes,
-        shape=shape,
-        multichannel=False,
-        min_size=min_size,
-        max_size=max_size,
-        allow_overlap=allow_overlap,
-    )
+    im, _ = random_shapes((sz, sz), min_shapes=min_shapes, max_shapes=max_shapes, 
+                          shape=shape, num_channels=1, min_size=min_size, 
+                          max_size=max_size, allow_overlap=allow_overlap)
 
     # Convert background pixels (255) to 1, and all shape pixels to 0-1 range
     im = np.where(im == 255, 1, im) - 1
